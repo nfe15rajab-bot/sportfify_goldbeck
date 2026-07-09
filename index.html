@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sportify — Indoor Field Configurator</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/tabler-icons.min.css" />
+</head>
+<body>
+  <div class="app">
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="mode-toggle">
+      <button id="modeSport" class="mode-btn active">Sport</button>
+      <button id="modeGarden" class="mode-btn">Garden</button>
+      <button id="modeCombine" class="mode-btn">Combine</button>
+    </div>
+
+    <aside class="panel">
+      <div id="sportConfigurator">
+        <div class="panel-header">
+          <h2>Field configurator</h2>
+          <p>Indoor sports — school facilities</p>
+        </div>
+        <div class="section">
+          <label>Sport category</label>
+          <select id="sport">
+            <option value="polyvalent">Polyvalent (multi-sport)</option>
+            <option value="basketball">Basketball</option>
+            <option value="handball">Handball</option>
+            <option value="volleyball">Volleyball</option>
+            <option value="badminton">Badminton</option>
+            <option value="football">Football (indoor)</option>
+          </select>
+        </div>
+        <div class="section">
+          <label>Size variant</label>
+          <select id="variant">
+            <option value="mini">Mini (children)</option>
+            <option value="standard">Standard</option>
+            <option value="competition">Competition</option>
+          </select>
+        </div>
+        <div class="section">
+          <label>Spectator capacity</label>
+          <div class="capacity-row">
+            <input type="range" id="capacity" min="0" max="500" step="50" value="0" />
+            <span id="cap-val">No stands</span>
+          </div>
+        </div>
+        <div class="section">
+          <label>Material quality</label>
+          <div class="quality-btns">
+            <div class="q-btn" data-q="low">Low</div>
+            <div class="q-btn active" data-q="medium">Medium</div>
+            <div class="q-btn" data-q="high">High</div>
+          </div>
+        </div>
+        <div class="section">
+          <label>Field dimensions</label>
+          <div class="dims">
+            <div class="dim-card"><div class="val" id="d-l">—</div><div class="lbl">Length (m)</div></div>
+            <div class="dim-card"><div class="val" id="d-w">—</div><div class="lbl">Width (m)</div></div>
+            <div class="dim-card"><div class="val" id="d-run">—</div><div class="lbl">Run-off (m)</div></div>
+            <div class="dim-card"><div class="val" id="d-h">—</div><div class="lbl">Height min (m)</div></div>
+          </div>
+        </div>
+        <div class="export-area">
+          <button class="btn-export accent" id="btn-push-sport">
+            <i class="ti ti-arrow-bar-to-right" aria-hidden="true"></i>Push to Combine
+          </button>
+          <button class="btn-export primary" id="btn-json">
+            <i class="ti ti-file-download" aria-hidden="true"></i>Export JSON
+          </button>
+          <button class="btn-export" id="btn-dxf">
+            <i class="ti ti-vector" aria-hidden="true"></i>Export DXF
+          </button>
+        </div>
+      </div>
+
+      <div id="gardenConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Garden configurator</h2>
+          <p>Green roof — flat roof configuration</p>
+        </div>
+        <div class="section">
+          <label>Roof type</label>
+          <select id="roofType">
+            <option value="extensive">Extensive</option>
+            <option value="intensive">Intensive</option>
+          </select>
+        </div>
+        <div class="section">
+          <label>Parcel length (m)</label>
+          <input type="number" id="parcelLength" value="10" min="1" step="0.5" />
+        </div>
+        <div class="section">
+          <label>Parcel width (m)</label>
+          <input type="number" id="parcelWidth" value="6" min="1" step="0.5" />
+        </div>
+        <div class="section">
+          <label>Material quality</label>
+          <div class="quality-btns" id="garden-quality-btns">
+            <div class="q-btn" data-q="low">Low</div>
+            <div class="q-btn active" data-q="medium">Medium</div>
+            <div class="q-btn" data-q="high">High</div>
+          </div>
+        </div>
+        <div class="section">
+          <label>Layer thicknesses</label>
+          <div class="dims" id="garden-layer-dims"><!-- filled by JS --></div>
+        </div>
+        <div class="export-area">
+          <button class="btn-export accent" id="btn-push-garden">
+            <i class="ti ti-arrow-bar-to-right" aria-hidden="true"></i>Push to Combine
+          </button>
+          <button class="btn-export primary" id="btn-garden-json">
+            <i class="ti ti-file-download" aria-hidden="true"></i>Export JSON
+          </button>
+        </div>
+      </div>
+
+      <div id="combineConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Combine configurator</h2>
+          <p>Place sport + garden inside the roof</p>
+        </div>
+        <div class="section">
+          <label>Roof length (m)</label>
+          <input type="number" id="roofLength" value="15" min="1" step="0.5" />
+        </div>
+        <div class="section">
+          <label>Roof width (m)</label>
+          <input type="number" id="roofWidth" value="10" min="1" step="0.5" />
+        </div>
+        <div class="section">
+          <label>Auto placement</label>
+          <div class="auto-grid">
+            <button class="btn-export" id="btn-auto-left">
+              <i class="ti ti-arrow-left" aria-hidden="true"></i>Left
+            </button>
+            <button class="btn-export" id="btn-auto-right">
+              <i class="ti ti-arrow-right" aria-hidden="true"></i>Right
+            </button>
+            <button class="btn-export" id="btn-auto-front">
+              <i class="ti ti-arrow-down" aria-hidden="true"></i>Front
+            </button>
+            <button class="btn-export" id="btn-auto-behind">
+              <i class="ti ti-arrow-up" aria-hidden="true"></i>Behind
+            </button>
+          </div>
+          <p class="hint">Garden is placed relative to the sport field.</p>
+        </div>
+        <div class="section">
+          <label>Manual placement</label>
+          <p class="hint">Click a shape to select it, drag to move.</p>
+          <button class="btn-export" id="btn-rotate">
+            <i class="ti ti-rotate" aria-hidden="true"></i>Rotate selected 90°
+          </button>
+        </div>
+        <div class="section">
+          <label>Status</label>
+          <p class="hint" id="combine-status">Push a sport or garden configuration to begin.</p>
+        </div>
+        <div class="export-area">
+          <button class="btn-export primary" id="btn-combine-json">
+            <i class="ti ti-file-download" aria-hidden="true"></i>Export Combined JSON
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="canvas-area">
+      <div class="canvas-top">
+        <span class="field-name" id="field-label">Polyvalent field — Mini</span>
+        <span class="badge" id="norm-badge">DIN 18032</span>
+      </div>
+      <div class="canvas-wrap">
+        <svg id="field"
+             viewBox="0 0 600 400"
+             preserveAspectRatio="xMidYMid meet"
+             xmlns="http://www.w3.org/2000/svg">
+        </svg>
+        <svg id="garden-field"
+             viewBox="0 0 600 400"
+             preserveAspectRatio="xMidYMid meet"
+             xmlns="http://www.w3.org/2000/svg"
+             style="display:none">
+        </svg>
+        <svg id="combine-canvas"
+             viewBox="0 0 600 400"
+             preserveAspectRatio="xMidYMid meet"
+             xmlns="http://www.w3.org/2000/svg"
+             style="display:none">
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="gardenData.js"></script>
+  <script src="balls.js"></script>
+  <script src="field.js"></script>
+  <script src="gardenField.js"></script>
+  <script src="combineField.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
