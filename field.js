@@ -20,13 +20,17 @@ function drawField(sport, variant, capacity, isDark) {
   }
   const ox = (VW - fw) / 2, oy = (VH - fh) / 2;
 
-  const floorFill  = isDark ? "#1e2a1e" : "#c8e6c9";
-  const floorGrid  = isDark ? "#2d3d2d" : "#b2d8b4";
+  // Warm, energetic court tones — these are all fast-paced team/court
+  // sports (there's no "zen" entry among the FIELDS presets; that
+  // distinction lives in the activity categories instead, see
+  // ACTIVITY_CATEGORY_COLORS in activityField.js).
+  const floorFill  = isDark ? "#4a2a12" : "#ffcc9e";
+  const floorGrid  = isDark ? "#6b3f1c" : "#ffb366";
   const fieldStroke = isDark ? "#aaa" : "#555";
   const runoffStroke = isDark ? "#555" : "#aaa";
   const dimColor   = isDark ? "#aaa" : "#666";
-  const standFill  = isDark ? "#2a2a3a" : "#e8eaf6";
-  const standStroke = isDark ? "#3a3a5a" : "#9fa8da";
+  const standFill  = isDark ? "#3a2e22" : "#f5e6d8";
+  const standStroke = isDark ? "#8a6a3f" : "#d9a876";
 
   // Stands
   let standsEl = "";
@@ -60,11 +64,11 @@ function drawField(sport, variant, capacity, isDark) {
   // Dimension labels
   const dimsEl = `
     <text x="${ox + fw / 2}" y="${oy - roH - 6}"
-          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="Arial, sans-serif">
+          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif">
       ${d.l} m
     </text>
     <text x="${ox - roW - 8}" y="${oy + fh / 2}"
-          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="Arial, sans-serif"
+          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif"
           transform="rotate(-90, ${ox - roW - 8}, ${oy + fh / 2})">
       ${d.w} m
     </text>

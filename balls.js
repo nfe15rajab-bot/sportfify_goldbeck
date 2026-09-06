@@ -200,6 +200,26 @@ function spawnBurst(sport) {
   for (let i = 0; i < n; i++) setTimeout(() => spawnBall(sport), i * 80);
 }
 
+/* ── Confetti burst — celebrates a fully rule-compliant generated layout ── */
+let confetti = [];
+const CONFETTI_COLORS = ["#ff9f43", "#3d6fff", "#0ea355", "#9c4fe0", "#ef4444", "#ffd93d"];
+
+function spawnConfetti() {
+  for (let i = 0; i < 46; i++) {
+    confetti.push({
+      x: W / 2 + (Math.random() - 0.5) * 80,
+      y: H * 0.32,
+      vx: (Math.random() - 0.5) * 7,
+      vy: -5 - Math.random() * 4,
+      size: 4 + Math.random() * 4,
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.35,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      age: 0, maxAge: 85 + Math.random() * 35,
+    });
+  }
+}
+
 let lastTime = 0;
 function animationLoop(ts) {
   Math.min(ts - lastTime, 32); lastTime = ts;
@@ -219,6 +239,20 @@ function animationLoop(ts) {
   });
   ctx2.globalAlpha = 1;
   balls = balls.filter(b => b.age < b.maxAge);
+
+  confetti.forEach(c => {
+    c.vy += 0.18;
+    c.x += c.vx; c.y += c.vy; c.rot += c.rotV; c.age++;
+    ctx2.save();
+    ctx2.globalAlpha = Math.max(0, 1 - c.age / c.maxAge);
+    ctx2.translate(c.x, c.y);
+    ctx2.rotate(c.rot);
+    ctx2.fillStyle = c.color;
+    ctx2.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+    ctx2.restore();
+  });
+  confetti = confetti.filter(c => c.age < c.maxAge);
+
   requestAnimationFrame(animationLoop);
 }
 

@@ -27,6 +27,15 @@ const gardenState = {
   quality: "medium"
 };
 
+/* ── Planner / Client role ──
+ * Planner = full manual control (raw dimensions, drag/rotate, rule
+ * tuning, CAD exports). Client = curates what goes in (sports, garden
+ * style, entrances) and lets the rule engine arrange it — no fine manual
+ * control. Gated purely client-side via html[data-role]; see style.css
+ * for the .planner-only hide rule.
+ */
+document.documentElement.dataset.role = "planner";
+
 const FIELD_SPORTS = {
   polyvalent: { label: "Polyvalent (multi-sport)", short: "Poly", icon: "ti-square-rounded" },
   basketball: { label: "Basketball", short: "B-Ball", icon: "ti-square-rounded" },
@@ -297,37 +306,100 @@ document.getElementById("btn-push-activity").addEventListener("click", () => {
 });
 
 /* ── Mode Switching ── */
+document.getElementById("modeGuide").addEventListener("click", () => setMode("guide"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
 document.getElementById("modeGarden").addEventListener("click", () => setMode("garden"));
 document.getElementById("modeCombine").addEventListener("click", () => setMode("combine"));
+document.getElementById("modeData").addEventListener("click", () => setMode("data"));
+document.getElementById("btn-guide-start").addEventListener("click", () => setMode("sport"));
 
 function setMode(mode) {
   const isGarden = mode === "garden";
   const isSport = mode === "sport";
-  
+  const isCombine = mode === "combine";
+  const isData = mode === "data";
+  const isGuide = mode === "guide";
+
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
-  
-  document.getElementById("activity-bar").style.display = mode === "combine" ? "none" : "flex";
+
+  // Warm accent for Sport (energetic court sports), green for Garden
+  // (nature) — see the html[data-app-mode] rules in style.css. Combine/Data
+  // don't match either selector, so they fall through to the neutral
+  // default accent unchanged.
+  document.documentElement.dataset.appMode = mode;
+
+  // Combine, Data, and Guide have no per-sport icon rail; Combine also has
+  // no use for the sidebar (its panel content lives beside the roof in
+  // .canvas-area instead), so collapse it there and give that space to
+  // the canvas instead of leaving it empty. Data and Guide keep the
+  // sidebar hidden too — neither has any sidebar controls to show.
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isGuide) ? "none" : "flex";
+  document.querySelector(".panel").style.display = (isCombine || isGuide) ? "none" : "flex";
 
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
   document.getElementById("gardenConfigurator").style.display = isGarden ? "block" : "none";
-  document.getElementById("combineConfigurator").style.display = mode === "combine" ? "block" : "none";
+  // combineConfigurator is itself a flex row (roof pane + step pane) now,
+  // so it needs "flex" rather than "block" to lay its children out
+  // correctly whenever it's re-shown.
+  document.getElementById("combineConfigurator").style.display = isCombine ? "flex" : "none";
+  document.getElementById("dataConfigurator").style.display = isData ? "block" : "none";
 
   document.getElementById("field").style.display = isSport ? "block" : "none";
   document.getElementById("garden-field").style.display = isGarden ? "block" : "none";
-  document.getElementById("combine-canvas").style.display = mode === "combine" ? "block" : "none";
+  // #combine-canvas is nested inside #combineConfigurator now, so toggling
+  // that parent already shows/hides it — no separate toggle needed here.
+  document.getElementById("data-content").style.display = isData ? "block" : "none";
+  document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
 
+  document.getElementById("modeGuide").classList.toggle("active", isGuide);
   document.getElementById("modeSport").classList.toggle("active", isSport);
   document.getElementById("modeGarden").classList.toggle("active", isGarden);
-  document.getElementById("modeCombine").classList.toggle("active", mode === "combine");
+  document.getElementById("modeCombine").classList.toggle("active", isCombine);
+  document.getElementById("modeData").classList.toggle("active", isData);
 
+  // Explicit branch per mode — a bare `else` here previously meant "anything
+  // that isn't garden/sport" silently ran updateCombineUI(), which broke the
+  // instant a 4th mode existed. Guide is static markup — nothing to update.
   if (isGarden) updateGardenUI();
   else if (isSport) updateUI();
-  else updateCombineUI();
-  
+  else if (isCombine) updateCombineUI();
+  else if (isData && typeof updateDataUI === "function") updateDataUI();
+
   activeMode = mode;
 }
+
+/* ── Role toggle (Planner / Client) ──
+ * Swaps a handful of button/label captions to friendlier client-facing
+ * text and disables (not hides) the design-rule number inputs so a
+ * client can still see *why* a layout looks the way it does without
+ * being able to change the thresholds. Hiding the deeper technical
+ * controls (raw dimensions, drag/rotate, CAD exports) is handled purely
+ * in CSS via the .planner-only class — see style.css.
+ */
+function applyRoleLabels(role) {
+  document.querySelectorAll("[data-client-label]").forEach(el => {
+    if (!el.dataset.plannerLabel) el.dataset.plannerLabel = el.textContent;
+    el.textContent = role === "client" ? el.dataset.clientLabel : el.dataset.plannerLabel;
+  });
+}
+
+function setRole(role) {
+  document.documentElement.dataset.role = role;
+  document.getElementById("rolePlanner").classList.toggle("active", role === "planner");
+  document.getElementById("roleClient").classList.toggle("active", role === "client");
+  applyRoleLabels(role);
+  document.querySelectorAll(".rule-input").forEach(el => { el.disabled = role !== "planner"; });
+  if (activeMode === "combine" && typeof drawCombineCanvas === "function") drawCombineCanvas();
+  showToast(
+    role === "client" ? "Client mode" : "Planner mode",
+    role === "client"
+      ? "Pick your sports, garden style, and entrances — the rules handle the rest."
+      : "Full manual control unlocked — fine-tune placement and design rules."
+  );
+}
+document.getElementById("rolePlanner").addEventListener("click", () => setRole("planner"));
+document.getElementById("roleClient").addEventListener("click", () => setRole("client"));
 
 /* ── Revit Live Sync Bridge ── */
 let activeMode = "sport"; // Declared ONCE here!
@@ -371,7 +443,10 @@ async function pollRevitBoundary() {
     if (statusEl) statusEl.textContent = `🔄 Live from Revit: ${detail}.`;
     showToast("Roof boundary pushed from Revit", detail + (activeMode !== "combine" ? " — switch to Combine to view." : ""));
 
-    if (activeMode === "combine" && typeof drawCombineCanvas === "function") drawCombineCanvas();
+    if (activeMode === "combine") {
+      if (typeof refreshSuggestions === "function") refreshSuggestions();
+      else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+    }
   } catch (err) {
     if(statusEl) statusEl.textContent = "Not connected to Revit — use manual import below.";
   }
@@ -441,8 +516,55 @@ document.getElementById("btn-push-garden").addEventListener("click", () => {
 });
 
 /* ── Combine Board Core ── */
-const combineState = { roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0 }, items: [], selectedId: null };
+const combineState = {
+  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0 },
+  items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
+  suggestions: [],
+};
 let combineItemCounter = 0;
+
+const siteState = { lat: null, lng: null, address: "", northDeg: 0, date: null, time: "12:00" };
+
+/**
+ * ── Combine wizard: step-by-step panel navigation ──
+ * The DOM itself is the source of truth for which step is showing (each
+ * step's hidden attribute), so nothing needs to re-sync this on mode
+ * switches — the panel is left exactly as the user left it.
+ */
+const WIZARD_STEPS = 4;
+let combineWizardStep = 1;
+const wizardStepsVisited = new Set([1]);
+
+function setWizardStep(n) {
+  combineWizardStep = Math.max(1, Math.min(WIZARD_STEPS, n));
+  wizardStepsVisited.add(combineWizardStep);
+  document.querySelectorAll(".wizard-step-content").forEach(el => {
+    const isCurrent = Number(el.dataset.stepContent) === combineWizardStep;
+    el.hidden = !isCurrent;
+    if (isCurrent) {
+      // Restart the fade-in on every step change, not just first reveal —
+      // same reflow trick used for the rules panel / score badge pops.
+      el.classList.remove("step-enter");
+      void el.offsetWidth;
+      el.classList.add("step-enter");
+    }
+  });
+  document.querySelectorAll(".wizard-step-btn").forEach(btn => {
+    const step = Number(btn.dataset.step);
+    btn.classList.toggle("active", step === combineWizardStep);
+    btn.classList.toggle("visited", wizardStepsVisited.has(step) && step !== combineWizardStep);
+  });
+  document.getElementById("wizard-back").style.display = combineWizardStep === 1 ? "none" : "flex";
+  document.getElementById("wizard-next").style.display = combineWizardStep === WIZARD_STEPS ? "none" : "flex";
+}
+
+document.getElementById("wizard-nav").addEventListener("click", e => {
+  const btn = e.target.closest(".wizard-step-btn");
+  if (btn) setWizardStep(Number(btn.dataset.step));
+});
+document.getElementById("wizard-back").addEventListener("click", () => setWizardStep(combineWizardStep - 1));
+document.getElementById("wizard-next").addEventListener("click", () => setWizardStep(combineWizardStep + 1));
+setWizardStep(1);
 
 function addCombineItem({ kind, label, length_m, width_m, sourceJson }) {
   const index = combineItemCounter++;
@@ -452,6 +574,7 @@ function addCombineItem({ kind, label, length_m, width_m, sourceJson }) {
   };
   combineState.items.push(item);
   combineState.selectedId = item.id;
+  combineState.selectedKind = "item";
   return item;
 }
 
@@ -464,11 +587,94 @@ document.getElementById("btn-push-sport").addEventListener("click", () => {
 function updateCombineUI() {
   document.getElementById("field-label").textContent = "Combine — roof layout";
   document.getElementById("norm-badge").textContent  = "Prototype";
+  if(typeof initSiteMap === "function") initSiteMap();
   if(typeof drawCombineCanvas === "function") drawCombineCanvas();
+  if(typeof refreshSuggestions === "function") refreshSuggestions();
 }
 
-document.getElementById("roofLength").addEventListener("input", e => { combineState.roof.length = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
-document.getElementById("roofWidth").addEventListener("input", e => { combineState.roof.width = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+/** Recomputes suggested spots for whichever item is currently selected (none selected → empty list), then redraws. */
+function refreshSuggestions() {
+  const item = combineState.selectedKind === "item" ? combineState.items.find(i => i.id === combineState.selectedId) : null;
+  combineState.suggestions = item && typeof suggestPositionsForItem === "function" ? suggestPositionsForItem(item, combineState, DESIGN_RULES) : [];
+  if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+}
+
+function applySuggestion(index) {
+  if (combineState.selectedKind !== "item") return;
+  const item = combineState.items.find(i => i.id === combineState.selectedId);
+  const cand = combineState.suggestions[index];
+  if (!item || !cand) return;
+  // Rotation swaps the rendered footprint immediately (animateItemsTo only
+  // tweens x/y), then the move itself eases into place — same tween used
+  // for auto-arrange, so applying a suggestion reads as a deliberate slide
+  // rather than a jump-cut.
+  item.rotation = cand.rotation;
+  animateItemsTo(new Map([[item.id, { x: cand.x_m, y: cand.y_m }]]), () => {
+    refreshSuggestions();
+    showToast("Suggestion applied", cand.reason);
+  });
+}
+
+/**
+ * Raises DESIGN_RULES to at least the area-aware recommendation (never
+ * lowers a value the planner already set higher) and reflects the new
+ * values in the rule inputs immediately — same pattern as any other
+ * DESIGN_RULES mutation in this file.
+ */
+function applySmartRuleRecommendation(rec) {
+  DESIGN_RULES.minEntryPoints = Math.max(DESIGN_RULES.minEntryPoints, rec.minEntryPoints);
+  DESIGN_RULES.circulationWidth_m = Math.max(DESIGN_RULES.circulationWidth_m, rec.circulationWidth_m);
+  document.getElementById("ruleMinEntries").value = DESIGN_RULES.minEntryPoints;
+  document.getElementById("ruleCirculationWidth").value = DESIGN_RULES.circulationWidth_m;
+  if (typeof refreshSuggestions === "function") refreshSuggestions();
+  else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  showToast("Smart rules applied", `Circulation width and minimum entries raised for ~${rec.totalAreaM2} m² programmed.`);
+}
+
+/** Refreshes the site-location readout + sun compass/summary from siteState — mirrors updateGardenUI/updateCombineUI's role for the new Site & Sun panel. */
+function updateSiteUI() {
+  const coordsEl = document.getElementById("site-coords-status");
+  if (coordsEl) {
+    coordsEl.textContent = siteState.lat == null
+      ? "No location set — click the map to place the site."
+      : `${siteState.lat.toFixed(5)}, ${siteState.lng.toFixed(5)}${siteState.address ? " — " + siteState.address : ""}`;
+  }
+  const summaryEl = document.getElementById("sun-summary");
+  if (summaryEl) {
+    const sun = typeof getSunPosition === "function" ? getSunPosition(siteState) : null;
+    if (!sun) {
+      summaryEl.textContent = "Set a site location to see sun position and shading guidance.";
+    } else {
+      const times = typeof getSunTimes === "function" ? getSunTimes(siteState) : null;
+      const fmt = t => t ? t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
+      summaryEl.textContent = sun.altitudeDeg > 0
+        ? `Sun at ${Math.round(sun.azimuthDeg)}° azimuth, ${Math.round(sun.altitudeDeg)}° above horizon. Sunrise ${fmt(times?.sunrise)}, sunset ${fmt(times?.sunset)}.`
+        : `Sun is below the horizon at this time. Sunrise ${fmt(times?.sunrise)}, sunset ${fmt(times?.sunset)}.`;
+    }
+  }
+  if (typeof drawSunCompass === "function") drawSunCompass(siteState);
+}
+
+document.getElementById("siteNorthDeg").addEventListener("input", e => {
+  siteState.northDeg = Number(e.target.value) || 0;
+  document.getElementById("site-north-val").textContent = `${siteState.northDeg}°`;
+  updateSiteUI();
+});
+document.getElementById("siteDate").addEventListener("input", e => { siteState.date = e.target.value; updateSiteUI(); });
+document.getElementById("siteTime").addEventListener("input", e => { siteState.time = e.target.value; updateSiteUI(); });
+
+function doSiteAddressSearch() {
+  const q = document.getElementById("siteAddressSearch").value.trim();
+  if (q && typeof searchAddress === "function") searchAddress(q);
+}
+document.getElementById("btn-site-search").addEventListener("click", doSiteAddressSearch);
+document.getElementById("siteAddressSearch").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); doSiteAddressSearch(); }
+});
+document.getElementById("btn-site-geolocate").addEventListener("click", () => { if (typeof useMyLocation === "function") useMyLocation(); });
+
+document.getElementById("roofLength").addEventListener("input", e => { combineState.roof.length = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("roofWidth").addEventListener("input", e => { combineState.roof.width = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 // Manual Revit Import 
 document.getElementById("btn-import-revit").addEventListener("click", () => { document.getElementById("import-revit-file").click(); });
@@ -492,8 +698,8 @@ document.getElementById("import-revit-file").addEventListener("change", e => {
       document.getElementById("roofWidth").value  = roof.width_m;
       
       if(statusEl) statusEl.textContent = `Imported ${roof.length_m}m × ${roof.width_m}m from Revit.`;
-      if(typeof drawCombineCanvas === "function") drawCombineCanvas();
-    } catch (err) { 
+      if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas();
+    } catch (err) {
       if(statusEl) statusEl.textContent = `Import failed: ${err.message}`;
     }
   };
@@ -502,15 +708,25 @@ document.getElementById("import-revit-file").addEventListener("change", e => {
 });
 
 document.getElementById("btn-rotate").addEventListener("click", () => {
+  if (combineState.selectedKind !== "item") return;
   const item = combineState.items.find(i => i.id === combineState.selectedId);
   if (item) { item.rotation = (item.rotation + 90) % 180; if(typeof drawCombineCanvas === "function") drawCombineCanvas(); }
 });
 document.getElementById("btn-remove-selected").addEventListener("click", () => {
-  if (combineState.selectedId) { combineState.items = combineState.items.filter(i => i.id !== combineState.selectedId); combineState.selectedId = null; if(typeof drawCombineCanvas === "function") drawCombineCanvas(); }
+  if (!combineState.selectedId) return;
+  if (combineState.selectedKind === "entry") {
+    combineState.entryPoints = combineState.entryPoints.filter(e => e.id !== combineState.selectedId);
+  } else {
+    combineState.items = combineState.items.filter(i => i.id !== combineState.selectedId);
+  }
+  combineState.selectedId = null;
+  combineState.selectedKind = null;
+  if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas();
 });
-document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.selectedId = null; if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.selectedId = null; combineState.selectedKind = null; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 function autoPlace(direction) {
+  if (combineState.selectedKind !== "item") return;
   const item = combineState.items.find(i => i.id === combineState.selectedId);
   if (!item) return;
   const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
@@ -527,47 +743,78 @@ document.getElementById("btn-auto-right").addEventListener("click", () => autoPl
 document.getElementById("btn-auto-front").addEventListener("click", () => autoPlace("front"));
 document.getElementById("btn-auto-behind").addEventListener("click", () => autoPlace("behind"));
 
-/* ── Auto-Arrange Algorithm (2D Grid Packing) ── */
+/* ── Entry point tool ── */
+document.getElementById("btn-add-entry").addEventListener("click", () => {
+  combineState.tool = combineState.tool === "addEntry" ? null : "addEntry";
+  syncAddEntryTool();
+});
+
+/* ── Design rules panel — planner tunes the thresholds, client sees them applied (inputs disabled via setRole) ── */
+function bindRuleInput(id, key, parse) {
+  document.getElementById(id).addEventListener("input", e => {
+    const v = (parse || Number)(e.target.value);
+    if (!Number.isFinite(v) || v < 0) return;
+    DESIGN_RULES[key] = v;
+    if (activeMode !== "combine") return;
+    if (typeof refreshSuggestions === "function") refreshSuggestions();
+    else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  });
+}
+bindRuleInput("ruleClearance", "clearance_m");
+bindRuleInput("ruleSetback", "boundarySetback_m");
+bindRuleInput("ruleCirculationWidth", "circulationWidth_m");
+bindRuleInput("ruleMinEntries", "minEntryPoints", v => Math.max(1, Math.round(Number(v))));
+
+/* ── Generate Layout: rule-based auto-arrange, tweened into place ── */
+function animateItemsTo(placements, onDone) {
+  const items = combineState.items.filter(it => placements.has(it.id));
+  if (items.length === 0) { if (onDone) onDone(); return; }
+  const from = new Map(items.map(it => [it.id, { x: it.x_m, y: it.y_m }]));
+  const duration = 500;
+  const start = performance.now();
+  const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+  function frame(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const k = ease(t);
+    items.forEach(it => {
+      const f = from.get(it.id), to = placements.get(it.id);
+      it.x_m = Math.round((f.x + (to.x - f.x) * k) * 10) / 10;
+      it.y_m = Math.round((f.y + (to.y - f.y) * k) * 10) / 10;
+    });
+    if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+    if (t < 1) requestAnimationFrame(frame);
+    else if (onDone) onDone();
+  }
+  requestAnimationFrame(frame);
+}
+
 document.getElementById("btn-auto-arrange").addEventListener("click", () => {
-  if (combineState.items.length === 0) return;
-  const roof = combineState.roof;
-  const step = 0.5;
+  if (combineState.items.length === 0) { showToast("Nothing to arrange", "Push a sport, activity, or garden piece first."); return; }
 
-  const sortedItems = [...combineState.items].sort((a, b) => {
-    const fpA = typeof getFootprint === "function" ? getFootprint(a) : { w: a.length_m, h: a.width_m };
-    const fpB = typeof getFootprint === "function" ? getFootprint(b) : { w: b.length_m, h: b.width_m };
-    return (fpB.w * fpB.h) - (fpA.w * fpA.h);
-  });
+  const { placements, unplaced } = ruleBasedArrange(combineState, DESIGN_RULES);
 
-  const overlaps = (box1, box2) => !(box1.x + box1.w <= box2.x || box2.x + box2.w <= box1.x || box1.y + box1.h <= box2.y || box2.y + box2.h <= box1.y);
-  const arranged = [];
-  let unplacedCount = 0;
-
-  sortedItems.forEach(item => {
-    const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
-    let placed = false;
-
-    for (let y = 0; y <= roof.width - fp.h; y += step) {
-      for (let x = 0; x <= roof.length - fp.w; x += step) {
-        const candidateBox = { x, y, w: fp.w, h: fp.h };
-        const hasOverlap = arranged.some(arr => {
-          const arrFp = typeof getFootprint === "function" ? getFootprint(arr) : { w: arr.length_m, h: arr.width_m };
-          return overlaps(candidateBox, { x: arr.x_m, y: arr.y_m, w: arrFp.w, h: arrFp.h });
-        });
-        
-        if (!hasOverlap) {
-          item.x_m = x; item.y_m = y;
-          arranged.push(item); placed = true; break;
-        }
-      }
-      if (placed) break;
+  animateItemsTo(placements, () => {
+    // animateItemsTo's own frame loop already redraws every tick, but it
+    // never recomputes combineState.suggestions — refresh once here so a
+    // stale candidate list doesn't linger after positions moved.
+    if (typeof refreshSuggestions === "function") refreshSuggestions();
+    if (unplaced.length > 0) {
+      showToast("Layout generated", `${unplaced.length} piece(s) didn't fit their zone — try a larger site or fewer pieces.`);
+      return;
     }
-    if (!placed) unplacedCount++;
+    const overlaps = findOverlappingIds(combineState.items, DESIGN_RULES.clearance_m);
+    const circulation = computeCirculation(combineState, DESIGN_RULES);
+    const allGood = overlaps.size === 0 && circulation.unreachable.size === 0 && combineState.entryPoints.length >= DESIGN_RULES.minEntryPoints;
+    if (allGood) {
+      showToast("Layout generated 🎉", "All rules satisfied — sports and gardens arranged with clear circulation.");
+      if (typeof spawnConfetti === "function") spawnConfetti();
+    } else if (combineState.entryPoints.length < DESIGN_RULES.minEntryPoints) {
+      showToast("Layout generated", "Add an entry point so circulation can be checked.");
+    } else {
+      showToast("Layout generated", "Some rules still need attention — check the checklist below.");
+    }
   });
-
-  if(typeof drawCombineCanvas === "function") drawCombineCanvas();
-  if (unplacedCount > 0) showToast("Auto-Arrange Warning", `${unplacedCount} item(s) couldn't fit inside the roof boundary. Increase roof dimensions or remove items.`);
-  else showToast("Auto-Arrange Complete", "All items successfully packed into the roof footprint.");
 });
 
 /* ── Combined JSON export (Revit Optimized) ── */
@@ -630,6 +877,15 @@ document.getElementById("btn-combine-json").addEventListener("click", () => {
   URL.revokeObjectURL(a.href);
 });
 
+/* ── Data tab: domain switch + search — render/fetch logic lives in dataTab.js ── */
+document.getElementById("data-domain-btns").addEventListener("click", e => {
+  const btn = e.target.closest(".q-btn");
+  if (btn && typeof setDataDomain === "function") setDataDomain(btn.dataset.domain);
+});
+document.getElementById("dataSearch").addEventListener("input", e => {
+  if (typeof setDataSearch === "function") setDataSearch(e.target.value);
+});
+
 function showToast(title, message) {
   const container = document.getElementById("toast-container");
   if (!container) return;
@@ -643,6 +899,9 @@ function showToast(title, message) {
 
 /* ── Init ── */
 buildActivityBar();
-setMode("sport");
+siteState.date = typeof todayIsoDate === "function" ? todayIsoDate() : siteState.date;
+document.getElementById("siteDate").value = siteState.date;
+setMode("guide");
 if(typeof initCombineInteractions === "function") initCombineInteractions();
+if(typeof updateSiteUI === "function") updateSiteUI();
 startRevitPolling();

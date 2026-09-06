@@ -4,8 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/tabler-icons.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <div class="app">
@@ -13,9 +17,20 @@
     <div id="toast-container" class="toast-container"></div>
 
     <div class="mode-toggle">
-      <button id="modeSport" class="mode-btn active">Sport</button>
+      <button id="modeGuide" class="mode-btn active">Guide</button>
+      <button id="modeSport" class="mode-btn">Sport</button>
       <button id="modeGarden" class="mode-btn">Garden</button>
       <button id="modeCombine" class="mode-btn">Combine</button>
+      <button id="modeData" class="mode-btn">Data</button>
+    </div>
+
+    <div class="role-toggle" id="role-toggle" title="Planner: full manual control. Client: pick preferences, the rules arrange it.">
+      <button id="rolePlanner" class="role-btn active">
+        <i class="ti ti-ruler-2" aria-hidden="true"></i>Planner
+      </button>
+      <button id="roleClient" class="role-btn">
+        <i class="ti ti-user" aria-hidden="true"></i>Client
+      </button>
     </div>
 
     <nav class="activity-bar" id="activity-bar"></nav>
@@ -46,9 +61,9 @@
           <div class="section">
             <label>Material quality</label>
             <div class="quality-btns">
-              <div class="q-btn" data-q="low">Low</div>
-              <div class="q-btn active" data-q="medium">Medium</div>
-              <div class="q-btn" data-q="high">High</div>
+              <div class="q-btn" data-q="low" data-client-label="Economy">Low</div>
+              <div class="q-btn active" data-q="medium" data-client-label="Standard">Medium</div>
+              <div class="q-btn" data-q="high" data-client-label="Premium">High</div>
             </div>
           </div>
           <div class="section">
@@ -64,10 +79,10 @@
             <button class="btn-export accent" id="btn-push-sport">
               <i class="ti ti-arrow-bar-to-right" aria-hidden="true"></i>Push to Combine
             </button>
-            <button class="btn-export primary" id="btn-json">
+            <button class="btn-export primary planner-only" id="btn-json">
               <i class="ti ti-file-download" aria-hidden="true"></i>Export JSON
             </button>
-            <button class="btn-export" id="btn-dxf">
+            <button class="btn-export planner-only" id="btn-dxf">
               <i class="ti ti-vector" aria-hidden="true"></i>Export DXF
             </button>
           </div>
@@ -78,11 +93,11 @@
             <label>Category</label>
             <p class="hint" id="activity-category">—</p>
           </div>
-          <div class="section">
+          <div class="section planner-only">
             <label>Length (m)</label>
             <input type="number" id="activityLength" min="0.5" step="0.1" />
           </div>
-          <div class="section">
+          <div class="section planner-only">
             <label>Width (m)</label>
             <input type="number" id="activityWidth" min="0.5" step="0.1" />
             <p class="hint">Defaults come from the reference sheet — edit freely, or leave as-is.</p>
@@ -105,16 +120,16 @@
           <div class="section">
             <label>Material quality</label>
             <div class="quality-btns" id="activity-quality-btns">
-              <div class="q-btn" data-q="low">Low</div>
-              <div class="q-btn active" data-q="medium">Medium</div>
-              <div class="q-btn" data-q="high">High</div>
+              <div class="q-btn" data-q="low" data-client-label="Economy">Low</div>
+              <div class="q-btn active" data-q="medium" data-client-label="Standard">Medium</div>
+              <div class="q-btn" data-q="high" data-client-label="Premium">High</div>
             </div>
           </div>
           <div class="export-area">
             <button class="btn-export accent" id="btn-push-activity">
               <i class="ti ti-arrow-bar-to-right" aria-hidden="true"></i>Push to Combine
             </button>
-            <button class="btn-export primary" id="btn-activity-json">
+            <button class="btn-export primary planner-only" id="btn-activity-json">
               <i class="ti ti-file-download" aria-hidden="true"></i>Export JSON
             </button>
           </div>
@@ -138,7 +153,7 @@
           <p class="hint" id="theme-desc">Manual dimensional adjustments enabled.</p>
         </div>
 
-        <div class="section">
+        <div class="section planner-only">
           <label>Element Footprint</label>
           <div class="garden-dims-row">
             <div>
@@ -163,13 +178,13 @@
         <div class="section">
           <label>Material Quality</label>
           <div class="quality-btns" id="garden-quality-setting">
-            <div class="q-btn" data-q="low">Low</div>
-            <div class="q-btn active" data-q="medium">Medium</div>
-            <div class="q-btn" data-q="high">High</div>
+            <div class="q-btn" data-q="low" data-client-label="Economy">Low</div>
+            <div class="q-btn active" data-q="medium" data-client-label="Standard">Medium</div>
+            <div class="q-btn" data-q="high" data-client-label="Premium">High</div>
           </div>
         </div>
 
-        <div class="section">
+        <div class="section planner-only">
           <label>Engineered Build-Up Layers</label>
           <div class="dims" id="garden-layer-dims"></div>
         </div>
@@ -178,77 +193,37 @@
           <button class="btn-export accent" id="btn-push-garden">
             <i class="ti ti-arrow-bar-to-right" aria-hidden="true"></i>Push to Combine
           </button>
-          <button class="btn-export primary" id="btn-garden-json">
+          <button class="btn-export primary planner-only" id="btn-garden-json">
             <i class="ti ti-file-download" aria-hidden="true"></i>Export Garden JSON
           </button>
         </div>
       </div>
 
-      <div id="combineConfigurator" style="display:none">
+      <div id="dataConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Combine configurator</h2>
-          <p>Place sport + garden inside the roof</p>
+          <h2>Reference data</h2>
+          <p>Sports, materials, norms &amp; vegetal palettes for Germany</p>
         </div>
+
         <div class="section">
-          <label>Roof boundary</label>
-          <button class="btn-export accent" id="btn-import-revit">
-            <i class="ti ti-upload" aria-hidden="true"></i>Import from Revit
-          </button>
-          <input type="file" id="import-revit-file" accept=".json" style="display:none" />
-          <p class="hint" id="import-revit-status">No import yet — using manual values below.</p>
-        </div>
-        <div class="section">
-          <label>Roof length (m)</label>
-          <input type="number" id="roofLength" value="15" min="1" step="0.5" />
-        </div>
-        <div class="section">
-          <label>Roof width (m)</label>
-          <input type="number" id="roofWidth" value="10" min="1" step="0.5" />
-        </div>
-        <div class="section">
-          <label>Auto placement</label>
-          <button class="btn-export accent" id="btn-auto-arrange" style="margin-bottom: 6px;">
-            <i class="ti ti-layout-grid-add" aria-hidden="true"></i>Auto-Arrange All
-          </button>
-          <div class="auto-grid">
-            <button class="btn-export" id="btn-auto-left">
-              <i class="ti ti-arrow-left" aria-hidden="true"></i>Left
-            </button>
-            <button class="btn-export" id="btn-auto-right">
-              <i class="ti ti-arrow-right" aria-hidden="true"></i>Right
-            </button>
-            <button class="btn-export" id="btn-auto-front">
-              <i class="ti ti-arrow-down" aria-hidden="true"></i>Front
-            </button>
-            <button class="btn-export" id="btn-auto-behind">
-              <i class="ti ti-arrow-up" aria-hidden="true"></i>Behind
-            </button>
+          <label>Domain</label>
+          <div class="quality-btns" id="data-domain-btns">
+            <div class="q-btn active" data-domain="sports">Sports</div>
+            <div class="q-btn" data-domain="vegetation">Vegetation</div>
           </div>
-          <p class="hint">Auto-arrange packs all items. Arrows snap the selected piece to an edge.</p>
         </div>
+
         <div class="section">
-          <label>Manual placement</label>
-          <p class="hint">Click a piece to select it, drag anywhere to move it. Push the same sport/activity multiple times to place multiple copies.</p>
-          <button class="btn-export" id="btn-rotate">
-            <i class="ti ti-rotate" aria-hidden="true"></i>Rotate selected 90°
-          </button>
-          <button class="btn-export" id="btn-remove-selected" style="margin-top:6px">
-            <i class="ti ti-trash" aria-hidden="true"></i>Remove selected
-          </button>
-          <button class="btn-export" id="btn-clear-all" style="margin-top:6px">
-            <i class="ti ti-eraser" aria-hidden="true"></i>Clear all pieces
-          </button>
+          <label>Search</label>
+          <input type="search" id="dataSearch" placeholder="Filter by name…" />
         </div>
+
         <div class="section">
           <label>Status</label>
-          <p class="hint" id="combine-status">Push a sport or garden configuration to begin.</p>
-        </div>
-        <div class="export-area">
-          <button class="btn-export primary" id="btn-combine-json">
-            <i class="ti ti-file-download" aria-hidden="true"></i>Export Combined JSON
-          </button>
+          <p class="hint" id="data-status">Loading…</p>
         </div>
       </div>
+
     </aside>
 
     <div class="canvas-area">
@@ -259,19 +234,285 @@
       <div class="canvas-wrap">
         <svg id="field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
         <svg id="garden-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
-        <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
+
+        <div id="data-content" style="display:none"></div>
+
+        <div id="guide-content" style="display:block">
+          <div class="guide-wrap">
+            <div class="guide-hero">
+              <h1>Design your roof, your way</h1>
+              <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Here's how it thinks.</p>
+            </div>
+
+            <div class="step-grid guide-grid">
+              <div class="section">
+                <label>Grid-based <span class="mode-status available">Available now</span></label>
+                <svg viewBox="0 0 100 74" class="philosophy-diagram grid" aria-hidden="true">
+                  <rect x="4" y="4" width="18" height="18" rx="3"/><rect x="28" y="4" width="18" height="18" rx="3"/><rect x="52" y="4" width="18" height="18" rx="3"/><rect x="76" y="4" width="18" height="18" rx="3"/>
+                  <rect x="4" y="28" width="18" height="18" rx="3"/><rect x="28" y="28" width="18" height="18" rx="3"/><rect x="52" y="28" width="18" height="18" rx="3"/><rect x="76" y="28" width="18" height="18" rx="3"/>
+                  <rect x="4" y="52" width="18" height="18" rx="3"/><rect x="28" y="52" width="18" height="18" rx="3"/><rect x="52" y="52" width="18" height="18" rx="3"/><rect x="76" y="52" width="18" height="18" rx="3"/>
+                </svg>
+                <p class="hint">Define a base module and every piece aligns to it — orderly, predictable, easy to extend. Combine's rule-based auto-arrange already produces a tidy, grid-like default layout today.</p>
+              </div>
+              <div class="section">
+                <label>Fractal <span class="mode-status vision">Vision</span></label>
+                <svg viewBox="0 0 100 74" class="philosophy-diagram fractal" aria-hidden="true">
+                  <rect x="3" y="3" width="94" height="68" rx="2" class="diagram-outline"/>
+                  <line x1="50" y1="3" x2="50" y2="71" class="diagram-outline"/>
+                  <line x1="3" y1="37" x2="50" y2="37" class="diagram-outline"/>
+                  <line x1="75" y1="37" x2="75" y2="71" class="diagram-outline"/>
+                  <path d="M12,20 L40,20 L40,55 L62,55 L62,15 L90,15" class="diagram-path"/>
+                </svg>
+                <p class="hint">Circulation branches recursively, like a maze, subdividing the roof into progressively smaller zones instead of one central corridor. The circulation engine's grid + pathfinding core is already built toward this.</p>
+              </div>
+              <div class="section">
+                <label>Organic <span class="mode-status vision">Vision</span></label>
+                <svg viewBox="0 0 100 74" class="philosophy-diagram organic" aria-hidden="true">
+                  <path d="M18,20 C8,30 8,50 22,60 C36,70 60,70 78,55 C94,42 90,18 72,10 C55,3 30,8 18,20 Z" class="diagram-blob"/>
+                  <circle cx="32" cy="34" r="6" class="diagram-dot"/>
+                  <circle cx="55" cy="44" r="5" class="diagram-dot"/>
+                  <circle cx="48" cy="24" r="4" class="diagram-dot"/>
+                </svg>
+                <p class="hint">Draw the boundary by hand — zones adapt to a freeform shape instead of a rectangle, the way a real garden follows the land rather than a grid. Combine already renders an arbitrary polygon boundary when one is imported from Revit; hand-drawing one yourself is the natural next step.</p>
+              </div>
+            </div>
+
+            <div class="guide-hero guide-section-spacer">
+              <h2>The rules every layout follows</h2>
+              <p class="hint">Whichever philosophy a layout comes from, four rules decide whether it's actually usable — the same ones Combine's auto-arrange and suggested spots already respect (see them live, with the same wording, in Combine's Rules step).</p>
+            </div>
+
+            <div class="rule-explain-grid guide-grid">
+              <div class="rule-explain">
+                <div class="rule-explain-head"><span>Clearance</span></div>
+                <p class="hint">Minimum gap kept between any two pieces, so there's room to walk between them.</p>
+              </div>
+              <div class="rule-explain">
+                <div class="rule-explain-head"><span>Boundary setback</span></div>
+                <p class="hint">Minimum gap kept between any piece and the roof edge — a safety margin around the perimeter.</p>
+              </div>
+              <div class="rule-explain">
+                <div class="rule-explain-head"><span>Circulation width</span></div>
+                <p class="hint">How wide a gap must be to count as a real walkway — narrower gaps don't connect a piece to an entrance, even if nothing overlaps.</p>
+              </div>
+              <div class="rule-explain">
+                <div class="rule-explain-head"><span>Entry points</span></div>
+                <p class="hint">Every piece needs a walkable path back to at least one entrance.</p>
+              </div>
+            </div>
+
+            <div class="section span-2 guide-section-spacer">
+              <label>Smarter, area-aware recommendations</label>
+              <p class="hint">These four rules aren't one-size-fits-all. Sportify also looks at how much you've actually programmed onto the roof — as the total footprint grows, it recommends wider circulation and more entrances, the same way a real building code scales egress with occupant load. It's a suggestion, not a forced override — the planner still decides. You'll see it live, with an Apply button, in Combine's Rules step once a few pieces are placed.</p>
+            </div>
+
+            <div class="guide-cta">
+              <button class="btn-export primary" id="btn-guide-start"><i class="ti ti-arrow-right" aria-hidden="true"></i>Start in Sport mode</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="combineConfigurator" style="display:none">
+          <div class="combine-roof-pane">
+            <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+
+          <div class="combine-step-pane">
+            <div class="wizard-nav" id="wizard-nav">
+              <button class="wizard-step-btn active" data-step="1"><span class="wizard-step-num">1</span>Site</button>
+              <button class="wizard-step-btn" data-step="2"><span class="wizard-step-num">2</span>Rules</button>
+              <button class="wizard-step-btn" data-step="3"><span class="wizard-step-num">3</span>Arrange</button>
+              <button class="wizard-step-btn" data-step="4"><span class="wizard-step-num">4</span>Review</button>
+            </div>
+
+            <div class="wizard-step-body">
+              <div class="wizard-step-content" data-step-content="1">
+                <p class="hint step-intro">Set the roof size and, optionally, where it really sits — that powers the sun-position readout used later for shading decisions.</p>
+
+                <div class="step-grid">
+                  <div class="section planner-only">
+                    <label>Roof boundary</label>
+                    <button class="btn-export accent" id="btn-import-revit">
+                      <i class="ti ti-upload" aria-hidden="true"></i>Import from Revit
+                    </button>
+                    <input type="file" id="import-revit-file" accept=".json" style="display:none" />
+                    <p class="hint" id="import-revit-status">No import yet — using manual values below.</p>
+                  </div>
+                  <div class="section planner-only">
+                    <label>Roof size (m)</label>
+                    <div class="input-row">
+                      <input type="number" id="roofLength" value="15" min="1" step="0.5" title="Length (m)" />
+                      <input type="number" id="roofWidth" value="10" min="1" step="0.5" title="Width (m)" />
+                    </div>
+                    <p class="hint">Length × width.</p>
+                  </div>
+                  <div class="section planner-only span-2">
+                    <label>Site location</label>
+                    <div id="site-map" class="site-map"></div>
+                    <div class="site-address-row">
+                      <input type="text" id="siteAddressSearch" placeholder="Search an address…" />
+                      <button class="btn-export" id="btn-site-search" title="Search"><i class="ti ti-search" aria-hidden="true"></i></button>
+                      <button class="btn-export" id="btn-site-geolocate" title="Use my current location"><i class="ti ti-current-location" aria-hidden="true"></i></button>
+                    </div>
+                    <p class="hint" id="site-coords-status">No location set — click the map to place the site.</p>
+                  </div>
+                  <div class="section planner-only">
+                    <label>Roof orientation</label>
+                    <input type="range" id="siteNorthDeg" min="0" max="359" step="1" value="0" />
+                    <p class="hint">Degrees clockwise from the top of the canvas to true north — <span id="site-north-val">0°</span>.</p>
+                  </div>
+                  <div class="section">
+                    <label>Sun date &amp; time</label>
+                    <div class="input-row">
+                      <input type="date" id="siteDate" />
+                      <input type="time" id="siteTime" value="12:00" />
+                    </div>
+                  </div>
+                  <div class="section span-2">
+                    <label>Sun position</label>
+                    <div id="sun-compass" class="sun-compass"></div>
+                    <p class="hint" id="sun-summary">Set a site location to see sun position and shading guidance.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wizard-step-content" data-step-content="2" hidden>
+                <p class="hint step-intro">These four rules decide what counts as a valid layout — auto-arrange and suggested spots both respect them.</p>
+
+                <div class="section">
+                  <label>Design rules</label>
+                  <div class="rule-explain-grid">
+                    <div class="rule-explain">
+                      <div class="rule-explain-head"><span>Clearance (m)</span><input type="number" id="ruleClearance" class="rule-input" value="1.0" min="0" step="0.1" /></div>
+                      <p class="hint">Minimum gap kept between any two pieces, so there's room to walk between them.</p>
+                    </div>
+                    <div class="rule-explain">
+                      <div class="rule-explain-head"><span>Boundary setback (m)</span><input type="number" id="ruleSetback" class="rule-input" value="1.5" min="0" step="0.1" /></div>
+                      <p class="hint">Minimum gap kept between any piece and the roof edge — a safety margin around the perimeter.</p>
+                    </div>
+                    <div class="rule-explain">
+                      <div class="rule-explain-head"><span>Circulation width (m)</span><input type="number" id="ruleCirculationWidth" class="rule-input" value="1.2" min="0.5" step="0.1" /></div>
+                      <p class="hint">How wide a gap must be to count as a real walkway — narrower gaps don't connect a piece to an entrance, even if nothing overlaps.</p>
+                    </div>
+                    <div class="rule-explain">
+                      <div class="rule-explain-head"><span>Min. entry points</span><input type="number" id="ruleMinEntries" class="rule-input" value="1" min="1" step="1" /></div>
+                      <p class="hint">How many entrances the layout needs. Every piece must have a walkable path back to at least one.</p>
+                    </div>
+                  </div>
+                  <p class="hint">The planner tunes these — the client sees them applied but can't change them.</p>
+                </div>
+
+                <div class="section">
+                  <label>Smart recommendation</label>
+                  <div id="smart-rule-advisory" class="smart-rule-advisory"></div>
+                </div>
+
+                <div class="section">
+                  <label>Entry points</label>
+                  <button class="btn-export accent" id="btn-add-entry">
+                    <i class="ti ti-door-enter" aria-hidden="true"></i>Add Entry Point
+                  </button>
+                  <p class="hint" id="add-entry-hint" style="display:none">Tool active — click near the site edge to drop one pin (click the button again to cancel).</p>
+                  <p class="hint">Satisfies the "min. entry points" rule above and gives circulation somewhere to connect to.</p>
+                </div>
+              </div>
+
+              <div class="wizard-step-content" data-step-content="3" hidden>
+                <p class="hint step-intro">Auto-arrange fits everything at once; suggested spots fine-tune one piece at a time. Both only ever propose spots that already satisfy the rules.</p>
+
+                <div class="step-grid">
+                  <div class="section">
+                    <label>Layout</label>
+                    <button class="btn-export accent" id="btn-auto-arrange" style="margin-bottom: 6px;">
+                      <i class="ti ti-wand" aria-hidden="true"></i><span data-client-label="Generate My Layout">Generate Rule-Based Layout</span>
+                    </button>
+                    <p class="hint">Groups sports and garden pieces into two zones with a shared walkway between them.</p>
+                    <div class="auto-grid planner-only">
+                      <button class="btn-export" id="btn-auto-left">
+                        <i class="ti ti-arrow-left" aria-hidden="true"></i>Left
+                      </button>
+                      <button class="btn-export" id="btn-auto-right">
+                        <i class="ti ti-arrow-right" aria-hidden="true"></i>Right
+                      </button>
+                      <button class="btn-export" id="btn-auto-front">
+                        <i class="ti ti-arrow-down" aria-hidden="true"></i>Front
+                      </button>
+                      <button class="btn-export" id="btn-auto-behind">
+                        <i class="ti ti-arrow-up" aria-hidden="true"></i>Behind
+                      </button>
+                    </div>
+                    <p class="hint planner-only">Snap arrows move the selected piece to an edge for fine manual control.</p>
+                  </div>
+
+                  <div class="section planner-only">
+                    <label>Manual placement</label>
+                    <p class="hint">Click a piece to select it, drag anywhere to move it.</p>
+                    <button class="btn-export" id="btn-rotate">
+                      <i class="ti ti-rotate" aria-hidden="true"></i>Rotate selected 90°
+                    </button>
+                  </div>
+
+                  <div class="section span-2">
+                    <label>Suggested spots</label>
+                    <p class="hint" id="suggestions-hint">Select a piece to see suggested spots.</p>
+                    <p class="hint">Click a numbered spot (in this list or on the roof) to move the selected piece there instantly.</p>
+                    <div id="suggestions-list" class="suggestions-list"></div>
+                  </div>
+
+                  <div class="section span-2">
+                    <label>Selection</label>
+                    <button class="btn-export" id="btn-remove-selected">
+                      <i class="ti ti-trash" aria-hidden="true"></i>Remove selected
+                    </button>
+                    <button class="btn-export" id="btn-clear-all" style="margin-top:6px">
+                      <i class="ti ti-eraser" aria-hidden="true"></i>Clear all pieces
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wizard-step-content" data-step-content="4" hidden>
+                <p class="hint step-intro">Every rule from step 2, checked against the current layout.</p>
+
+                <div class="step-grid">
+                  <div class="section span-2">
+                    <label>Design rules checklist</label>
+                    <div id="rules-panel" class="rules-panel"></div>
+                  </div>
+                </div>
+
+                <div class="export-area">
+                  <button class="btn-export primary" id="btn-combine-json">
+                    <i class="ti ti-file-download" aria-hidden="true"></i><span data-client-label="Download My Design">Export Combined JSON</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="wizard-footer">
+              <button class="btn-export" id="wizard-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
+              <button class="btn-export primary" id="wizard-next">Next<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
   <script src="data.js"></script>
   <script src="activitiesData.js"></script>
   <script src="gardenData.js"></script>
+  <script src="rules.js"></script>
+  <script src="sunPosition.js"></script>
   <script src="balls.js"></script>
   <script src="field.js"></script>
   <script src="activityField.js"></script>
   <script src="gardenField.js"></script>
   <script src="combineField.js"></script>
+  <script src="siteField.js"></script>
+  <script src="dataTab.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

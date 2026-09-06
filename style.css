@@ -1,15 +1,77 @@
 /* ── Reset & base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; font-family: Arial, Helvetica, sans-serif; background: #f5f5f3; color: #1a1a18; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); background: var(--surface-0); color: var(--text-primary); }
 
-/* ── CSS variable shim ── */
+/* ── CSS variable shim ──
+ * A brighter, more saturated "young" palette: electric blue primary
+ * (was a muted corporate blue), vivid lime-green / coral-red / golden-
+ * amber for success/fail/warn (were olive / brick / mustard), a cooler
+ * lavender-tinted neutral scale instead of warm gray, and a punchier
+ * violet/cyan for the role-toggle and suggestion accents. Same variable
+ * names throughout, so every component that already themes off these
+ * tokens picks the new palette up automatically. */
 :root {
-  --surface-0: #ebebe8; --surface-1: #f0f0ed; --surface-2: #ffffff;
-  --text-primary: #1a1a18; --text-secondary: #6b6b66; --text-muted: #9b9b94;
-  --border: rgba(0,0,0,0.1); --border-strong: rgba(0,0,0,0.18); --border-accent: #1a6bbf;
-  --bg-accent: #e6f1fb; --bg-success: #eaf3de; --text-accent: #185fa5; --text-success: #3b6d11; --border-success: #c0dd97;
-  --fill-accent: #378add; --fill-accent-hover: #185fa5; --on-accent: #ffffff;
-  --radius: 8px; --font-sans: Arial, Helvetica, sans-serif;
+  --surface-0: #eef1fb; --surface-1: #f5f6fd; --surface-2: #ffffff;
+  --text-primary: #181a2e; --text-secondary: #62658a; --text-muted: #9698b8;
+  --border: rgba(31,34,74,0.09); --border-strong: rgba(31,34,74,0.16); --border-accent: #3d6fff;
+  --bg-accent: #e8edff; --bg-success: #e3faec; --text-accent: #3d6fff; --text-success: #0ea355; --border-success: #7fe0a8;
+  --bg-fail: #ffeaea; --border-fail: #ffb3b0; --text-fail: #ef4444;
+  --fill-accent: #3d6fff; --fill-accent-hover: #2451e0; --on-accent: #ffffff;
+  --accent-hover-tint: #d2f7de;
+  --suggestion-color: #06b6d4; --suggestion-fill: rgba(6,182,212,0.10); --suggestion-fill-hover: rgba(6,182,212,0.20);
+  --violet: #9c4fe0; --violet-tint: rgba(156,79,224,0.16);
+  --radius: 8px; --font-sans: "Titillium Web", Arial, Helvetica, sans-serif;
+}
+
+/* ── Dark mode: same variable names, same hues, tuned for a dark surface
+   (translucent tints instead of pale solid fills, brightened accent
+   colors for contrast) — deep indigo neutrals instead of neutral gray so
+   the dark theme reads as part of the same "young" palette, not just an
+   inverted corporate one. Explicit-attribute only — this app defaults to
+   dark in the markup and the toggle always sets one value or the other,
+   so there's no "unset" state to fall back to system prefs for. ── */
+html[data-mode="dark"] {
+  --surface-0: #14152a; --surface-1: #1b1d38; --surface-2: #242747;
+  --text-primary: #eef0ff; --text-secondary: #a0a3c9; --text-muted: #6f72a0;
+  --border: rgba(140,150,255,0.12); --border-strong: rgba(140,150,255,0.22); --border-accent: #7c9bff;
+  --bg-accent: rgba(61,111,255,0.22); --bg-success: rgba(20,200,110,0.18); --text-accent: #8fabff; --text-success: #3ee089; --border-success: rgba(20,200,110,0.45);
+  --bg-fail: rgba(255,90,90,0.18); --border-fail: rgba(255,90,90,0.45); --text-fail: #ff6b6b;
+  --fill-accent: #5b82ff; --fill-accent-hover: #7c9bff; --on-accent: #ffffff;
+  --accent-hover-tint: rgba(20,200,110,0.28);
+  --suggestion-color: #22d3ee; --suggestion-fill: rgba(34,211,238,0.16); --suggestion-fill-hover: rgba(34,211,238,0.26);
+  --violet: #b47bef; --violet-tint: rgba(180,123,239,0.22);
+}
+
+/* ── Per-mode accent theming ──
+ * Sport is inherently energetic (every FIELDS preset is a fast, competitive
+ * court sport — the one genuinely "zen" activity, yoga, lives inside Sport
+ * mode too but is already distinguished at the content level by
+ * ACTIVITY_CATEGORY_COLORS, not by re-theming the whole mode), so its
+ * accent runs warm. Garden runs a nature green, kept a distinct forest
+ * shade from the (brighter, lime) --text-success so "brand" and "passed a
+ * rule" don't read as the same color. Combine/Data stay on the neutral
+ * blue/violet default — cross-cutting tools, not tied to one energy. Only
+ * the "brand" tokens shift, never the semantic success/fail/warn ones —
+ * an error should still read as an error regardless of which mode it's in.
+ * Combined [data-app-mode][data-mode="dark"] selectors (rather than relying
+ * on cascade order against the plain dark-mode block above) guarantee the
+ * dark-tuned shade wins regardless of source order, since two same-
+ * specificity attribute selectors would otherwise depend on it. */
+html[data-app-mode="sport"] {
+  --fill-accent: #ff5a36; --fill-accent-hover: #e8431d; --text-accent: #c53d10; --border-accent: #ff5a36;
+  --bg-accent: #ffe9e0; --accent-hover-tint: #ffdccb;
+}
+html[data-app-mode="sport"][data-mode="dark"] {
+  --fill-accent: #ff7a52; --fill-accent-hover: #ff9470; --text-accent: #ff9f7a; --border-accent: #ff9f7a;
+  --bg-accent: rgba(255,90,54,0.22); --accent-hover-tint: rgba(255,90,54,0.30);
+}
+html[data-app-mode="garden"] {
+  --fill-accent: #2f8f4e; --fill-accent-hover: #256e3c; --text-accent: #1f6b39; --border-accent: #2f8f4e;
+  --bg-accent: #e3f3e7; --accent-hover-tint: #d3ecd9;
+}
+html[data-app-mode="garden"][data-mode="dark"] {
+  --fill-accent: #4caf6e; --fill-accent-hover: #5fc182; --text-accent: #6fcf8f; --border-accent: #6fcf8f;
+  --bg-accent: rgba(76,175,110,0.20); --accent-hover-tint: rgba(76,175,110,0.28);
 }
 
 /* ── Layout ── */
@@ -51,10 +113,11 @@ select:focus { border-color: var(--border-accent); outline: none; }
 .export-area { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
 .btn-export { width: 100%; padding: 8px; font-size: 12px; font-weight: 600; border-radius: var(--radius); cursor: pointer; border: 0.5px solid var(--border-strong); background: var(--surface-2); color: var(--text-primary); display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; font-family: var(--font-sans); }
 .btn-export:hover { background: var(--surface-1); }
-.btn-export.primary { background: var(--fill-accent); border-color: var(--fill-accent); color: var(--on-accent); }
-.btn-export.primary:hover { background: var(--fill-accent-hover); }
+.btn-export:active { transform: scale(0.97); }
+.btn-export.primary { background: linear-gradient(135deg, var(--fill-accent), var(--violet)); border-color: var(--fill-accent); color: var(--on-accent); }
+.btn-export.primary:hover { background: linear-gradient(135deg, var(--fill-accent-hover), var(--violet)); }
 .btn-export.accent { background: var(--bg-success); border-color: var(--border-success); color: var(--text-success); }
-.btn-export.accent:hover { background: #dcecc7; }
+.btn-export.accent:hover { background: var(--accent-hover-tint); }
 .btn-export i { font-size: 14px; }
 
 /* ── Combine: auto-placement grid ── */
@@ -74,9 +137,138 @@ select:focus { border-color: var(--border-accent); outline: none; }
 .mode-btn { padding: 6px 18px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-sans); }
 .mode-btn.active { background: var(--fill-accent); color: var(--on-accent); }
 
+/* ── Role toggle (Planner / Client) ── */
+.role-toggle { position: absolute; top: 12px; right: 14px; z-index: 3; display: flex; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; }
+.role-btn { padding: 6px 14px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-sans); display: flex; align-items: center; gap: 5px; transition: background 0.15s, color 0.15s; }
+.role-btn i { font-size: 14px; }
+.role-btn.active { background: var(--violet); color: #fff; }
+.role-btn:not(.active):hover { background: var(--surface-1); }
+
+/* ── Planner-only elements: hidden entirely once Client mode is active ── */
+html[data-role="client"] .planner-only { display: none !important; }
+
+/* ── Design rules: Planner edits, Client sees them applied but locked ── */
+.rule-input:disabled { background: var(--surface-1); color: var(--text-muted); cursor: not-allowed; }
+
+/* ── Entry point tool toggle state ── */
+#btn-add-entry.active { background: #ffb300; border-color: #b57e00; color: #4a3000; }
+
+/* ── Design rules checklist ── */
+.rules-panel { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.rules-panel.pop { animation: rules-pop 0.35s ease; }
+@keyframes rules-pop { 0% { transform: scale(0.98); opacity: 0.75; } 100% { transform: scale(1); opacity: 1; } }
+.rule-row { display: flex; align-items: flex-start; gap: 7px; padding: 6px 8px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface-2); transition: background 0.2s, border-color 0.2s; }
+.rule-row.pass { border-color: var(--border-success); background: var(--bg-success); }
+.rule-row.fail { border-color: var(--border-fail); background: var(--bg-fail); }
+.rule-icon { flex-shrink: 0; width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; margin-top: 1px; }
+.rule-row.pass .rule-icon { background: var(--text-success); }
+.rule-row.fail .rule-icon { background: var(--text-fail); }
+.rule-label { font-size: 11px; font-weight: 600; color: var(--text-primary); }
+.rule-detail { font-size: 10.5px; color: var(--text-secondary); margin-top: 1px; line-height: 1.3; }
+
+/* ── Entry point markers (SVG, drawn on the combine canvas) ── */
+.entry-marker { cursor: pointer; }
+.entry-marker circle { fill: #ffb300; stroke: #7a4f00; stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: entry-pulse 2.2s ease-in-out infinite; }
+.entry-marker .entry-arrow { fill: #7a4f00; }
+.entry-marker text { fill: #4a3000; font-family: var(--font-sans); pointer-events: none; }
+.entry-marker.selected circle { stroke: var(--fill-accent); stroke-width: 2.2; }
+@keyframes entry-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.16); } }
+
+/* ── Circulation paths: soft "marching ants" flow toward the entrances ── */
+.circulation-path { stroke: var(--violet); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; stroke-dasharray: 6 5; animation: circulation-flow 1.4s linear infinite; pointer-events: none; }
+@keyframes circulation-flow { to { stroke-dashoffset: -22; } }
+
 /* ── Numeric inputs ── */
-#gardenConfigurator input[type="number"], #combineConfigurator input[type="number"] { width: 100%; font-size: 12px; color: var(--text-primary); background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 8px; outline: none; font-family: var(--font-sans); }
-#gardenConfigurator input[type="number"]:focus, #combineConfigurator input[type="number"]:focus { border-color: var(--border-accent); }
+#gardenConfigurator input[type="number"], #combineConfigurator input[type="number"],
+#combineConfigurator input[type="date"], #combineConfigurator input[type="time"], #combineConfigurator input[type="text"],
+#dataConfigurator input[type="search"] { width: 100%; font-size: 12px; color: var(--text-primary); background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 8px; outline: none; font-family: var(--font-sans); }
+#gardenConfigurator input[type="number"]:focus, #combineConfigurator input[type="number"]:focus,
+#combineConfigurator input[type="date"]:focus, #combineConfigurator input[type="time"]:focus, #combineConfigurator input[type="text"]:focus,
+#dataConfigurator input[type="search"]:focus { border-color: var(--border-accent); }
+#combineConfigurator input[type="range"] { width: 100%; accent-color: var(--fill-accent); margin-top: 4px; }
+
+/* ── Data tab: reuses Combine's .step-grid/.section card layout ── */
+#data-content { width: 100%; height: 100%; overflow-y: auto; padding: 20px; }
+
+/* ── Decision support: suggested-spot ghosts/list ── */
+.suggestion-ghost { transform-box: fill-box; transform-origin: center; animation: suggestion-enter 0.35s ease backwards; }
+.suggestion-ghost rect { fill: var(--suggestion-fill); stroke: var(--suggestion-color); stroke-width: 1.5; stroke-dasharray: 3,3; cursor: pointer; }
+.suggestion-ghost:hover rect { fill: var(--suggestion-fill-hover); stroke-width: 2; }
+.suggestion-ghost .suggestion-badge { fill: var(--suggestion-color); }
+.suggestion-ghost text { fill: #fff; font-family: var(--font-sans); pointer-events: none; }
+.suggestion-ghost.top-pick rect { animation: suggestion-glow 1.6s ease-in-out infinite; }
+@keyframes suggestion-enter { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+@keyframes suggestion-glow { 0%, 100% { stroke-width: 1.5; filter: none; } 50% { stroke-width: 2.5; filter: drop-shadow(0 0 3px var(--suggestion-color)); } }
+
+.suggestions-list { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.suggestion-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface-2); cursor: pointer; font-family: var(--font-sans); text-align: left; width: 100%; }
+.suggestion-row:hover { background: var(--suggestion-fill); border-color: var(--suggestion-color); }
+.suggestion-num { flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--suggestion-color); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.suggestion-text { flex: 1; font-size: 10.5px; color: var(--text-secondary); }
+.suggestion-score { font-size: 10px; font-weight: 700; color: var(--suggestion-color); }
+
+/* ── Site & Sun: Leaflet map, address search, sun compass ── */
+.site-map { width: 100%; height: 160px; border-radius: var(--radius); border: 0.5px solid var(--border); margin-top: 4px; overflow: hidden; }
+.site-address-row { display: flex; gap: 6px; margin-top: 6px; }
+.site-address-row input[type="text"] { flex: 1; }
+.site-address-row .btn-export { width: auto; padding: 6px 10px; }
+.input-row { display: flex; gap: 6px; margin-top: 4px; }
+.input-row input { flex: 1; }
+.sun-compass { width: 120px; height: 120px; margin: 6px auto 0; }
+
+/* ── Combine: two-pane layout inside .canvas-wrap ──
+ * The roof stays visible at all times in its own pane; the step wizard
+ * (previously squeezed into the 240px sidebar) expands into the rest of
+ * the canvas area instead of leaving it mostly empty. #combineConfigurator
+ * replaces #combine-canvas as .canvas-wrap's direct flex child, so it needs
+ * to actively fill the space (width/height: 100%) rather than just being
+ * centered at its intrinsic size the way a lone SVG was. */
+#combineConfigurator { width: 100%; height: 100%; display: flex; }
+.combine-roof-pane { flex: 1 1 46%; min-width: 260px; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.combine-step-pane { flex: 1 1 54%; min-width: 340px; max-width: 640px; height: 100%; display: flex; flex-direction: column; background: var(--surface-1); border-left: 0.5px solid var(--border); }
+
+/* ── Combine wizard: step-by-step flow ──
+ * This pane's ~17 sections used to render as one long flat scroll in a
+ * 240px sidebar. Grouping them into steps (Site → Rules → Arrange →
+ * Review), laid out in a 2-column grid now that there's real width to
+ * work with, keeps only a handful of controls on screen at once. The step
+ * nav stays fixed above the (scrollable) step body so "jump to another
+ * step" is always reachable without hunting through a step's own scroll. */
+.wizard-nav { display: flex; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+.wizard-step-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; font-size: 10px; font-weight: 600; color: var(--text-muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font-sans); transition: color 0.15s, border-color 0.15s; }
+.wizard-step-btn:hover { color: var(--text-secondary); }
+.wizard-step-btn.active { color: var(--text-accent); border-bottom-color: var(--fill-accent); }
+.wizard-step-num { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; background: var(--surface-2); border: 0.5px solid var(--border-strong); color: var(--text-muted); }
+.wizard-step-btn.active .wizard-step-num { background: var(--fill-accent); border-color: var(--fill-accent); color: var(--on-accent); }
+.wizard-step-btn.visited .wizard-step-num { background: var(--bg-success); border-color: var(--border-success); color: var(--text-success); }
+
+.wizard-step-body { flex: 1; min-height: 0; overflow-y: auto; }
+
+.step-intro { padding: 12px 16px 0; margin: 0; }
+
+/* Step content lays its sections out as a 2-column grid instead of a
+ * stacked list — .span-2 opts a section into the full row width. Cards
+ * get their own border/background here (rather than .section's default
+ * bottom-border-only list style) since side-by-side list items would
+ * otherwise read as a broken grid. */
+.step-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 16px; }
+.step-grid .span-2 { grid-column: 1 / -1; }
+.step-grid .section { border-bottom: none; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; transition: border-color 0.15s, box-shadow 0.15s; }
+.step-grid .section:hover { border-color: var(--border-strong); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+
+.step-enter { animation: step-fade-in 0.25s ease; }
+@keyframes step-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.rule-explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.rule-explain { padding: 8px; border-radius: var(--radius); background: var(--surface-0); border: 0.5px solid var(--border); }
+.rule-explain-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.rule-explain-head span { font-size: 11px; font-weight: 600; color: var(--text-primary); }
+.rule-explain-head input { width: 56px; flex-shrink: 0; }
+.rule-explain .hint { margin-top: 5px; }
+
+.wizard-footer { display: flex; gap: 6px; padding: 10px 16px; border-top: 0.5px solid var(--border); flex-shrink: 0; }
+.wizard-footer #wizard-back { flex: 0 0 auto; width: auto; padding: 8px 12px; }
+.wizard-footer #wizard-next { flex: 1; }
 
 /* ── Toast notifications ── */
 .toast-container { position: fixed; top: 16px; right: 16px; z-index: 10; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
@@ -107,3 +299,36 @@ select:focus { border-color: var(--border-accent); outline: none; }
 
 #theme-desc { font-style: italic; color: var(--text-muted); margin-top: 6px; font-size: 11px; line-height: 1.35; }
 #gardenConfigurator .section span { display: inline-block; margin-bottom: 2px; font-weight: 500; }
+
+/* ── Guide tab: the app's landing/explanation mode ──
+ * Full-width like Combine/Data (no roof or filter sidebar needed for a
+ * read-only explainer), but capped narrower than the raw canvas width —
+ * a page of prose at 1400px is harder to read than one at ~980px. Reuses
+ * Combine's .step-grid/.section/.rule-explain-grid/.rule-explain card
+ * styling rather than inventing a parallel one. */
+#guide-content { width: 100%; height: 100%; overflow-y: auto; }
+.guide-wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px 48px; }
+.guide-hero h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+.guide-hero h2 { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.guide-hero .hint { font-size: 12.5px; margin-top: 6px; max-width: 640px; }
+.guide-section-spacer { margin-top: 28px; }
+.guide-grid { padding: 0; margin-top: 14px; }
+.guide-grid .section { background: var(--surface-2); }
+.guide-grid.rule-explain-grid { grid-template-columns: repeat(4, 1fr); }
+.guide-cta { margin-top: 28px; display: flex; justify-content: center; }
+.guide-cta .btn-export { width: auto; padding: 10px 22px; }
+
+.mode-status { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: 1px; }
+.mode-status.available { background: var(--bg-success); color: var(--text-success); border: 0.5px solid var(--border-success); }
+.mode-status.vision { background: var(--violet-tint); color: var(--violet); border: 0.5px solid var(--violet); }
+
+.philosophy-diagram { width: 100%; height: auto; margin: 8px 0; display: block; }
+.philosophy-diagram.grid rect { fill: var(--fill-accent); opacity: 0.75; }
+.philosophy-diagram.fractal .diagram-outline { fill: none; stroke: var(--border-strong); stroke-width: 1.5; }
+.philosophy-diagram.fractal .diagram-path { fill: none; stroke: var(--violet); stroke-width: 2; stroke-dasharray: 4,3; stroke-linecap: round; stroke-linejoin: round; }
+.philosophy-diagram.organic .diagram-blob { fill: var(--bg-success); stroke: var(--text-success); stroke-width: 1.5; }
+.philosophy-diagram.organic .diagram-dot { fill: var(--text-success); opacity: 0.8; }
+
+/* ── Smarter-rules advisory (Combine's Rules step) ── */
+.smart-rule-advisory { margin-top: 8px; padding: 8px; border-radius: var(--radius); background: var(--violet-tint); border: 0.5px solid var(--violet); font-size: 10.5px; line-height: 1.4; color: var(--text-primary); }
+.smart-rule-advisory .btn-export { margin-top: 6px; width: auto; padding: 5px 10px; font-size: 10.5px; }

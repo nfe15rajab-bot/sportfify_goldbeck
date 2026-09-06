@@ -4,9 +4,11 @@
  * with dynamic dimensions for functional and vegetable landscaping zones.
  */
 
+// Nature palette throughout — functional (paths/hardscape) reads as warm
+// stone/sand rather than a cool UI-chrome tint, vegetation as vivid green.
 const GARDEN_CAT_COLORS = {
-  functional: { light: "#ebebe8", dark: "#2c2c2a", grid: "#d5d5d0", stroke: "#888880" },
-  vegetation: { light: "#dcedc8", dark: "#1b2e0f", grid: "#c5e1a5", stroke: "#558b2f" }
+  functional: { light: "#e8dcc8", dark: "#3a3226", grid: "#d9c8a8", stroke: "#8a7355" },
+  vegetation: { light: "#c3f0a8", dark: "#1d3d14", grid: "#a8e685", stroke: "#3fa832" }
 };
 
 function drawGardenField(itemId, length, width, isDark) {
@@ -42,13 +44,13 @@ function drawGardenField(itemId, length, width, isDark) {
       </pattern>
     </defs>
     <rect x="${ox}" y="${oy}" width="${fw}" height="${fh}" fill="url(#gardenPattern)" stroke="${perimeter}" stroke-width="2" rx="4"/>
-    <text x="${ox + fw / 2}" y="${oy + fh / 2}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="${txtColor}" font-family="Arial, sans-serif">
+    <text x="${ox + fw / 2}" y="${oy + fh / 2}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="${txtColor}" font-family="'Titillium Web', Arial, sans-serif">
       ${item.label}
     </text>
-    <text x="${ox + fw / 2}" y="${oy - 14}" text-anchor="middle" font-size="12" font-weight="600" fill="${dimColor}" font-family="Arial, sans-serif">
+    <text x="${ox + fw / 2}" y="${oy - 14}" text-anchor="middle" font-size="12" font-weight="600" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif">
       ${length.toFixed(1)} m
     </text>
-    <text x="${ox - 14}" y="${oy + fh / 2}" text-anchor="middle" font-size="12" font-weight="600" fill="${dimColor}" font-family="Arial, sans-serif" transform="rotate(-90, ${ox - 14}, ${oy + fh / 2})">
+    <text x="${ox - 14}" y="${oy + fh / 2}" text-anchor="middle" font-size="12" font-weight="600" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif" transform="rotate(-90, ${ox - 14}, ${oy + fh / 2})">
       ${width.toFixed(1)} m
     </text>
   `;

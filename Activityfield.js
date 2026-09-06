@@ -6,12 +6,15 @@
  * shape since these presets have no goal/line geometry.
  */
 
+// Energetic, competitive/active categories get warm tones; calm, low-
+// intensity ones (wellness, leisure) get cool tones — same energetic/zen
+// split as the rest of the app's palette.
 const ACTIVITY_CATEGORY_COLORS = {
-  court:      { light: "#c8e6c9", dark: "#1e2a1e", grid: "#b2d8b4" },
-  fitness:    { light: "#ffe0b2", dark: "#3a2a12", grid: "#ffcc80" },
-  wellness:   { light: "#e1bee7", dark: "#2a1a2e", grid: "#ce93d8" },
-  leisure:    { light: "#b3e5fc", dark: "#12242e", grid: "#81d4fa" },
-  playground: { light: "#fff9c4", dark: "#2e2a12", grid: "#fff59d" },
+  court:      { light: "#ffcc9e", dark: "#4a2a12", grid: "#ffb366" }, // energetic — 3x3, padel, bocce, ping pong, badminton
+  fitness:    { light: "#ffab91", dark: "#4a2416", grid: "#ff8a65" }, // energetic — calisthenics, sprint
+  wellness:   { light: "#c9b8f5", dark: "#2a2049", grid: "#b39ceb" }, // zen — yoga
+  leisure:    { light: "#a3e0e6", dark: "#123840", grid: "#7ad0d9" }, // zen — mini-golf
+  playground: { light: "#fff08a", dark: "#4a4318", grid: "#ffe95c" }, // energetic — playful/active
 };
 
 function drawActivity(activityId, dims, isDark) {
@@ -51,15 +54,15 @@ function drawActivity(activityId, dims, isDark) {
           fill="url(#activityFloor)" stroke="${stroke}" stroke-width="1.5"/>
     <text x="${ox + fw / 2}" y="${oy + fh / 2}"
           text-anchor="middle" dominant-baseline="middle"
-          font-size="13" font-weight="600" fill="${stroke}" font-family="Arial, sans-serif">
+          font-size="13" font-weight="600" fill="${stroke}" font-family="'Titillium Web', Arial, sans-serif">
       ${a.label}
     </text>
     <text x="${ox + fw / 2}" y="${oy - 10}"
-          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="Arial, sans-serif">
+          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif">
       ${length} m
     </text>
     <text x="${ox - 10}" y="${oy + fh / 2}"
-          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="Arial, sans-serif"
+          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif"
           transform="rotate(-90, ${ox - 10}, ${oy + fh / 2})">
       ${width} m
     </text>
