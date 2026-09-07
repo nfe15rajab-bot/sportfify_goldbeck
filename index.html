@@ -22,6 +22,7 @@
       <button id="modeGarden" class="mode-btn">Garden</button>
       <button id="modeCombine" class="mode-btn">Combine</button>
       <button id="modeData" class="mode-btn">Data</button>
+      <button id="modeAnalysis" class="mode-btn">Analysis</button>
     </div>
 
     <div class="role-toggle" id="role-toggle" title="Planner: full manual control. Client: pick preferences, the rules arrange it.">
@@ -224,6 +225,13 @@
         </div>
       </div>
 
+      <div id="analysisConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Analysis tools</h2>
+          <p>Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these.</p>
+        </div>
+      </div>
+
     </aside>
 
     <div class="canvas-area">
@@ -236,6 +244,8 @@
         <svg id="garden-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
 
         <div id="data-content" style="display:none"></div>
+
+        <div id="analysis-content" style="display:none"></div>
 
         <div id="guide-content" style="display:block">
           <div class="guide-wrap">
@@ -513,6 +523,12 @@
   <script src="combineField.js"></script>
   <script src="siteField.js"></script>
   <script src="dataTab.js"></script>
+  <script src="revitBridge.js"></script>
+  <script src="sportController.js"></script>
+  <script src="gardenController.js"></script>
+  <script src="siteController.js"></script>
+  <script src="combineController.js"></script>
+  <script src="analysisController.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

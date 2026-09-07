@@ -142,3 +142,12 @@ function retryDataFetch() {
 function updateDataUI() {
   loadAndRenderDataContent();
 }
+
+/* ── Data tab: domain switch + search wiring ── */
+document.getElementById("data-domain-btns").addEventListener("click", e => {
+  const btn = e.target.closest(".q-btn");
+  if (btn && typeof setDataDomain === "function") setDataDomain(btn.dataset.domain);
+});
+document.getElementById("dataSearch").addEventListener("input", e => {
+  if (typeof setDataSearch === "function") setDataSearch(e.target.value);
+});
