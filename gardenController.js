@@ -78,10 +78,35 @@ document.querySelectorAll("#garden-quality-setting .q-btn").forEach(btn => {
   });
 });
 
+/* ── Reference material/provider (sourced from the .NET reference DB,
+   read fresh at export time — mirrors sportController.js's version). ── */
+let gardenMaterialRefOptions = [];
+let gardenProviderRefOptions = [];
+
+async function initGardenReferenceDropdowns() {
+  const matSelect = document.getElementById("gardenMaterialSelect");
+  const provSelect = document.getElementById("gardenProviderSelect");
+  const matManual = document.getElementById("gardenMaterialManual");
+  const provManual = document.getElementById("gardenProviderManual");
+  try {
+    const [materials, providers] = await Promise.all([fetchReferenceMaterials(), fetchReferenceProviders()]);
+    gardenMaterialRefOptions = materials.filter(m => m.category === "Green roof build-up" || m.category === "Roofing");
+    gardenProviderRefOptions = providers.filter(p => p.category === "Green roof systems" || p.category === "Roofing & waterproofing");
+    wireReferenceDropdown(matSelect, matManual, gardenMaterialRefOptions, false);
+    wireReferenceDropdown(provSelect, provManual, gardenProviderRefOptions, false);
+  } catch (err) {
+    wireReferenceDropdown(matSelect, matManual, [], true);
+    wireReferenceDropdown(provSelect, provManual, [], true);
+  }
+}
+initGardenReferenceDropdowns();
+
 function buildGardenPayload() {
   const item = GARDEN_ITEMS[gardenState.activeItemId];
   const theme = GARDEN_THEMES[gardenState.themeId];
   const mat = GARDEN_MATERIALS[gardenState.quality];
+  const referenceMaterial = readReferenceSelection(document.getElementById("gardenMaterialSelect"), document.getElementById("gardenMaterialManual"), gardenMaterialRefOptions);
+  const referenceProvider = readReferenceSelection(document.getElementById("gardenProviderSelect"), document.getElementById("gardenProviderManual"), gardenProviderRefOptions);
 
   return {
     version: "1.0",
@@ -95,7 +120,7 @@ function buildGardenPayload() {
       layers: Object.entries(theme.layers).map(([name, config]) => ({
         layer_name: name, thickness_m: config.thickness_m, material: config.material
       })),
-      materials: { waterproofing: mat.waterproofing, drainage: mat.drainage, quality_level: gardenState.quality }
+      materials: { waterproofing: mat.waterproofing, drainage: mat.drainage, quality_level: gardenState.quality, reference_material: referenceMaterial, reference_provider: referenceProvider }
     }
   };
 }

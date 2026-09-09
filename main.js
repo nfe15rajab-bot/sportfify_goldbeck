@@ -62,6 +62,7 @@ document.getElementById("modeGarden").addEventListener("click", () => setMode("g
 document.getElementById("modeCombine").addEventListener("click", () => setMode("combine"));
 document.getElementById("modeData").addEventListener("click", () => setMode("data"));
 document.getElementById("modeAnalysis").addEventListener("click", () => setMode("analysis"));
+document.getElementById("modeCompare").addEventListener("click", () => setMode("compare"));
 document.getElementById("btn-guide-start").addEventListener("click", () => setMode("sport"));
 
 function setMode(mode) {
@@ -70,6 +71,7 @@ function setMode(mode) {
   const isCombine = mode === "combine";
   const isData = mode === "data";
   const isAnalysis = mode === "analysis";
+  const isCompare = mode === "compare";
   const isGuide = mode === "guide";
 
   if (isGarden) updateActivityBarForMode("garden");
@@ -81,12 +83,13 @@ function setMode(mode) {
   // neutral default accent unchanged.
   document.documentElement.dataset.appMode = mode;
 
-  // Combine, Data, Analysis, and Guide have no per-sport icon rail; Combine
-  // also has no use for the sidebar (its panel content lives beside the
-  // roof in .canvas-area instead), so collapse it there and give that space
-  // to the canvas instead of leaving it empty. Data, Analysis, and Guide
-  // keep the sidebar visible/hidden per their own minimal needs.
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isGuide) ? "none" : "flex";
+  // Combine, Data, Analysis, Compare, and Guide have no per-sport icon rail;
+  // Combine also has no use for the sidebar (its panel content lives beside
+  // the roof in .canvas-area instead), so collapse it there and give that
+  // space to the canvas instead of leaving it empty. Data, Analysis,
+  // Compare, and Guide keep the sidebar visible/hidden per their own
+  // minimal needs.
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide) ? "none" : "flex";
   document.querySelector(".panel").style.display = (isCombine || isGuide) ? "none" : "flex";
 
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
@@ -97,6 +100,7 @@ function setMode(mode) {
   document.getElementById("combineConfigurator").style.display = isCombine ? "flex" : "none";
   document.getElementById("dataConfigurator").style.display = isData ? "block" : "none";
   document.getElementById("analysisConfigurator").style.display = isAnalysis ? "block" : "none";
+  document.getElementById("compareConfigurator").style.display = isCompare ? "block" : "none";
 
   document.getElementById("field").style.display = isSport ? "block" : "none";
   document.getElementById("garden-field").style.display = isGarden ? "block" : "none";
@@ -104,6 +108,7 @@ function setMode(mode) {
   // that parent already shows/hides it — no separate toggle needed here.
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
+  document.getElementById("compare-content").style.display = isCompare ? "block" : "none";
   document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
 
   document.getElementById("modeGuide").classList.toggle("active", isGuide);
@@ -112,6 +117,7 @@ function setMode(mode) {
   document.getElementById("modeCombine").classList.toggle("active", isCombine);
   document.getElementById("modeData").classList.toggle("active", isData);
   document.getElementById("modeAnalysis").classList.toggle("active", isAnalysis);
+  document.getElementById("modeCompare").classList.toggle("active", isCompare);
 
   // Explicit branch per mode — a bare `else` here previously meant "anything
   // that isn't garden/sport" silently ran updateCombineUI(), which broke the
@@ -121,6 +127,7 @@ function setMode(mode) {
   else if (isCombine) updateCombineUI();
   else if (isData && typeof updateDataUI === "function") updateDataUI();
   else if (isAnalysis && typeof updateAnalysisUI === "function") updateAnalysisUI();
+  else if (isCompare && typeof updateCompareUI === "function") updateCompareUI();
 
   activeMode = mode;
 }
@@ -179,4 +186,5 @@ document.getElementById("siteDate").value = siteState.date;
 setMode("guide");
 if(typeof initCombineInteractions === "function") initCombineInteractions();
 if(typeof updateSiteUI === "function") updateSiteUI();
+if(typeof restoreAutosaveIfAny === "function") restoreAutosaveIfAny();
 startRevitPolling();

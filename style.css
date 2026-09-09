@@ -189,10 +189,15 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Numeric inputs ── */
 #gardenConfigurator input[type="number"], #combineConfigurator input[type="number"],
 #combineConfigurator input[type="date"], #combineConfigurator input[type="time"], #combineConfigurator input[type="text"],
-#dataConfigurator input[type="search"] { width: 100%; font-size: 12px; color: var(--text-primary); background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 8px; outline: none; font-family: var(--font-sans); }
+#dataConfigurator input[type="search"], #dataConfigurator input[type="text"], #dataConfigurator input[type="number"], #dataConfigurator textarea,
+#sportConfigurator input[type="text"], #gardenConfigurator select#gardenMaterialSelect, #gardenConfigurator select#gardenProviderSelect
+{ width: 100%; font-size: 12px; color: var(--text-primary); background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 8px; outline: none; font-family: var(--font-sans); }
+#dataConfigurator textarea { resize: vertical; min-height: 44px; }
 #gardenConfigurator input[type="number"]:focus, #combineConfigurator input[type="number"]:focus,
 #combineConfigurator input[type="date"]:focus, #combineConfigurator input[type="time"]:focus, #combineConfigurator input[type="text"]:focus,
-#dataConfigurator input[type="search"]:focus { border-color: var(--border-accent); }
+#dataConfigurator input[type="search"]:focus, #dataConfigurator input[type="text"]:focus, #dataConfigurator input[type="number"]:focus, #dataConfigurator textarea:focus,
+#sportConfigurator input[type="text"]:focus { border-color: var(--border-accent); }
+#adminFormFields > div > span { font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px; }
 #combineConfigurator input[type="range"] { width: 100%; accent-color: var(--fill-accent); margin-top: 4px; }
 
 /* ── Data tab: reuses Combine's .step-grid/.section card layout ── */
@@ -370,3 +375,43 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Smarter-rules advisory (Combine's Rules step) ── */
 .smart-rule-advisory { margin-top: 8px; padding: 8px; border-radius: var(--radius); background: var(--violet-tint); border: 0.5px solid var(--violet); font-size: 10.5px; line-height: 1.4; color: var(--text-primary); }
 .smart-rule-advisory .btn-export { margin-top: 6px; width: auto; padding: 5px 10px; font-size: 10.5px; }
+
+/* ── Compare tab ── */
+.compare-weight-block { margin-top: 10px; }
+.compare-weight-block:first-child { margin-top: 0; }
+.compare-weight-block > span:first-child { font-size: 10.5px; color: var(--text-secondary); font-weight: 600; }
+#comparePresetBtns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+#comparePresetBtns .q-btn { flex: none; }
+
+.compare-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 16px; align-items: start; }
+@media (max-width: 1100px) { .compare-cards { grid-template-columns: 1fr; } }
+
+.compare-card { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.3s, box-shadow 0.3s; }
+.compare-card:has(.rank-1) { border-color: var(--border-success); box-shadow: 0 2px 14px rgba(0,0,0,0.08); }
+
+.compare-card-head { display: flex; align-items: flex-start; gap: 10px; }
+.compare-rank { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: var(--surface-1); border: 0.5px solid var(--border-strong); color: var(--text-muted); transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.3s; }
+.compare-rank.rank-1 { background: var(--bg-success); border-color: var(--border-success); color: var(--text-success); transform: scale(1.12); }
+.compare-rank.rank-2 { background: var(--bg-accent); border-color: var(--border-accent); color: var(--text-accent); }
+.compare-card-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+
+.compare-roof-preview { background: var(--surface-0); border-radius: var(--radius); border: 0.5px solid var(--border); }
+.compare-roof-svg { width: 100%; height: auto; display: block; }
+
+.compare-checklist { display: flex; flex-direction: column; gap: 4px; }
+.compare-rule-row { display: flex; align-items: center; gap: 6px; font-size: 10.5px; padding: 4px 7px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface-0); color: var(--text-secondary); }
+.compare-rule-row.pass { border-color: var(--border-success); color: var(--text-success); }
+.compare-rule-row.fail { border-color: var(--border-fail); color: var(--text-fail); }
+.compare-rule-row i { font-size: 12px; flex-shrink: 0; }
+
+.compare-stats { line-height: 1.4; }
+
+.compare-bars { display: flex; flex-direction: column; gap: 7px; }
+.compare-bar-row { display: grid; grid-template-columns: 84px 1fr 24px; align-items: center; gap: 8px; }
+.compare-bar-label { font-size: 10px; color: var(--text-muted); }
+.compare-bar-track { height: 7px; border-radius: 4px; background: var(--surface-1); border: 0.5px solid var(--border); overflow: hidden; }
+.compare-bar-fill { height: 100%; border-radius: 4px; background: var(--fill-accent); transition: width 0.45s cubic-bezier(.22,.8,.25,1); }
+.compare-bar-val { font-size: 10px; color: var(--text-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+
+.compare-overall { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 0.5px solid var(--border); font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.compare-overall-num { font-size: 20px; font-weight: 800; color: var(--text-accent); font-variant-numeric: tabular-nums; }

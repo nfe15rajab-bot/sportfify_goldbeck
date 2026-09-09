@@ -257,10 +257,17 @@ document.getElementById("btn-auto-arrange").addEventListener("click", () => {
   });
 });
 
-/* ── Combined JSON export (Revit Optimized) ── */
-document.getElementById("btn-combine-json").addEventListener("click", () => {
-  if (combineState.items.length === 0) return;
-
+/**
+ * Builds the exact same payload the Combine JSON export downloads —
+ * pulled into its own function so the manual export button and the
+ * localStorage autosave below share one construction, rather than two
+ * copies that could drift apart. This is also, deliberately, the one and
+ * only "session save" format: it already carries the roof, design rules,
+ * entry points, site location and every placement's full parameters, so
+ * loading it back in via applySessionSnapshot() needs no separate save
+ * format of its own.
+ */
+function buildCombinedPayload() {
   const placements = combineState.items.map(item => {
     const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
 
@@ -342,6 +349,13 @@ document.getElementById("btn-combine-json").addEventListener("click", () => {
     placements
   };
 
+  return payload;
+}
+
+document.getElementById("btn-combine-json").addEventListener("click", () => {
+  if (combineState.items.length === 0) return;
+  const payload = buildCombinedPayload();
+
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -359,3 +373,135 @@ document.getElementById("btn-combine-json").addEventListener("click", () => {
     body: JSON.stringify(payload)
   }).catch(() => {});
 });
+
+/**
+ * Reverses buildCombinedPayload() back into combineState/DESIGN_RULES/
+ * siteState — the export already carries everything needed:
+ * bounding_box + transform.rotation_deg fully determine the original
+ * pre-rotation length_m/width_m the same way getFootprint() derives the
+ * opposite direction, so "load progress" needs no separate save format,
+ * just this function plus a file input.
+ */
+function applySessionSnapshot(payload) {
+  if (!payload || !Array.isArray(payload.placements)) {
+    throw new Error('Not a Sportify Combine export — no "placements" array found.');
+  }
+
+  const rc = payload.roof_context || {};
+  combineState.roof.length = rc.length_m ?? combineState.roof.length;
+  combineState.roof.width = rc.width_m ?? combineState.roof.width;
+  combineState.roof.boundary = rc.source_boundary_polygon || null;
+  combineState.roof.originXm = rc.world_origin_x_m || 0;
+  combineState.roof.originYm = rc.world_origin_y_m || 0;
+
+  if (payload.design_rules) {
+    DESIGN_RULES.clearance_m = payload.design_rules.clearance_m ?? DESIGN_RULES.clearance_m;
+    DESIGN_RULES.boundarySetback_m = payload.design_rules.boundary_setback_m ?? DESIGN_RULES.boundarySetback_m;
+    DESIGN_RULES.circulationWidth_m = payload.design_rules.circulation_width_m ?? DESIGN_RULES.circulationWidth_m;
+    DESIGN_RULES.minEntryPoints = payload.design_rules.min_entry_points ?? DESIGN_RULES.minEntryPoints;
+  }
+
+  combineState.entryPoints = (payload.entry_points || []).map((ep, i) => ({
+    id: `entry_${Date.now()}_${i}`, x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge,
+  }));
+
+  combineState.items = payload.placements.map((p, i) => {
+    const rotation = p.transform?.rotation_deg || 0;
+    const rotated = (rotation % 180) !== 0;
+    const bb = p.bounding_box || {};
+    // bounding_box.width_m/height_m are the POST-rotation footprint (see
+    // getFootprint() in combineField.js) — undo that same swap to recover
+    // the pre-rotation length_m/width_m getFootprint expects from here on.
+    const length_m = rotated ? bb.height_m : bb.width_m;
+    const width_m = rotated ? bb.width_m : bb.height_m;
+    return {
+      id: p.id || `item_${Date.now()}_${i}`,
+      kind: p.category, label: p.label,
+      length_m, width_m, rotation,
+      x_m: bb.top_left_x_m ?? 0, y_m: bb.top_left_y_m ?? 0,
+      sourceJson: p.parameters || {},
+    };
+  });
+  combineState.selectedId = null;
+  combineState.selectedKind = null;
+
+  if (payload.site_location) {
+    siteState.lat = payload.site_location.latitude_deg ?? siteState.lat;
+    siteState.lng = payload.site_location.longitude_deg ?? siteState.lng;
+    siteState.address = payload.site_location.place_name || siteState.address;
+    siteState.date = payload.site_location.date || siteState.date;
+    siteState.time = payload.site_location.time || siteState.time;
+  }
+
+  document.getElementById("roofLength").value = combineState.roof.length;
+  document.getElementById("roofWidth").value = combineState.roof.width;
+  document.getElementById("ruleClearance").value = DESIGN_RULES.clearance_m;
+  document.getElementById("ruleSetback").value = DESIGN_RULES.boundarySetback_m;
+  document.getElementById("ruleCirculationWidth").value = DESIGN_RULES.circulationWidth_m;
+  document.getElementById("ruleMinEntries").value = DESIGN_RULES.minEntryPoints;
+  if (payload.site_location) {
+    document.getElementById("siteDate").value = siteState.date;
+    document.getElementById("siteTime").value = siteState.time;
+  }
+
+  if (typeof refreshSuggestions === "function") refreshSuggestions();
+  else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  if (typeof updateSiteUI === "function") updateSiteUI();
+}
+
+document.getElementById("btn-load-session").addEventListener("click", () => { document.getElementById("load-session-file").click(); });
+
+document.getElementById("load-session-file").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      applySessionSnapshot(JSON.parse(evt.target.result));
+      showToast("Progress loaded", `${combineState.items.length} piece(s) restored.`);
+    } catch (err) {
+      showToast("Load failed", err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = ""; // allows re-loading the same file
+});
+
+/**
+ * ── Autosave to localStorage ──
+ * Belt-and-suspenders alongside the explicit JSON save/load above:
+ * protects against an accidentally closed tab without needing every
+ * mutation call site in this file to remember to save. Polls on an
+ * interval rather than hooking every mutation, and skips the write when
+ * nothing actually changed, so this stays cheap.
+ */
+const AUTOSAVE_KEY = "sportify-autosave";
+let lastAutosaveJson = null;
+
+function autosaveTick() {
+  if (combineState.items.length === 0) return;
+  const json = JSON.stringify(buildCombinedPayload());
+  if (json === lastAutosaveJson) return;
+  lastAutosaveJson = json;
+  try { localStorage.setItem(AUTOSAVE_KEY, json); } catch (e) { /* private mode / quota — silently skip */ }
+}
+setInterval(autosaveTick, 4000);
+
+/**
+ * Restores the last autosave on a fresh page load, before anything's been
+ * pushed this session — Clear All is the existing "no, start fresh"
+ * escape hatch, so this doesn't need its own confirmation prompt. Called
+ * from main.js's init block (not run here directly): this file loads
+ * before main.js, which is where showToast is defined.
+ */
+function restoreAutosaveIfAny() {
+  let saved;
+  try { saved = localStorage.getItem(AUTOSAVE_KEY); } catch (e) { return; }
+  if (!saved || combineState.items.length > 0) return;
+  try {
+    const payload = JSON.parse(saved);
+    applySessionSnapshot(payload);
+    lastAutosaveJson = saved;
+    showToast("Welcome back", `Restored your last session (${combineState.items.length} piece(s)). Clear All to start fresh instead.`);
+  } catch (e) { /* corrupt autosave — ignore, start fresh */ }
+}

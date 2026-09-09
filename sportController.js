@@ -120,14 +120,40 @@ document.querySelectorAll("#sportConfigurator .q-btn").forEach(btn => {
   });
 });
 
+/* ── Reference material/provider (sourced from the .NET reference DB,
+   read fresh at export time — doesn't affect the rendered field, so no
+   need to track it in `state` the way quality/variant/capacity are). ── */
+let sportMaterialRefOptions = [];
+let sportProviderRefOptions = [];
+
+async function initSportReferenceDropdowns() {
+  const matSelect = document.getElementById("sportMaterialSelect");
+  const provSelect = document.getElementById("sportProviderSelect");
+  const matManual = document.getElementById("sportMaterialManual");
+  const provManual = document.getElementById("sportProviderManual");
+  try {
+    const [materials, providers] = await Promise.all([fetchReferenceMaterials(), fetchReferenceProviders()]);
+    sportMaterialRefOptions = materials.filter(m => m.category === "Flooring" || m.category === "Subfloor");
+    sportProviderRefOptions = providers.filter(p => p.category === "Sports flooring & surfaces" || p.category === "Prefab hall construction");
+    wireReferenceDropdown(matSelect, matManual, sportMaterialRefOptions, false);
+    wireReferenceDropdown(provSelect, provManual, sportProviderRefOptions, false);
+  } catch (err) {
+    wireReferenceDropdown(matSelect, matManual, [], true);
+    wireReferenceDropdown(provSelect, provManual, [], true);
+  }
+}
+initSportReferenceDropdowns();
+
 function buildSportPayload() {
   const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
   const mat = MATERIALS[state.quality];
+  const referenceMaterial = readReferenceSelection(document.getElementById("sportMaterialSelect"), document.getElementById("sportMaterialManual"), sportMaterialRefOptions);
+  const referenceProvider = readReferenceSelection(document.getElementById("sportProviderSelect"), document.getElementById("sportProviderManual"), sportProviderRefOptions);
   return {
     version: "1.0", generator: "Sportify",
     quality_key: typeof getQualityKey === "function" ? getQualityKey(state.sport, state.variant, state.quality) : "",
     field: { sport: state.sport, variant: state.variant, norm: d.norm, dimensions: { length_m: d.l, width_m: d.w, runoff_m: d.runoff, min_height_m: d.h }, capacity: { seats: state.capacity, side_stands: state.capacity > 0 } },
-    materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: state.quality },
+    materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: state.quality, reference_material: referenceMaterial, reference_provider: referenceProvider },
     layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"],
   };
 }

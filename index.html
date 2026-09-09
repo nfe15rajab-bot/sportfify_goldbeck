@@ -34,12 +34,13 @@
     <div id="toast-container" class="toast-container"></div>
 
     <div class="mode-toggle">
+      <button id="modeData" class="mode-btn">Data</button>
       <button id="modeGuide" class="mode-btn active">Guide</button>
       <button id="modeSport" class="mode-btn">Sport</button>
       <button id="modeGarden" class="mode-btn">Garden</button>
       <button id="modeCombine" class="mode-btn">Combine</button>
-      <button id="modeData" class="mode-btn">Data</button>
       <button id="modeAnalysis" class="mode-btn">Analysis</button>
+      <button id="modeCompare" class="mode-btn">Compare</button>
     </div>
 
     <div class="top-right-controls">
@@ -89,6 +90,16 @@
               <div class="q-btn active" data-q="medium" data-client-label="Standard">Medium</div>
               <div class="q-btn" data-q="high" data-client-label="Premium">High</div>
             </div>
+          </div>
+          <div class="section">
+            <label>Reference material (database)</label>
+            <select id="sportMaterialSelect"><option value="">Loading…</option></select>
+            <input type="text" id="sportMaterialManual" placeholder="Type a material name…" style="display:none; margin-top:6px;" />
+          </div>
+          <div class="section">
+            <label>Reference provider (database)</label>
+            <select id="sportProviderSelect"><option value="">Loading…</option></select>
+            <input type="text" id="sportProviderManual" placeholder="Type a provider name…" style="display:none; margin-top:6px;" />
           </div>
           <div class="section">
             <label>Field dimensions</label>
@@ -208,6 +219,17 @@
           </div>
         </div>
 
+        <div class="section">
+          <label>Reference material (database)</label>
+          <select id="gardenMaterialSelect"><option value="">Loading…</option></select>
+          <input type="text" id="gardenMaterialManual" placeholder="Type a material name…" style="display:none; margin-top:6px;" />
+        </div>
+        <div class="section">
+          <label>Reference provider (database)</label>
+          <select id="gardenProviderSelect"><option value="">Loading…</option></select>
+          <input type="text" id="gardenProviderManual" placeholder="Type a provider name…" style="display:none; margin-top:6px;" />
+        </div>
+
         <div class="section planner-only">
           <label>Engineered Build-Up Layers</label>
           <div class="dims" id="garden-layer-dims"></div>
@@ -247,12 +269,99 @@
           <label>Status</label>
           <p class="hint" id="data-status">Loading…</p>
         </div>
+
+        <div class="section">
+          <label>Add reference data</label>
+          <select id="adminEntityType">
+            <option value="Material">Material</option>
+            <option value="Provider">Provider</option>
+            <option value="Norm">Norm</option>
+            <option value="Sport">Sport</option>
+            <option value="PlantPalette">Vegetation palette</option>
+            <option value="Plant">Plant</option>
+            <option value="FacilityGuideline">Facility guideline</option>
+            <option value="FieldVariant">Field size variant (needs an existing Sport ID)</option>
+          </select>
+          <div id="adminFormFields" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;"></div>
+          <button class="btn-export accent" id="btn-admin-create" style="margin-top:8px;">
+            <i class="ti ti-plus" aria-hidden="true"></i>Create
+          </button>
+          <p class="hint" id="admin-create-status"></p>
+        </div>
+
+        <div class="section">
+          <label>Import .sql file</label>
+          <p class="hint">Runs the file's statements against the reference database in one transaction — all rows commit, or none do.</p>
+          <input type="file" id="adminSqlFile" accept=".sql" style="margin-top:6px;" />
+          <button class="btn-export" id="btn-admin-import-sql" style="margin-top:6px;">
+            <i class="ti ti-upload" aria-hidden="true"></i>Import
+          </button>
+          <p class="hint" id="admin-import-status"></p>
+        </div>
       </div>
 
       <div id="analysisConfigurator" style="display:none">
         <div class="panel-header">
           <h2>Analysis tools</h2>
           <p>Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these.</p>
+        </div>
+      </div>
+
+      <div id="compareConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Compare configurations</h2>
+          <p>Three predefined 20 × 25 m roof layouts, built from real reference-database figures. Pick what matters most, or fine-tune below.</p>
+        </div>
+
+        <div class="section">
+          <label>Quick priority</label>
+          <div class="quality-btns" id="comparePresetBtns">
+            <div class="q-btn" data-preset="quality">Best Quality</div>
+            <div class="q-btn" data-preset="cost">Most Cost-Effective</div>
+            <div class="q-btn" data-preset="sustainability">Most Sustainable</div>
+            <div class="q-btn active" data-preset="balanced">Balanced</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <label>Fine-tune priorities</label>
+          <div class="compare-weight-block">
+            <span>Quality</span>
+            <div class="capacity-row">
+              <input type="range" id="weightQuality" min="0" max="100" value="50" />
+              <span id="weightQualityVal">50%</span>
+            </div>
+          </div>
+          <div class="compare-weight-block">
+            <span>Cost-effectiveness</span>
+            <div class="capacity-row">
+              <input type="range" id="weightCost" min="0" max="100" value="50" />
+              <span id="weightCostVal">50%</span>
+            </div>
+          </div>
+          <div class="compare-weight-block">
+            <span>Sustainability</span>
+            <div class="capacity-row">
+              <input type="range" id="weightSustainability" min="0" max="100" value="50" />
+              <span id="weightSustainabilityVal">50%</span>
+            </div>
+          </div>
+          <div class="compare-weight-block">
+            <span>Accessibility &amp; safety</span>
+            <div class="capacity-row">
+              <input type="range" id="weightAccessibility" min="0" max="100" value="50" />
+              <span id="weightAccessibilityVal">50%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <label>Roof</label>
+          <div class="dims">
+            <div class="dim-card"><div class="val">25 × 20 m</div><div class="lbl">Dimensions</div></div>
+            <div class="dim-card"><div class="val">500 m²</div><div class="lbl">Total area</div></div>
+          </div>
+          <p class="hint">Fixed for this comparison — each configuration is auto-arranged and rule-checked against the same 20 × 25 m boundary.</p>
         </div>
       </div>
 
@@ -270,6 +379,8 @@
         <div id="data-content" style="display:none"></div>
 
         <div id="analysis-content" style="display:none"></div>
+
+        <div id="compare-content" style="display:none"></div>
 
         <div id="guide-content" style="display:block">
           <div class="guide-wrap">
@@ -519,6 +630,11 @@
                   <button class="btn-export primary" id="btn-combine-json">
                     <i class="ti ti-file-download" aria-hidden="true"></i><span data-client-label="Download My Design">Export Combined JSON</span>
                   </button>
+                  <button class="btn-export" id="btn-load-session">
+                    <i class="ti ti-upload" aria-hidden="true"></i><span data-client-label="Resume My Design">Load Progress</span>
+                  </button>
+                  <input type="file" id="load-session-file" accept=".json" style="display:none" />
+                  <p class="hint">A Combined JSON export doubles as a save file — load it back in anytime to pick up exactly where you left off.</p>
                 </div>
               </div>
             </div>
@@ -553,6 +669,7 @@
   <script src="siteController.js"></script>
   <script src="combineController.js"></script>
   <script src="analysisController.js"></script>
+  <script src="compareController.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
