@@ -9,8 +9,46 @@
  * right, organized the same way a BIM family's properties would be.
  */
 
-const WHEELCHAIR_MIN_WIDTH_M = 1.5; // common reference figure for a two-way accessible route
-const WIND_EXPOSURE_ZONE_M = 2.0;   // distance from the roof edge treated as elevated wind exposure
+/* ── Reference figures, sourced from the .NET database's AnalysisParameter
+   rows (Data tab → Analysis domain) instead of living as bare constants.
+   The literal values below are only the offline fallback — used verbatim
+   if the backend can't be reached, so this tab never breaks standalone,
+   and identical to what this file hardcoded before this was wired up. ── */
+const ANALYSIS_PARAM_DEFAULTS = {
+  "Fire Safety": { max_travel_distance_m: 35 },
+  "Accessibility": { min_circulation_width_m: 1.5 },
+  "Water Management": { retention_base_percent: 30, retention_depth_coefficient_percent_per_cm: 2, retention_max_percent: 90 },
+  "Wind Exposure": { edge_exposure_zone_m: 2.0 },
+};
+let analysisParametersCache = [];
+let analysisMaterialsCache = [];
+
+function getAnalysisParam(category, key) {
+  const found = analysisParametersCache.find(p => p.category === category && p.key === key);
+  return found ? found.value : ANALYSIS_PARAM_DEFAULTS[category]?.[key];
+}
+
+async function initAnalysisReferenceData() {
+  try {
+    const [params, materials] = await Promise.all([fetchAnalysisParameters(), fetchReferenceMaterials()]);
+    analysisParametersCache = params;
+    analysisMaterialsCache = materials;
+  } catch (err) {
+    // Offline: caches stay empty, getAnalysisParam() falls back to
+    // ANALYSIS_PARAM_DEFAULTS and LCA reports every piece as missing data
+    // (true, in the sense that it can't be looked up right now) rather
+    // than throwing.
+  }
+  if (activeMode === "analysis" && typeof updateAnalysisUI === "function") updateAnalysisUI();
+}
+initAnalysisReferenceData();
+
+/** The reference material a piece was pushed with (Sport/Garden's "Reference material (database)" dropdown) — the LCA lookup key. Null if the piece was pushed before that field existed, or manual text was typed that isn't a real catalog name. */
+function getReferenceMaterialName(item) {
+  if (item.kind === "field") return item.sourceJson?.materials?.reference_material || null;
+  if (item.kind === "garden") return item.sourceJson?.garden?.materials?.reference_material || null;
+  return null;
+}
 
 function pathLengthM(points) {
   let len = 0;
@@ -31,25 +69,37 @@ function analyzeFireSafety() {
   if (circulation.unreachable.size > 0) {
     return { status: "fail", unreachableCount: circulation.unreachable.size };
   }
+  const maxTravelDistance = getAnalysisParam("Fire Safety", "max_travel_distance_m");
   const distances = circulation.paths.map(p => pathLengthM(p.points));
-  return { status: "ok", maxDist: distances.length ? Math.max(...distances) : 0 };
+  const maxDist = distances.length ? Math.max(...distances) : 0;
+  return { status: "ok", maxDist, maxTravelDistance, withinLimit: maxDist <= maxTravelDistance };
 }
 
 function analyzeAccessibility() {
   if (combineState.items.length === 0) return { status: "empty" };
 
-  const widthOk = DESIGN_RULES.circulationWidth_m >= WHEELCHAIR_MIN_WIDTH_M;
+  const minWidth = getAnalysisParam("Accessibility", "min_circulation_width_m");
+  const widthOk = DESIGN_RULES.circulationWidth_m >= minWidth;
   const circulation = computeCirculation(combineState, DESIGN_RULES);
   const reachOk = combineState.entryPoints.length > 0 && circulation.unreachable.size === 0;
-  return { status: "ok", widthOk, reachOk, currentWidth: DESIGN_RULES.circulationWidth_m };
+  return { status: "ok", widthOk, reachOk, currentWidth: DESIGN_RULES.circulationWidth_m, minWidth };
 }
 
 /**
  * Illustrative estimate, not a certified hydrology calculation: retention
  * scaling with total buildup depth is consistent with FLL guidance
  * (deeper substrate retains more), but the exact coefficient here is a
- * simple, clearly-approximate formula, not a cited coefficient table.
+ * simple, clearly-approximate formula, not a cited coefficient table. The
+ * three coefficients themselves come from AnalysisParameter (Water
+ * Management category) — see initAnalysisReferenceData() above.
  */
+function computeRetentionPercent(depthCm) {
+  const base = getAnalysisParam("Water Management", "retention_base_percent");
+  const coeff = getAnalysisParam("Water Management", "retention_depth_coefficient_percent_per_cm");
+  const max = getAnalysisParam("Water Management", "retention_max_percent");
+  return Math.min(max, Math.round(base + depthCm * coeff));
+}
+
 function analyzeWaterManagement() {
   const gardenItems = combineState.items.filter(it => it.kind === "garden");
   if (gardenItems.length === 0) return { status: "empty" };
@@ -65,7 +115,7 @@ function analyzeWaterManagement() {
     weightedDepthCm += area * depthCm;
   });
   const avgDepthCm = weightedDepthCm / totalAreaM2;
-  const retentionPercent = Math.min(90, Math.round(30 + avgDepthCm * 2));
+  const retentionPercent = computeRetentionPercent(avgDepthCm);
   return { status: "ok", totalAreaM2, avgDepthCm, retentionPercent };
 }
 
@@ -73,8 +123,25 @@ function analyzeWaterManagement() {
 function analyzeWindExposure() {
   if (combineState.items.length === 0) return { status: "empty" };
   const roof = combineState.roof;
-  const exposed = combineState.items.filter(it => edgeDistanceM(it, roof) < WIND_EXPOSURE_ZONE_M);
-  return { status: "ok", exposedCount: exposed.length, totalCount: combineState.items.length };
+  const zoneM = getAnalysisParam("Wind Exposure", "edge_exposure_zone_m");
+  const exposed = combineState.items.filter(it => edgeDistanceM(it, roof) < zoneM);
+  return { status: "ok", exposedCount: exposed.length, totalCount: combineState.items.length, zoneM };
+}
+
+/** Sums embodied carbon (area × material's kg CO2e/m²) across every piece with both a picked reference material and that material's carbon figure filled in — pieces missing either are reported separately, never silently assumed zero. */
+function analyzeLCA() {
+  if (combineState.items.length === 0) return { status: "empty" };
+  let totalKg = 0, coveredCount = 0;
+  combineState.items.forEach(it => {
+    const matName = getReferenceMaterialName(it);
+    const material = matName ? analysisMaterialsCache.find(m => m.name === matName) : null;
+    if (material && material.embodiedCarbonValue != null) {
+      const fp = typeof getFootprint === "function" ? getFootprint(it) : { w: it.length_m, h: it.width_m };
+      totalKg += material.embodiedCarbonValue * fp.w * fp.h;
+      coveredCount++;
+    }
+  });
+  return { status: "ok", totalKg, coveredCount, missingCount: combineState.items.length - coveredCount, totalCount: combineState.items.length };
 }
 
 function edgeDistanceM(item, roof) {
@@ -97,7 +164,7 @@ function fireSafetyCardHtml() {
   const empty = emptyCardBody(r.status);
   const body = empty ? empty
     : r.status === "fail" ? `<p class="hint">⚠️ ${r.unreachableCount} piece(s) have no walkable route to any entry point at all.</p>`
-    : `<p class="hint">Longest route from a piece to its nearest entry point: <strong>${r.maxDist.toFixed(1)} m</strong>.</p>`;
+    : `<p class="hint">${r.withinLimit ? "✅" : "⚠️"} Longest route from a piece to its nearest entry point: <strong>${r.maxDist.toFixed(1)} m</strong> (max. travel distance reference: ${r.maxTravelDistance} m, MBO §35).</p>`;
   return `<div class="section"><label>Fire Safety <span class="mode-status available">Available now</span></label>${body}</div>`;
 }
 
@@ -105,7 +172,7 @@ function accessibilityCardHtml() {
   const r = analyzeAccessibility();
   const empty = emptyCardBody(r.status);
   const body = empty ? empty : `
-    <p class="hint">${r.widthOk ? "✅" : "⚠️"} Circulation width set to ${r.currentWidth.toFixed(1)} m (wheelchair two-way reference: ${WHEELCHAIR_MIN_WIDTH_M} m).</p>
+    <p class="hint">${r.widthOk ? "✅" : "⚠️"} Circulation width set to ${r.currentWidth.toFixed(1)} m (wheelchair two-way reference: ${r.minWidth} m).</p>
     <p class="hint">${r.reachOk ? "✅ Every piece has a walkable route from an entry point." : "⚠️ Not every piece is reachable — add or move entry points."}</p>`;
   return `<div class="section"><label>Accessibility <span class="mode-status available">Available now</span></label>${body}</div>`;
 }
@@ -123,13 +190,20 @@ function windExposureCardHtml() {
   const r = analyzeWindExposure();
   const empty = emptyCardBody(r.status);
   const body = empty ? empty : `
-    <p class="hint">${r.exposedCount} of ${r.totalCount} piece(s) sit within ${WIND_EXPOSURE_ZONE_M} m of the roof edge — the zone with the highest rooftop wind exposure.</p>`;
+    <p class="hint">${r.exposedCount} of ${r.totalCount} piece(s) sit within ${r.zoneM} m of the roof edge — the zone with the highest rooftop wind exposure.</p>`;
   return `<div class="section"><label>Wind Exposure <span class="mode-status available">Available now</span></label>${body}</div>`;
 }
 
 function lcaCardHtml() {
-  return `<div class="section"><label>LCA Estimate <span class="mode-status vision">Coming soon</span></label>
-    <p class="hint">Needs embodied-carbon coefficients per material, which aren't in the reference database yet — see the Data tab's Materials list.</p></div>`;
+  const r = analyzeLCA();
+  const empty = emptyCardBody(r.status);
+  const body = empty ? empty
+    : r.coveredCount === 0
+    ? `<p class="hint">None of the ${r.totalCount} piece(s) have both a reference material picked (Sport/Garden's "Reference material (database)" dropdown) and embodied-carbon data filled in yet.</p>
+       <p class="hint">Add missing embodied-carbon figures from the Data tab's Materials edit form.</p>`
+    : `<p class="hint">Estimated embodied carbon: <strong>~${Math.round(r.totalKg).toLocaleString("en-US")} kg CO2e</strong> (A1-A3, illustrative) across ${r.coveredCount} of ${r.totalCount} piece(s).</p>
+       ${r.missingCount ? `<p class="hint">${r.missingCount} piece(s) excluded — no reference material picked, or that material has no embodied-carbon figure yet. Fill gaps in from the Data tab.</p>` : ""}`;
+  return `<div class="section"><label>LCA Estimate <span class="mode-status available">Available now</span></label>${body}</div>`;
 }
 
 /**
@@ -322,7 +396,9 @@ function materialsSectionHtml(item) {
     return `
       <p class="hint"><strong>Floor surface:</strong> ${m.floor_surface || "—"}</p>
       <p class="hint"><strong>Line marking:</strong> ${m.line_marking || "—"}</p>
-      <p class="hint"><strong>Gradin type:</strong> ${m.gradin_type || "—"}</p>`;
+      <p class="hint"><strong>Gradin type:</strong> ${m.gradin_type || "—"}</p>
+      <p class="hint"><strong>Reference material:</strong> ${m.reference_material || "— none picked"}</p>
+      <p class="hint"><strong>Reference provider:</strong> ${m.reference_provider || "— none picked"}</p>`;
   }
   if (item.kind === "garden" && item.sourceJson?.garden) {
     const g = item.sourceJson.garden;
@@ -332,6 +408,8 @@ function materialsSectionHtml(item) {
     return `
       <p class="hint"><strong>Waterproofing:</strong> ${g.materials?.waterproofing || "—"}</p>
       <p class="hint"><strong>Drainage:</strong> ${g.materials?.drainage || "—"}</p>
+      <p class="hint"><strong>Reference material:</strong> ${g.materials?.reference_material || "— none picked"}</p>
+      <p class="hint"><strong>Reference provider:</strong> ${g.materials?.reference_provider || "— none picked"}</p>
       <div class="dims" style="grid-template-columns:1fr;margin-top:6px;">${layers}</div>`;
   }
   return `<p class="hint">Not available yet — activity pieces don't export material data (see Ali's PDF item on buildActivityPayload()).</p>`;
@@ -349,11 +427,12 @@ function fireSafetyDetailHtml(item) {
 }
 
 function accessibilityDetailHtml(item) {
-  const widthOk = DESIGN_RULES.circulationWidth_m >= WHEELCHAIR_MIN_WIDTH_M;
+  const minWidth = getAnalysisParam("Accessibility", "min_circulation_width_m");
+  const widthOk = DESIGN_RULES.circulationWidth_m >= minWidth;
   const circulation = combineState.entryPoints.length > 0 ? computeCirculation(combineState, DESIGN_RULES) : null;
   const reachable = circulation ? !circulation.unreachable.has(item.id) : false;
   return `
-    <p class="hint">${widthOk ? "✅" : "⚠️"} Circulation width set to ${DESIGN_RULES.circulationWidth_m.toFixed(1)} m (wheelchair two-way reference: ${WHEELCHAIR_MIN_WIDTH_M} m) — a layout-wide setting, not per-piece.</p>
+    <p class="hint">${widthOk ? "✅" : "⚠️"} Circulation width set to ${DESIGN_RULES.circulationWidth_m.toFixed(1)} m (wheelchair two-way reference: ${minWidth} m) — a layout-wide setting, not per-piece.</p>
     <p class="hint">${reachable ? "✅ This piece has a walkable route from an entry point." : "⚠️ Not reachable from an entry point yet."}</p>`;
 }
 
@@ -362,28 +441,39 @@ function waterManagementDetailHtml(item) {
   const area = fp.w * fp.h;
   const theme = GARDEN_THEMES[item.sourceJson?.garden?.theme] || GARDEN_THEMES.custom;
   const depthCm = Object.values(theme.layers).reduce((sum, l) => sum + l.thickness_m * 100, 0);
-  const retentionPercent = Math.min(90, Math.round(30 + depthCm * 2));
+  const retentionPercent = computeRetentionPercent(depthCm);
   return `
     <p class="hint">${area.toFixed(1)} m², ${depthCm.toFixed(0)} cm buildup depth.</p>
     <p class="hint">Estimated rainfall retention: <strong>~${retentionPercent}%</strong> (illustrative — not a certified hydrology figure).</p>`;
 }
 
 function windExposureDetailHtml(item) {
+  const zoneM = getAnalysisParam("Wind Exposure", "edge_exposure_zone_m");
   const dist = edgeDistanceM(item, combineState.roof);
-  const exposed = dist < WIND_EXPOSURE_ZONE_M;
+  const exposed = dist < zoneM;
   if (dist < 0) return `<p class="hint">⚠️ This piece extends past the roof boundary — resize or move it before this check means anything.</p>`;
-  return `<p class="hint">${exposed ? "⚠️" : "✅"} ${dist.toFixed(1)} m from the nearest roof edge${exposed ? ` — inside the ${WIND_EXPOSURE_ZONE_M} m elevated-exposure zone.` : "."}</p>`;
+  return `<p class="hint">${exposed ? "⚠️" : "✅"} ${dist.toFixed(1)} m from the nearest roof edge${exposed ? ` — inside the ${zoneM} m elevated-exposure zone.` : "."}</p>`;
 }
 
 function lcaDetailHtml(item) {
-  const materialNames = item.kind === "field"
-    ? [item.sourceJson?.materials?.floor_surface, item.sourceJson?.materials?.line_marking, item.sourceJson?.materials?.gradin_type].filter(Boolean)
-    : item.kind === "garden"
-    ? [item.sourceJson?.garden?.materials?.waterproofing, item.sourceJson?.garden?.materials?.drainage, ...(item.sourceJson?.garden?.layers || []).map(l => l.material)].filter(Boolean)
-    : [];
+  const matName = getReferenceMaterialName(item);
+  if (!matName) {
+    return `<p class="hint">No reference material selected for this piece — pick one from the "Reference material (database)" dropdown in Sport/Garden mode to enable this.</p>`;
+  }
+  const material = analysisMaterialsCache.find(m => m.name === matName);
+  if (!material) {
+    return `<p class="hint"><strong>Reference material:</strong> ${matName}</p><p class="hint">Not found in the database (likely typed as manual text) — no embodied-carbon figure to look up.</p>`;
+  }
+  if (material.embodiedCarbonValue == null) {
+    return `<p class="hint"><strong>Reference material:</strong> ${matName}</p><p class="hint">⚠️ No embodied-carbon figure yet for this material — add one from the Data tab's Materials edit form.</p>`;
+  }
+  const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
+  const area = fp.w * fp.h;
+  const total = material.embodiedCarbonValue * area;
   return `
-    <p class="hint">Needs embodied-carbon coefficients per material, which aren't in the reference database yet.</p>
-    ${materialNames.length ? `<p class="hint"><strong>Would assess:</strong> ${materialNames.join(", ")}.</p>` : ""}`;
+    <p class="hint"><strong>Reference material:</strong> ${matName}</p>
+    <p class="hint">${area.toFixed(1)} m² × ${material.embodiedCarbonValue} ${material.embodiedCarbonUnit} = <strong>~${total.toFixed(0)} kg CO2e</strong> (A1-A3, illustrative).</p>
+    <p class="hint">${material.embodiedCarbonSource || ""}</p>`;
 }
 
 /** Which sections apply to which item kind — the "toggle" the user asked for: automatic per selected item, not a manual switch, since the item's own kind already determines what's relevant. */
@@ -398,7 +488,7 @@ function componentSections(item) {
     sections.push({ icon: "ti-droplet", title: "Water Management", badge: "available", html: waterManagementDetailHtml(item) });
   }
   sections.push({ icon: "ti-wind", title: "Wind Exposure", badge: "available", html: windExposureDetailHtml(item) });
-  sections.push({ icon: "ti-recycle", title: "LCA", badge: "soon", html: lcaDetailHtml(item) });
+  sections.push({ icon: "ti-recycle", title: "LCA", badge: "available", html: lcaDetailHtml(item) });
   return sections;
 }
 

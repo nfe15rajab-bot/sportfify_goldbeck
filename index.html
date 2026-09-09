@@ -257,6 +257,7 @@
             <div class="q-btn active" data-domain="sports">Sports</div>
             <div class="q-btn" data-domain="vegetation">Vegetation</div>
             <div class="q-btn" data-domain="facilities">Facilities</div>
+            <div class="q-btn" data-domain="analysisParams">Analysis</div>
           </div>
         </div>
 
@@ -271,8 +272,13 @@
         </div>
 
         <div class="section">
-          <label>Add reference data</label>
-          <select id="adminEntityType">
+          <label>Add / edit reference data</label>
+          <div class="quality-btns" id="admin-mode-btns">
+            <div class="q-btn active" data-admin-mode="create">Create new</div>
+            <div class="q-btn" data-admin-mode="edit">Edit existing</div>
+          </div>
+
+          <select id="adminEntityType" style="margin-top:8px;">
             <option value="Material">Material</option>
             <option value="Provider">Provider</option>
             <option value="Norm">Norm</option>
@@ -280,8 +286,15 @@
             <option value="PlantPalette">Vegetation palette</option>
             <option value="Plant">Plant</option>
             <option value="FacilityGuideline">Facility guideline</option>
+            <option value="AnalysisParameter">Analysis parameter</option>
             <option value="FieldVariant">Field size variant (needs an existing Sport ID)</option>
           </select>
+
+          <div id="adminRecordPickerWrap" style="display:none; margin-top:8px;">
+            <p class="hint">Pick the record to fill in or correct — e.g. a Material with no embodied-carbon figure yet.</p>
+            <select id="adminRecordPicker"><option value="">Loading…</option></select>
+          </div>
+
           <div id="adminFormFields" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;"></div>
           <button class="btn-export accent" id="btn-admin-create" style="margin-top:8px;">
             <i class="ti ti-plus" aria-hidden="true"></i>Create

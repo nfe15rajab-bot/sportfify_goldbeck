@@ -31,12 +31,13 @@ async function fetchDataEntity(key, path) {
 function domainFetchPlan() {
   if (dataState.domain === "sports") return { key: "sports", path: "sports" };
   if (dataState.domain === "facilities") return { key: "facilities", path: "facilities" };
+  if (dataState.domain === "analysisParams") return { key: "analysisParameters", path: "AnalysisParameters" };
   return { key: "palettes", path: "plants/palettes" };
 }
 
 // Each domain's search box filters against a different field on its items —
-// sports/palettes are named, facility guidelines are grouped by Title instead.
-const DOMAIN_SEARCH_FIELD = { sports: "name", vegetation: "name", facilities: "title" };
+// sports/palettes are named, facility guidelines and analysis parameters are grouped by Title/Label instead.
+const DOMAIN_SEARCH_FIELD = { sports: "name", vegetation: "name", facilities: "title", analysisParams: "label" };
 
 function variantsTableHtml(variants) {
   if (!variants || variants.length === 0) return "";
@@ -90,7 +91,18 @@ function facilityCardHtml(item) {
     </div>`;
 }
 
-const DOMAIN_CARD_HTML = { sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml };
+function analysisParamCardHtml(item) {
+  return `
+    <div class="section">
+      <label>${item.label}</label>
+      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${item.category}</p>
+      <p class="hint"><strong>Value:</strong> ${item.value} ${item.unit}</p>
+      ${item.description ? `<p class="hint">${item.description}</p>` : ""}
+      <p class="hint"><strong>Source:</strong> ${item.authority} — ${item.normCode}</p>
+    </div>`;
+}
+
+const DOMAIN_CARD_HTML = { sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml, analysisParams: analysisParamCardHtml };
 
 function offlineCardHtml() {
   return `
@@ -129,7 +141,7 @@ function renderDataContent(items) {
   }
 
   if (statusEl) {
-    const noun = { sports: "sport", vegetation: "palette", facilities: "guideline" }[dataState.domain] || "item";
+    const noun = { sports: "sport", vegetation: "palette", facilities: "guideline", analysisParams: "parameter" }[dataState.domain] || "item";
     statusEl.textContent = `${filtered.length} ${noun}${filtered.length === 1 ? "" : "s"}${term ? " matching your search" : ""}.`;
   }
 }
@@ -183,6 +195,7 @@ function updateDataUI() {
    and gardenController.js in index.html. ── */
 async function fetchReferenceMaterials() { return fetchDataEntity("materials", "sports/materials"); }
 async function fetchReferenceProviders() { return fetchDataEntity("providers", "sports/providers"); }
+async function fetchAnalysisParameters() { return fetchDataEntity("analysisParameters", "AnalysisParameters"); }
 
 /**
  * Populates a <select> with `items` (each needs id+name) plus a trailing
@@ -237,6 +250,9 @@ const ADMIN_ENTITY_FIELDS = {
     { key: "normCode", label: "Norm code", type: "text", placeholder: "e.g. EN 14904" },
     { key: "performanceClass", label: "Performance class", type: "text" },
     { key: "forceReduction", label: "Force reduction", type: "text", placeholder: "e.g. ≥45%" },
+    { key: "embodiedCarbonValue", label: "Embodied carbon (LCA)", type: "number", placeholder: "e.g. 9.1" },
+    { key: "embodiedCarbonUnit", label: "Embodied carbon unit", type: "text", placeholder: "e.g. kg CO2e/m2" },
+    { key: "embodiedCarbonSource", label: "Embodied carbon source", type: "textarea", placeholder: "Which EPD/database this figure came from" },
     { key: "notes", label: "Notes", type: "textarea" },
   ],
   Provider: [
@@ -283,19 +299,53 @@ const ADMIN_ENTITY_FIELDS = {
     { key: "heightMinM", label: "Min. height (m)", type: "number" },
     { key: "norm", label: "Norm citation", type: "text" },
   ],
+  AnalysisParameter: [
+    { key: "category", label: "Category", type: "text", required: true, placeholder: "Fire Safety, Accessibility, Water Management, Wind Exposure…" },
+    { key: "key", label: "Machine key", type: "text", required: true, placeholder: "e.g. max_travel_distance_m — must match what analysisController.js looks up" },
+    { key: "label", label: "Label", type: "text", required: true },
+    { key: "value", label: "Value", type: "number", required: true },
+    { key: "unit", label: "Unit", type: "text", placeholder: "e.g. m, %, %/cm" },
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "authority", label: "Authority", type: "text", placeholder: "e.g. DIN, MBO, Illustrative" },
+    { key: "normCode", label: "Norm code", type: "text" },
+  ],
 };
 
-function renderAdminForm(entityType) {
+// Which real GET endpoint lists each editable type, and which of its
+// fields reads best as the record picker's label — used only by "Edit
+// existing" mode. FieldVariant has no standalone list endpoint (it's only
+// ever fetched nested under a Sport), so it's create-only.
+const ADMIN_ENTITY_LIST = {
+  Material: { path: "sports/materials", labelField: "name" },
+  Provider: { path: "sports/providers", labelField: "name" },
+  Norm: { path: "norms", labelField: "code" },
+  Sport: { path: "sports", labelField: "name" },
+  PlantPalette: { path: "plants/palettes", labelField: "name" },
+  Plant: { path: "plants", labelField: "commonName" },
+  FacilityGuideline: { path: "facilities", labelField: "title" },
+  AnalysisParameter: { path: "AnalysisParameters", labelField: "label" },
+};
+
+let adminMode = "create"; // "create" | "edit"
+let adminEditRecords = [];  // the currently-picked entity type's full list, for the picker + pre-fill
+let adminEditSelected = null; // the specific record currently being edited
+
+/** `prefill`, when given, seeds each field's input with the existing record's current value — edit mode only; create mode always starts blank. */
+function renderAdminForm(entityType, prefill) {
   const container = document.getElementById("adminFormFields");
   if (!container) return;
   const fields = ADMIN_ENTITY_FIELDS[entityType] || [];
-  container.innerHTML = fields.map(f => `
+  container.innerHTML = fields.map(f => {
+    const current = prefill ? prefill[f.key] : null;
+    const value = current === null || current === undefined ? "" : current;
+    return `
     <div>
       <span>${f.label}${f.required ? " *" : ""}</span>
       ${f.type === "textarea"
-        ? `<textarea data-field="${f.key}" rows="2" placeholder="${f.placeholder || ""}"></textarea>`
-        : `<input type="${f.type === "number" ? "number" : "text"}" data-field="${f.key}" placeholder="${f.placeholder || ""}" ${f.type === "number" ? 'step="any"' : ""} />`}
-    </div>`).join("");
+        ? `<textarea data-field="${f.key}" rows="2" placeholder="${f.placeholder || ""}">${value}</textarea>`
+        : `<input type="${f.type === "number" ? "number" : "text"}" data-field="${f.key}" placeholder="${f.placeholder || ""}" value="${value}" ${f.type === "number" ? 'step="any"' : ""} />`}
+    </div>`;
+  }).join("");
 }
 
 function setAdminStatus(elId, text, ok) {
@@ -305,35 +355,103 @@ function setAdminStatus(elId, text, ok) {
   el.style.color = ok === true ? "var(--text-success)" : ok === false ? "var(--text-fail)" : "";
 }
 
-document.getElementById("adminEntityType").addEventListener("change", e => renderAdminForm(e.target.value));
+function updateAdminCreateButton() {
+  const btn = document.getElementById("btn-admin-create");
+  if (!btn) return;
+  btn.innerHTML = adminMode === "edit"
+    ? `<i class="ti ti-device-floppy" aria-hidden="true"></i>Save changes`
+    : `<i class="ti ti-plus" aria-hidden="true"></i>Create`;
+}
+
+async function loadAdminRecordPicker(entityType) {
+  const wrap = document.getElementById("adminRecordPickerWrap");
+  const picker = document.getElementById("adminRecordPicker");
+  const listMeta = ADMIN_ENTITY_LIST[entityType];
+  if (!listMeta) {
+    wrap.style.display = "block";
+    picker.innerHTML = `<option value="">No browsable list for this type — use Create new instead</option>`;
+    document.getElementById("adminFormFields").innerHTML = "";
+    adminEditRecords = [];
+    return;
+  }
+  wrap.style.display = "block";
+  picker.innerHTML = `<option value="">Loading…</option>`;
+  try {
+    const items = await fetchDataEntity(`admin_${entityType}`, listMeta.path);
+    adminEditRecords = items;
+    picker.innerHTML = `<option value="">Select a record…</option>` +
+      items.map(it => `<option value="${it.id}">#${it.id} — ${it[listMeta.labelField]}</option>`).join("");
+    document.getElementById("adminFormFields").innerHTML = "";
+  } catch (err) {
+    picker.innerHTML = `<option value="">Backend unreachable</option>`;
+    adminEditRecords = [];
+  }
+}
+
+document.getElementById("admin-mode-btns").addEventListener("click", e => {
+  const btn = e.target.closest(".q-btn");
+  if (!btn) return;
+  adminMode = btn.dataset.adminMode;
+  document.querySelectorAll("#admin-mode-btns .q-btn").forEach(b => b.classList.toggle("active", b === btn));
+  document.getElementById("adminRecordPickerWrap").style.display = adminMode === "edit" ? "block" : "none";
+  updateAdminCreateButton();
+  const entityType = document.getElementById("adminEntityType").value;
+  if (adminMode === "edit") loadAdminRecordPicker(entityType);
+  else { adminEditSelected = null; renderAdminForm(entityType); }
+});
+
+document.getElementById("adminRecordPicker").addEventListener("change", e => {
+  const entityType = document.getElementById("adminEntityType").value;
+  adminEditSelected = adminEditRecords.find(it => String(it.id) === e.target.value) || null;
+  renderAdminForm(entityType, adminEditSelected);
+});
+
+document.getElementById("adminEntityType").addEventListener("change", e => {
+  adminEditSelected = null;
+  if (adminMode === "edit") loadAdminRecordPicker(e.target.value);
+  else renderAdminForm(e.target.value);
+});
 renderAdminForm(document.getElementById("adminEntityType").value);
 
 document.getElementById("btn-admin-create").addEventListener("click", async () => {
   const entityType = document.getElementById("adminEntityType").value;
   const fields = ADMIN_ENTITY_FIELDS[entityType] || [];
+  const statusId = "admin-create-status";
+
+  if (adminMode === "edit" && !adminEditSelected) {
+    setAdminStatus(statusId, "Pick a record to edit first.", false);
+    return;
+  }
+
   const data = {};
   for (const f of fields) {
     const el = document.querySelector(`#adminFormFields [data-field="${f.key}"]`);
     const raw = el ? el.value.trim() : "";
-    if (f.required && raw === "") { setAdminStatus("admin-create-status", `${f.label} is required.`, false); return; }
-    if (raw === "") continue;
+    if (adminMode === "create" && f.required && raw === "") { setAdminStatus(statusId, `${f.label} is required.`, false); return; }
+    if (raw === "") continue; // never sent — leaves the field unset (create) or unchanged (edit), rather than blanking it out
     data[f.key] = f.type === "number" ? Number(raw) : raw;
   }
 
-  setAdminStatus("admin-create-status", "Saving…", null);
+  setAdminStatus(statusId, "Saving…", null);
   try {
-    const res = await fetch(`${DATA_API_BASE}/admin/records`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entityType, data }),
-    });
+    const res = adminMode === "edit"
+      ? await fetch(`${DATA_API_BASE}/admin/records/${entityType}/${adminEditSelected.id}`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+        })
+      : await fetch(`${DATA_API_BASE}/admin/records`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entityType, data }),
+        });
     const body = await res.json().catch(() => null);
     if (!res.ok) throw new Error(typeof body === "string" ? body : JSON.stringify(body) || res.statusText);
-    setAdminStatus("admin-create-status", `${entityType} created (id ${body?.id ?? "?"}).`, true);
-    renderAdminForm(entityType);
-    dataState.cache = {}; // the new row invalidates whichever domain list it belongs to
+
+    setAdminStatus(statusId, adminMode === "edit" ? `${entityType} #${body?.id ?? adminEditSelected.id} updated.` : `${entityType} created (id ${body?.id ?? "?"}).`, true);
+    dataState.cache = {}; // the change invalidates whichever domain list it belongs to
+    if (adminMode === "edit") { adminEditSelected = null; loadAdminRecordPicker(entityType); }
+    else renderAdminForm(entityType);
     if (typeof updateDataUI === "function") updateDataUI();
+    if (typeof initAnalysisReferenceData === "function") initAnalysisReferenceData(); // LCA/analysis caches pick up the edit immediately
   } catch (err) {
-    setAdminStatus("admin-create-status", `Failed: ${err.message}`, false);
+    setAdminStatus(statusId, `Failed: ${err.message}`, false);
   }
 });
 
