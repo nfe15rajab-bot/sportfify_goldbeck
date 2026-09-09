@@ -17,8 +17,41 @@
 document.documentElement.dataset.role = "planner";
 
 function isDarkMode() {
-  return document.documentElement.dataset.mode === "dark" || window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return document.documentElement.dataset.mode === "dark";
 }
+
+/* ── Light / dark theme toggle ──
+ * index.html's inline head script already sets html[data-mode] to a saved
+ * choice (or the OS preference, or "dark") before first paint, so the
+ * attribute is always explicitly "light" or "dark" by the time this file
+ * runs — never unset. Toggling just flips it, persists the choice, and
+ * re-renders the few SVG panels (field/activity/garden) that bake
+ * light/dark colors directly into their fills instead of reading CSS
+ * variables; everything else re-themes on its own via those variables.
+ */
+const THEME_STORAGE_KEY = "sportify-theme";
+
+function applyTheme(mode) {
+  document.documentElement.dataset.mode = mode;
+  const btn = document.getElementById("themeToggle");
+  if (btn) {
+    btn.innerHTML = mode === "dark"
+      ? '<i class="ti ti-moon" aria-hidden="true"></i>'
+      : '<i class="ti ti-sun" aria-hidden="true"></i>';
+    btn.title = mode === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  }
+  if (activeMode === "sport") updateUI();
+  else if (activeMode === "garden") updateGardenUI();
+}
+
+function setTheme(mode) {
+  applyTheme(mode);
+  try { localStorage.setItem(THEME_STORAGE_KEY, mode); } catch (e) {}
+}
+
+document.getElementById("themeToggle").addEventListener("click", () => {
+  setTheme(isDarkMode() ? "light" : "dark");
+});
 
 /* ── Mode Switching ── */
 let activeMode = "sport"; // Declared ONCE here!
@@ -136,6 +169,10 @@ function showToast(title, message) {
 }
 
 /* ── Init ── */
+// Sync the toggle button's icon/title to whatever theme the head script
+// already applied — activeMode is still "guide"'s eventual value at this
+// point, so this only updates the button, no SVG redraw happens yet.
+applyTheme(document.documentElement.dataset.mode);
 buildActivityBar();
 siteState.date = typeof todayIsoDate === "function" ? todayIsoDate() : siteState.date;
 document.getElementById("siteDate").value = siteState.date;

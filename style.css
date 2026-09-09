@@ -137,8 +137,16 @@ select:focus { border-color: var(--border-accent); outline: none; }
 .mode-btn { padding: 6px 18px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-sans); }
 .mode-btn.active { background: var(--fill-accent); color: var(--on-accent); }
 
+/* ── Top-right controls: theme toggle + role toggle share one positioned row ── */
+.top-right-controls { position: absolute; top: 12px; right: 14px; z-index: 3; display: flex; align-items: center; gap: 8px; }
+
+/* ── Theme toggle (light / dark) ── */
+.theme-toggle-btn { width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); color: var(--text-secondary); cursor: pointer; transition: background 0.15s, color 0.15s, transform 0.15s; }
+.theme-toggle-btn:hover { background: var(--surface-1); color: var(--text-primary); }
+.theme-toggle-btn:active { transform: scale(0.92); }
+
 /* ── Role toggle (Planner / Client) ── */
-.role-toggle { position: absolute; top: 12px; right: 14px; z-index: 3; display: flex; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; }
+.role-toggle { display: flex; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; }
 .role-btn { padding: 6px 14px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-sans); display: flex; align-items: center; gap: 5px; transition: background 0.15s, color 0.15s; }
 .role-btn i { font-size: 14px; }
 .role-btn.active { background: var(--violet); color: #fff; }

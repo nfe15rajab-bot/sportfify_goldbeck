@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
+  <script>
+    /* Runs before the stylesheet paints so the saved/system theme applies
+       immediately — no flash of the wrong mode. A saved choice always wins;
+       first-ever visit falls back to the OS preference, then to dark
+       (this app's original default). */
+    (function () {
+      try {
+        var saved = localStorage.getItem("sportify-theme");
+        var mode = (saved === "light" || saved === "dark")
+          ? saved
+          : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        document.documentElement.dataset.mode = mode;
+      } catch (e) {
+        document.documentElement.dataset.mode = "dark";
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -25,13 +42,19 @@
       <button id="modeAnalysis" class="mode-btn">Analysis</button>
     </div>
 
-    <div class="role-toggle" id="role-toggle" title="Planner: full manual control. Client: pick preferences, the rules arrange it.">
-      <button id="rolePlanner" class="role-btn active">
-        <i class="ti ti-ruler-2" aria-hidden="true"></i>Planner
+    <div class="top-right-controls">
+      <button id="themeToggle" class="theme-toggle-btn" title="Switch to light mode">
+        <i class="ti ti-moon" aria-hidden="true"></i>
       </button>
-      <button id="roleClient" class="role-btn">
-        <i class="ti ti-user" aria-hidden="true"></i>Client
-      </button>
+
+      <div class="role-toggle" id="role-toggle" title="Planner: full manual control. Client: pick preferences, the rules arrange it.">
+        <button id="rolePlanner" class="role-btn active">
+          <i class="ti ti-ruler-2" aria-hidden="true"></i>Planner
+        </button>
+        <button id="roleClient" class="role-btn">
+          <i class="ti ti-user" aria-hidden="true"></i>Client
+        </button>
+      </div>
     </div>
 
     <nav class="activity-bar" id="activity-bar"></nav>
@@ -211,6 +234,7 @@
           <div class="quality-btns" id="data-domain-btns">
             <div class="q-btn active" data-domain="sports">Sports</div>
             <div class="q-btn" data-domain="vegetation">Vegetation</div>
+            <div class="q-btn" data-domain="facilities">Facilities</div>
           </div>
         </div>
 

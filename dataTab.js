@@ -12,9 +12,9 @@
 const DATA_API_BASE = "http://localhost:5107/api";
 
 const dataState = {
-  domain: "sports",       // "sports" | "vegetation"
+  domain: "sports",       // "sports" | "vegetation" | "facilities"
   search: "",
-  cache: {},               // { sports: Sport[], palettes: PlantPalette[] }
+  cache: {},               // { sports: Sport[], palettes: PlantPalette[], facilities: FacilityGuideline[] }
   backendOnline: null,     // null = not checked yet, true/false once known
 };
 
@@ -29,22 +29,38 @@ async function fetchDataEntity(key, path) {
 }
 
 function domainFetchPlan() {
-  return dataState.domain === "sports"
-    ? { key: "sports", path: "sports" }
-    : { key: "palettes", path: "plants/palettes" };
+  if (dataState.domain === "sports") return { key: "sports", path: "sports" };
+  if (dataState.domain === "facilities") return { key: "facilities", path: "facilities" };
+  return { key: "palettes", path: "plants/palettes" };
+}
+
+// Each domain's search box filters against a different field on its items —
+// sports/palettes are named, facility guidelines are grouped by Title instead.
+const DOMAIN_SEARCH_FIELD = { sports: "name", vegetation: "name", facilities: "title" };
+
+function variantsTableHtml(variants) {
+  if (!variants || variants.length === 0) return "";
+  const rows = variants.map(v => `
+    <div class="dim-card">
+      <div class="val">${v.lengthM}×${v.widthM} m</div>
+      <div class="lbl">${v.variant} — run-off ${v.runoffM}m, h≥${v.heightMinM}m</div>
+    </div>`).join("");
+  return `<div class="dims" style="grid-template-columns:1fr;">${rows}</div>`;
 }
 
 function sportCardHtml(sport) {
   const norms = (sport.norms || []).map(n => n.code).join(", ") || "—";
-  const materials = (sport.materials || []).map(m => m.name).join(", ") || "—";
+  const materials = (sport.materials || []).map(m => m.performanceClass ? `${m.name} (${m.normCode} ${m.performanceClass}, force reduction ${m.forceReduction || "—"})` : m.name).join("; ") || "—";
   const providers = (sport.providers || []).map(p => p.name).join(", ") || "—";
   return `
-    <div class="section">
+    <div class="section span-2">
       <label>${sport.name}</label>
       <p class="hint">${sport.category}</p>
       <p class="hint"><strong>Norms:</strong> ${norms}</p>
       <p class="hint"><strong>Materials:</strong> ${materials}</p>
       <p class="hint"><strong>Providers:</strong> ${providers}</p>
+      <p class="hint" style="margin-top:6px"><strong>Field dimensions (length × width):</strong></p>
+      ${variantsTableHtml(sport.variants)}
     </div>`;
 }
 
@@ -59,6 +75,18 @@ function paletteCardHtml(palette) {
       <p class="hint"><strong>Norms:</strong> ${norms}</p>
     </div>`;
 }
+
+function facilityCardHtml(item) {
+  return `
+    <div class="section">
+      <label>${item.title}</label>
+      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${item.category}</p>
+      <p class="hint">${item.requirement}</p>
+      <p class="hint"><strong>Source:</strong> ${item.authority} — ${item.normCode}</p>
+    </div>`;
+}
+
+const DOMAIN_CARD_HTML = { sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml };
 
 function offlineCardHtml() {
   return `
@@ -85,18 +113,19 @@ function renderDataContent(items) {
     return;
   }
 
+  const searchField = DOMAIN_SEARCH_FIELD[dataState.domain] || "name";
   const term = dataState.search.trim().toLowerCase();
-  const filtered = term ? items.filter(it => (it.name || "").toLowerCase().includes(term)) : items;
+  const filtered = term ? items.filter(it => (it[searchField] || "").toLowerCase().includes(term)) : items;
 
   if (filtered.length === 0) {
     contentEl.innerHTML = `<div class="step-grid"><div class="section span-2"><p class="hint">No matches${term ? ` for "${dataState.search}"` : ""}.</p></div></div>`;
   } else {
-    const cardHtml = dataState.domain === "sports" ? sportCardHtml : paletteCardHtml;
+    const cardHtml = DOMAIN_CARD_HTML[dataState.domain] || sportCardHtml;
     contentEl.innerHTML = `<div class="step-grid">${filtered.map(cardHtml).join("")}</div>`;
   }
 
   if (statusEl) {
-    const noun = dataState.domain === "sports" ? "sport" : "palette";
+    const noun = { sports: "sport", vegetation: "palette", facilities: "guideline" }[dataState.domain] || "item";
     statusEl.textContent = `${filtered.length} ${noun}${filtered.length === 1 ? "" : "s"}${term ? " matching your search" : ""}.`;
   }
 }
