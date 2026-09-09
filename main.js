@@ -186,5 +186,8 @@ document.getElementById("siteDate").value = siteState.date;
 setMode("guide");
 if(typeof initCombineInteractions === "function") initCombineInteractions();
 if(typeof updateSiteUI === "function") updateSiteUI();
-if(typeof restoreAutosaveIfAny === "function") restoreAutosaveIfAny();
 startRevitPolling();
+// restoreAutosaveIfAny() is no longer called automatically here — the
+// session gate (sessionGate.js, shown on top of whatever setMode("guide")
+// just rendered) now owns that decision explicitly instead of silently
+// restoring on every load.

@@ -33,6 +33,25 @@
     <canvas id="bg-canvas"></canvas>
     <div id="toast-container" class="toast-container"></div>
 
+    <div id="sessionGate" class="session-gate">
+      <div class="session-gate-card">
+        <div class="session-gate-icon"><i class="ti ti-building-stadium" aria-hidden="true"></i></div>
+        <h1>Welcome to Sportify</h1>
+        <p class="hint">Pick up where you left off, or start a fresh roof layout.</p>
+        <div class="session-gate-actions">
+          <button class="btn-export accent" id="btn-gate-load">
+            <i class="ti ti-upload" aria-hidden="true"></i><span id="btn-gate-load-label">Load a Session</span>
+          </button>
+          <button class="btn-export" id="btn-gate-new">
+            <i class="ti ti-plus" aria-hidden="true"></i>Start a New Session
+          </button>
+        </div>
+        <button class="session-gate-link" id="btn-gate-load-file" style="display:none">Or load from a file instead</button>
+        <input type="file" id="gate-load-file" accept=".json" style="display:none" />
+        <p class="hint" id="sessionGateStatus"></p>
+      </div>
+    </div>
+
     <div class="mode-toggle">
       <button id="modeData" class="mode-btn">Data</button>
       <button id="modeGuide" class="mode-btn active">Guide</button>
@@ -683,6 +702,7 @@
   <script src="combineController.js"></script>
   <script src="analysisController.js"></script>
   <script src="compareController.js"></script>
+  <script src="sessionGate.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

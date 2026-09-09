@@ -415,3 +415,15 @@ html[data-role="client"] .planner-only { display: none !important; }
 
 .compare-overall { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 0.5px solid var(--border); font-size: 11px; font-weight: 600; color: var(--text-secondary); }
 .compare-overall-num { font-size: 20px; font-weight: 800; color: var(--text-accent); font-variant-numeric: tabular-nums; }
+
+/* ── Session gate ── */
+.session-gate { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(8,9,20,0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.25s ease; }
+.session-gate.session-gate-hidden { opacity: 0; pointer-events: none; }
+.session-gate-card { width: min(400px, 90vw); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 30px 26px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.4); }
+.session-gate-icon { font-size: 32px; color: var(--text-accent); margin-bottom: 8px; }
+.session-gate-card h1 { font-size: 19px; font-weight: 700; color: var(--text-primary); }
+.session-gate-card > .hint { font-size: 12px; margin: 6px 0 20px; }
+.session-gate-actions { display: flex; flex-direction: column; gap: 8px; }
+.session-gate-link { display: block; margin: 12px auto 0; background: none; border: none; color: var(--text-accent); font-size: 11px; cursor: pointer; text-decoration: underline; font-family: var(--font-sans); }
+.session-gate-link:hover { color: var(--text-primary); }
+#sessionGateStatus:not(:empty) { margin-top: 10px; color: var(--text-fail); }

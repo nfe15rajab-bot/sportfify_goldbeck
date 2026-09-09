@@ -159,7 +159,11 @@ function computeAxisScores(state) {
   const distances = circulation.paths.map(p => pathLengthM(p.points));
   const maxDist = distances.length ? Math.max(...distances) : 0;
   const reachOk = circulation.unreachable.size === 0;
-  const widthOk = DESIGN_RULES.circulationWidth_m >= WHEELCHAIR_MIN_WIDTH_M;
+  // WHEELCHAIR_MIN_WIDTH_M used to be a bare constant here; analysisController.js
+  // now sources it from the AnalysisParameter database table (falling back to
+  // the same 1.5 default offline) via getAnalysisParam() — reused directly so
+  // Compare's accessibility check never disagrees with the Analysis tab's.
+  const widthOk = DESIGN_RULES.circulationWidth_m >= getAnalysisParam("Accessibility", "min_circulation_width_m");
   const distScore = clamp(100 - maxDist * 4, 15, 100);
   const accessibility = reachOk ? Math.round(distScore * 0.6 + (widthOk ? 100 : 50) * 0.4) : 20;
 
@@ -324,16 +328,19 @@ function cardShellHtml(r) {
     </div>`;
 }
 
+/** rAF-driven count-up, tweening from the number's own last value. rAF can be starved indefinitely (a backgrounded tab, a minimized/hidden window) — setting the correct value up front means a starved tween still ends up showing the right number immediately, just without the animation, instead of silently freezing on a stale one. */
 function animateNumber(el, target) {
   if (!el) return;
   const start = Number(el.dataset.val || 0);
+  el.textContent = Math.round(target);
+  el.dataset.val = target;
   const startTime = performance.now();
   const dur = 450;
   function frame(now) {
     const t = Math.min(1, (now - startTime) / dur);
     const k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     el.textContent = Math.round(start + (target - start) * k);
-    if (t < 1) requestAnimationFrame(frame); else el.dataset.val = target;
+    if (t < 1) requestAnimationFrame(frame); else el.textContent = Math.round(target);
   }
   requestAnimationFrame(frame);
 }
