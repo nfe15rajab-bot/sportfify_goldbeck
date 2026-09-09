@@ -132,6 +132,114 @@ function lcaCardHtml() {
     <p class="hint">Needs embodied-carbon coefficients per material, which aren't in the reference database yet — see the Data tab's Materials list.</p></div>`;
 }
 
+/**
+ * ── Sun Path chart ──
+ * The first prototype of "graphs the web app can do that Revit can't as
+ * a simple 2D chart" (Revit's own sun tool only visualizes a path on the
+ * 3D model) — feeds into the Revit Deliverables report as a PNG. Samples
+ * getSunPosition() (sunPosition.js) across the day by handing it a
+ * shallow siteState copy per time slice rather than mutating the real
+ * siteState, since that function reads siteState.time internally.
+ * Fixed, non-theme colors on purpose: this is meant to become a page in
+ * a printed/embedded report, not something that should shift with the
+ * live viewer's dark-mode preference. CSS custom properties (var(...))
+ * also wouldn't resolve correctly once serialized out to a standalone
+ * PNG anyway — a real constraint, not just a style choice.
+ */
+function sampleSunPathToday() {
+  const samples = [];
+  for (let totalMin = 4 * 60; totalMin <= 22 * 60; totalMin += 20) {
+    const hh = String(Math.floor(totalMin / 60)).padStart(2, "0");
+    const mm = String(totalMin % 60).padStart(2, "0");
+    const sun = typeof getSunPosition === "function" ? getSunPosition({ ...siteState, time: `${hh}:${mm}` }) : null;
+    if (sun) samples.push({ minutes: totalMin, altitudeDeg: sun.altitudeDeg });
+  }
+  return samples;
+}
+
+function buildSunPathSvg() {
+  const samples = sampleSunPathToday();
+  if (samples.length === 0) return null;
+
+  const W = 640, H = 300, PAD_L = 42, PAD_R = 16, PAD_T = 16, PAD_B = 30;
+  const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
+  const minMin = samples[0].minutes, maxMin = samples[samples.length - 1].minutes;
+  const altitudes = samples.map(s => s.altitudeDeg);
+  const minAlt = Math.min(-10, Math.floor(Math.min(...altitudes) / 10) * 10);
+  const maxAlt = Math.max(10, Math.ceil(Math.max(...altitudes) / 10) * 10);
+  const xFor = min => PAD_L + ((min - minMin) / (maxMin - minMin)) * plotW;
+  const yFor = alt => PAD_T + (1 - (alt - minAlt) / (maxAlt - minAlt)) * plotH;
+
+  let gridSvg = "";
+  for (let h = Math.ceil(minMin / 120) * 2; h <= Math.floor(maxMin / 60); h += 2) {
+    const x = xFor(h * 60);
+    gridSvg += `<line x1="${x.toFixed(1)}" y1="${PAD_T}" x2="${x.toFixed(1)}" y2="${PAD_T + plotH}" stroke="#e2e2ea" stroke-width="1"/>`;
+    gridSvg += `<text x="${x.toFixed(1)}" y="${H - 10}" font-size="10" fill="#8a8a9a" text-anchor="middle" font-family="Arial,sans-serif">${h}:00</text>`;
+  }
+  for (let a = minAlt; a <= maxAlt; a += 20) {
+    const y = yFor(a);
+    gridSvg += `<line x1="${PAD_L}" y1="${y.toFixed(1)}" x2="${PAD_L + plotW}" y2="${y.toFixed(1)}" stroke="#e2e2ea" stroke-width="1"/>`;
+    gridSvg += `<text x="${PAD_L - 8}" y="${(y + 3).toFixed(1)}" font-size="10" fill="#8a8a9a" text-anchor="end" font-family="Arial,sans-serif">${a}°</text>`;
+  }
+
+  const pathD = samples.map((s, i) => `${i === 0 ? "M" : "L"}${xFor(s.minutes).toFixed(1)},${yFor(s.altitudeDeg).toFixed(1)}`).join(" ");
+  const horizonY = yFor(0).toFixed(1);
+
+  return `<svg id="sunPathSvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#ffffff;border-radius:8px;">
+    ${gridSvg}
+    <line x1="${PAD_L}" y1="${horizonY}" x2="${PAD_L + plotW}" y2="${horizonY}" stroke="#e0664a" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="${(PAD_L + plotW - 4).toFixed(1)}" y="${(Number(horizonY) - 6).toFixed(1)}" font-size="10" fill="#e0664a" text-anchor="end" font-family="Arial,sans-serif">horizon</text>
+    <path d="${pathD}" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  </svg>`;
+}
+
+function downloadSunPathPng() {
+  const svgEl = document.getElementById("sunPathSvg");
+  if (!svgEl) return;
+  const svgString = new XMLSerializer().serializeToString(svgEl);
+  const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = () => {
+    const scale = 2; // supersample so it isn't blurry once placed on a Revit sheet
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff"; // the PNG needs an opaque background; the SVG itself has none
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(blob => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "sportify_sun_path.png";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast("Chart downloaded", "sportify_sun_path.png — pick this file in Revit's Generate Analysis Report command.");
+    }, "image/png");
+  };
+  img.onerror = () => showToast("Export failed", "Couldn't render the chart to an image.");
+  img.src = url;
+}
+
+function sunPathSectionHtml() {
+  const svg = buildSunPathSvg();
+  if (!svg) {
+    return `<div class="section span-2"><label>Sun Path <span class="mode-status available">Available now</span></label>
+      <p class="hint">Set a site location on Combine's Site step first — this chart needs a real latitude/longitude to compute sun altitude.</p></div>`;
+  }
+  return `<div class="section span-2">
+    <label>Sun Path — Today <span class="mode-status available">Available now</span></label>
+    <p class="hint">Altitude across the day at the current site — a 2D analytical chart Revit's own sun tool doesn't offer (it only draws a path on the 3D model). Exports as a PNG for the Revit Deliverables report.</p>
+    ${svg}
+    <button class="btn-export accent" id="btn-download-sunpath" style="margin-top:8px">
+      <i class="ti ti-file-download" aria-hidden="true"></i>Download Chart (PNG)
+    </button>
+  </div>`;
+}
+
 /* ── Per-component explorer ──
  * Left: one clickable card per pushed piece. Right: that piece's own
  * parameters, organized into the same section taxonomy a BIM family's
@@ -346,6 +454,9 @@ function renderAnalysisContent() {
       ${windExposureCardHtml()}
       ${lcaCardHtml()}
     </div>
+    <div class="step-grid">
+      ${sunPathSectionHtml()}
+    </div>
     <div class="analysis-components-heading">
       <i class="ti ti-list-details" aria-hidden="true"></i>
       <span>Component Details</span>
@@ -356,6 +467,7 @@ function renderAnalysisContent() {
       <div class="analysis-component-detail" id="analysis-component-detail"></div>
     </div>`;
   renderComponentExplorer();
+  document.getElementById("btn-download-sunpath")?.addEventListener("click", downloadSunPathPng);
 }
 
 function updateAnalysisUI() {
