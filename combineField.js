@@ -148,6 +148,7 @@ function drawCombineCanvas() {
   const circulation = computeCirculation(combineState, DESIGN_RULES);
   const outOfBoundsIds = findOutOfBoundsIds(items, roof);
   const anyOutOfBounds = outOfBoundsIds.size > 0;
+  const zoneConflicts = findZoneConflicts(items, DESIGN_RULES);
 
   // Circulation paths draw under the pieces so labels stay readable.
   circulation.paths.forEach(p => {
@@ -237,7 +238,7 @@ function drawCombineCanvas() {
     }
   }
 
-  renderRulesPanel(overlappingIds, anyOutOfBounds, circulation);
+  renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts);
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);
@@ -281,7 +282,7 @@ function renderSmartRuleAdvisory() {
  * Rebuilding innerHTML from state matches the pattern used everywhere
  * else in this app (e.g. updateGardenUI's layer cards).
  */
-function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation) {
+function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts) {
   const panel = document.getElementById("rules-panel");
   if (!panel) return;
   const items = combineState.items;
@@ -315,6 +316,15 @@ function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation) {
           ? "Every piece connects back to an entrance."
           : `${circulation.unreachable.size} piece(s) can't be reached from any entrance.`,
     });
+    if (zoneConflicts) {
+      rows.push({
+        passed: zoneConflicts.pairs.length === 0,
+        label: `Quiet zones protected (${DESIGN_RULES.quietBufferM.toFixed(1)} m buffer)`,
+        detail: zoneConflicts.pairs.length === 0
+          ? "No wellness/garden zone sits too close to a loud court or activity."
+          : zoneConflicts.pairs.map(p => `"${p.quietLabel}" is ${p.distanceM.toFixed(1)} m from "${p.loudLabel}"`).join("; ") + ".",
+      });
+    }
   }
 
   panel.innerHTML = rows.map(r => `

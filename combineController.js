@@ -204,6 +204,7 @@ bindRuleInput("ruleClearance", "clearance_m");
 bindRuleInput("ruleSetback", "boundarySetback_m");
 bindRuleInput("ruleCirculationWidth", "circulationWidth_m");
 bindRuleInput("ruleMinEntries", "minEntryPoints", v => Math.max(1, Math.round(Number(v))));
+bindRuleInput("ruleQuietBuffer", "quietBufferM");
 
 /* ── Generate Layout: rule-based auto-arrange, tweened into place ── */
 function animateItemsTo(placements, onDone) {
@@ -318,14 +319,15 @@ function buildCombinedPayload() {
       world_origin_x_m: combineState.roof.originXm || 0,
       world_origin_y_m: combineState.roof.originYm || 0
     },
-    // The four planner-tunable thresholds, so a Revit import can draw the
+    // The five planner-tunable thresholds, so a Revit import can draw the
     // same setback inset the canvas shows (as a simple rectangle inset,
     // same approximation setbackGuideSvg already uses for a polygon roof).
     design_rules: {
       clearance_m: DESIGN_RULES.clearance_m,
       boundary_setback_m: DESIGN_RULES.boundarySetback_m,
       circulation_width_m: DESIGN_RULES.circulationWidth_m,
-      min_entry_points: DESIGN_RULES.minEntryPoints
+      min_entry_points: DESIGN_RULES.minEntryPoints,
+      quiet_buffer_m: DESIGN_RULES.quietBufferM
     },
     entry_points: combineState.entryPoints.map(ep => ({
       x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge
@@ -399,6 +401,7 @@ function applySessionSnapshot(payload) {
     DESIGN_RULES.boundarySetback_m = payload.design_rules.boundary_setback_m ?? DESIGN_RULES.boundarySetback_m;
     DESIGN_RULES.circulationWidth_m = payload.design_rules.circulation_width_m ?? DESIGN_RULES.circulationWidth_m;
     DESIGN_RULES.minEntryPoints = payload.design_rules.min_entry_points ?? DESIGN_RULES.minEntryPoints;
+    DESIGN_RULES.quietBufferM = payload.design_rules.quiet_buffer_m ?? DESIGN_RULES.quietBufferM;
   }
 
   combineState.entryPoints = (payload.entry_points || []).map((ep, i) => ({
@@ -439,6 +442,7 @@ function applySessionSnapshot(payload) {
   document.getElementById("ruleSetback").value = DESIGN_RULES.boundarySetback_m;
   document.getElementById("ruleCirculationWidth").value = DESIGN_RULES.circulationWidth_m;
   document.getElementById("ruleMinEntries").value = DESIGN_RULES.minEntryPoints;
+  document.getElementById("ruleQuietBuffer").value = DESIGN_RULES.quietBufferM;
   if (payload.site_location) {
     document.getElementById("siteDate").value = siteState.date;
     document.getElementById("siteTime").value = siteState.time;

@@ -17,7 +17,99 @@ const DESIGN_RULES = {
   boundarySetback_m: 1.5,  // min gap kept between a piece and the site edge
   circulationWidth_m: 1.2, // min walkway width circulation paths must keep clear
   minEntryPoints: 1,       // how many entrances a valid layout needs
+  quietBufferM: 3.0,       // min gap kept between a noise-sensitive zone and a loud one
 };
+
+/* ── Garden↔sport interaction: noise-sensitive zones need distance from loud ones ──
+ * The clearance rule only guarantees pieces don't overlap — it says nothing about
+ * whether a yoga deck ends up backed onto a basketball court. This is a separate,
+ * larger buffer (quietBufferM), checked independently of clearance.
+ */
+
+/** All garden pieces are inherently quiet; activities are only quiet if tagged "wellness" in Activitiesdata.js. Sport fields are never quiet — courts are loud by nature. */
+function isQuietZone(item) {
+  if (item.kind === "garden") return true;
+  if (item.kind === "activity") return item.sourceJson?.activity?.category === "wellness";
+  return false;
+}
+
+/** Every sport field is loud; activities are loud unless they're the wellness kind above. Gardens are never loud. */
+function isLoudZone(item) {
+  if (item.kind === "field") return true;
+  if (item.kind === "activity") return item.sourceJson?.activity?.category !== "wellness";
+  return false;
+}
+
+/**
+ * True edge-to-edge gap between two axis-aligned footprints (0 if they
+ * touch or overlap) — NOT center-to-center, which badly underrates
+ * proximity for a size-asymmetric pair: a 28x15m court's own center sits
+ * ~14m from its edge, so a small deck placed right against that edge
+ * would read as "far away" under a center-distance metric even though
+ * it's touching. Same per-axis gap formula rectsOverlap's zero-gap case
+ * implies, generalized to the positive-gap case.
+ */
+function zoneGapM(a, b) {
+  const fpA = getFootprint(a), fpB = getFootprint(b);
+  const dx = Math.max(0, Math.max(b.x_m - (a.x_m + fpA.w), a.x_m - (b.x_m + fpB.w)));
+  const dy = Math.max(0, Math.max(b.y_m - (a.y_m + fpA.h), a.y_m - (b.y_m + fpB.h)));
+  return Math.hypot(dx, dy);
+}
+
+/**
+ * Returns { conflictIds: Set<itemId>, pairs: [{quietId, quietLabel, loudId, loudLabel, distanceM}] }
+ * for every quiet/loud pair closer than rules.quietBufferM. O(n²) over placed
+ * items, same cost class as findOverlappingIds — fine at Combine's scale.
+ */
+function findZoneConflicts(items, rules) {
+  const conflictIds = new Set();
+  const pairs = [];
+  const quiet = items.filter(isQuietZone);
+  const loud = items.filter(isLoudZone);
+
+  quiet.forEach(q => {
+    loud.forEach(l => {
+      if (q.id === l.id) return;
+      const d = zoneGapM(q, l);
+      if (d < rules.quietBufferM) {
+        conflictIds.add(q.id);
+        conflictIds.add(l.id);
+        pairs.push({ quietId: q.id, quietLabel: q.label, loudId: l.id, loudLabel: l.label, distanceM: d });
+      }
+    });
+  });
+
+  return { conflictIds, pairs };
+}
+
+/**
+ * Wind-sensitivity for garden pieces feeding suggestPositionsForItem's
+ * ranking below — taller/deeper-rooted vegetation catches more wind and
+ * benefits from sitting further from the roof edge (the same edge zone
+ * Wind Exposure's analyzeWindExposure() already flags). Garden items not
+ * in this list default to insensitive, since a low groundcover parcel has
+ * no real wind-exposure preference either way.
+ */
+const WIND_SENSITIVE_GARDEN_ITEMS = new Set(["roof_trees"]);
+
+function isWindSensitive(item) {
+  return item.kind === "garden" && WIND_SENSITIVE_GARDEN_ITEMS.has(item.sourceJson?.garden?.type_id);
+}
+
+/**
+ * Same metric analyzeWindExposure() (analysisController.js) uses —
+ * distance from a footprint's nearest edge to the roof boundary.
+ * Deliberately NOT named edgeDistanceM: analysisController.js already
+ * declares a global function with that exact name and a different
+ * signature (item, roof) — this file and that one both load as plain
+ * <script> tags into one shared global scope with no modules, so a
+ * same-named function here would silently shadow (or be shadowed by,
+ * depending on script order) the other, breaking whichever signature
+ * lost.
+ */
+function footprintEdgeDistanceM(footprintX, footprintY, fpW, fpH, roof) {
+  return Math.min(footprintX, roof.length - (footprintX + fpW), footprintY, roof.width - (footprintY + fpH));
+}
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -330,7 +422,9 @@ function boxAccessDistance(grid, dist, xm, ym, wM, hM) {
  * Searches a coarse grid of candidate (x, y, rotation) spots for one item —
  * clear of every other piece (with the clearance-rule gap), inside the
  * boundary setback — and ranks the valid ones by circulation access (closer
- * to an entrance first), then by closeness to the roof's center, then by
+ * to an entrance first); wind-sensitive garden items (isWindSensitive) then
+ * prefer the more sheltered spot ahead of the usual closeness-to-center
+ * tiebreaker, and everyone else falls straight through to it; last,
  * matching the item's current rotation. Returns the top few with a score
  * and a short plain-language reason. Expensive (a search, not a lookup) —
  * only called from discrete-event triggers, never per-pointermove.
@@ -341,6 +435,7 @@ function suggestPositionsForItem(item, combineState, rules, topN = 3) {
   const grid = buildOccupancyGrid(roof, others, rules.circulationWidth_m);
   const starts = combineState.entryPoints.map(ep => entryStartCell(ep, roof, grid)).filter(k => k >= 0);
   const dist = starts.length ? bfs(grid, starts).dist : null;
+  const windSensitive = isWindSensitive(item);
 
   const setback = rules.boundarySetback_m, half = rules.clearance_m / 2;
   const cx = roof.length / 2, cy = roof.width / 2;
@@ -364,7 +459,8 @@ function suggestPositionsForItem(item, combineState, rules, topN = 3) {
         if (blocked) continue;
         const accessDist = dist ? boxAccessDistance(grid, dist, x, y, fp.w, fp.h) : Infinity;
         const centerDist = Math.hypot(x + fp.w / 2 - cx, y + fp.h / 2 - cy);
-        candidates.push({ x_m: Math.round(x * 10) / 10, y_m: Math.round(y * 10) / 10, rotation, w_m: fp.w, h_m: fp.h, accessDist, centerDist });
+        const edgeDist = footprintEdgeDistanceM(x, y, fp.w, fp.h, roof);
+        candidates.push({ x_m: Math.round(x * 10) / 10, y_m: Math.round(y * 10) / 10, rotation, w_m: fp.w, h_m: fp.h, accessDist, centerDist, edgeDist });
       }
     }
   });
@@ -373,6 +469,7 @@ function suggestPositionsForItem(item, combineState, rules, topN = 3) {
     const aR = Number.isFinite(a.accessDist), bR = Number.isFinite(b.accessDist);
     if (aR !== bR) return aR ? -1 : 1;
     if (aR && a.accessDist !== b.accessDist) return a.accessDist - b.accessDist;
+    if (windSensitive && Math.abs(a.edgeDist - b.edgeDist) > 0.05) return b.edgeDist - a.edgeDist;
     if (Math.abs(a.centerDist - b.centerDist) > 0.05) return a.centerDist - b.centerDist;
     return (a.rotation === item.rotation ? 0 : 1) - (b.rotation === item.rotation ? 0 : 1);
   });
@@ -385,7 +482,7 @@ function suggestPositionsForItem(item, combineState, rules, topN = 3) {
     reason: !starts.length
       ? "Clear of every piece and inside the boundary — add an entrance to also check circulation."
       : Number.isFinite(c.accessDist)
-        ? (i === 0 ? "Closest reachable spot with no clearance conflicts." : "Reachable, a bit further from the nearest entrance.")
+        ? (i === 0 ? (windSensitive ? "Closest reachable, wind-sheltered spot with no clearance conflicts." : "Closest reachable spot with no clearance conflicts.") : "Reachable, a bit further from the nearest entrance.")
         : "Clear of conflicts, but not yet connected to an entrance.",
   }));
 }
