@@ -158,6 +158,32 @@ function buildSportPayload() {
   };
 }
 
+/**
+ * Was referenced by the push-to-combine handler below but never defined
+ * (typeof-guarded, so it silently fell back to {} instead of erroring) —
+ * activity pieces exported with empty parameters ever since Activity
+ * presets shipped. Mirrors buildSportPayload()/buildGardenPayload()'s
+ * shape: same three universal materials fields (quality_level,
+ * reference_material, reference_provider) as both, so this isn't a third
+ * one-off shape. Activities have no reference-material picker in the UI
+ * (only Sport/Garden do), so those two stay null rather than omitted.
+ */
+function buildActivityPayload() {
+  const a = ACTIVITIES[state.activityId];
+  const mat = ACTIVITY_MATERIALS[state.activityQuality];
+  return {
+    version: "1.0", generator: "Sportify",
+    quality_key: typeof getActivityQualityKey === "function" ? getActivityQualityKey(state.activityId) : "",
+    activity: {
+      type_id: state.activityId,
+      category: a.category,
+      norm: a.norm,
+      dimensions: { length_m: state.activityLength, width_m: state.activityWidth },
+    },
+    materials: { surface: mat.surface, structure: mat.structure, quality_level: state.activityQuality, reference_material: null, reference_provider: null },
+  };
+}
+
 document.getElementById("btn-json").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(buildSportPayload(), null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `sportify_${state.sport}_${state.variant}.json`; a.click();

@@ -329,7 +329,7 @@ let selectedComponentId = null;
 const KIND_LABELS = { field: "Sport Field", activity: "Activity", garden: "Garden" };
 const KIND_ICONS = { field: "ti-square-rounded", activity: "ti-run", garden: "ti-leaf" };
 
-/** Activity items currently export empty sourceJson (buildActivityPayload() isn't defined yet — see Ali's PDF item), so fall back to looking the label up in the reference data directly. */
+/** Fallback for activity pieces pushed before buildActivityPayload() existed (empty sourceJson) — looks the label up in the reference data directly instead. */
 function findActivityMeta(label) {
   if (typeof ACTIVITIES !== "object") return null;
   return Object.values(ACTIVITIES).find(a => a.label === label) || null;
@@ -377,8 +377,16 @@ function generalSectionHtml(item) {
     relevance = `${titleCase(g.type_id)} — ${titleCase(g.theme)} (${titleCase(g.category)})`;
     quality = titleCase(g.materials?.quality_level);
   } else if (item.kind === "activity") {
-    const meta = findActivityMeta(item.label);
-    relevance = meta ? `${titleCase(meta.category)} — ${meta.norm}` : "Not available yet (buildActivityPayload() isn't wired up)";
+    if (item.sourceJson?.activity) {
+      const a = item.sourceJson.activity;
+      relevance = `${titleCase(a.category)} — ${a.norm}`;
+      quality = titleCase(item.sourceJson.materials?.quality_level);
+    } else {
+      // Pieces pushed before buildActivityPayload() existed have no
+      // sourceJson.activity to read — fall back to the reference data.
+      const meta = findActivityMeta(item.label);
+      relevance = meta ? `${titleCase(meta.category)} — ${meta.norm}` : "—";
+    }
   }
 
   return `
@@ -412,7 +420,15 @@ function materialsSectionHtml(item) {
       <p class="hint"><strong>Reference provider:</strong> ${g.materials?.reference_provider || "— none picked"}</p>
       <div class="dims" style="grid-template-columns:1fr;margin-top:6px;">${layers}</div>`;
   }
-  return `<p class="hint">Not available yet — activity pieces don't export material data (see Ali's PDF item on buildActivityPayload()).</p>`;
+  if (item.kind === "activity" && item.sourceJson?.materials) {
+    const m = item.sourceJson.materials;
+    return `
+      <p class="hint"><strong>Surface:</strong> ${m.surface || "—"}</p>
+      <p class="hint"><strong>Structure:</strong> ${m.structure || "—"}</p>
+      <p class="hint"><strong>Reference material:</strong> ${m.reference_material || "— none picked"}</p>
+      <p class="hint"><strong>Reference provider:</strong> ${m.reference_provider || "— none picked"}</p>`;
+  }
+  return `<p class="hint">No material data available for this piece — it was likely pushed before buildActivityPayload() existed. Push it again to pick up real data.</p>`;
 }
 
 function fireSafetyDetailHtml(item) {
