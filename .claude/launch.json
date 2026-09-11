@@ -4,8 +4,8 @@
     {
       "name": "sportfify_goldbeck",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "serve", ".", "-l", "5173"],
-      "port": 5173
+      "runtimeArgs": ["--yes", "serve", ".", "-l", "8123"],
+      "port": 8123
     }
   ]
 }
