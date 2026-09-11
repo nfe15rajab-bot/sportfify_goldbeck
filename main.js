@@ -57,6 +57,8 @@ document.getElementById("themeToggle").addEventListener("click", () => {
 let activeMode = "sport"; // Declared ONCE here!
 
 document.getElementById("modeGuide").addEventListener("click", () => setMode("guide"));
+document.getElementById("modeDeliverables").addEventListener("click", () => setMode("deliverables"));
+document.getElementById("modeSession").addEventListener("click", () => setMode("session"));
 document.getElementById("modeSite").addEventListener("click", () => setMode("site"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
 document.getElementById("modeGarden").addEventListener("click", () => setMode("garden"));
@@ -66,26 +68,16 @@ document.getElementById("modeAnalysis").addEventListener("click", () => setMode(
 document.getElementById("modeCompare").addEventListener("click", () => setMode("compare"));
 document.getElementById("btn-guide-start").addEventListener("click", () => setMode("site"));
 
-/* ── Overview tab: workflow shortcuts, save/load, deliverables ──
- * All of these delegate to the SAME real buttons/functions used elsewhere
- * (top-right save/load icons, each mode's own export buttons) rather than
- * duplicating logic — Overview is a front door to real actions, not a
- * second implementation of them. */
+/* ── Overview / Deliverables / Save Session tabs ──
+ * Deliverables' buttons delegate to each mode's own real export buttons
+ * rather than duplicating logic; Save/Load's own buttons (wired directly
+ * in combineController.js — downloadCombinedSession/loadSessionFromFile)
+ * are now the ONLY save/load entry point, since the old top-right icons
+ * were a redundant second copy of the same action. */
 document.getElementById("overviewWorkflow")?.addEventListener("click", e => {
   const btn = e.target.closest(".workflow-step");
   if (btn) setMode(btn.dataset.goto);
 });
-
-/** Overview's own sub-tabs (Workflow / Deliverables / Save Session) — independent of the app's main mode-switching. */
-document.getElementById("overviewNav")?.addEventListener("click", e => {
-  const btn = e.target.closest(".overview-tab-btn");
-  if (!btn) return;
-  const target = btn.dataset.overviewTab;
-  document.querySelectorAll(".overview-tab-btn").forEach(b => b.classList.toggle("active", b === btn));
-  document.querySelectorAll(".overview-tab-content").forEach(c => { c.hidden = c.dataset.overviewContent !== target; });
-});
-document.getElementById("btn-overview-save")?.addEventListener("click", () => document.getElementById("btn-save-session-global").click());
-document.getElementById("btn-overview-load")?.addEventListener("click", () => document.getElementById("btn-load-session-global").click());
 
 function wireDeliverable(overviewId, realId) {
   document.getElementById(overviewId)?.addEventListener("click", () => document.getElementById(realId)?.click());
@@ -105,6 +97,8 @@ function setMode(mode) {
   const isCompare = mode === "compare";
   const isGuide = mode === "guide";
   const isSite = mode === "site";
+  const isDeliverables = mode === "deliverables";
+  const isSession = mode === "session";
 
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
@@ -121,8 +115,8 @@ function setMode(mode) {
   // that space to the canvas instead of leaving it empty. Data, Analysis,
   // Compare, Site, and Guide keep the sidebar visible/hidden per their own
   // minimal needs.
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide || isSite) ? "none" : "flex";
-  document.querySelector(".panel").style.display = (isCombine || isGuide) ? "none" : "flex";
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide || isSite || isDeliverables || isSession) ? "none" : "flex";
+  document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession) ? "none" : "flex";
 
   document.getElementById("siteConfigurator").style.display = isSite ? "block" : "none";
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
@@ -139,14 +133,17 @@ function setMode(mode) {
   document.getElementById("garden-field").style.display = isGarden ? "block" : "none";
   // #combine-canvas is nested inside #combineConfigurator now, so toggling
   // that parent already shows/hides it — no separate toggle needed here.
-  // Site has no canvas-wrap content of its own — the sidebar (map + sun
-  // compass) already carries everything it needs.
+  document.getElementById("site-content").style.display = isSite ? "block" : "none";
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
   document.getElementById("compare-content").style.display = isCompare ? "block" : "none";
   document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
+  document.getElementById("deliverables-content").style.display = isDeliverables ? "block" : "none";
+  document.getElementById("session-content").style.display = isSession ? "block" : "none";
 
   document.getElementById("modeGuide").classList.toggle("active", isGuide);
+  document.getElementById("modeDeliverables").classList.toggle("active", isDeliverables);
+  document.getElementById("modeSession").classList.toggle("active", isSession);
   document.getElementById("modeSite").classList.toggle("active", isSite);
   document.getElementById("modeSport").classList.toggle("active", isSport);
   document.getElementById("modeGarden").classList.toggle("active", isGarden);
@@ -225,6 +222,41 @@ function showToast(title, message) {
 // Sync the toggle button's icon/title to whatever theme the head script
 // already applied — activeMode is still "guide"'s eventual value at this
 // point, so this only updates the button, no SVG redraw happens yet.
+/**
+ * Generic drag-to-resize for a handle sitting next to a fixed-width pane.
+ * targetSide "left" = the pane being resized sits to the LEFT of the
+ * handle (dragging right grows it, e.g. the main .panel sidebar);
+ * "right" = the pane sits to the RIGHT of the handle (dragging right
+ * shrinks it instead, e.g. Combine's step/iterations panes) — same
+ * pointer-capture idiom the roof canvas's own drags already use.
+ */
+function makeResizable(handleId, targetEl, { min, max, targetSide }) {
+  const handle = document.getElementById(handleId);
+  if (!handle || !targetEl) return;
+  let startX = 0, startWidth = 0;
+  const sign = targetSide === "left" ? 1 : -1;
+
+  handle.addEventListener("pointerdown", e => {
+    startX = e.clientX;
+    startWidth = targetEl.getBoundingClientRect().width;
+    handle.classList.add("resizing");
+    try { handle.setPointerCapture(e.pointerId); } catch (err) { /* no active pointer for this id — rare, harmless to skip capture */ }
+    e.preventDefault();
+  });
+  handle.addEventListener("pointermove", e => {
+    if (!handle.hasPointerCapture(e.pointerId)) return;
+    const newWidth = Math.min(max, Math.max(min, startWidth + sign * (e.clientX - startX)));
+    targetEl.style.width = `${newWidth}px`;
+  });
+  ["pointerup", "pointercancel"].forEach(evt => handle.addEventListener(evt, e => {
+    handle.classList.remove("resizing");
+    if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
+  }));
+}
+makeResizable("panelResizer", document.querySelector(".panel"), { min: 180, max: 520, targetSide: "left" });
+makeResizable("stepPaneResizer", document.querySelector(".combine-step-pane"), { min: 300, max: 720, targetSide: "right" });
+makeResizable("iterationsPaneResizer", document.querySelector(".iterations-pane"), { min: 140, max: 400, targetSide: "right" });
+
 applyTheme(document.documentElement.dataset.mode);
 buildActivityBar();
 siteState.date = typeof todayIsoDate === "function" ? todayIsoDate() : siteState.date;

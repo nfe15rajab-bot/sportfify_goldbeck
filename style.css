@@ -79,7 +79,17 @@ html[data-app-mode="garden"][data-mode="dark"] {
 #bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 
 /* ── Left panel ── */
-.panel { width: 240px; min-width: 240px; background: var(--surface-1); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 2; flex-shrink: 0; }
+.panel { width: 240px; min-width: 180px; max-width: 520px; background: var(--surface-1); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; overflow-x: auto; position: relative; z-index: 2; flex-shrink: 0; }
+
+/* ── Resizable panel handles ──
+ * A thin drag handle between two panes, width-adjustable via
+ * makeResizable() (main.js). Widened invisibly (::before) so the actual
+ * grab target is bigger than the 1px visible line, same idiom VS Code/most
+ * editors use for split-pane handles. */
+.panel-resizer { width: 5px; flex-shrink: 0; cursor: col-resize; position: relative; z-index: 3; background: transparent; }
+.panel-resizer::before { content: ""; position: absolute; inset: 0 -3px; }
+.panel-resizer::after { content: ""; position: absolute; top: 0; bottom: 0; left: 2px; width: 1px; background: var(--border-strong); transition: background 0.15s, width 0.15s, left 0.15s; }
+.panel-resizer:hover::after, .panel-resizer.resizing::after { background: var(--fill-accent); width: 2px; left: 1.5px; }
 .panel-header { padding: 12px 14px; border-bottom: 0.5px solid var(--border); }
 .panel-header h2 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 .panel-header p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
@@ -221,8 +231,13 @@ html[data-role="client"] .planner-only { display: none !important; }
 .suggestion-text { flex: 1; font-size: 10.5px; color: var(--text-secondary); }
 .suggestion-score { font-size: 10px; font-weight: 700; color: var(--suggestion-color); }
 
-/* ── Site & Sun: Leaflet map, address search, sun compass ── */
-.site-map { width: 100%; height: 160px; border-radius: var(--radius); border: 0.5px solid var(--border); margin-top: 4px; overflow: hidden; }
+/* ── Site & Sun: Leaflet map (now the main-canvas content for Site mode), address search, sun compass ── */
+/* .canvas-wrap already centers its children (flex, align/justify-content:
+   center) — sizing this as a bounded box rather than 100%/100% is what
+   lets that centering actually show, instead of the box filling (and so
+   visually canceling) the centered space. */
+#site-content { width: min(900px, 100%); height: min(600px, 100%); }
+.site-map { width: 100%; height: 100%; border-radius: calc(var(--radius) * 1.5); border: 0.5px solid var(--border-strong); overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
 .site-address-row { display: flex; gap: 6px; margin-top: 6px; }
 .site-address-row input[type="text"] { flex: 1; }
 .site-address-row .btn-export { width: auto; padding: 6px 10px; }
@@ -245,14 +260,14 @@ html[data-role="client"] .planner-only { display: none !important; }
 .combine-zoom-controls button { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 4px; color: var(--text-secondary); cursor: pointer; font-size: 13px; }
 .combine-zoom-controls button:hover { background: var(--surface-1); color: var(--text-accent); }
 .combine-zoom-hint { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); margin: 0; font-size: 9px; opacity: 0.6; pointer-events: none; white-space: nowrap; }
-.combine-step-pane { flex: 1 1 54%; min-width: 340px; max-width: 640px; height: 100%; display: flex; flex-direction: column; background: var(--surface-1); border-left: 0.5px solid var(--border); }
+.combine-step-pane { flex: 0 0 auto; width: 400px; min-width: 300px; max-width: 720px; height: 100%; display: flex; flex-direction: column; background: var(--surface-1); border-left: 0.5px solid var(--border); overflow-x: auto; }
 
 /* ── Iterations pane — Revit-Properties-panel-style list of saved
    snapshots (savedCompareConfigs, compareController.js), shown in both
    Combine (its own docked pane here) and Analysis (a section in its
    existing sidebar — see .iterations-section below). Selecting one loads
    it live and refreshes whichever tab is showing it. ── */
-.iterations-pane { width: 180px; min-width: 160px; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; background: var(--surface-2); border-left: 0.5px solid var(--border); padding: 14px 12px; overflow-y: auto; }
+.iterations-pane { width: 200px; min-width: 140px; max-width: 400px; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; background: var(--surface-2); border-left: 0.5px solid var(--border); padding: 14px 12px; overflow-y: auto; overflow-x: auto; }
 .iterations-pane-header { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; color: var(--text-primary); }
 .iterations-pane-hint { margin: 4px 0 12px; }
 .iterations-section .hint { margin-bottom: 10px; }
@@ -409,16 +424,7 @@ html[data-role="client"] .planner-only { display: none !important; }
 .guide-cta { margin-top: 28px; display: flex; justify-content: center; }
 .guide-cta .btn-export { width: auto; padding: 10px 22px; }
 
-/* ── Overview: sub-tabs (Workflow / Deliverables / Save Session) ── */
-.overview-nav { display: flex; gap: 4px; border-bottom: 0.5px solid var(--border); margin-top: 24px; }
-.overview-tab-btn { display: flex; align-items: center; gap: 6px; padding: 9px 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font-sans); transition: color 0.15s, border-color 0.15s; }
-.overview-tab-btn i { font-size: 14px; }
-.overview-tab-btn:hover { color: var(--text-secondary); }
-.overview-tab-btn.active { color: var(--text-accent); border-bottom-color: var(--fill-accent); }
-.overview-tab-content { padding-top: 18px; }
-.overview-tab-content[hidden] { display: none; }
-
-/* ── Overview: workflow pipeline, save/load, deliverables ── */
+/* ── Overview / Deliverables / Save Session: workflow pipeline, exports ── */
 .workflow-row { display: flex; align-items: center; gap: 6px; margin-top: 20px; overflow-x: auto; padding-bottom: 4px; }
 .workflow-step { flex: 1 1 0; min-width: 108px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 1.5); padding: 14px 8px; cursor: pointer; font-family: var(--font-sans); transition: border-color 0.15s, transform 0.15s; }
 .workflow-step:hover { border-color: var(--border-accent); transform: translateY(-1px); }
@@ -452,7 +458,13 @@ html[data-role="client"] .planner-only { display: none !important; }
 .mode-status.available { background: var(--bg-success); color: var(--text-success); border: 0.5px solid var(--border-success); }
 .mode-status.vision { background: var(--violet-tint); color: var(--violet); border: 0.5px solid var(--violet); }
 
-.philosophy-diagram { width: 100%; height: auto; margin: 8px 0; display: block; }
+/* Fixed height (not aspect-ratio-driven auto) so the 3 philosophy cards
+   stay visually aligned regardless of each diagram's own viewBox aspect —
+   the SVG's own preserveAspectRatio (default xMidYMid meet) fits the
+   artwork inside without distortion either way. */
+.philosophy-diagram { width: 100%; height: 130px; margin: 8px 0; display: block; }
+.guide-grid.step-grid { align-items: stretch; }
+.guide-grid.step-grid .section { display: flex; flex-direction: column; }
 .philosophy-diagram.grid rect { fill: var(--fill-accent); opacity: 0.75; }
 .philosophy-diagram.fractal .diagram-outline { fill: none; stroke: var(--border-strong); stroke-width: 1.5; }
 .philosophy-diagram.fractal .diagram-path { fill: none; stroke: var(--violet); stroke-width: 2; stroke-dasharray: 4,3; stroke-linecap: round; stroke-linejoin: round; }

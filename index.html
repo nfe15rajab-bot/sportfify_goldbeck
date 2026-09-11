@@ -60,17 +60,13 @@
       </div>
     </div>
 
-    <div class="mode-toggle mode-toggle-single">
+    <div class="mode-toggle">
       <button id="modeGuide" class="mode-btn active">Overview</button>
+      <button id="modeDeliverables" class="mode-btn">Deliverables</button>
+      <button id="modeSession" class="mode-btn">Save Session</button>
     </div>
 
     <div class="top-right-controls">
-      <button id="btn-save-session-global" class="theme-toggle-btn" title="Save session — downloads your current layout, load it back in anytime">
-        <i class="ti ti-device-floppy" aria-hidden="true"></i>
-      </button>
-      <button id="btn-load-session-global" class="theme-toggle-btn" title="Load session — pick up a previously saved layout">
-        <i class="ti ti-folder-open" aria-hidden="true"></i>
-      </button>
       <input type="file" id="load-session-file-global" accept=".json" style="display:none" />
 
       <button id="themeToggle" class="theme-toggle-btn" title="Switch to light mode">
@@ -126,13 +122,12 @@
         </div>
         <div class="section planner-only">
           <label>Site location</label>
-          <div id="site-map" class="site-map"></div>
           <div class="site-address-row">
             <input type="text" id="siteAddressSearch" placeholder="Search an address…" />
             <button class="btn-export" id="btn-site-search" title="Search"><i class="ti ti-search" aria-hidden="true"></i></button>
             <button class="btn-export" id="btn-site-geolocate" title="Use my current location"><i class="ti ti-current-location" aria-hidden="true"></i></button>
           </div>
-          <p class="hint" id="site-coords-status">No location set — click the map to place the site.</p>
+          <p class="hint" id="site-coords-status">No location set — click the map on the right to place the site.</p>
         </div>
         <div class="section planner-only">
           <label>Roof orientation</label>
@@ -477,6 +472,8 @@
 
     </aside>
 
+    <div class="panel-resizer" id="panelResizer" title="Drag to resize"></div>
+
     <div class="canvas-area">
       <div class="canvas-top">
         <span class="field-name" id="field-label">Polyvalent field — Mini</span>
@@ -485,6 +482,10 @@
       <div class="canvas-wrap">
         <svg id="field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
         <svg id="garden-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
+
+        <div id="site-content" style="display:none">
+          <div id="site-map" class="site-map"></div>
+        </div>
 
         <div id="data-content" style="display:none"></div>
 
@@ -499,13 +500,6 @@
               <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Site, Sport, Garden, Combine, Analysis, Compare and Data all live in the rail on the left — here's the order they're meant to be used in.</p>
             </div>
 
-            <div class="overview-nav" id="overviewNav">
-              <button class="overview-tab-btn active" data-overview-tab="workflow"><i class="ti ti-route" aria-hidden="true"></i>Workflow</button>
-              <button class="overview-tab-btn" data-overview-tab="deliverables"><i class="ti ti-download" aria-hidden="true"></i>Deliverables</button>
-              <button class="overview-tab-btn" data-overview-tab="session"><i class="ti ti-device-floppy" aria-hidden="true"></i>Save Session</button>
-            </div>
-
-            <div class="overview-tab-content" data-overview-content="workflow">
               <div class="workflow-row" id="overviewWorkflow">
                 <button class="workflow-step" data-goto="site"><span class="workflow-num">1</span><i class="ti ti-map-pin" aria-hidden="true"></i><span class="workflow-label">Site</span><span class="hint">Roof size, location, sun</span></button>
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
@@ -588,55 +582,58 @@
             <div class="guide-cta">
               <button class="btn-export primary" id="btn-guide-start"><i class="ti ti-arrow-right" aria-hidden="true"></i>Start with Site setup</button>
             </div>
+          </div>
+        </div>
+
+        <div id="deliverables-content" style="display:none">
+          <div class="guide-wrap">
+            <div class="guide-hero">
+              <h1>Deliverables</h1>
+              <p class="hint">Real, working exports grouped by discipline — each button downloads the actual current state, not a placeholder.</p>
             </div>
 
-            <div class="overview-tab-content" data-overview-content="deliverables" hidden>
-              <div class="guide-hero">
-                <h2>Deliverables</h2>
-                <p class="hint">Real, working exports grouped by discipline — each button downloads the actual current state, not a placeholder.</p>
+            <div class="deliverables-grid">
+              <div class="deliverable-group">
+                <div class="deliverable-group-title"><i class="ti ti-ball-basketball" aria-hidden="true"></i>Sport</div>
+                <button class="deliverable-item" id="btn-deliver-sport-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Field JSON<small>Currently configured sport</small></span></button>
+                <button class="deliverable-item" id="btn-deliver-sport-dxf"><i class="ti ti-vector-triangle" aria-hidden="true"></i><span>Field DXF<small>CAD-ready outline</small></span></button>
               </div>
-
-              <div class="deliverables-grid">
-                <div class="deliverable-group">
-                  <div class="deliverable-group-title"><i class="ti ti-ball-basketball" aria-hidden="true"></i>Sport</div>
-                  <button class="deliverable-item" id="btn-deliver-sport-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Field JSON<small>Currently configured sport</small></span></button>
-                  <button class="deliverable-item" id="btn-deliver-sport-dxf"><i class="ti ti-vector-triangle" aria-hidden="true"></i><span>Field DXF<small>CAD-ready outline</small></span></button>
-                </div>
-                <div class="deliverable-group">
-                  <div class="deliverable-group-title"><i class="ti ti-plant-2" aria-hidden="true"></i>Garden</div>
-                  <button class="deliverable-item" id="btn-deliver-garden-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Garden JSON<small>Currently configured parcel</small></span></button>
-                </div>
-                <div class="deliverable-group">
-                  <div class="deliverable-group-title"><i class="ti ti-layout-grid" aria-hidden="true"></i>Combine</div>
-                  <button class="deliverable-item" id="btn-deliver-combine-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Combined JSON<small>Full session — feeds the Revit add-in</small></span></button>
-                  <button class="deliverable-item" id="btn-deliver-combine-png"><i class="ti ti-photo" aria-hidden="true"></i><span>Roof PNG<small>Current arrangement as an image</small></span></button>
-                </div>
-                <div class="deliverable-group deliverable-group-note">
-                  <div class="deliverable-group-title"><i class="ti ti-building-factory-2" aria-hidden="true"></i>Revit</div>
-                  <p class="hint">Analysis reports, functional diagrams, and schedules are still placeholder commands in the add-in's ribbon — not generating real files yet.</p>
-                </div>
+              <div class="deliverable-group">
+                <div class="deliverable-group-title"><i class="ti ti-plant-2" aria-hidden="true"></i>Garden</div>
+                <button class="deliverable-item" id="btn-deliver-garden-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Garden JSON<small>Currently configured parcel</small></span></button>
+              </div>
+              <div class="deliverable-group">
+                <div class="deliverable-group-title"><i class="ti ti-layout-grid" aria-hidden="true"></i>Combine</div>
+                <button class="deliverable-item" id="btn-deliver-combine-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Combined JSON<small>Full session — feeds the Revit add-in</small></span></button>
+                <button class="deliverable-item" id="btn-deliver-combine-png"><i class="ti ti-photo" aria-hidden="true"></i><span>Roof PNG<small>Current arrangement as an image</small></span></button>
+              </div>
+              <div class="deliverable-group deliverable-group-note">
+                <div class="deliverable-group-title"><i class="ti ti-building-factory-2" aria-hidden="true"></i>Revit</div>
+                <p class="hint">Analysis reports, functional diagrams, and schedules are still placeholder commands in the add-in's ribbon — not generating real files yet.</p>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="overview-tab-content" data-overview-content="session" hidden>
-              <div class="guide-hero">
-                <h2>Save Session</h2>
-                <p class="hint">The whole session — roof, rules, entries, site location, and every placement — as one file. Load it back in anytime to pick up exactly where you left off, on this machine or another one.</p>
-              </div>
-
-              <div class="overview-actions">
-                <button class="btn-export accent overview-action-btn" id="btn-overview-save">
-                  <i class="ti ti-device-floppy" aria-hidden="true"></i>
-                  <span><strong>Save Session</strong><small>Download your current layout — load it back in anytime</small></span>
-                </button>
-                <button class="btn-export overview-action-btn" id="btn-overview-load">
-                  <i class="ti ti-folder-open" aria-hidden="true"></i>
-                  <span><strong>Load Session</strong><small>Resume a previously saved layout</small></span>
-                </button>
-              </div>
-
-              <p class="hint guide-section-spacer">Sportify also autosaves to this browser every few seconds, and the welcome screen offers to resume it next time — this is for a real file you keep, share, or load on another machine.</p>
+        <div id="session-content" style="display:none">
+          <div class="guide-wrap">
+            <div class="guide-hero">
+              <h1>Save Session</h1>
+              <p class="hint">The whole session — roof, rules, entries, site location, and every placement — as one file. Load it back in anytime to pick up exactly where you left off, on this machine or another one.</p>
             </div>
+
+            <div class="overview-actions">
+              <button class="btn-export accent overview-action-btn" id="btn-overview-save">
+                <i class="ti ti-device-floppy" aria-hidden="true"></i>
+                <span><strong>Save Session</strong><small>Download your current layout — load it back in anytime</small></span>
+              </button>
+              <button class="btn-export overview-action-btn" id="btn-overview-load">
+                <i class="ti ti-folder-open" aria-hidden="true"></i>
+                <span><strong>Load Session</strong><small>Resume a previously saved layout</small></span>
+              </button>
+            </div>
+
+            <p class="hint guide-section-spacer">Sportify also autosaves to this browser every few seconds, and the welcome screen offers to resume it next time — this is for a real file you keep, share, or load on another machine.</p>
           </div>
         </div>
 
@@ -659,6 +656,8 @@
               <div class="combine-tray-items" id="combineTrayItems"></div>
             </div>
           </div>
+
+          <div class="panel-resizer" id="stepPaneResizer" title="Drag to resize"></div>
 
           <div class="combine-step-pane">
             <div class="wizard-nav" id="wizard-nav">
@@ -813,6 +812,8 @@
               <button class="btn-export primary" id="wizard-next">Next<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
             </div>
           </div>
+
+          <div class="panel-resizer" id="iterationsPaneResizer" title="Drag to resize"></div>
 
           <aside class="iterations-pane">
             <div class="iterations-pane-header"><i class="ti ti-stack-2" aria-hidden="true"></i> Iterations</div>

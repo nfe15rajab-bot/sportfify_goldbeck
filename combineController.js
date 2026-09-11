@@ -511,9 +511,9 @@ function downloadCombineRoofPng() {
 }
 document.getElementById("btn-combine-png")?.addEventListener("click", downloadCombineRoofPng);
 
-// Always-visible top-bar twin of the above — same action, reachable
-// without navigating to Combine's last wizard step first.
-document.getElementById("btn-save-session-global").addEventListener("click", downloadCombinedSession);
+// Overview's own "Save Session" tab twin of the above — same action,
+// reachable without navigating to Combine's last wizard step first.
+document.getElementById("btn-overview-save")?.addEventListener("click", downloadCombinedSession);
 
 /**
  * Pushes the current layout into Compare's rolling 3-slot buffer
@@ -641,8 +641,8 @@ document.getElementById("load-session-file").addEventListener("change", e => {
   e.target.value = ""; // otherwise re-selecting the same file next time fires no change event
 });
 
-// Always-visible top-bar twin of the above — same action, reachable from any tab.
-document.getElementById("btn-load-session-global").addEventListener("click", () => { document.getElementById("load-session-file-global").click(); });
+// Overview's "Save Session" tab twin of the above — same action, reachable from any tab.
+document.getElementById("btn-overview-load")?.addEventListener("click", () => { document.getElementById("load-session-file-global").click(); });
 document.getElementById("load-session-file-global").addEventListener("change", e => {
   loadSessionFromFile(e.target.files[0]);
   e.target.value = "";
