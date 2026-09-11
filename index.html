@@ -38,13 +38,21 @@
         <div class="session-gate-icon"><i class="ti ti-building-stadium" aria-hidden="true"></i></div>
         <h1>Welcome to Sportify</h1>
         <p class="hint">Pick up where you left off, or start a fresh roof layout.</p>
-        <div class="session-gate-actions">
+        <div class="session-gate-actions" id="sessionGateMainActions">
           <button class="btn-export accent" id="btn-gate-load">
             <i class="ti ti-upload" aria-hidden="true"></i><span id="btn-gate-load-label">Load a Session</span>
           </button>
           <button class="btn-export" id="btn-gate-new">
             <i class="ti ti-plus" aria-hidden="true"></i>Start a New Session
           </button>
+          <button class="btn-export" id="btn-gate-presets">
+            <i class="ti ti-building-factory-2" aria-hidden="true"></i>Load Goldbeck IFC Roof — Prebuilt Session
+          </button>
+        </div>
+        <div class="session-gate-presets" id="sessionGatePresets" hidden>
+          <button class="session-gate-link session-gate-back" id="btn-gate-presets-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
+          <p class="hint session-gate-presets-intro">Three real, rule-checked layouts on the actual Goldbeck roof (67.6 × 21 m, 4 entries) — pick one to start editing, or use it as-is.</p>
+          <div class="preset-cards" id="presetCards"></div>
         </div>
         <button class="session-gate-link" id="btn-gate-load-file" style="display:none">Or load from a file instead</button>
         <input type="file" id="gate-load-file" accept=".json" style="display:none" />
@@ -52,14 +60,8 @@
       </div>
     </div>
 
-    <div class="mode-toggle">
-      <button id="modeData" class="mode-btn">Data</button>
-      <button id="modeGuide" class="mode-btn active">Guide</button>
-      <button id="modeSport" class="mode-btn">Sport</button>
-      <button id="modeGarden" class="mode-btn">Garden</button>
-      <button id="modeCombine" class="mode-btn">Combine</button>
-      <button id="modeAnalysis" class="mode-btn">Analysis</button>
-      <button id="modeCompare" class="mode-btn">Compare</button>
+    <div class="mode-toggle mode-toggle-single">
+      <button id="modeGuide" class="mode-btn active">Overview</button>
     </div>
 
     <div class="top-right-controls">
@@ -85,9 +87,72 @@
       </div>
     </div>
 
+    <nav class="mode-rail" id="modeRail" title="Sportify workspaces">
+      <button id="modeSite" class="activity-icon" title="Site"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="activity-icon-label">Site</span></button>
+      <div class="activity-bar-divider"></div>
+      <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
+      <button id="modeGarden" class="activity-icon" title="Garden"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Garden</span></button>
+      <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
+      <div class="activity-bar-divider"></div>
+      <button id="modeAnalysis" class="activity-icon" title="Analysis"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Analysis</span></button>
+      <button id="modeCompare" class="activity-icon" title="Compare"><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="activity-icon-label">Compare</span></button>
+      <div class="activity-bar-divider"></div>
+      <button id="modeData" class="activity-icon" title="Data"><i class="ti ti-database" aria-hidden="true"></i><span class="activity-icon-label">Data</span></button>
+    </nav>
+
     <nav class="activity-bar" id="activity-bar"></nav>
 
     <aside class="panel">
+      <div id="siteConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Site</h2>
+          <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine/Analysis for shading decisions.</p>
+        </div>
+        <div class="section planner-only">
+          <label>Roof boundary</label>
+          <button class="btn-export accent" id="btn-import-revit">
+            <i class="ti ti-upload" aria-hidden="true"></i>Import from Revit
+          </button>
+          <input type="file" id="import-revit-file" accept=".json" style="display:none" />
+          <p class="hint" id="import-revit-status">No import yet — using manual values below.</p>
+        </div>
+        <div class="section planner-only">
+          <label>Roof size (m)</label>
+          <div class="input-row">
+            <input type="number" id="roofLength" value="15" min="1" step="0.5" title="Length (m)" />
+            <input type="number" id="roofWidth" value="10" min="1" step="0.5" title="Width (m)" />
+          </div>
+          <p class="hint">Length × width.</p>
+        </div>
+        <div class="section planner-only">
+          <label>Site location</label>
+          <div id="site-map" class="site-map"></div>
+          <div class="site-address-row">
+            <input type="text" id="siteAddressSearch" placeholder="Search an address…" />
+            <button class="btn-export" id="btn-site-search" title="Search"><i class="ti ti-search" aria-hidden="true"></i></button>
+            <button class="btn-export" id="btn-site-geolocate" title="Use my current location"><i class="ti ti-current-location" aria-hidden="true"></i></button>
+          </div>
+          <p class="hint" id="site-coords-status">No location set — click the map to place the site.</p>
+        </div>
+        <div class="section planner-only">
+          <label>Roof orientation</label>
+          <input type="range" id="siteNorthDeg" min="0" max="359" step="1" value="0" />
+          <p class="hint">Degrees clockwise from the top of the canvas to true north — <span id="site-north-val">0°</span>.</p>
+        </div>
+        <div class="section">
+          <label>Sun date &amp; time</label>
+          <div class="input-row">
+            <input type="date" id="siteDate" />
+            <input type="time" id="siteTime" value="12:00" />
+          </div>
+        </div>
+        <div class="section">
+          <label>Sun position</label>
+          <div id="sun-compass" class="sun-compass"></div>
+          <p class="hint" id="sun-summary">Set a site location to see sun position and shading guidance.</p>
+        </div>
+      </div>
+
       <div id="sportConfigurator">
         <div class="panel-header">
           <h2 id="sport-panel-title">Field configurator</h2>
@@ -345,12 +410,17 @@
           <h2>Analysis tools</h2>
           <p>Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these.</p>
         </div>
+        <div class="section iterations-section">
+          <label><i class="ti ti-stack-2" aria-hidden="true"></i> Saved iterations</label>
+          <p class="hint">Saved from Combine's Review step ("Save for Compare") — select one to analyze it instead.</p>
+          <div class="iterations-list" id="iterationsListAnalysis"></div>
+        </div>
       </div>
 
       <div id="compareConfigurator" style="display:none">
         <div class="panel-header">
           <h2>Compare configurations</h2>
-          <p>Three predefined 20 × 25 m roof layouts, built from real reference-database figures. Pick what matters most, or fine-tune below.</p>
+          <p id="compare-intro">Three predefined 20 × 25 m roof layouts, built from real reference-database figures. Pick what matters most, or fine-tune below.</p>
         </div>
 
         <div class="section">
@@ -398,10 +468,10 @@
         <div class="section">
           <label>Roof</label>
           <div class="dims">
-            <div class="dim-card"><div class="val">25 × 20 m</div><div class="lbl">Dimensions</div></div>
-            <div class="dim-card"><div class="val">500 m²</div><div class="lbl">Total area</div></div>
+            <div class="dim-card"><div class="val" id="compare-roof-dims">25 × 20 m</div><div class="lbl">Dimensions</div></div>
+            <div class="dim-card"><div class="val" id="compare-roof-area">500 m²</div><div class="lbl">Total area</div></div>
           </div>
-          <p class="hint">Fixed for this comparison — each configuration is auto-arranged and rule-checked against the same 20 × 25 m boundary.</p>
+          <p class="hint" id="compare-roof-hint">Fixed for this comparison — each configuration is auto-arranged and rule-checked against the same 20 × 25 m boundary.</p>
         </div>
       </div>
 
@@ -426,10 +496,34 @@
           <div class="guide-wrap">
             <div class="guide-hero">
               <h1>Design your roof, your way</h1>
-              <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Here's how it thinks.</p>
+              <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Site, Sport, Garden, Combine, Analysis, Compare and Data all live in the rail on the left — here's the order they're meant to be used in.</p>
             </div>
 
-            <div class="step-grid guide-grid">
+            <div class="overview-nav" id="overviewNav">
+              <button class="overview-tab-btn active" data-overview-tab="workflow"><i class="ti ti-route" aria-hidden="true"></i>Workflow</button>
+              <button class="overview-tab-btn" data-overview-tab="deliverables"><i class="ti ti-download" aria-hidden="true"></i>Deliverables</button>
+              <button class="overview-tab-btn" data-overview-tab="session"><i class="ti ti-device-floppy" aria-hidden="true"></i>Save Session</button>
+            </div>
+
+            <div class="overview-tab-content" data-overview-content="workflow">
+              <div class="workflow-row" id="overviewWorkflow">
+                <button class="workflow-step" data-goto="site"><span class="workflow-num">1</span><i class="ti ti-map-pin" aria-hidden="true"></i><span class="workflow-label">Site</span><span class="hint">Roof size, location, sun</span></button>
+                <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
+                <button class="workflow-step" data-goto="sport"><span class="workflow-num">2</span><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="workflow-label">Sport / Garden</span><span class="hint">Configure pieces, push them</span></button>
+                <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
+                <button class="workflow-step" data-goto="combine"><span class="workflow-num">3</span><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="workflow-label">Combine</span><span class="hint">Drag pieces onto the roof</span></button>
+                <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
+                <button class="workflow-step" data-goto="analysis"><span class="workflow-num">4</span><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="workflow-label">Analysis</span><span class="hint">Check the layout</span></button>
+                <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
+                <button class="workflow-step" data-goto="compare"><span class="workflow-num">5</span><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="workflow-label">Compare</span><span class="hint">Weigh variants against each other</span></button>
+              </div>
+
+              <div class="guide-hero guide-section-spacer">
+                <h2>How it thinks</h2>
+                <p class="hint">Three layout philosophies Sportify can work from — whichever one you build toward, the same rules underneath decide if it's actually usable.</p>
+              </div>
+
+              <div class="step-grid guide-grid">
               <div class="section">
                 <label>Grid-based <span class="mode-status available">Available now</span></label>
                 <svg viewBox="0 0 100 74" class="philosophy-diagram grid" aria-hidden="true">
@@ -492,76 +586,89 @@
             </div>
 
             <div class="guide-cta">
-              <button class="btn-export primary" id="btn-guide-start"><i class="ti ti-arrow-right" aria-hidden="true"></i>Start in Sport mode</button>
+              <button class="btn-export primary" id="btn-guide-start"><i class="ti ti-arrow-right" aria-hidden="true"></i>Start with Site setup</button>
+            </div>
+            </div>
+
+            <div class="overview-tab-content" data-overview-content="deliverables" hidden>
+              <div class="guide-hero">
+                <h2>Deliverables</h2>
+                <p class="hint">Real, working exports grouped by discipline — each button downloads the actual current state, not a placeholder.</p>
+              </div>
+
+              <div class="deliverables-grid">
+                <div class="deliverable-group">
+                  <div class="deliverable-group-title"><i class="ti ti-ball-basketball" aria-hidden="true"></i>Sport</div>
+                  <button class="deliverable-item" id="btn-deliver-sport-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Field JSON<small>Currently configured sport</small></span></button>
+                  <button class="deliverable-item" id="btn-deliver-sport-dxf"><i class="ti ti-vector-triangle" aria-hidden="true"></i><span>Field DXF<small>CAD-ready outline</small></span></button>
+                </div>
+                <div class="deliverable-group">
+                  <div class="deliverable-group-title"><i class="ti ti-plant-2" aria-hidden="true"></i>Garden</div>
+                  <button class="deliverable-item" id="btn-deliver-garden-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Garden JSON<small>Currently configured parcel</small></span></button>
+                </div>
+                <div class="deliverable-group">
+                  <div class="deliverable-group-title"><i class="ti ti-layout-grid" aria-hidden="true"></i>Combine</div>
+                  <button class="deliverable-item" id="btn-deliver-combine-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Combined JSON<small>Full session — feeds the Revit add-in</small></span></button>
+                  <button class="deliverable-item" id="btn-deliver-combine-png"><i class="ti ti-photo" aria-hidden="true"></i><span>Roof PNG<small>Current arrangement as an image</small></span></button>
+                </div>
+                <div class="deliverable-group deliverable-group-note">
+                  <div class="deliverable-group-title"><i class="ti ti-building-factory-2" aria-hidden="true"></i>Revit</div>
+                  <p class="hint">Analysis reports, functional diagrams, and schedules are still placeholder commands in the add-in's ribbon — not generating real files yet.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="overview-tab-content" data-overview-content="session" hidden>
+              <div class="guide-hero">
+                <h2>Save Session</h2>
+                <p class="hint">The whole session — roof, rules, entries, site location, and every placement — as one file. Load it back in anytime to pick up exactly where you left off, on this machine or another one.</p>
+              </div>
+
+              <div class="overview-actions">
+                <button class="btn-export accent overview-action-btn" id="btn-overview-save">
+                  <i class="ti ti-device-floppy" aria-hidden="true"></i>
+                  <span><strong>Save Session</strong><small>Download your current layout — load it back in anytime</small></span>
+                </button>
+                <button class="btn-export overview-action-btn" id="btn-overview-load">
+                  <i class="ti ti-folder-open" aria-hidden="true"></i>
+                  <span><strong>Load Session</strong><small>Resume a previously saved layout</small></span>
+                </button>
+              </div>
+
+              <p class="hint guide-section-spacer">Sportify also autosaves to this browser every few seconds, and the welcome screen offers to resume it next time — this is for a real file you keep, share, or load on another machine.</p>
             </div>
           </div>
         </div>
 
         <div id="combineConfigurator" style="display:none">
           <div class="combine-roof-pane">
-            <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="combine-canvas-wrap">
+              <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+              <div class="combine-zoom-controls">
+                <button id="btn-combine-zoom-in" title="Zoom in"><i class="ti ti-plus" aria-hidden="true"></i></button>
+                <button id="btn-combine-zoom-out" title="Zoom out"><i class="ti ti-minus" aria-hidden="true"></i></button>
+                <button id="btn-combine-zoom-reset" title="Reset view"><i class="ti ti-focus-2" aria-hidden="true"></i></button>
+              </div>
+              <p class="hint combine-zoom-hint">Scroll to zoom · right-drag to pan</p>
+            </div>
+            <div class="combine-tray" id="combineTray">
+              <div class="combine-tray-header">
+                <span><i class="ti ti-package" aria-hidden="true"></i> Pushed pieces — drag onto the roof</span>
+                <span class="combine-tray-count" id="combineTrayCount">0</span>
+              </div>
+              <div class="combine-tray-items" id="combineTrayItems"></div>
+            </div>
           </div>
 
           <div class="combine-step-pane">
             <div class="wizard-nav" id="wizard-nav">
-              <button class="wizard-step-btn active" data-step="1"><span class="wizard-step-num">1</span>Site</button>
-              <button class="wizard-step-btn" data-step="2"><span class="wizard-step-num">2</span>Rules</button>
-              <button class="wizard-step-btn" data-step="3"><span class="wizard-step-num">3</span>Arrange</button>
-              <button class="wizard-step-btn" data-step="4"><span class="wizard-step-num">4</span>Review</button>
+              <button class="wizard-step-btn active" data-step="1"><span class="wizard-step-num">1</span>Rules</button>
+              <button class="wizard-step-btn" data-step="2"><span class="wizard-step-num">2</span>Arrange</button>
+              <button class="wizard-step-btn" data-step="3"><span class="wizard-step-num">3</span>Review</button>
             </div>
 
             <div class="wizard-step-body">
               <div class="wizard-step-content" data-step-content="1">
-                <p class="hint step-intro">Set the roof size and, optionally, where it really sits — that powers the sun-position readout used later for shading decisions.</p>
-
-                <div class="step-grid">
-                  <div class="section planner-only">
-                    <label>Roof boundary</label>
-                    <button class="btn-export accent" id="btn-import-revit">
-                      <i class="ti ti-upload" aria-hidden="true"></i>Import from Revit
-                    </button>
-                    <input type="file" id="import-revit-file" accept=".json" style="display:none" />
-                    <p class="hint" id="import-revit-status">No import yet — using manual values below.</p>
-                  </div>
-                  <div class="section planner-only">
-                    <label>Roof size (m)</label>
-                    <div class="input-row">
-                      <input type="number" id="roofLength" value="15" min="1" step="0.5" title="Length (m)" />
-                      <input type="number" id="roofWidth" value="10" min="1" step="0.5" title="Width (m)" />
-                    </div>
-                    <p class="hint">Length × width.</p>
-                  </div>
-                  <div class="section planner-only span-2">
-                    <label>Site location</label>
-                    <div id="site-map" class="site-map"></div>
-                    <div class="site-address-row">
-                      <input type="text" id="siteAddressSearch" placeholder="Search an address…" />
-                      <button class="btn-export" id="btn-site-search" title="Search"><i class="ti ti-search" aria-hidden="true"></i></button>
-                      <button class="btn-export" id="btn-site-geolocate" title="Use my current location"><i class="ti ti-current-location" aria-hidden="true"></i></button>
-                    </div>
-                    <p class="hint" id="site-coords-status">No location set — click the map to place the site.</p>
-                  </div>
-                  <div class="section planner-only">
-                    <label>Roof orientation</label>
-                    <input type="range" id="siteNorthDeg" min="0" max="359" step="1" value="0" />
-                    <p class="hint">Degrees clockwise from the top of the canvas to true north — <span id="site-north-val">0°</span>.</p>
-                  </div>
-                  <div class="section">
-                    <label>Sun date &amp; time</label>
-                    <div class="input-row">
-                      <input type="date" id="siteDate" />
-                      <input type="time" id="siteTime" value="12:00" />
-                    </div>
-                  </div>
-                  <div class="section span-2">
-                    <label>Sun position</label>
-                    <div id="sun-compass" class="sun-compass"></div>
-                    <p class="hint" id="sun-summary">Set a site location to see sun position and shading guidance.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="wizard-step-content" data-step-content="2" hidden>
                 <p class="hint step-intro">These four rules decide what counts as a valid layout — auto-arrange and suggested spots both respect them.</p>
 
                 <div class="section">
@@ -606,10 +713,18 @@
                 </div>
               </div>
 
-              <div class="wizard-step-content" data-step-content="3" hidden>
+              <div class="wizard-step-content" data-step-content="2" hidden>
                 <p class="hint step-intro">Auto-arrange fits everything at once; suggested spots fine-tune one piece at a time. Both only ever propose spots that already satisfy the rules.</p>
 
                 <div class="step-grid">
+                  <div class="section" id="goldbeck-shuffle-section" style="display:none">
+                    <label>Goldbeck roof — boundary variant</label>
+                    <button class="btn-export accent" id="btn-shuffle-boundary">
+                      <i class="ti ti-dice-5" aria-hidden="true"></i>Shuffle Boundary
+                    </button>
+                    <p class="hint">Regenerates this pattern with a different garden/sport boundary split — re-checked against every rule before it replaces the current layout.</p>
+                  </div>
+
                   <div class="section">
                     <label>Layout</label>
                     <button class="btn-export accent" id="btn-auto-arrange" style="margin-bottom: 6px;">
@@ -660,10 +775,14 @@
                 </div>
               </div>
 
-              <div class="wizard-step-content" data-step-content="4" hidden>
-                <p class="hint step-intro">Every rule from step 2, checked against the current layout.</p>
+              <div class="wizard-step-content" data-step-content="3" hidden>
+                <p class="hint step-intro">A recap of what's on the roof right now, and every rule from step 2 checked against it.</p>
 
                 <div class="step-grid">
+                  <div class="section span-2">
+                    <label>Summary</label>
+                    <div id="combine-summary" class="dims"></div>
+                  </div>
                   <div class="section span-2">
                     <label>Design rules checklist</label>
                     <div id="rules-panel" class="rules-panel"></div>
@@ -671,8 +790,14 @@
                 </div>
 
                 <div class="export-area">
+                  <button class="btn-export accent" id="btn-save-compare">
+                    <i class="ti ti-chart-bar" aria-hidden="true"></i>Save for Compare
+                  </button>
                   <button class="btn-export primary" id="btn-combine-json">
                     <i class="ti ti-file-download" aria-hidden="true"></i><span data-client-label="Download My Design">Export Combined JSON</span>
+                  </button>
+                  <button class="btn-export" id="btn-combine-png">
+                    <i class="ti ti-photo" aria-hidden="true"></i>Export Roof PNG
                   </button>
                   <button class="btn-export" id="btn-load-session">
                     <i class="ti ti-upload" aria-hidden="true"></i><span data-client-label="Resume My Design">Load Progress</span>
@@ -688,6 +813,12 @@
               <button class="btn-export primary" id="wizard-next">Next<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
             </div>
           </div>
+
+          <aside class="iterations-pane">
+            <div class="iterations-pane-header"><i class="ti ti-stack-2" aria-hidden="true"></i> Iterations</div>
+            <p class="hint iterations-pane-hint">Saved from "Save for Compare" (Review step) — select one to load it here.</p>
+            <div class="iterations-list" id="iterationsListCombine"></div>
+          </aside>
         </div>
       </div>
     </div>
@@ -698,6 +829,7 @@
   <script src="data.js"></script>
   <script src="activitiesData.js"></script>
   <script src="gardenData.js"></script>
+  <script src="prebuiltSessions.js"></script>
   <script src="rules.js"></script>
   <script src="sunPosition.js"></script>
   <script src="balls.js"></script>

@@ -578,4 +578,5 @@ function renderAnalysisContent() {
 
 function updateAnalysisUI() {
   renderAnalysisContent();
+  if (typeof renderIterationsPanels === "function") renderIterationsPanels();
 }

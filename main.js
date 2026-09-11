@@ -57,13 +57,44 @@ document.getElementById("themeToggle").addEventListener("click", () => {
 let activeMode = "sport"; // Declared ONCE here!
 
 document.getElementById("modeGuide").addEventListener("click", () => setMode("guide"));
+document.getElementById("modeSite").addEventListener("click", () => setMode("site"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
 document.getElementById("modeGarden").addEventListener("click", () => setMode("garden"));
 document.getElementById("modeCombine").addEventListener("click", () => setMode("combine"));
 document.getElementById("modeData").addEventListener("click", () => setMode("data"));
 document.getElementById("modeAnalysis").addEventListener("click", () => setMode("analysis"));
 document.getElementById("modeCompare").addEventListener("click", () => setMode("compare"));
-document.getElementById("btn-guide-start").addEventListener("click", () => setMode("sport"));
+document.getElementById("btn-guide-start").addEventListener("click", () => setMode("site"));
+
+/* ── Overview tab: workflow shortcuts, save/load, deliverables ──
+ * All of these delegate to the SAME real buttons/functions used elsewhere
+ * (top-right save/load icons, each mode's own export buttons) rather than
+ * duplicating logic — Overview is a front door to real actions, not a
+ * second implementation of them. */
+document.getElementById("overviewWorkflow")?.addEventListener("click", e => {
+  const btn = e.target.closest(".workflow-step");
+  if (btn) setMode(btn.dataset.goto);
+});
+
+/** Overview's own sub-tabs (Workflow / Deliverables / Save Session) — independent of the app's main mode-switching. */
+document.getElementById("overviewNav")?.addEventListener("click", e => {
+  const btn = e.target.closest(".overview-tab-btn");
+  if (!btn) return;
+  const target = btn.dataset.overviewTab;
+  document.querySelectorAll(".overview-tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+  document.querySelectorAll(".overview-tab-content").forEach(c => { c.hidden = c.dataset.overviewContent !== target; });
+});
+document.getElementById("btn-overview-save")?.addEventListener("click", () => document.getElementById("btn-save-session-global").click());
+document.getElementById("btn-overview-load")?.addEventListener("click", () => document.getElementById("btn-load-session-global").click());
+
+function wireDeliverable(overviewId, realId) {
+  document.getElementById(overviewId)?.addEventListener("click", () => document.getElementById(realId)?.click());
+}
+wireDeliverable("btn-deliver-sport-json", "btn-json");
+wireDeliverable("btn-deliver-sport-dxf", "btn-dxf");
+wireDeliverable("btn-deliver-garden-json", "btn-garden-json");
+wireDeliverable("btn-deliver-combine-json", "btn-combine-json");
+wireDeliverable("btn-deliver-combine-png", "btn-combine-png");
 
 function setMode(mode) {
   const isGarden = mode === "garden";
@@ -73,25 +104,27 @@ function setMode(mode) {
   const isAnalysis = mode === "analysis";
   const isCompare = mode === "compare";
   const isGuide = mode === "guide";
+  const isSite = mode === "site";
 
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
 
   // Warm accent for Sport (energetic court sports), green for Garden
   // (nature) — see the html[data-app-mode] rules in style.css. Combine/Data/
-  // Analysis don't match either selector, so they fall through to the
+  // Analysis/Site don't match either selector, so they fall through to the
   // neutral default accent unchanged.
   document.documentElement.dataset.appMode = mode;
 
-  // Combine, Data, Analysis, Compare, and Guide have no per-sport icon rail;
-  // Combine also has no use for the sidebar (its panel content lives beside
-  // the roof in .canvas-area instead), so collapse it there and give that
-  // space to the canvas instead of leaving it empty. Data, Analysis,
-  // Compare, and Guide keep the sidebar visible/hidden per their own
+  // Combine, Data, Analysis, Compare, Site, and Guide have no per-sport icon
+  // rail; Combine also has no use for the sidebar (its panel content lives
+  // beside the roof in .canvas-area instead), so collapse it there and give
+  // that space to the canvas instead of leaving it empty. Data, Analysis,
+  // Compare, Site, and Guide keep the sidebar visible/hidden per their own
   // minimal needs.
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide) ? "none" : "flex";
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide || isSite) ? "none" : "flex";
   document.querySelector(".panel").style.display = (isCombine || isGuide) ? "none" : "flex";
 
+  document.getElementById("siteConfigurator").style.display = isSite ? "block" : "none";
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
   document.getElementById("gardenConfigurator").style.display = isGarden ? "block" : "none";
   // combineConfigurator is itself a flex row (roof pane + step pane) now,
@@ -106,12 +139,15 @@ function setMode(mode) {
   document.getElementById("garden-field").style.display = isGarden ? "block" : "none";
   // #combine-canvas is nested inside #combineConfigurator now, so toggling
   // that parent already shows/hides it — no separate toggle needed here.
+  // Site has no canvas-wrap content of its own — the sidebar (map + sun
+  // compass) already carries everything it needs.
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
   document.getElementById("compare-content").style.display = isCompare ? "block" : "none";
   document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
 
   document.getElementById("modeGuide").classList.toggle("active", isGuide);
+  document.getElementById("modeSite").classList.toggle("active", isSite);
   document.getElementById("modeSport").classList.toggle("active", isSport);
   document.getElementById("modeGarden").classList.toggle("active", isGarden);
   document.getElementById("modeCombine").classList.toggle("active", isCombine);
@@ -122,12 +158,22 @@ function setMode(mode) {
   // Explicit branch per mode — a bare `else` here previously meant "anything
   // that isn't garden/sport" silently ran updateCombineUI(), which broke the
   // instant a 4th mode existed. Guide is static markup — nothing to update.
+  // Site is also static markup (its inputs are wired directly by
+  // siteController.js/siteField.js) except for the map, which needs an
+  // explicit (re)init once its container is actually visible/sized.
   if (isGarden) updateGardenUI();
   else if (isSport) updateUI();
   else if (isCombine) updateCombineUI();
   else if (isData && typeof updateDataUI === "function") updateDataUI();
   else if (isAnalysis && typeof updateAnalysisUI === "function") updateAnalysisUI();
   else if (isCompare && typeof updateCompareUI === "function") updateCompareUI();
+  else if (isSite && typeof initSiteMap === "function") {
+    initSiteMap(); // no-ops after the first call (siteMap already exists)
+    // Re-measure every time Site is (re)entered, not just on first creation
+    // — a Leaflet map created while its container was ever hidden/mid-
+    // transition caches a stale size that only a fresh invalidateSize() fixes.
+    if (typeof siteMap !== "undefined" && siteMap) requestAnimationFrame(() => siteMap.invalidateSize());
+  }
 
   activeMode = mode;
 }
@@ -185,6 +231,7 @@ siteState.date = typeof todayIsoDate === "function" ? todayIsoDate() : siteState
 document.getElementById("siteDate").value = siteState.date;
 setMode("guide");
 if(typeof initCombineInteractions === "function") initCombineInteractions();
+if(typeof initTrayDragInteractions === "function") initTrayDragInteractions();
 if(typeof updateSiteUI === "function") updateSiteUI();
 startRevitPolling();
 // restoreAutosaveIfAny() is no longer called automatically here — the

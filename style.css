@@ -175,6 +175,7 @@ html[data-role="client"] .planner-only { display: none !important; }
 .rule-detail { font-size: 10.5px; color: var(--text-secondary); margin-top: 1px; line-height: 1.3; }
 
 /* ── Entry point markers (SVG, drawn on the combine canvas) ── */
+.snap-grid line { stroke: var(--border-strong); stroke-width: 0.6; opacity: 0.3; pointer-events: none; }
 .entry-marker { cursor: pointer; }
 .entry-marker circle { fill: #ffb300; stroke: #7a4f00; stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: entry-pulse 2.2s ease-in-out infinite; }
 .entry-marker .entry-arrow { fill: #7a4f00; }
@@ -237,8 +238,48 @@ html[data-role="client"] .planner-only { display: none !important; }
  * to actively fill the space (width/height: 100%) rather than just being
  * centered at its intrinsic size the way a lone SVG was. */
 #combineConfigurator { width: 100%; height: 100%; display: flex; }
-.combine-roof-pane { flex: 1 1 46%; min-width: 260px; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.combine-roof-pane { flex: 1 1 46%; min-width: 260px; height: 100%; display: flex; flex-direction: column; padding: 20px; gap: 10px; }
+.combine-canvas-wrap { flex: 1; min-height: 0; position: relative; }
+.combine-canvas-wrap svg { width: 100%; height: 100%; display: block; touch-action: none; }
+.combine-zoom-controls { position: absolute; top: 6px; right: 6px; display: flex; flex-direction: column; gap: 3px; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 3px; }
+.combine-zoom-controls button { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 4px; color: var(--text-secondary); cursor: pointer; font-size: 13px; }
+.combine-zoom-controls button:hover { background: var(--surface-1); color: var(--text-accent); }
+.combine-zoom-hint { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); margin: 0; font-size: 9px; opacity: 0.6; pointer-events: none; white-space: nowrap; }
 .combine-step-pane { flex: 1 1 54%; min-width: 340px; max-width: 640px; height: 100%; display: flex; flex-direction: column; background: var(--surface-1); border-left: 0.5px solid var(--border); }
+
+/* ── Iterations pane — Revit-Properties-panel-style list of saved
+   snapshots (savedCompareConfigs, compareController.js), shown in both
+   Combine (its own docked pane here) and Analysis (a section in its
+   existing sidebar — see .iterations-section below). Selecting one loads
+   it live and refreshes whichever tab is showing it. ── */
+.iterations-pane { width: 180px; min-width: 160px; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; background: var(--surface-2); border-left: 0.5px solid var(--border); padding: 14px 12px; overflow-y: auto; }
+.iterations-pane-header { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; color: var(--text-primary); }
+.iterations-pane-hint { margin: 4px 0 12px; }
+.iterations-section .hint { margin-bottom: 10px; }
+.iterations-list { display: flex; flex-direction: column; gap: 8px; }
+.iteration-card { display: flex; flex-direction: column; gap: 5px; padding: 6px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface-1); cursor: pointer; text-align: left; }
+.iteration-card:hover { border-color: var(--border-accent); }
+.iteration-card-thumb { width: 100%; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+.iteration-card-thumb svg { width: 100%; height: auto; display: block; }
+.iteration-card-label { font-size: 10.5px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Combine tray — pushed-but-unplaced pieces, dragged onto the roof ──
+ * A mini-game-style inventory tray: a piece pushed from Sport/Garden lands
+ * here first (addCombineItem, combineController.js), not on the roof —
+ * the user drags a thumbnail out onto the canvas to actually place it
+ * (see initTrayDragInteractions, combineField.js). */
+.combine-tray { flex-shrink: 0; max-height: 120px; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); display: flex; flex-direction: column; }
+.combine-tray-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+.combine-tray-count { background: var(--bg-accent); color: var(--text-accent); border-radius: 10px; padding: 1px 7px; font-size: 10px; }
+.combine-tray-items { flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 10px; overflow-x: auto; overflow-y: hidden; }
+.combine-tray-empty { margin: 0; white-space: nowrap; }
+.tray-thumb { position: relative; flex-shrink: 0; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: grab; touch-action: none; }
+.tray-thumb-box { width: 44px; height: 44px; border-radius: 6px; background: var(--thumb-fill); border: 1.5px solid var(--thumb-stroke); }
+.tray-thumb-label { font-size: 9px; text-align: center; color: var(--text-secondary); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tray-thumb-remove { position: absolute; top: -5px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface-1); border: 0.5px solid var(--border-strong); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; padding: 0; }
+.tray-thumb-remove:hover { background: var(--text-fail); color: #fff; border-color: var(--text-fail); }
+.tray-thumb.tray-thumb-dragging { opacity: 0.35; }
+.tray-thumb-ghost { position: fixed; width: 64px; z-index: 100; opacity: 0.9; transform: scale(1.05); pointer-events: none; }
 
 /* ── Combine wizard: step-by-step flow ──
  * This pane's ~17 sections used to render as one long flat scroll in a
@@ -321,6 +362,13 @@ html[data-role="client"] .planner-only { display: none !important; }
 .toast-body { color: var(--text-secondary); line-height: 1.4; }
 
 /* ── Activity bar ── */
+/* VS Code-style: a persistent, always-visible rail for Sport/Garden/Combine
+   specifically (Data/Guide/Analysis/Compare stay in the top .mode-toggle) —
+   sits outermost-left, one tier up from .activity-bar's per-mode item
+   picker, reusing its exact .activity-icon visual language on purpose. */
+.mode-rail { width: 48px; min-width: 48px; background: #161616; display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 2px; position: relative; z-index: 2; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.06); }
+.mode-rail .activity-icon { font-size: 18px; }
+
 .activity-bar { width: 48px; min-width: 48px; background: #1e1e1e; display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 2px; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 2; flex-shrink: 0; }
 .activity-bar::-webkit-scrollbar { width: 4px; }
 .activity-bar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
@@ -361,6 +409,45 @@ html[data-role="client"] .planner-only { display: none !important; }
 .guide-cta { margin-top: 28px; display: flex; justify-content: center; }
 .guide-cta .btn-export { width: auto; padding: 10px 22px; }
 
+/* ── Overview: sub-tabs (Workflow / Deliverables / Save Session) ── */
+.overview-nav { display: flex; gap: 4px; border-bottom: 0.5px solid var(--border); margin-top: 24px; }
+.overview-tab-btn { display: flex; align-items: center; gap: 6px; padding: 9px 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font-sans); transition: color 0.15s, border-color 0.15s; }
+.overview-tab-btn i { font-size: 14px; }
+.overview-tab-btn:hover { color: var(--text-secondary); }
+.overview-tab-btn.active { color: var(--text-accent); border-bottom-color: var(--fill-accent); }
+.overview-tab-content { padding-top: 18px; }
+.overview-tab-content[hidden] { display: none; }
+
+/* ── Overview: workflow pipeline, save/load, deliverables ── */
+.workflow-row { display: flex; align-items: center; gap: 6px; margin-top: 20px; overflow-x: auto; padding-bottom: 4px; }
+.workflow-step { flex: 1 1 0; min-width: 108px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 1.5); padding: 14px 8px; cursor: pointer; font-family: var(--font-sans); transition: border-color 0.15s, transform 0.15s; }
+.workflow-step:hover { border-color: var(--border-accent); transform: translateY(-1px); }
+.workflow-num { font-size: 9px; font-weight: 700; color: var(--text-accent); background: var(--bg-accent); border-radius: 8px; padding: 1px 6px; }
+.workflow-step i { font-size: 20px; color: var(--text-accent); margin: 4px 0; }
+.workflow-label { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+.workflow-step .hint { font-size: 10px; margin: 0; }
+.workflow-arrow { font-size: 16px; color: var(--text-muted); flex-shrink: 0; }
+
+.overview-actions { display: flex; gap: 10px; margin-top: 18px; }
+.overview-action-btn { flex: 1; flex-direction: row; justify-content: flex-start; gap: 10px; padding: 12px 16px; }
+.overview-action-btn i { font-size: 18px; }
+.overview-action-btn span { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+.overview-action-btn strong { font-size: 12.5px; }
+.overview-action-btn small { font-size: 10px; font-weight: 500; opacity: 0.8; }
+
+.deliverables-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+.deliverable-group { background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.deliverable-group-title { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 5px; color: var(--text-primary); }
+.deliverable-group-title i { color: var(--text-accent); }
+.deliverable-item { display: flex; align-items: center; gap: 8px; text-align: left; background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-family: var(--font-sans); }
+.deliverable-item:hover { border-color: var(--border-accent); }
+.deliverable-item i { font-size: 15px; color: var(--text-accent); flex-shrink: 0; }
+.deliverable-item span { display: flex; flex-direction: column; gap: 1px; }
+.deliverable-item span, .deliverable-item small { font-size: 11px; font-weight: 600; color: var(--text-primary); }
+.deliverable-item small { font-size: 9.5px; font-weight: 500; color: var(--text-muted); }
+.deliverable-group-note { justify-content: center; }
+.deliverable-group-note .hint { margin: 0; }
+
 .mode-status { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: 1px; }
 .mode-status.available { background: var(--bg-success); color: var(--text-success); border: 0.5px solid var(--border-success); }
 .mode-status.vision { background: var(--violet-tint); color: var(--violet); border: 0.5px solid var(--violet); }
@@ -386,8 +473,11 @@ html[data-role="client"] .planner-only { display: none !important; }
 .compare-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 16px; align-items: start; }
 @media (max-width: 1100px) { .compare-cards { grid-template-columns: 1fr; } }
 
-.compare-card { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.3s, box-shadow 0.3s; }
+.compare-card { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.3s, box-shadow 0.3s; cursor: pointer; }
 .compare-card:has(.rank-1) { border-color: var(--border-success); box-shadow: 0 2px 14px rgba(0,0,0,0.08); }
+.compare-card:hover { border-color: var(--border-accent); }
+.compare-card:hover .compare-load-hint { color: var(--text-accent); }
+.compare-load-hint { display: flex; align-items: center; gap: 4px; justify-content: center; margin: 0; font-weight: 600; }
 
 .compare-card-head { display: flex; align-items: flex-start; gap: 10px; }
 .compare-rank { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; background: var(--surface-1); border: 0.5px solid var(--border-strong); color: var(--text-muted); transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.3s; }
@@ -419,7 +509,8 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Session gate ── */
 .session-gate { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(8,9,20,0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.25s ease; }
 .session-gate.session-gate-hidden { opacity: 0; pointer-events: none; }
-.session-gate-card { width: min(400px, 90vw); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 30px 26px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.4); }
+.session-gate-card { width: min(400px, 90vw); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 30px 26px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.4); transition: width 0.2s ease; }
+.session-gate-card.session-gate-wide { width: min(460px, 92vw); }
 .session-gate-icon { font-size: 32px; color: var(--text-accent); margin-bottom: 8px; }
 .session-gate-card h1 { font-size: 19px; font-weight: 700; color: var(--text-primary); }
 .session-gate-card > .hint { font-size: 12px; margin: 6px 0 20px; }
@@ -427,3 +518,19 @@ html[data-role="client"] .planner-only { display: none !important; }
 .session-gate-link { display: block; margin: 12px auto 0; background: none; border: none; color: var(--text-accent); font-size: 11px; cursor: pointer; text-decoration: underline; font-family: var(--font-sans); }
 .session-gate-link:hover { color: var(--text-primary); }
 #sessionGateStatus:not(:empty) { margin-top: 10px; color: var(--text-fail); }
+
+.session-gate-presets[hidden] { display: none; }
+.session-gate-presets { text-align: left; }
+.session-gate-back { margin: 0 0 10px; text-align: left; display: flex; align-items: center; gap: 4px; }
+.session-gate-presets-intro { text-align: left; margin: 0 0 14px; }
+.preset-cards { display: flex; flex-direction: column; gap: 8px; }
+.preset-card { width: 100%; text-align: left; padding: 12px 14px; border-radius: var(--radius); cursor: pointer; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-primary); font-family: var(--font-sans); transition: all 0.15s; }
+.preset-card:hover { border-color: var(--border-accent); background: var(--bg-accent); }
+.preset-card:active { transform: scale(0.98); }
+.preset-card-title { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.preset-card-title i { color: var(--text-accent); font-size: 15px; }
+.preset-card-shuffle { margin-left: auto; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--text-muted); }
+.preset-card-shuffle:hover { background: var(--surface-2); color: var(--text-accent); }
+.preset-card-shuffle i { font-size: 13px; color: inherit; }
+.preset-card-tagline { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+.preset-card-stats { font-size: 10px; color: var(--text-accent); margin-top: 6px; font-weight: 600; }

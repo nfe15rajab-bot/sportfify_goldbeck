@@ -7,8 +7,25 @@
  */
 
 const CVW = 600, CVH = 400, CPAD = 40;
+const SNAP_GRID_M = 0.5;
 
-let dragState = null; // { id, startPtX, startPtY, startXm, startYm, scale }
+let dragState = null; // { kind: "item"|"entry", id, startPtX, startPtY, startXm, startYm, scale }
+
+function snapToGrid(v) { return Math.round(v / SNAP_GRID_M) * SNAP_GRID_M; }
+
+/** Faint 0.5m reference grid across the whole roof rectangle — the same plain (0,0)-(length,width) box placement/packing already works against, not the visual boundary polygon. Purely visual; snapToGrid() is what actually snaps drags. */
+function snapGridSvg(roof, scale, roofOx, roofOy) {
+  let lines = "";
+  for (let x = SNAP_GRID_M; x < roof.length; x += SNAP_GRID_M) {
+    const px = roofOx + x * scale;
+    lines += `<line x1="${px}" y1="${roofOy}" x2="${px}" y2="${roofOy + roof.width * scale}"/>`;
+  }
+  for (let y = SNAP_GRID_M; y < roof.width; y += SNAP_GRID_M) {
+    const py = roofOy + y * scale;
+    lines += `<line x1="${roofOx}" y1="${py}" x2="${roofOx + roof.length * scale}" y2="${py}"/>`;
+  }
+  return `<g class="snap-grid">${lines}</g>`;
+}
 
 const KIND_COLORS = {
   field:    { stroke: "#3d6fff", fill: "rgba(61,111,255,0.35)" },
@@ -29,16 +46,55 @@ function rectsOverlap(a, b) {
   return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
 }
 
+/**
+ * View-only zoom/pan for the Combine canvas — deliberately NOT part of
+ * combineState: it's a per-viewer camera setting, not layout data, so it
+ * never gets saved/exported/compared and never desyncs a loaded session
+ * from what it looked like when saved.
+ */
+let combineView = { zoom: 1, panX: 0, panY: 0 };
+const COMBINE_ZOOM_MIN = 0.5, COMBINE_ZOOM_MAX = 6;
+
+function resetCombineView() {
+  combineView = { zoom: 1, panX: 0, panY: 0 };
+}
+
 function combineLayout() {
   const roof = combineState.roof;
   const availW = CVW - CPAD * 2;
   const availH = CVH - CPAD * 2 - 30; // room for the title line up top
-  const scale = Math.min(availW / roof.length, availH / roof.width);
+  const fitScale = Math.min(availW / roof.length, availH / roof.width);
+  const scale = fitScale * combineView.zoom;
   const roofPxW = roof.length * scale;
   const roofPxH = roof.width * scale;
-  const roofOx = (CVW - roofPxW) / 2;
-  const roofOy = 40 + (availH - roofPxH) / 2;
-  return { scale, roofPxW, roofPxH, roofOx, roofOy };
+  const roofOx = (CVW - roofPxW) / 2 + combineView.panX;
+  const roofOy = 40 + (availH - roofPxH) / 2 + combineView.panY;
+  return { scale, roofPxW, roofPxH, roofOx, roofOy, fitScale };
+}
+
+/**
+ * Zooms by `factor` (>1 in, <1 out) while keeping whatever roof point is
+ * under (clientX, clientY) fixed on screen — the standard "zoom to
+ * cursor" feel, not just zooming around the canvas center.
+ */
+function zoomCombineView(factor, clientX, clientY, svg) {
+  const before = combineLayout();
+  const cursor = svgPoint(svg, { clientX, clientY });
+  const meterX = (cursor.x - before.roofOx) / before.scale;
+  const meterY = (cursor.y - before.roofOy) / before.scale;
+
+  combineView.zoom = clamp(combineView.zoom * factor, COMBINE_ZOOM_MIN, COMBINE_ZOOM_MAX);
+
+  const availW = CVW - CPAD * 2;
+  const availH = CVH - CPAD * 2 - 30;
+  const scale = before.fitScale * combineView.zoom;
+  const roofPxW = combineState.roof.length * scale, roofPxH = combineState.roof.width * scale;
+  const baseOx = (CVW - roofPxW) / 2, baseOy = 40 + (availH - roofPxH) / 2;
+  // Solve for the pan that keeps (meterX, meterY) under the same screen point.
+  combineView.panX = cursor.x - baseOx - meterX * scale;
+  combineView.panY = cursor.y - baseOy - meterY * scale;
+
+  drawCombineCanvas();
 }
 
 /**
@@ -138,6 +194,7 @@ function drawCombineCanvas() {
       Roof boundary — ${roof.length} m × ${roof.width} m
     </text>
     ${roofShapeSvg(roof, scale, roofOx, roofOy, roofPxW, roofPxH)}
+    ${snapGridSvg(roof, scale, roofOx, roofOy)}
     ${setbackGuideSvg(roof, scale, roofOx, roofOy)}
   `;
 
@@ -211,7 +268,7 @@ function drawCombineCanvas() {
     const tx = -ny, ty = nx;
     const selected = combineState.selectedKind === "entry" && combineState.selectedId === ep.id;
     el += `
-      <g class="entry-marker${selected ? ' selected' : ''}" data-entry-id="${ep.id}">
+      <g class="entry-marker${selected ? ' selected' : ''}" data-entry-id="${ep.id}" style="cursor:${isPlanner ? 'grab' : 'pointer'}">
         <circle cx="${x}" cy="${y}" r="7" />
         <path class="entry-arrow" d="M${x - 5 * tx},${y - 5 * ty} L${x + nx * 11},${y + ny * 11} L${x + 5 * tx},${y + 5 * ty} Z" />
         <text x="${x + nx * 20}" y="${y + ny * 20 + 4}" text-anchor="middle" font-size="10" font-weight="700">${i + 1}</text>
@@ -220,6 +277,7 @@ function drawCombineCanvas() {
   });
 
   svg.innerHTML = el;
+  renderCombineTray();
 
   const statusEl = document.getElementById("combine-status");
   if (statusEl) {
@@ -239,6 +297,7 @@ function drawCombineCanvas() {
   }
 
   renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts);
+  renderCombineSummary(circulation);
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);
@@ -274,6 +333,59 @@ function renderSmartRuleAdvisory() {
   `;
   const btn = document.getElementById("btn-apply-smart-rules");
   if (btn) btn.addEventListener("click", () => { if (typeof applySmartRuleRecommendation === "function") applySmartRuleRecommendation(rec); });
+}
+
+/**
+ * Step 4 "Review"'s summary stat cards — real numbers off the current
+ * layout (piece counts, programmed area, garden retention, longest route
+ * to an entrance), not just the checklist's pass/fail. Retention formula
+ * is the same illustrative one compareController.js/analysisController.js
+ * each already use (consistent duplication across the 3 files — each
+ * computes it for its own state shape rather than sharing across the
+ * plain-<script> global scope, matching this app's established pattern).
+ * Reuses the circulation result the caller (drawCombineCanvas) already
+ * computed rather than running BFS a second time.
+ */
+function renderCombineSummary(circulation) {
+  const el = document.getElementById("combine-summary");
+  if (!el) return;
+  const items = combineState.items;
+
+  if (items.length === 0) {
+    el.innerHTML = `<div class="dim-card"><div class="val">0</div><div class="lbl">Pieces placed</div></div>`;
+    return;
+  }
+
+  const sportCount = items.filter(it => it.kind === "field" || it.kind === "activity").length;
+  const gardenCount = items.filter(it => it.kind === "garden").length;
+  const totalAreaM2 = items.reduce((s, it) => { const fp = getFootprint(it); return s + fp.w * fp.h; }, 0);
+
+  let retentionHtml = "";
+  const gardenItems = items.filter(it => it.kind === "garden");
+  if (gardenItems.length > 0) {
+    let gardenAreaM2 = 0, weightedDepthCm = 0;
+    gardenItems.forEach(it => {
+      const fp = getFootprint(it);
+      const area = fp.w * fp.h;
+      const theme = GARDEN_THEMES[it.sourceJson?.garden?.theme] || GARDEN_THEMES.custom;
+      const depthCm = Object.values(theme.layers).reduce((s, l) => s + l.thickness_m * 100, 0);
+      gardenAreaM2 += area;
+      weightedDepthCm += area * depthCm;
+    });
+    const retentionPercent = Math.min(90, Math.round(30 + (weightedDepthCm / gardenAreaM2) * 2));
+    retentionHtml = `<div class="dim-card"><div class="val">${retentionPercent}%</div><div class="lbl">Garden retention</div></div>`;
+  }
+
+  const distances = circulation.paths.map(p => pathLengthM(p.points));
+  const maxDist = distances.length ? Math.max(...distances) : 0;
+
+  el.innerHTML = `
+    <div class="dim-card"><div class="val">${items.length}</div><div class="lbl">Pieces placed</div></div>
+    <div class="dim-card"><div class="val">${sportCount} / ${gardenCount}</div><div class="lbl">Sport &amp; activity / garden</div></div>
+    <div class="dim-card"><div class="val">${Math.round(totalAreaM2)} m²</div><div class="lbl">Total programmed</div></div>
+    ${retentionHtml}
+    <div class="dim-card"><div class="val">${maxDist.toFixed(1)} m</div><div class="lbl">Longest route to an entrance</div></div>
+  `;
 }
 
 /**
@@ -373,11 +485,120 @@ function renderSuggestions(item, candidates) {
   });
 }
 
+/**
+ * Renders the tray's thumbnails from combineState.tray — called at the end
+ * of every drawCombineCanvas() so it never drifts out of sync with the
+ * roof (tray and canvas are two views of the same combineState).
+ */
+function renderCombineTray() {
+  const wrap = document.getElementById("combineTrayItems");
+  const countEl = document.getElementById("combineTrayCount");
+  if (!wrap) return;
+  const tray = combineState.tray;
+  if (countEl) countEl.textContent = tray.length;
+
+  if (tray.length === 0) {
+    wrap.innerHTML = `<p class="hint combine-tray-empty">Push a sport, activity, or garden piece — it lands here first, then drag it onto the roof.</p>`;
+    return;
+  }
+  wrap.innerHTML = tray.map(it => {
+    const colors = KIND_COLORS[it.kind] || KIND_COLORS.field;
+    return `
+      <div class="tray-thumb" data-tray-id="${it.id}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${it.label} — ${it.length_m}m × ${it.width_m}m">
+        <button class="tray-thumb-remove" data-tray-remove="${it.id}" title="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>
+        <div class="tray-thumb-box"></div>
+        <span class="tray-thumb-label">${it.label}</span>
+      </div>`;
+  }).join("");
+}
+
+let trayDragState = null; // { id, ghostEl }
+
+/**
+ * Drag-and-drop from the tray onto the roof — a "mini-game inventory"
+ * pattern, kept consistent with the roof canvas's own drag (pointer events
+ * + manual position math, not native HTML5 DnD, so both share the same
+ * snapToGrid/combineLayout helpers and behave identically). The tray lives
+ * in a different DOM region than the SVG, so this listens on `document`
+ * for move/up rather than the canvas itself — a drag has to be trackable
+ * even while the pointer is over the tray, empty space, or the canvas.
+ */
+function initTrayDragInteractions() {
+  const wrap = document.getElementById("combineTrayItems");
+  if (!wrap) return;
+
+  wrap.addEventListener("pointerdown", e => {
+    const removeBtn = e.target.closest("[data-tray-remove]");
+    if (removeBtn) {
+      if (typeof removeFromTray === "function") removeFromTray(removeBtn.dataset.trayRemove);
+      return;
+    }
+    const thumb = e.target.closest(".tray-thumb");
+    if (!thumb) return;
+    const id = thumb.dataset.trayId;
+    if (!combineState.tray.some(it => it.id === id)) return;
+
+    const ghost = thumb.cloneNode(true);
+    ghost.classList.add("tray-thumb-ghost");
+    ghost.style.left = `${e.clientX - 32}px`;
+    ghost.style.top = `${e.clientY - 32}px`;
+    document.body.appendChild(ghost);
+
+    trayDragState = { id, ghost };
+    thumb.classList.add("tray-thumb-dragging");
+    e.preventDefault();
+  });
+
+  document.addEventListener("pointermove", e => {
+    if (!trayDragState) return;
+    trayDragState.ghost.style.left = `${e.clientX - 32}px`;
+    trayDragState.ghost.style.top = `${e.clientY - 32}px`;
+  });
+
+  document.addEventListener("pointerup", e => {
+    if (!trayDragState) return;
+    const { id, ghost } = trayDragState;
+    trayDragState = null;
+    ghost.remove();
+    document.querySelectorAll(".tray-thumb-dragging").forEach(el => el.classList.remove("tray-thumb-dragging"));
+
+    const svg = document.getElementById("combine-canvas");
+    const svgRect = svg.getBoundingClientRect();
+    const overCanvas = e.clientX >= svgRect.left && e.clientX <= svgRect.right && e.clientY >= svgRect.top && e.clientY <= svgRect.bottom;
+    if (!overCanvas) return; // dropped outside the roof — stays in the tray, nothing to do
+
+    const item = combineState.tray.find(it => it.id === id);
+    if (!item) return;
+
+    // Map the real drop pixel into the SVG's own viewBox space (it's
+    // scaled to fit its container via preserveAspectRatio), then into
+    // roof meters, centering the piece on the drop point.
+    const { scale, roofOx, roofOy } = combineLayout();
+    const svgX = (e.clientX - svgRect.left) / svgRect.width * CVW;
+    const svgY = (e.clientY - svgRect.top) / svgRect.height * CVH;
+    const fp = getFootprint(item);
+    let x_m = snapToGrid((svgX - roofOx) / scale - fp.w / 2);
+    let y_m = snapToGrid((svgY - roofOy) / scale - fp.h / 2);
+    x_m = Math.max(0, Math.min(combineState.roof.length - fp.w, x_m));
+    y_m = Math.max(0, Math.min(combineState.roof.width - fp.h, y_m));
+
+    if (typeof placeTrayItemAt === "function") placeTrayItemAt(id, x_m, y_m);
+  });
+}
+
 function initCombineInteractions() {
   const svg = document.getElementById("combine-canvas");
   if (!svg) return;
 
+  svg.addEventListener("contextmenu", e => e.preventDefault()); // right-drag pans instead of opening the browser menu
+
   svg.addEventListener("pointerdown", e => {
+    if (e.button === 2) {
+      dragState = { kind: "pan", startClientX: e.clientX, startClientY: e.clientY, startPanX: combineView.panX, startPanY: combineView.panY };
+      svg.setPointerCapture(e.pointerId);
+      return;
+    }
+
     const pt = svgPoint(svg, e);
 
     if (combineState.tool === "addEntry") {
@@ -404,10 +625,20 @@ function initCombineInteractions() {
     if (entryEl) {
       combineState.selectedKind = "entry";
       combineState.selectedId = entryEl.dataset.entryId;
+      // Auto-jump to the Arrange step so a selection is immediately
+      // actionable, matching item selection below.
+      if (typeof setWizardStep === "function") setWizardStep(2);
       // refreshSuggestions redraws the canvas itself (and clears any stale
       // item suggestions now that an entry is selected instead) — no need
       // for a separate drawCombineCanvas() call here too.
       if (typeof refreshSuggestions === "function") refreshSuggestions(); else drawCombineCanvas();
+
+      const isPlanner = document.documentElement.dataset.role !== "client";
+      if (!isPlanner) return;
+      const entry = combineState.entryPoints.find(ep => ep.id === entryEl.dataset.entryId);
+      if (!entry) return;
+      dragState = { kind: "entry", id: entry.id };
+      svg.setPointerCapture(e.pointerId);
       return;
     }
 
@@ -418,6 +649,7 @@ function initCombineInteractions() {
 
     combineState.selectedKind = "item";
     combineState.selectedId = id;
+    if (typeof setWizardStep === "function") setWizardStep(2);
     // Same reasoning: refreshSuggestions both recomputes for the newly
     // selected item and redraws, so it replaces the plain redraw here.
     if (typeof refreshSuggestions === "function") refreshSuggestions(); else drawCombineCanvas();
@@ -430,7 +662,7 @@ function initCombineInteractions() {
 
     const { scale } = combineLayout();
     dragState = {
-      id,
+      kind: "item", id,
       startPtX: pt.x, startPtY: pt.y,
       startXm: item.x_m, startYm: item.y_m,
       scale,
@@ -440,26 +672,74 @@ function initCombineInteractions() {
 
   svg.addEventListener("pointermove", e => {
     if (!dragState) return;
+
+    if (dragState.kind === "pan") {
+      // Client-pixel delta converted into viewBox units via the SVG's own
+      // CTM scale factor, so panning tracks the cursor 1:1 regardless of
+      // how large the SVG is actually rendered on screen.
+      const ctm = svg.getScreenCTM();
+      combineView.panX = dragState.startPanX + (e.clientX - dragState.startClientX) / ctm.a;
+      combineView.panY = dragState.startPanY + (e.clientY - dragState.startClientY) / ctm.d;
+      drawCombineCanvas();
+      return;
+    }
+
     const pt = svgPoint(svg, e);
+
+    if (dragState.kind === "entry") {
+      const entry = combineState.entryPoints.find(ep => ep.id === dragState.id);
+      if (!entry) return;
+      const { scale, roofOx, roofOy } = combineLayout();
+      const rawXm = (pt.x - roofOx) / scale;
+      const rawYm = (pt.y - roofOy) / scale;
+      // Entries only ever live on the site edge — re-snap to whichever
+      // edge is nearest the pointer (can cross to a different edge
+      // mid-drag), then grid-snap along that edge same as items.
+      const snap = nearestBoundaryPoint(combineState.roof, rawXm, rawYm);
+      entry.edge = snap.edge;
+      entry.x_m = snapToGrid(snap.x);
+      entry.y_m = snapToGrid(snap.y);
+      drawCombineCanvas();
+      return;
+    }
+
     const dxM = (pt.x - dragState.startPtX) / dragState.scale;
     const dyM = (pt.y - dragState.startPtY) / dragState.scale;
     const item = combineState.items.find(i => i.id === dragState.id);
     if (!item) return;
 
-    item.x_m = Math.round((dragState.startXm + dxM) * 10) / 10;
-    item.y_m = Math.round((dragState.startYm + dyM) * 10) / 10;
+    item.x_m = snapToGrid(dragState.startXm + dxM);
+    item.y_m = snapToGrid(dragState.startYm + dyM);
     drawCombineCanvas();
   });
 
   ["pointerup", "pointercancel"].forEach(evtName =>
     svg.addEventListener(evtName, () => {
-      const wasDragging = !!dragState;
+      const wasDragging = dragState && dragState.kind !== "pan";
       dragState = null;
       // Recompute once the drag actually settles — not mid-drag, where a
       // full candidate search on every pointermove would visibly lag.
       if (wasDragging && typeof refreshSuggestions === "function") refreshSuggestions();
     })
   );
+
+  svg.addEventListener("wheel", e => {
+    e.preventDefault();
+    zoomCombineView(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY, svg);
+  }, { passive: false });
+
+  document.getElementById("btn-combine-zoom-in")?.addEventListener("click", () => {
+    const r = svg.getBoundingClientRect();
+    zoomCombineView(1.25, r.x + r.width / 2, r.y + r.height / 2, svg);
+  });
+  document.getElementById("btn-combine-zoom-out")?.addEventListener("click", () => {
+    const r = svg.getBoundingClientRect();
+    zoomCombineView(1 / 1.25, r.x + r.width / 2, r.y + r.height / 2, svg);
+  });
+  document.getElementById("btn-combine-zoom-reset")?.addEventListener("click", () => {
+    resetCombineView();
+    drawCombineCanvas();
+  });
 }
 
 /** Converts a pointer event's client coords into this SVG's viewBox coordinate space. */

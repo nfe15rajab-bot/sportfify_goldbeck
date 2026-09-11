@@ -10,8 +10,44 @@ const combineState = {
   roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0 },
   items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
   suggestions: [],
+  // Pushed-but-not-yet-placed pieces — a "Push to Combine" click lands here
+  // first (mini-game inventory tray, rendered beside the roof canvas), not
+  // directly on the roof. Dragging a thumbnail out onto the canvas is what
+  // actually adds it to `items`. See placeTrayItemAt() below and
+  // initTrayDragInteractions() (combineField.js).
+  tray: [],
 };
 let combineItemCounter = 0;
+
+/**
+ * Set only by loading one of the Goldbeck IFC roof prebuilt sessions
+ * (sessionGate.js), cleared by any other load or Clear All — lets
+ * compareController.js show Compare results for this session's actual
+ * roof/layout variants instead of its generic 25x20m demo configs.
+ */
+let activeGoldbeckPresetId = null;
+
+function updateGoldbeckShuffleVisibility() {
+  const section = document.getElementById("goldbeck-shuffle-section");
+  if (section) section.style.display = activeGoldbeckPresetId ? "block" : "none";
+}
+
+/**
+ * Regenerates the currently active Goldbeck pattern (fresh boundary depth
+ * + item variety, re-validated against the app's own real engine inside
+ * generate() itself — see prebuiltSessions.js) and applies it live, same
+ * path a gate-picker load takes. Only meaningful while a Goldbeck preset
+ * is active; the button that calls this is hidden otherwise.
+ */
+function shuffleGoldbeckBoundary() {
+  if (!activeGoldbeckPresetId || typeof GOLDBECK_PREBUILT_SESSIONS !== "object") return;
+  const preset = GOLDBECK_PREBUILT_SESSIONS[activeGoldbeckPresetId];
+  if (!preset) return;
+  const payload = preset.generate();
+  applySessionSnapshot(payload, { goldbeckPresetId: activeGoldbeckPresetId });
+  showToast("Boundary shuffled", `${payload.placements.length} piece(s) — re-checked against every rule.`);
+}
+document.getElementById("btn-shuffle-boundary")?.addEventListener("click", shuffleGoldbeckBoundary);
 
 /**
  * ── Combine wizard: step-by-step panel navigation ──
@@ -19,7 +55,7 @@ let combineItemCounter = 0;
  * step's hidden attribute), so nothing needs to re-sync this on mode
  * switches — the panel is left exactly as the user left it.
  */
-const WIZARD_STEPS = 4;
+const WIZARD_STEPS = 3; // Site moved out to its own top-level mode (see index.html/main.js) — wizard is now Rules/Arrange/Review
 let combineWizardStep = 1;
 const wizardStepsVisited = new Set([1]);
 
@@ -54,30 +90,51 @@ document.getElementById("wizard-back").addEventListener("click", () => setWizard
 document.getElementById("wizard-next").addEventListener("click", () => setWizardStep(combineWizardStep + 1));
 setWizardStep(1);
 
+/** Pushed pieces land in the tray, not on the roof — see combineState.tray above. */
 function addCombineItem({ kind, label, length_m, width_m, sourceJson }) {
   const index = combineItemCounter++;
   const item = {
     id: `item_${Date.now()}_${index}`, kind, label, length_m: Number(length_m), width_m: Number(width_m), rotation: 0,
-    x_m: 0.5 + (index % 5) * 1.2, y_m: 0.5 + Math.floor(index / 5) * 1.2, sourceJson,
+    sourceJson,
   };
+  combineState.tray.push(item);
+  if (typeof renderCombineTray === "function") renderCombineTray();
+  return item;
+}
+
+function removeFromTray(id) {
+  combineState.tray = combineState.tray.filter(it => it.id !== id);
+  if (typeof renderCombineTray === "function") renderCombineTray();
+}
+
+/** Moves one tray item onto the roof at (x_m, y_m) — the drop side of drag-from-tray (initTrayDragInteractions, combineField.js). */
+function placeTrayItemAt(id, x_m, y_m) {
+  const idx = combineState.tray.findIndex(it => it.id === id);
+  if (idx === -1) return;
+  const [item] = combineState.tray.splice(idx, 1);
+  item.x_m = x_m;
+  item.y_m = y_m;
   combineState.items.push(item);
   combineState.selectedId = item.id;
   combineState.selectedKind = "item";
-  return item;
+  if (typeof renderCombineTray === "function") renderCombineTray();
+  if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
 }
 
 function updateCombineUI() {
   document.getElementById("field-label").textContent = "Combine — roof layout";
   document.getElementById("norm-badge").textContent  = "Prototype";
-  if(typeof initSiteMap === "function") initSiteMap();
+  // Site (map/orientation/sun) moved out to its own top-level mode — see
+  // main.js's isSite branch — so this no longer touches initSiteMap().
   if(typeof drawCombineCanvas === "function") drawCombineCanvas();
   if(typeof refreshSuggestions === "function") refreshSuggestions();
+  if(typeof renderIterationsPanels === "function") renderIterationsPanels();
 }
 
 /** Recomputes suggested spots for whichever item is currently selected (none selected → empty list), then redraws. */
 function refreshSuggestions() {
   const item = combineState.selectedKind === "item" ? combineState.items.find(i => i.id === combineState.selectedId) : null;
-  combineState.suggestions = item && typeof suggestPositionsForItem === "function" ? suggestPositionsForItem(item, combineState, DESIGN_RULES) : [];
+  combineState.suggestions = item && typeof suggestPositionsForItem === "function" ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 1) : [];
   if (typeof drawCombineCanvas === "function") drawCombineCanvas();
 }
 
@@ -152,7 +209,7 @@ document.getElementById("btn-rotate").addEventListener("click", () => {
   const item = combineState.items.find(i => i.id === combineState.selectedId);
   if (item) { item.rotation = (item.rotation + 90) % 180; if(typeof drawCombineCanvas === "function") drawCombineCanvas(); }
 });
-document.getElementById("btn-remove-selected").addEventListener("click", () => {
+function deleteSelectedEntity() {
   if (!combineState.selectedId) return;
   if (combineState.selectedKind === "entry") {
     combineState.entryPoints = combineState.entryPoints.filter(e => e.id !== combineState.selectedId);
@@ -162,8 +219,25 @@ document.getElementById("btn-remove-selected").addEventListener("click", () => {
   combineState.selectedId = null;
   combineState.selectedKind = null;
   if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas();
+}
+document.getElementById("btn-remove-selected").addEventListener("click", deleteSelectedEntity);
+
+/**
+ * Delete/Backspace removes whatever's currently selected on the Combine
+ * canvas — only while actually in Combine mode and not while the user is
+ * typing in some other field (a text input's own Backspace must keep
+ * editing text, not delete a piece three tabs away).
+ */
+document.addEventListener("keydown", e => {
+  if (e.key !== "Delete" && e.key !== "Backspace") return;
+  if (typeof activeMode !== "undefined" && activeMode !== "combine") return;
+  if (!combineState.selectedId) return;
+  const tag = document.activeElement?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+  e.preventDefault();
+  deleteSelectedEntity();
 });
-document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.selectedId = null; combineState.selectedKind = null; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.tray = []; combineState.selectedId = null; combineState.selectedKind = null; activeGoldbeckPresetId = null; updateGoldbeckShuffleVisibility(); if(typeof resetCombineView === "function") resetCombineView(); if(typeof renderCombineTray === "function") renderCombineTray(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 function autoPlace(direction) {
   if (combineState.selectedKind !== "item") return;
@@ -231,6 +305,15 @@ function animateItemsTo(placements, onDone) {
 }
 
 document.getElementById("btn-auto-arrange").addEventListener("click", () => {
+  // Auto-arrange is a "place everything the smart way" action, so it also
+  // drains the tray — otherwise a full tray would make this button useless
+  // the moment the tray/drag workflow is in play. Placeholder (0,0) is
+  // immediately overwritten by ruleBasedArrange's own placement below.
+  if (combineState.tray.length > 0) {
+    combineState.tray.forEach(it => { it.x_m = 0; it.y_m = 0; combineState.items.push(it); });
+    combineState.tray = [];
+    if (typeof renderCombineTray === "function") renderCombineTray();
+  }
   if (combineState.items.length === 0) { showToast("Nothing to arrange", "Push a sport, activity, or garden piece first."); return; }
 
   const { placements, unplaced } = ruleBasedArrange(combineState, DESIGN_RULES);
@@ -389,9 +472,65 @@ function downloadCombinedSession() {
 
 document.getElementById("btn-combine-json").addEventListener("click", downloadCombinedSession);
 
+/**
+ * Rasterizes the current #combine-canvas SVG to a PNG — a real graphic
+ * deliverable (Overview's Deliverables section links here), not just the
+ * JSON/DXF data exports. Safe to canvas.toBlob() because the SVG is fully
+ * self-contained (no external <image>/<use> references that would taint
+ * the canvas). Doubles the 600x400 viewBox for a crisper download than a
+ * 1:1 screenshot would give.
+ */
+function downloadCombineRoofPng() {
+  if (combineState.items.length === 0) {
+    showToast("Nothing to export yet", "Place at least one piece on the roof first.");
+    return;
+  }
+  const svg = document.getElementById("combine-canvas");
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200; canvas.height = 800;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = typeof isDarkMode === "function" && isDarkMode() ? "#12131c" : "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(blob => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "sportify_combine_roof.png";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); showToast("PNG export failed", "Couldn't rasterize the roof canvas."); };
+  img.src = url;
+}
+document.getElementById("btn-combine-png")?.addEventListener("click", downloadCombineRoofPng);
+
 // Always-visible top-bar twin of the above — same action, reachable
 // without navigating to Combine's last wizard step first.
 document.getElementById("btn-save-session-global").addEventListener("click", downloadCombinedSession);
+
+/**
+ * Pushes the current layout into Compare's rolling 3-slot buffer
+ * (saveConfigToCompare, compareController.js) and jumps straight to
+ * Compare so the save is immediately visible — "auto pushed to compare".
+ */
+document.getElementById("btn-save-compare")?.addEventListener("click", () => {
+  if (combineState.items.length === 0) {
+    showToast("Nothing to save yet", "Push a sport, activity, or garden piece to Combine first.");
+    return;
+  }
+  if (typeof saveConfigToCompare !== "function") return;
+  const payload = buildCombinedPayload();
+  saveConfigToCompare(payload);
+  showToast("Saved for Compare", "This layout is now in Compare — up to 3 saved configs at a time, oldest replaced first.");
+  setMode("compare");
+});
 
 /**
  * Reverses buildCombinedPayload() back into combineState/DESIGN_RULES/
@@ -401,10 +540,14 @@ document.getElementById("btn-save-session-global").addEventListener("click", dow
  * opposite direction, so "load progress" needs no separate save format,
  * just this function plus a file input.
  */
-function applySessionSnapshot(payload) {
+function applySessionSnapshot(payload, opts = {}) {
   if (!payload || !Array.isArray(payload.placements)) {
     throw new Error('Not a Sportify Combine export — no "placements" array found.');
   }
+  activeGoldbeckPresetId = opts.goldbeckPresetId || null;
+  updateGoldbeckShuffleVisibility();
+  combineState.tray = []; // a loaded session only ever describes placed pieces — any leftover tray items wouldn't belong to this session
+  if (typeof resetCombineView === "function") resetCombineView();
 
   const rc = payload.roof_context || {};
   combineState.roof.length = rc.length_m ?? combineState.roof.length;

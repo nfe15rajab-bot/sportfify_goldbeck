@@ -61,6 +61,128 @@ function cmpGardenItem(itemId, theme, quality, length_m, width_m, refMaterial, r
   };
 }
 
+/**
+ * ── Goldbeck IFC roof configs ──
+ * When a Goldbeck prebuilt session is active (combineController.js's
+ * activeGoldbeckPresetId, set by sessionGate.js), Compare shows these 3
+ * variants on the actual Goldbeck roof instead of the generic 25x20m demo
+ * below. Each preset's generate() runs fresh here (a live variant, not a
+ * frozen one) — see prebuiltSessions.js; the specific variant shown stays
+ * stable for as long as Compare is open (updateCompareUI only re-generates
+ * on mode entry, not on every slider tweak).
+ */
+function snapshotToDef(id, name, tagline, payload, goldbeckPresetId) {
+  return {
+    id, name, tagline, goldbeckPresetId: goldbeckPresetId || null,
+    roof: { length: payload.roof_context.length_m, width: payload.roof_context.width_m },
+    prePositioned: true,
+    entryPoints: payload.entry_points,
+    items: payload.placements.map(pl => ({
+      kind: pl.category, label: pl.label,
+      length_m: pl.bounding_box.width_m, width_m: pl.bounding_box.height_m,
+      rotation: pl.transform?.rotation_deg || 0,
+      x_m: pl.bounding_box.top_left_x_m, y_m: pl.bounding_box.top_left_y_m,
+      sourceJson: pl.parameters,
+    })),
+  };
+}
+
+function buildGoldbeckCompareConfigDefs() {
+  return Object.values(GOLDBECK_PREBUILT_SESSIONS).map(preset =>
+    snapshotToDef(preset.id, preset.title, preset.tagline, preset.generate(), preset.id));
+}
+
+/**
+ * ── Saved-for-Compare rolling buffer ──
+ * "Save for Compare" (Combine step 4) calls saveConfigToCompare() with the
+ * current combineState snapshot (buildCombinedPayload() shape). Compare
+ * holds at most 3 at a time; updateCompareUI() below fills each of its 3
+ * card slots from here first and only falls back to a built-in default
+ * (Goldbeck A/B/C, or the generic demo) for a slot with no save yet — so
+ * saves replace defaults one at a time as the user makes them, exactly like
+ * asked. A 4th save evicts the oldest saved slot (FIFO); un-replaced
+ * default slots are never evicted by a save landing in another slot.
+ */
+let savedCompareConfigs = [];
+
+function saveConfigToCompare(payload) {
+  const sportCount = payload.placements.filter(pl => pl.category === "field" || pl.category === "activity").length;
+  const gardenCount = payload.placements.filter(pl => pl.category === "garden").length;
+  const entry = {
+    id: `saved_${Date.now()}`,
+    name: `Saved Layout ${savedCompareConfigs.length + 1}`,
+    tagline: `Saved from Combine — ${sportCount} sport, ${gardenCount} garden piece(s) on ${payload.roof_context.length_m}×${payload.roof_context.width_m} m.`,
+    payload,
+  };
+  savedCompareConfigs.push(entry);
+  if (savedCompareConfigs.length > 3) savedCompareConfigs.shift();
+  renderIterationsPanels();
+}
+
+/**
+ * ── Iterations panels (Combine's docked pane + Analysis's sidebar section) ──
+ * Both show the exact same savedCompareConfigs list — a self-contained mini
+ * roof preview (not compareController's own miniRoofSvg/COMPARE_ROOF-bound
+ * version, so this works independent of whatever Compare's own state is)
+ * plus a name, clickable to load. "Results update as per the tab": loading
+ * always goes through applySessionSnapshot (making it the live session),
+ * then Combine jumps to Arrange and Analysis re-renders its own cards —
+ * each tab reacting to the same live-state change in its own way.
+ */
+function miniIterationSvg(payload) {
+  const VW = 150, VH = 90, PAD = 5;
+  const scale = Math.min((VW - PAD * 2) / payload.roof_context.length_m, (VH - PAD * 2) / payload.roof_context.width_m);
+  const rw = payload.roof_context.length_m * scale, rh = payload.roof_context.width_m * scale;
+  const ox = (VW - rw) / 2, oy = (VH - rh) / 2;
+  let svg = `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<rect x="${ox}" y="${oy}" width="${rw}" height="${rh}" fill="none" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="3,2"/>`;
+  payload.placements.forEach(pl => {
+    const colors = KIND_COLORS[pl.category] || KIND_COLORS.field;
+    const x = ox + pl.bounding_box.top_left_x_m * scale, y = oy + pl.bounding_box.top_left_y_m * scale;
+    const w = pl.bounding_box.width_m * scale, h = pl.bounding_box.height_m * scale;
+    svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="0.8"/>`;
+  });
+  svg += `</svg>`;
+  return svg;
+}
+
+function iterationCardHtml(entry) {
+  return `
+    <button class="iteration-card" data-iteration-id="${entry.id}">
+      <div class="iteration-card-thumb">${miniIterationSvg(entry.payload)}</div>
+      <div class="iteration-card-label">${entry.name}</div>
+    </button>`;
+}
+
+function renderIterationsPanels() {
+  const html = savedCompareConfigs.length === 0
+    ? `<p class="hint">No saved iterations yet — use "Save for Compare" in Combine's Review step.</p>`
+    : savedCompareConfigs.map(iterationCardHtml).join("");
+  ["iterationsListCombine", "iterationsListAnalysis"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+}
+
+document.addEventListener("click", e => {
+  const card = e.target.closest(".iteration-card");
+  if (!card) return;
+  const entry = savedCompareConfigs.find(c => c.id === card.dataset.iterationId);
+  if (!entry) return;
+  try {
+    applySessionSnapshot(entry.payload);
+    if (activeMode === "combine") {
+      if (typeof setWizardStep === "function") setWizardStep(2);
+      showToast(entry.name, "Loaded into Combine — Arrange step.");
+    } else if (activeMode === "analysis" && typeof updateAnalysisUI === "function") {
+      updateAnalysisUI();
+      showToast(entry.name, "Loaded — Analysis results updated.");
+    }
+  } catch (err) {
+    showToast("Couldn't load that iteration", err.message);
+  }
+});
+
 /* ── The 3 configurations ──
  * Real figures throughout: field dimensions from data.js's FIELDS (same
  * table Sportify.Api's FieldVariant seed mirrors), garden build-up depths
@@ -192,23 +314,42 @@ function miniRoofSvg(state) {
   return svg;
 }
 
-/** Places one config's items via the real auto-arrange engine, adds edge-snapped entries, then checks every DESIGN_RULES criterion the same way Combine's own rules checklist does — this is the "make sure they satisfy all our criteria" verification, computed live rather than assumed. */
+/**
+ * Places one config's items, adds entries, then checks every DESIGN_RULES
+ * criterion the same way Combine's own rules checklist does — this is the
+ * "make sure they satisfy all our criteria" verification, computed live
+ * rather than assumed. Two modes: the generic 25x20m demo configs below
+ * supply unpositioned items + entryEdges and get auto-arranged here (as
+ * before); a Goldbeck prebuilt config (def.prePositioned) already carries
+ * real, pre-verified x_m/y_m/rotation per item and an exact entryPoints
+ * list, so arranging is skipped — this function then only re-derives the
+ * scores/checklist against the live DESIGN_RULES, never the positions.
+ */
 function layoutAndScoreConfig(def) {
+  const roof = def.roof || COMPARE_ROOF;
   const state = {
-    roof: { ...COMPARE_ROOF, boundary: null, originXm: 0, originYm: 0 },
-    items: def.items.map((it, i) => ({ ...it, id: `${def.id}_item_${i}`, rotation: 0, x_m: 0, y_m: 0 })),
+    roof: { ...roof, boundary: null, originXm: 0, originYm: 0 },
+    items: def.items.map((it, i) => ({ ...it, id: `${def.id}_item_${i}`, rotation: it.rotation || 0, x_m: it.x_m ?? 0, y_m: it.y_m ?? 0 })),
     entryPoints: [],
   };
 
-  const { placements, unplaced } = ruleBasedArrange(state, DESIGN_RULES);
-  state.items.forEach(it => { const p = placements.get(it.id); if (p) { it.x_m = p.x; it.y_m = p.y; } });
+  let unplaced = [];
+  if (!def.prePositioned) {
+    const arranged = ruleBasedArrange(state, DESIGN_RULES);
+    state.items.forEach(it => { const p = arranged.placements.get(it.id); if (p) { it.x_m = p.x; it.y_m = p.y; } });
+    unplaced = arranged.unplaced;
+  }
 
-  def.entryEdges.forEach((edge, i) => {
-    const anchor = edge === "left" ? nearestBoundaryPoint(state.roof, 0, state.roof.width / 2)
-      : edge === "right" ? nearestBoundaryPoint(state.roof, state.roof.length, state.roof.width / 2)
-      : nearestBoundaryPoint(state.roof, state.roof.length / 2, state.roof.width / 2);
-    state.entryPoints.push({ id: `${def.id}_entry_${i}`, x_m: anchor.x, y_m: anchor.y, edge: anchor.edge });
-  });
+  if (def.entryPoints) {
+    state.entryPoints = def.entryPoints.map((ep, i) => ({ id: `${def.id}_entry_${i}`, x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge }));
+  } else {
+    def.entryEdges.forEach((edge, i) => {
+      const anchor = edge === "left" ? nearestBoundaryPoint(state.roof, 0, state.roof.width / 2)
+        : edge === "right" ? nearestBoundaryPoint(state.roof, state.roof.length, state.roof.width / 2)
+        : nearestBoundaryPoint(state.roof, state.roof.length / 2, state.roof.width / 2);
+      state.entryPoints.push({ id: `${def.id}_entry_${i}`, x_m: anchor.x, y_m: anchor.y, edge: anchor.edge });
+    });
+  }
 
   const overlappingIds = findOverlappingIds(state.items, DESIGN_RULES.clearance_m);
   const outOfBoundsIds = findOutOfBoundsIds(state.items, state.roof);
@@ -226,10 +367,32 @@ function layoutAndScoreConfig(def) {
 
   return {
     id: def.id, name: def.name, tagline: def.tagline,
+    goldbeckPresetId: def.goldbeckPresetId || null,
     scores,
     checklistHtml: checklist.map(c => `<div class="compare-rule-row ${c.pass ? "pass" : "fail"}"><i class="ti ${c.pass ? "ti-check" : "ti-x"}" aria-hidden="true"></i>${c.label}</div>`).join(""),
     statsLine: `${Math.round(totalItemAreaM2)} m² programmed · ${water.totalAreaM2 ? Math.round(water.totalAreaM2) + " m² garden (" + water.retentionPercent + "% retention)" : "no garden coverage"} · ${maxDist.toFixed(1)} m longest route to an entrance`,
     roofSvg: miniRoofSvg(state),
+    rawSnapshot: stateToSnapshot(state),
+  };
+}
+
+/** Converts a scored config's final, positioned {roof, items, entryPoints} state back into a buildCombinedPayload()-shaped snapshot — lets any Compare card (default or saved) be loaded straight back into Combine via applySessionSnapshot(). */
+function stateToSnapshot(state) {
+  const placements = state.items.map(it => ({
+    id: it.id, category: it.kind, label: it.label,
+    insertion_point: { center_x_m: it.x_m + it.length_m / 2, center_y_m: it.y_m + it.width_m / 2 },
+    bounding_box: { top_left_x_m: it.x_m, top_left_y_m: it.y_m, width_m: it.length_m, height_m: it.width_m },
+    transform: { rotation_deg: it.rotation },
+    parameters: it.sourceJson,
+  }));
+  return {
+    version: "1.3", generator: "Sportify-Combine",
+    roof_context: { length_m: state.roof.length, width_m: state.roof.width, source_boundary_polygon: null, world_origin_x_m: 0, world_origin_y_m: 0 },
+    design_rules: { clearance_m: DESIGN_RULES.clearance_m, boundary_setback_m: DESIGN_RULES.boundarySetback_m, circulation_width_m: DESIGN_RULES.circulationWidth_m, min_entry_points: DESIGN_RULES.minEntryPoints, quiet_buffer_m: DESIGN_RULES.quietBufferM },
+    entry_points: state.entryPoints.map(ep => ({ x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge })),
+    circulation_paths: [],
+    site_location: null,
+    placements,
   };
 }
 
@@ -325,8 +488,33 @@ function cardShellHtml(r) {
         <span>Overall match to your priorities</span>
         <span class="compare-overall-num" id="overall-${r.id}" data-val="0">0</span>
       </div>
+      <p class="hint compare-load-hint"><i class="ti ti-arrow-right" aria-hidden="true"></i>Click to load into Combine's Arrange step</p>
     </div>`;
 }
+
+/**
+ * Clicking any card loads its exact positioned layout back into Combine
+ * (applySessionSnapshot, same path a saved file or a gate preset uses) and
+ * jumps straight to the Arrange step — "if an entity is selected, user is
+ * directed to the arrange mode directly". Delegated on document rather than
+ * #compareCards directly: updateCompareUI() replaces that element's
+ * innerHTML (and so the element itself is a fresh node) every time Compare
+ * is opened, which would silently drop a listener attached to it directly.
+ */
+document.addEventListener("click", e => {
+  const card = e.target.closest(".compare-card");
+  if (!card || !compareResultsCache) return;
+  const result = compareResultsCache.find(r => r.id === card.dataset.configId);
+  if (!result || !result.rawSnapshot) return;
+  try {
+    applySessionSnapshot(result.rawSnapshot, { goldbeckPresetId: result.goldbeckPresetId });
+    setMode("combine");
+    if (typeof setWizardStep === "function") setWizardStep(2);
+    showToast(result.name, "Loaded into Combine — Arrange step.");
+  } catch (err) {
+    showToast("Couldn't load that config", err.message);
+  }
+});
 
 /** rAF-driven count-up, tweening from the number's own last value. rAF can be starved indefinitely (a backgrounded tab, a minimized/hidden window) — setting the correct value up front means a starved tween still ends up showing the right number immediately, just without the animation, instead of silently freezing on a stale one. */
 function animateNumber(el, target) {
@@ -400,10 +588,73 @@ function renderCompareResults(results, weights) {
   scored.forEach(updateCardScores);
 }
 
+/**
+ * Builds the 3 Compare slots: a saved-for-compare config (savedCompareConfigs,
+ * oldest-first) fills a slot before its matching default does, so "Save for
+ * Compare" replaces defaults one at a time rather than needing all 3 filled
+ * at once. Defaults come from whichever context is active (the Goldbeck
+ * roof's 3 patterns if a Goldbeck session is loaded, else the generic demo).
+ */
+function buildCompareSlotDefs(usingGoldbeck) {
+  const defaults = usingGoldbeck ? buildGoldbeckCompareConfigDefs() : buildCompareConfigDefs();
+  return defaults.map((def, i) => {
+    const saved = savedCompareConfigs[i];
+    if (!saved) return def;
+    return snapshotToDef(saved.id, saved.name, saved.tagline, saved.payload, null);
+  });
+}
+
+/**
+ * Real per-roof dimensions/area for the sidebar block — computed from the
+ * actual 3 slot defs (after saved configs are merged in), not a hardcoded
+ * string. A saved config keeps whatever roof it was saved from, so once any
+ * slot differs from the rest the block says "Varies" instead of quietly
+ * showing a number that's only true for some of the 3 cards.
+ */
+function compareRoofSummary(defs) {
+  // Same fallback layoutAndScoreConfig itself uses — the generic demo defs
+  // (buildCompareConfigDefs) never set def.roof directly, they rely on it.
+  const roofs = defs.map(d => d.roof || COMPARE_ROOF);
+  const dims = roofs.map(r => `${r.length}×${r.width}`);
+  const uniform = dims.every(d => d === dims[0]);
+  if (uniform) {
+    const { length, width } = roofs[0];
+    return { dimsText: `${length} × ${width} m`, areaText: `${(length * width).toLocaleString()} m²` };
+  }
+  return { dimsText: "Varies", areaText: "See each card" };
+}
+
 function updateCompareUI() {
-  document.getElementById("field-label").textContent = "Compare — predefined roof configurations";
-  document.getElementById("norm-badge").textContent = "20 × 25 m · 500 m²";
-  compareResultsCache = buildCompareConfigDefs().map(layoutAndScoreConfig);
+  const goldbeckPreset = typeof activeGoldbeckPresetId !== "undefined" ? activeGoldbeckPresetId : null;
+  const usingGoldbeck = !!goldbeckPreset && typeof GOLDBECK_PREBUILT_SESSIONS === "object";
+  const savedNote = savedCompareConfigs.length > 0
+    ? ` ${savedCompareConfigs.length} of 3 slot(s) are your own saved layouts (from Combine's "Save for Compare") — click a card to load it back into Combine's Arrange step.`
+    : " Click a card to load it into Combine's Arrange step.";
+
+  const slotDefs = buildCompareSlotDefs(usingGoldbeck);
+  const { dimsText, areaText } = compareRoofSummary(slotDefs);
+
+  if (usingGoldbeck) {
+    document.getElementById("field-label").textContent = "Compare — Goldbeck IFC roof, 3 layout variants";
+    document.getElementById("norm-badge").textContent = `${dimsText} · ${areaText}`;
+    document.getElementById("compare-intro").textContent = "Three real layouts on the actual Goldbeck roof (67.6 × 21 m) — garden-boundary, sports-boundary, and a hybrid chess pattern." + savedNote;
+    document.getElementById("compare-roof-dims").textContent = dimsText;
+    document.getElementById("compare-roof-area").textContent = areaText;
+    document.getElementById("compare-roof-hint").textContent = dimsText === "Varies"
+      ? "A saved config keeps the roof it was saved from — each card's own stats reflect its real size."
+      : "This session's own roof — from the loaded Goldbeck IFC prebuilt session, not the generic demo roof below.";
+  } else {
+    document.getElementById("field-label").textContent = "Compare — predefined roof configurations";
+    document.getElementById("norm-badge").textContent = `${dimsText} · ${areaText}`;
+    document.getElementById("compare-intro").textContent = "Three predefined 20 × 25 m roof layouts, built from real reference-database figures." + savedNote;
+    document.getElementById("compare-roof-dims").textContent = dimsText;
+    document.getElementById("compare-roof-area").textContent = areaText;
+    document.getElementById("compare-roof-hint").textContent = dimsText === "Varies"
+      ? "A saved config keeps the roof it was saved from — each card's own stats reflect its real size."
+      : "Fixed for this comparison — each configuration is auto-arranged and rule-checked against the same 20 × 25 m boundary.";
+  }
+
+  compareResultsCache = slotDefs.map(layoutAndScoreConfig);
   compareCardsBuilt = false;
   const contentEl = document.getElementById("compare-content");
   if (contentEl) contentEl.innerHTML = `<div class="compare-cards" id="compareCards"></div>`;
