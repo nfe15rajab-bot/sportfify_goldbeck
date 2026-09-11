@@ -589,27 +589,25 @@ function renderCompareResults(results, weights) {
 }
 
 /**
- * Builds the 3 Compare slots: a saved-for-compare config (savedCompareConfigs,
- * oldest-first) fills a slot before its matching default does, so "Save for
- * Compare" replaces defaults one at a time rather than needing all 3 filled
- * at once. Defaults come from whichever context is active (the Goldbeck
- * roof's 3 patterns if a Goldbeck session is loaded, else the generic demo).
+ * Compare defaults to showing ONLY the user's own saved iterations
+ * (savedCompareConfigs) — no auto-filled demo/Goldbeck defaults mixed in,
+ * so "compare" always means comparing your own work, not padding it out
+ * with examples you didn't ask for. The generic/Goldbeck defaults still
+ * exist, just moved behind the "Compare Guide" toggle below (compareGuide()
+ * / btn-compare-guide) as a reference example, never the default view.
  */
-function buildCompareSlotDefs(usingGoldbeck) {
-  const defaults = usingGoldbeck ? buildGoldbeckCompareConfigDefs() : buildCompareConfigDefs();
-  return defaults.map((def, i) => {
-    const saved = savedCompareConfigs[i];
-    if (!saved) return def;
-    return snapshotToDef(saved.id, saved.name, saved.tagline, saved.payload, null);
-  });
+let compareShowingGuide = false;
+
+function buildCompareSlotDefs() {
+  return savedCompareConfigs.map(saved => snapshotToDef(saved.id, saved.name, saved.tagline, saved.payload, null));
 }
 
 /**
  * Real per-roof dimensions/area for the sidebar block — computed from the
- * actual 3 slot defs (after saved configs are merged in), not a hardcoded
- * string. A saved config keeps whatever roof it was saved from, so once any
- * slot differs from the rest the block says "Varies" instead of quietly
- * showing a number that's only true for some of the 3 cards.
+ * actual set of defs being shown, not a hardcoded string. A saved config
+ * keeps whatever roof it was saved from, so once any def differs from the
+ * rest the block says "Varies" instead of quietly showing a number that's
+ * only true for some of the cards.
  */
 function compareRoofSummary(defs) {
   // Same fallback layoutAndScoreConfig itself uses — the generic demo defs
@@ -624,39 +622,105 @@ function compareRoofSummary(defs) {
   return { dimsText: "Varies", areaText: "See each card" };
 }
 
+const COMPARE_EMPTY_HTML = `
+  <div class="compare-empty">
+    <i class="ti ti-stack-2" aria-hidden="true"></i>
+    <h3>No saved iterations yet</h3>
+    <p class="hint">Compare only shows your own work — build a layout in Combine, then use <strong>"Save for Compare"</strong> in its Review step to bring it here. Save up to 3 at once.</p>
+    <p class="hint">New to Compare? <button class="btn-link" id="btn-compare-guide-empty">Open the Compare Guide</button> to see a worked example first.</p>
+  </div>`;
+
+function setComparePriorityControlsVisible(visible) {
+  ["comparePrioritySection", "compareFineTuneSection", "compareRoofSection"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = visible ? "" : "none";
+  });
+}
+
+/**
+ * Two views, toggled by #btn-compare-guide:
+ *  - Default ("My Comparisons"): ONLY savedCompareConfigs — the user's own
+ *    "Save for Compare" layouts, never padded out with demo/Goldbeck
+ *    defaults. Empty until the user has saved at least one.
+ *  - Guide (compareShowingGuide=true): the original worked example (the
+ *    Goldbeck roof's 3 patterns if a Goldbeck session is active, else the
+ *    generic 25x20m demo) — a pure reference view, independent of whatever
+ *    the user has saved.
+ */
 function updateCompareUI() {
   const goldbeckPreset = typeof activeGoldbeckPresetId !== "undefined" ? activeGoldbeckPresetId : null;
   const usingGoldbeck = !!goldbeckPreset && typeof GOLDBECK_PREBUILT_SESSIONS === "object";
-  const savedNote = savedCompareConfigs.length > 0
-    ? ` ${savedCompareConfigs.length} of 3 slot(s) are your own saved layouts (from Combine's "Save for Compare") — click a card to load it back into Combine's Arrange step.`
-    : " Click a card to load it into Combine's Arrange step.";
 
-  const slotDefs = buildCompareSlotDefs(usingGoldbeck);
-  const { dimsText, areaText } = compareRoofSummary(slotDefs);
+  const guideBtnLabel = document.getElementById("btn-compare-guide-label");
+  if (guideBtnLabel) guideBtnLabel.textContent = compareShowingGuide ? "Back to My Comparisons" : "View Compare Guide";
 
-  if (usingGoldbeck) {
-    document.getElementById("field-label").textContent = "Compare — Goldbeck IFC roof, 3 layout variants";
+  const contentEl = document.getElementById("compare-content");
+
+  if (compareShowingGuide) {
+    const slotDefs = usingGoldbeck ? buildGoldbeckCompareConfigDefs() : buildCompareConfigDefs();
+    const { dimsText, areaText } = compareRoofSummary(slotDefs);
+
+    document.getElementById("compare-heading").textContent = "Compare Guide";
+    if (usingGoldbeck) {
+      document.getElementById("field-label").textContent = "Compare Guide — Goldbeck IFC roof, 3 layout variants";
+      document.getElementById("compare-intro").textContent = "A worked example, not your own data: three real layouts on the actual Goldbeck roof (67.6 × 21 m) — garden-boundary, sports-boundary, and a hybrid chess pattern.";
+      document.getElementById("compare-roof-hint").textContent = "This example's own roof — from the loaded Goldbeck IFC prebuilt session, not the generic demo roof.";
+    } else {
+      document.getElementById("field-label").textContent = "Compare Guide — predefined roof configurations";
+      document.getElementById("compare-intro").textContent = "A worked example, not your own data: three predefined 20 × 25 m roof layouts, built from real reference-database figures.";
+      document.getElementById("compare-roof-hint").textContent = "Fixed for this example — each configuration is auto-arranged and rule-checked against the same 20 × 25 m boundary.";
+    }
     document.getElementById("norm-badge").textContent = `${dimsText} · ${areaText}`;
-    document.getElementById("compare-intro").textContent = "Three real layouts on the actual Goldbeck roof (67.6 × 21 m) — garden-boundary, sports-boundary, and a hybrid chess pattern." + savedNote;
     document.getElementById("compare-roof-dims").textContent = dimsText;
     document.getElementById("compare-roof-area").textContent = areaText;
-    document.getElementById("compare-roof-hint").textContent = dimsText === "Varies"
-      ? "A saved config keeps the roof it was saved from — each card's own stats reflect its real size."
-      : "This session's own roof — from the loaded Goldbeck IFC prebuilt session, not the generic demo roof below.";
-  } else {
-    document.getElementById("field-label").textContent = "Compare — predefined roof configurations";
-    document.getElementById("norm-badge").textContent = `${dimsText} · ${areaText}`;
-    document.getElementById("compare-intro").textContent = "Three predefined 20 × 25 m roof layouts, built from real reference-database figures." + savedNote;
-    document.getElementById("compare-roof-dims").textContent = dimsText;
-    document.getElementById("compare-roof-area").textContent = areaText;
-    document.getElementById("compare-roof-hint").textContent = dimsText === "Varies"
-      ? "A saved config keeps the roof it was saved from — each card's own stats reflect its real size."
-      : "Fixed for this comparison — each configuration is auto-arranged and rule-checked against the same 20 × 25 m boundary.";
+
+    setComparePriorityControlsVisible(true);
+    compareResultsCache = slotDefs.map(layoutAndScoreConfig);
+    compareCardsBuilt = false;
+    if (contentEl) contentEl.innerHTML = `<div class="compare-cards" id="compareCards"></div>`;
+    renderCompareResults(compareResultsCache, computeWeights());
+    return;
   }
 
+  document.getElementById("compare-heading").textContent = "My Comparisons";
+  document.getElementById("field-label").textContent = "Compare — your saved iterations";
+  document.getElementById("norm-badge").textContent = `${savedCompareConfigs.length} of 3 saved`;
+
+  if (savedCompareConfigs.length === 0) {
+    document.getElementById("compare-intro").textContent = "Save layouts from Combine's Review step to compare them here — side by side, scored against your own priorities.";
+    document.getElementById("compare-roof-dims").textContent = "—";
+    document.getElementById("compare-roof-area").textContent = "—";
+    document.getElementById("compare-roof-hint").textContent = "No saved layouts yet.";
+    setComparePriorityControlsVisible(false);
+    compareResultsCache = null;
+    compareCardsBuilt = false;
+    if (contentEl) contentEl.innerHTML = COMPARE_EMPTY_HTML;
+    return;
+  }
+
+  document.getElementById("compare-intro").textContent = `Your own saved layout${savedCompareConfigs.length === 1 ? "" : "s"} (from Combine's "Save for Compare") — click a card to load it back into Combine's Arrange step.`;
+
+  const slotDefs = buildCompareSlotDefs();
+  const { dimsText, areaText } = compareRoofSummary(slotDefs);
+  document.getElementById("compare-roof-dims").textContent = dimsText;
+  document.getElementById("compare-roof-area").textContent = areaText;
+  document.getElementById("compare-roof-hint").textContent = dimsText === "Varies"
+    ? "Each saved layout keeps the roof it was saved from — every card's own stats reflect its real size."
+    : "Every saved layout shares this roof.";
+
+  setComparePriorityControlsVisible(true);
   compareResultsCache = slotDefs.map(layoutAndScoreConfig);
   compareCardsBuilt = false;
-  const contentEl = document.getElementById("compare-content");
   if (contentEl) contentEl.innerHTML = `<div class="compare-cards" id="compareCards"></div>`;
   renderCompareResults(compareResultsCache, computeWeights());
 }
+
+document.getElementById("btn-compare-guide")?.addEventListener("click", () => {
+  compareShowingGuide = !compareShowingGuide;
+  updateCompareUI();
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest("#btn-compare-guide-empty")) return;
+  compareShowingGuide = true;
+  updateCompareUI();
+});

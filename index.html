@@ -414,11 +414,17 @@
 
       <div id="compareConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Compare configurations</h2>
+          <h2 id="compare-heading">Compare configurations</h2>
           <p id="compare-intro">Three predefined 20 × 25 m roof layouts, built from real reference-database figures. Pick what matters most, or fine-tune below.</p>
         </div>
 
         <div class="section">
+          <button class="btn-export accent" id="btn-compare-guide" style="width:100%">
+            <i class="ti ti-help-circle" aria-hidden="true"></i><span id="btn-compare-guide-label">View Compare Guide</span>
+          </button>
+        </div>
+
+        <div class="section" id="comparePrioritySection">
           <label>Quick priority</label>
           <div class="quality-btns" id="comparePresetBtns">
             <div class="q-btn" data-preset="quality">Best Quality</div>
@@ -428,7 +434,7 @@
           </div>
         </div>
 
-        <div class="section">
+        <div class="section" id="compareFineTuneSection">
           <label>Fine-tune priorities</label>
           <div class="compare-weight-block">
             <span>Quality</span>
@@ -460,7 +466,7 @@
           </div>
         </div>
 
-        <div class="section">
+        <div class="section" id="compareRoofSection">
           <label>Roof</label>
           <div class="dims">
             <div class="dim-card"><div class="val" id="compare-roof-dims">25 × 20 m</div><div class="lbl">Dimensions</div></div>

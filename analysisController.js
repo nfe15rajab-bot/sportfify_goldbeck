@@ -259,7 +259,7 @@ function buildSunPathSvg() {
   const pathD = samples.map((s, i) => `${i === 0 ? "M" : "L"}${xFor(s.minutes).toFixed(1)},${yFor(s.altitudeDeg).toFixed(1)}`).join(" ");
   const horizonY = yFor(0).toFixed(1);
 
-  return `<svg id="sunPathSvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#ffffff;border-radius:8px;">
+  return `<svg id="sunPathSvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:${W}px;height:auto;display:block;background:#ffffff;border-radius:8px;">
     ${gridSvg}
     <line x1="${PAD_L}" y1="${horizonY}" x2="${PAD_L + plotW}" y2="${horizonY}" stroke="#e0664a" stroke-width="1.5" stroke-dasharray="5,3"/>
     <text x="${(PAD_L + plotW - 4).toFixed(1)}" y="${(Number(horizonY) - 6).toFixed(1)}" font-size="10" fill="#e0664a" text-anchor="end" font-family="Arial,sans-serif">horizon</text>
