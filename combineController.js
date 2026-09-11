@@ -354,8 +354,17 @@ function buildCombinedPayload() {
   return payload;
 }
 
-document.getElementById("btn-combine-json").addEventListener("click", () => {
-  if (combineState.items.length === 0) return;
+/**
+ * Shared by the Combine wizard's own "Export Combined JSON" button and the
+ * always-visible top-bar save button (added so saving doesn't require
+ * navigating to Combine's last step first) — one download path, not two
+ * that could drift apart.
+ */
+function downloadCombinedSession() {
+  if (combineState.items.length === 0) {
+    showToast("Nothing to save yet", "Push a sport, activity, or garden piece to Combine first.");
+    return;
+  }
   const payload = buildCombinedPayload();
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -374,7 +383,15 @@ document.getElementById("btn-combine-json").addEventListener("click", () => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   }).catch(() => {});
-});
+
+  showToast("Session saved", "Downloaded — load it back in anytime to pick up exactly where you left off.");
+}
+
+document.getElementById("btn-combine-json").addEventListener("click", downloadCombinedSession);
+
+// Always-visible top-bar twin of the above — same action, reachable
+// without navigating to Combine's last wizard step first.
+document.getElementById("btn-save-session-global").addEventListener("click", downloadCombinedSession);
 
 /**
  * Reverses buildCombinedPayload() back into combineState/DESIGN_RULES/
@@ -453,22 +470,39 @@ function applySessionSnapshot(payload) {
   if (typeof updateSiteUI === "function") updateSiteUI();
 }
 
-document.getElementById("btn-load-session").addEventListener("click", () => { document.getElementById("load-session-file").click(); });
-
-document.getElementById("load-session-file").addEventListener("change", e => {
-  const file = e.target.files[0];
+/**
+ * Shared by the Combine wizard's own "Load Progress" file input and the
+ * always-visible top-bar load input — jumps to Combine on success so a
+ * load triggered from any other tab actually shows what just loaded,
+ * rather than restoring state invisibly behind whatever tab you were on.
+ */
+function loadSessionFromFile(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = evt => {
     try {
       applySessionSnapshot(JSON.parse(evt.target.result));
       showToast("Progress loaded", `${combineState.items.length} piece(s) restored.`);
+      setMode("combine");
     } catch (err) {
       showToast("Load failed", err.message);
     }
   };
   reader.readAsText(file);
-  e.target.value = ""; // allows re-loading the same file
+}
+
+document.getElementById("btn-load-session").addEventListener("click", () => { document.getElementById("load-session-file").click(); });
+
+document.getElementById("load-session-file").addEventListener("change", e => {
+  loadSessionFromFile(e.target.files[0]);
+  e.target.value = ""; // otherwise re-selecting the same file next time fires no change event
+});
+
+// Always-visible top-bar twin of the above — same action, reachable from any tab.
+document.getElementById("btn-load-session-global").addEventListener("click", () => { document.getElementById("load-session-file-global").click(); });
+document.getElementById("load-session-file-global").addEventListener("change", e => {
+  loadSessionFromFile(e.target.files[0]);
+  e.target.value = "";
 });
 
 /**
