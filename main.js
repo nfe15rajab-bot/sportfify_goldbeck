@@ -58,6 +58,7 @@ let activeMode = "sport"; // Declared ONCE here!
 
 document.getElementById("modeGuide").addEventListener("click", () => setMode("guide"));
 document.getElementById("modeDeliverables").addEventListener("click", () => setMode("deliverables"));
+document.getElementById("modeFamilies").addEventListener("click", () => setMode("families"));
 document.getElementById("modeSession").addEventListener("click", () => setMode("session"));
 document.getElementById("modeSite").addEventListener("click", () => setMode("site"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
@@ -99,6 +100,7 @@ function setMode(mode) {
   const isSite = mode === "site";
   const isDeliverables = mode === "deliverables";
   const isSession = mode === "session";
+  const isFamilies = mode === "families";
 
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
@@ -115,8 +117,8 @@ function setMode(mode) {
   // that space to the canvas instead of leaving it empty. Data, Analysis,
   // Compare, Site, and Guide keep the sidebar visible/hidden per their own
   // minimal needs.
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide || isSite || isDeliverables || isSession) ? "none" : "flex";
-  document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession) ? "none" : "flex";
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide || isSite || isDeliverables || isSession || isFamilies) ? "none" : "flex";
+  document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession || isFamilies) ? "none" : "flex";
 
   document.getElementById("siteConfigurator").style.display = isSite ? "block" : "none";
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
@@ -137,6 +139,7 @@ function setMode(mode) {
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
   document.getElementById("compare-content").style.display = isCompare ? "block" : "none";
+  document.getElementById("families-content").style.display = isFamilies ? "block" : "none";
   document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
   document.getElementById("deliverables-content").style.display = isDeliverables ? "block" : "none";
   document.getElementById("session-content").style.display = isSession ? "block" : "none";
@@ -148,6 +151,7 @@ function setMode(mode) {
   document.getElementById("modeSport").classList.toggle("active", isSport);
   document.getElementById("modeGarden").classList.toggle("active", isGarden);
   document.getElementById("modeCombine").classList.toggle("active", isCombine);
+  document.getElementById("modeFamilies").classList.toggle("active", isFamilies);
   document.getElementById("modeData").classList.toggle("active", isData);
   document.getElementById("modeAnalysis").classList.toggle("active", isAnalysis);
   document.getElementById("modeCompare").classList.toggle("active", isCompare);
@@ -164,6 +168,7 @@ function setMode(mode) {
   else if (isData && typeof updateDataUI === "function") updateDataUI();
   else if (isAnalysis && typeof updateAnalysisUI === "function") updateAnalysisUI();
   else if (isCompare && typeof updateCompareUI === "function") updateCompareUI();
+  else if (isFamilies && typeof updateFamiliesUI === "function") updateFamiliesUI();
   else if (isSite && typeof initSiteMap === "function") {
     initSiteMap(); // no-ops after the first call (siteMap already exists)
     // Re-measure every time Site is (re)entered, not just on first creation

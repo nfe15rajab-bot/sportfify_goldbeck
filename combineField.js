@@ -31,6 +31,10 @@ const KIND_COLORS = {
   field:    { stroke: "#3d6fff", fill: "rgba(61,111,255,0.35)" },
   activity: { stroke: "#9c4fe0", fill: "rgba(156,79,224,0.32)" },
   garden:   { stroke: "#0ea355", fill: "rgba(14,163,85,0.35)" },
+  // Pieces pushed from the Revit Families tab — the user's own loaded
+  // content rather than one of the app's built-in presets. Its own colour
+  // so a designer can see at a glance which pieces came from their model.
+  revit:    { stroke: "#d97706", fill: "rgba(217,119,6,0.32)" },
 };
 
 /** Returns the on-canvas (possibly rotated) footprint size in meters. */

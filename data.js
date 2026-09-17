@@ -3,6 +3,13 @@
  * Source: DIN 18032, FIBA, IHF, FIVB, BWF, DFB
  */
 
+/* Identifies this build in exports and in the console. Declared in the first
+ * script the page loads so every later file can rely on it — and so a stale
+ * cached page is visible at a glance instead of being inferred from JSON
+ * fields that mysteriously fail to appear. */
+const SPORTIFY_BUILD = "2026-09-18-roof-elevation";
+console.log("Sportify build:", SPORTIFY_BUILD);
+
 const FIELDS = {
   polyvalent: {
     mini:        { l: 20,   w: 12,  runoff: 1.5, h: 5.5,  norm: "DIN 18032" },

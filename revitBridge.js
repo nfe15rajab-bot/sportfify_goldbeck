@@ -35,6 +35,10 @@ async function pollRevitBoundary() {
     combineState.roof.boundary = roof.boundary_m || null;
     combineState.roof.originXm = roof.origin_x_m ?? 0;
     combineState.roof.originYm = roof.origin_y_m ?? 0;
+    // Height of the pushed roof in the Revit project. Carried straight through
+    // to the export so an import lands the layout ON the roof rather than at
+    // Z=0 on the ground.
+    combineState.roof.originZm = roof.origin_z_m ?? 0;
     document.getElementById("roofLength").value = roof.length_m;
     document.getElementById("roofWidth").value  = roof.width_m;
 
