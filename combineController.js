@@ -7,7 +7,7 @@
  */
 
 const combineState = {
-  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0 },
+  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, originZm: 0 },
   items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
   suggestions: [],
   // Pushed-but-not-yet-placed pieces — a "Push to Combine" click lands here
@@ -391,6 +391,10 @@ function buildCombinedPayload() {
   const payload = {
     version: "1.3",
     generator: "Sportify-Combine",
+    // Stamped so an export identifies the code that produced it. A cached page
+    // serving an older build is otherwise invisible: the fix is on disk, the
+    // export silently lacks its fields, and both sides look correct.
+    build: SPORTIFY_BUILD,
     roof_context: {
       length_m: combineState.roof.length,
       width_m: combineState.roof.width,
@@ -400,7 +404,10 @@ function buildCombinedPayload() {
       // the actual pushed element instead of world (0,0). Both 0 if the
       // roof was set manually rather than pushed from Revit.
       world_origin_x_m: combineState.roof.originXm || 0,
-      world_origin_y_m: combineState.roof.originYm || 0
+      world_origin_y_m: combineState.roof.originYm || 0,
+      // Elevation of the pushed roof. Zero when the roof was typed in by hand
+      // rather than pushed from Revit, which correctly means "ground level".
+      world_origin_z_m: combineState.roof.originZm || 0
     },
     // The five planner-tunable thresholds, so a Revit import can draw the
     // same setback inset the canvas shows (as a simple rectangle inset,
