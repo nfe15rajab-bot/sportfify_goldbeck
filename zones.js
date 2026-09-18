@@ -536,3 +536,39 @@ function zonesInViolation() {
   findZonesOutOfBounds().forEach(id => bad.add(id));
   return bad;
 }
+
+/* ── Export ── */
+
+/**
+ * The export shape for one zone: a rectangle plus the build-up it is made of.
+ * That is all Revit needs — a boundary and a floor type — which is why a zone
+ * maps so much more directly than a court ever did.
+ */
+function buildZonePayload(zone) {
+  const kind = ZONE_KINDS[zone.kind] || ZONE_KINDS.planting;
+  return {
+    id: zone.id,
+    kind: zone.kind,
+    label: kind.label,
+    bounding_box: {
+      top_left_x_m: zone.x_m,
+      top_left_y_m: zone.y_m,
+      width_m: zone.length_m,
+      height_m: zone.width_m,
+    },
+    area_m2: zone.length_m * zone.width_m,
+    assembly_key: zone.assemblyKey,
+  };
+}
+
+/** Every distinct build-up used by the drawn zones, so an import creates each floor type once. */
+function collectZoneAssemblies() {
+  ensureZoneState();
+  const seen = new Map();
+  combineState.zones.forEach(z => {
+    if (!z.assemblyKey || seen.has(z.assemblyKey)) return;
+    const payload = typeof buildAssemblyPayload === "function" ? buildAssemblyPayload(z.assemblyKey) : null;
+    if (payload) seen.set(z.assemblyKey, payload);
+  });
+  return [...seen.values()];
+}

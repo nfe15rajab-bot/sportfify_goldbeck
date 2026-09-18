@@ -457,10 +457,16 @@ function buildCombinedPayload() {
       date: siteState.date,
       time: siteState.time
     } : null,
-    // Distinct provider build-up systems used in this layout. Sent once at the
-    // top level rather than repeated inside every garden placement: Revit
-    // creates one floor type per system, not one per parcel.
-    assemblies: typeof collectUsedAssemblies === "function" ? collectUsedAssemblies(combineState.items) : [],
+    // Distinct provider build-up systems used by the drawn zones. Sent once at
+    // the top level rather than repeated inside every zone: Revit creates one
+    // floor type per system, not one per patch of ground.
+    assemblies: typeof collectZoneAssemblies === "function" ? collectZoneAssemblies() : [],
+    // Ground zones — planting, lawn, walkways. A rectangle and a build-up is
+    // everything Revit needs to draw a real layered floor, which is why these
+    // travel separately from placements rather than pretending to be objects.
+    zones: typeof buildZonePayload === "function"
+      ? (combineState.zones || []).map(buildZonePayload)
+      : [],
     placements
   };
 
