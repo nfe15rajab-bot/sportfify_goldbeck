@@ -49,113 +49,72 @@
  * assemblies distinguish published from typical: someone specifying a plant
  * needs to know which numbers came from the grower.
  */
-const VEGETATION_TYPES = {
-  cornus_mas: {
-    label: "Cornus mas",
-    common: "Cornelian cherry",
-    short: "Cornus mas",
-    form: "tree",
-    height_m: 6, height_range: "5–6 m",
-    crown_m: 5.5, crown_min_m: 5, crown_max_m: 6,
-    min_substrate_mm: 800,
-    color: "#2f7a43",
-    note: "Multi-stemmed small tree, dense round crown. Slow growing.",
-    source: "Van den Berk",
-    source_url: "https://www.vdberk.com/trees/cornus-mas/",
-    dimensions_published: true,
-  },
-  pyrus_salicifolia_pendula: {
-    label: "Pyrus salicifolia 'Pendula'",
-    common: "Weeping willow-leaved pear",
-    short: "Pyrus 'Pendula'",
-    form: "tree",
-    height_m: 6, height_range: "5–6 m",
-    crown_m: 5.5, crown_min_m: 5, crown_max_m: 6,
-    min_substrate_mm: 800,
-    color: "#3f8f4f",
-    note: "Broad weeping crown. Withstands wind and dry soil, tolerates paving.",
-    source: "Van den Berk",
-    source_url: "https://www.vdberk.com/trees/pyrus-salicifolia-pendula/",
-    dimensions_published: true,
-  },
-  pinus_parviflora_glauca: {
-    label: "Pinus parviflora 'Glauca'",
-    common: "Japanese white pine",
-    short: "Pinus 'Glauca'",
-    form: "tree",
-    height_m: 9, height_range: "6–12 m",
-    crown_m: 8, crown_min_m: 6, crown_max_m: 10,
-    min_substrate_mm: 800,
-    color: "#1f5c33",
-    note: "Evergreen, broad pyramidal. Withstands sea wind — but tolerates no paving.",
-    source: "Van den Berk",
-    source_url: "https://www.vdberk.com/trees/pinus-parviflora-glauca/",
-    dimensions_published: true,
-  },
-  carpinus_japonica: {
-    label: "Carpinus japonica",
-    common: "Japanese hornbeam",
-    short: "Carpinus japonica",
-    form: "tree",
-    height_m: 11, height_range: "8–15 m",
-    crown_m: 7, crown_min_m: 6, crown_max_m: 8,
-    min_substrate_mm: 800,
-    color: "#27663a",
-    note: "Vase-shaped becoming rounded. The largest here — check the structure.",
-    source: "Van den Berk",
-    source_url: "https://www.vdberk.com/trees/carpinus-japonica/",
-    dimensions_published: true,
-  },
+/**
+ * Loaded from the API, not from this file — same reasoning as the assemblies:
+ * a landscape architect adding a species should not need a developer.
+ *
+ * No built-in fallback on purpose. Two catalogs that can disagree is worse
+ * than one that is sometimes unavailable.
+ */
+let VEGETATION_TYPES = {};
+let vegetationLoaded = false;
 
-  lavandula_angustifolia: {
-    label: "Lavandula angustifolia",
-    common: "Lavender",
-    short: "Lavender",
-    form: "shrub",
-    height_m: 0.6, height_range: "0.4–0.8 m",
-    crown_m: 0.8, crown_min_m: 0.6, crown_max_m: 1.0,
-    min_substrate_mm: 200,
-    color: "#7b6fa8",
-    note: "Drought-tolerant sub-shrub, a green roof staple.",
-    source: "Horticultural norm",
-    dimensions_published: false,
-  },
-  festuca_glauca: {
-    label: "Festuca glauca",
-    common: "Blue fescue",
-    short: "Blue fescue",
-    form: "grass",
-    height_m: 0.3, height_range: "0.2–0.4 m",
-    crown_m: 0.4, crown_min_m: 0.3, crown_max_m: 0.5,
-    min_substrate_mm: 150,
-    color: "#6b9e8f",
-    note: "Ornamental grass, clump forming. Tolerates thin substrate.",
-    source: "Horticultural norm",
-    dimensions_published: false,
-  },
-  sedum_mix: {
-    label: "Sedum mix",
-    common: "Stonecrop mat",
-    short: "Sedum",
-    form: "groundcover",
-    height_m: 0.15, height_range: "0.05–0.2 m",
-    crown_m: 1.0, crown_min_m: 0.5, crown_max_m: 2.0,
-    min_substrate_mm: 60,
-    color: "#7fb069",
-    note: "The extensive green roof default — survives the thinnest build-ups.",
-    source: "Horticultural norm",
-    dimensions_published: false,
-  },
-};
+const PLANTS_API = "http://localhost:5107/api/Plants";
+
+/**
+ * Only plants the database has roof dimensions for. A species without a
+ * mature height and crown cannot be placed — there is nothing to draw and
+ * nothing to check the substrate against — so it is left out rather than
+ * offered and then failing.
+ */
+function speciesFromApi(record) {
+  return {
+    label: record.scientificName,
+    common: record.commonName,
+    short: record.scientificName,
+    form: record.form || "shrub",
+    height_m: record.matureHeightM,
+    height_range: record.heightRange || `${record.matureHeightM} m`,
+    crown_m: record.crownM,
+    crown_min_m: record.crownMinM ?? record.crownM,
+    crown_max_m: record.crownMaxM ?? record.crownM,
+    min_substrate_mm: record.minSubstrateMm || 0,
+    note: record.notes || "",
+    source: record.source || "",
+    source_url: record.sourceUrl || null,
+    dimensions_published: !!record.dimensionsPublished,
+  };
+}
+
+/** A stable key from the botanical name, since the API keys plants by id. */
+function speciesKeyFor(record) {
+  return (record.scientificName || `plant_${record.id}`)
+    .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
+
+async function loadVegetation() {
+  const res = await fetch(PLANTS_API, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Plants API returned ${res.status}`);
+  const records = await res.json();
+
+  VEGETATION_TYPES = {};
+  records
+    .filter(r => r.matureHeightM > 0 && r.crownM > 0)
+    .forEach(r => { VEGETATION_TYPES[speciesKeyFor(r)] = speciesFromApi(r); });
+
+  vegetationLoaded = true;
+  return VEGETATION_TYPES;
+}
+
 
 const vegetationState = {
-  typeKey: "cornus_mas",
+  typeKey: null,
   /** Crown diameter in metres, editable: a species is not one fixed size. */
-  crown_m: VEGETATION_TYPES.cornus_mas.crown_m,
+  crown_m: 0,
 };
 
 function activeVegetationType() {
-  return VEGETATION_TYPES[vegetationState.typeKey] || VEGETATION_TYPES.cornus_mas;
+  return VEGETATION_TYPES[vegetationState.typeKey] || Object.values(VEGETATION_TYPES)[0] || null;
 }
 
 /**
@@ -255,7 +214,38 @@ function findVegetationRootProblems() {
 function renderVegetationPanel() {
   const el = document.getElementById("vegetation-panel");
   if (!el) return;
+
+  if (!vegetationLoaded) {
+    el.innerHTML = `<div class="section"><p class="hint">Loading species…</p></div>`;
+    Promise.all([loadVegetation(), assembliesLoaded ? null : loadAssemblies()])
+      .then(() => {
+        // Default to whatever the database offers first, rather than a species
+        // this file assumes exists.
+        if (!vegetationState.typeKey) {
+          vegetationState.typeKey = Object.keys(VEGETATION_TYPES)[0] || null;
+          const t = activeVegetationType();
+          if (t) vegetationState.crown_m = t.crown_m;
+        }
+        renderVegetationPanel();
+      })
+      .catch(err => {
+        el.innerHTML = `
+          <div class="section">
+            <label>Reference database unavailable</label>
+            <p class="hint">Species live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
+            <button class="btn-export accent" id="btn-veg-retry">Retry</button>
+          </div>`;
+        document.getElementById("btn-veg-retry")?.addEventListener("click", renderVegetationPanel);
+      });
+    return;
+  }
+
   const type = activeVegetationType();
+  if (!type) {
+    el.innerHTML = `<div class="section"><p class="hint">No species in the database have roof dimensions yet.</p></div>`;
+    return;
+  }
 
   const forms = { tree: "Trees", shrub: "Shrubs", grass: "Grasses", groundcover: "Ground cover" };
   const options = Object.entries(forms).map(([form, heading]) => {

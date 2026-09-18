@@ -341,6 +341,27 @@ function resizeZoneTo(id, corner, x_m, y_m) {
 function renderZonePanel() {
   const el = document.getElementById("zone-panel");
   if (!el) return;
+
+  // The catalog lives in the database, so there is nothing to draw with until
+  // it has been fetched. Said plainly rather than shown as an empty dropdown,
+  // which would read as "no systems exist".
+  if (!assembliesLoaded) {
+    el.innerHTML = `<div class="section"><p class="hint">Loading build-up systems…</p></div>`;
+    loadAssemblies()
+      .then(() => { ensureZoneState(); renderZonePanel(); })
+      .catch(err => {
+        el.innerHTML = `
+          <div class="section">
+            <label>Reference database unavailable</label>
+            <p class="hint">Build-up systems live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
+            <button class="btn-export accent" id="btn-zone-retry">Retry</button>
+          </div>`;
+        document.getElementById("btn-zone-retry")?.addEventListener("click", renderZonePanel);
+      });
+    return;
+  }
+
   ensureZoneState();
 
   const kindOptions = Object.entries(ZONE_KINDS)

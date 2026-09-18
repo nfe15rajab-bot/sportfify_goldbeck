@@ -46,112 +46,57 @@ const ASSEMBLY_LAYER_FUNCTIONS = {
   bedding: { label: "Bedding", color: "#b8ab93" },
 };
 
-const ASSEMBLIES = {
-  zinco_roof_garden: {
-    provider: "ZinCo",
-    provider_country: "Germany",
-    system_name: "Roof Garden",
-    category: "intensive",
-    label: "ZinCo — Roof Garden (intensive)",
-    description: "Intensive build-up for planted roof gardens with shrubs and small trees.",
-    build_up_mm: 318,          // published: "from 12½ in."
-    saturated_kg_m2: 425,      // published: "from 87 lbs/sq. ft."
-    water_storage_l_m2: 143,   // published: "from 3.5 gal/sq. ft."
-    source_url: "https://zinco-usa.com/systems/roof-garden",
-    layers: [
-      { name: "Plant layer per plant list", fn: "vegetation", mm: 100, src: "typical" },
-      { name: "Growing media Zincoblend I", fn: "substrate", mm: 250, src: "published" },
-      { name: "Filter Sheet SF", fn: "filter", mm: 2, src: "typical" },
-      { name: "Floradrain FD 60 neo, filled with Zincoblend M", fn: "drainage", mm: 60, src: "typical" },
-      { name: "Protection Mat ISM 50", fn: "protection", mm: 5, src: "typical" },
-      { name: "Root Barrier WSB 100-PO", fn: "root_barrier", mm: 1, src: "typical" },
-    ],
-  },
+/**
+ * Loaded from the API, not from this file.
+ *
+ * The catalog lives in the reference database so that adding a ZinCo product
+ * is a form in the Data tab rather than a code change and a deploy — which is
+ * the whole point, since the people who know the products are not the people
+ * who edit JavaScript.
+ *
+ * There is deliberately NO built-in fallback. A local copy that silently
+ * stands in when the API is down means two catalogs that drift apart, and a
+ * designer specifying from the stale one with no way to tell. Empty and
+ * obviously broken beats quietly wrong.
+ */
+let ASSEMBLIES = {};
+let assembliesLoaded = false;
 
-  zinco_sloped_sedum: {
-    provider: "ZinCo",
-    provider_country: "Germany",
-    system_name: "Sloped Sedum",
-    category: "extensive",
-    label: "ZinCo — Sloped Sedum (extensive)",
-    description: "Extensive sedum for pitched roofs, 20°–35°. Low weight, no access.",
-    build_up_mm: 127,          // published: "approx. 5 in."
-    saturated_kg_m2: 171,      // published: "approx. 35 lbs/sq. ft."
-    water_storage_l_m2: 57,    // published: "approx. 1.4 gal/sq. ft."
-    source_url: "https://zinco-usa.com/systems/sloped-sedum",
-    layers: [
-      { name: "Plant community Sloped Sedum", fn: "vegetation", mm: 20, src: "typical" },
-      { name: "Growing media Zincoblend E", fn: "substrate", mm: 110, src: "published" },
-      { name: "Georaster Elements", fn: "drainage", mm: 40, src: "typical" },
-      { name: "Protection Mat WSM 150", fn: "protection", mm: 5, src: "typical" },
-    ],
-  },
+const ASSEMBLIES_API = "http://localhost:5107/api/RoofAssemblies";
 
-  bauder_extensive_sedum: {
-    provider: "Bauder",
-    provider_country: "Germany",
-    system_name: "BauderEXTENSIVE Lightweight Sedum",
-    category: "extensive",
-    label: "Bauder — EXTENSIVE Lightweight Sedum",
-    description: "Bauder's lightest all-in-one system: mature sedum blanket on a thin substrate.",
-    // Bauder's site blocks automated access (HTTP 403), so only the substrate
-    // depth quoted in their published product summary is a confirmed figure.
-    // The system totals are left null rather than guessed — they are the
-    // numbers an engineer would check a deck against.
-    build_up_mm: null,
-    saturated_kg_m2: null,
-    water_storage_l_m2: null,
-    source_url: "https://www.bauder.co.uk/green-and-blue-roofs/green-roofs/extensive-lightweight-sedum",
-    layers: [
-      { name: "Mature sedum blanket", fn: "vegetation", mm: 25, src: "typical" },
-      { name: "Extensive substrate", fn: "substrate", mm: 20, src: "published" },
-      { name: "Water retention and filter layer", fn: "drainage", mm: 20, src: "typical" },
-      { name: "Root-resistant waterproofing", fn: "waterproofing", mm: 4, src: "typical" },
-    ],
-  },
+/** Maps one API record onto the shape the rest of the app already reads. */
+function assemblyFromApi(record) {
+  return {
+    provider: record.provider,
+    provider_country: record.providerCountry,
+    system_name: record.systemName,
+    category: record.category,
+    label: `${record.provider} — ${record.systemName}`,
+    description: record.description || "",
+    build_up_mm: record.buildUpMm,
+    saturated_kg_m2: record.saturatedKgM2,
+    water_storage_l_m2: record.waterStorageLM2,
+    source_url: record.sourceUrl,
+    layers: (record.layers || []).map(l => ({
+      name: l.name,
+      fn: l.function,
+      mm: l.thicknessMm,
+      src: l.thicknessSource,
+    })),
+  };
+}
 
-  optigruen_nature_roof: {
-    provider: "Optigrün",
-    provider_country: "Germany",
-    system_name: "Naturdach",
-    category: "extensive",
-    label: "Optigrün — Naturdach (extensive)",
-    description: "Extensive nature roof for biodiversity, varied substrate depth.",
-    build_up_mm: null,
-    saturated_kg_m2: null,
-    water_storage_l_m2: null,
-    source_url: "https://www.optigruen.de/systemloesungen",
-    layers: [
-      { name: "Seed mix / plug planting", fn: "vegetation", mm: 20, src: "typical" },
-      { name: "Extensive substrate", fn: "substrate", mm: 100, src: "typical" },
-      { name: "Filter fleece 105", fn: "filter", mm: 2, src: "typical" },
-      { name: "Drainage element FKD 25", fn: "drainage", mm: 25, src: "typical" },
-      { name: "Protection mat RMS 500", fn: "protection", mm: 5, src: "typical" },
-    ],
-  },
+async function loadAssemblies() {
+  const res = await fetch(ASSEMBLIES_API, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Assemblies API returned ${res.status}`);
+  const records = await res.json();
 
-  // Kept but not offered as a zone: pedestrian circulation is the negative
-  // space between things, not an area someone draws. This is the build-up that
-  // leftover ground will eventually be given, once the app decides what the
-  // negative space is made of.
-  zinco_paved_walkway: {
-    provider: "ZinCo",
-    provider_country: "Germany",
-    system_name: "Paved Walkway on Pedestals",
-    category: "walkway",
-    label: "ZinCo — Paved walkway on pedestals",
-    description: "Pedestrian paving on adjustable pedestals, drained beneath.",
-    build_up_mm: null,
-    saturated_kg_m2: null,
-    water_storage_l_m2: null,
-    source_url: "https://zinco-greenroof.com/green-roof-systems",
-    layers: [
-      { name: "Concrete paving slab", fn: "wearing", mm: 40, src: "typical" },
-      { name: "Adjustable pedestal", fn: "bedding", mm: 50, src: "typical" },
-      { name: "Protection mat", fn: "protection", mm: 5, src: "typical" },
-    ],
-  },
-};
+  ASSEMBLIES = {};
+  records.forEach(r => { ASSEMBLIES[r.key] = assemblyFromApi(r); });
+  assembliesLoaded = true;
+  return ASSEMBLIES;
+}
+
 
 /** Total of the layer thicknesses — what the geometry will actually be. */
 function assemblyLayerTotalMm(assembly) {
