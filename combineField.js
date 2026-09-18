@@ -239,7 +239,25 @@ function drawCombineCanvas() {
     const colors = KIND_COLORS[item.kind] || KIND_COLORS.field;
     const strokeColor = warn ? "#ef4444" : cutOff ? "#f59e0b" : colors.stroke;
 
-    el += `
+    // A tree's crown is round, so it is drawn round. Courts and equipment stay
+    // rectangular because that is genuinely their shape. The trunk sits at the
+    // centre of the crown.
+    const isCrown = item.kind === "vegetation";
+    el += isCrown
+      ? `
+      <circle data-id="${item.id}" cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.min(w, h) / 2}"
+              fill="${colors.fill}" stroke="${strokeColor}"
+              stroke-width="${selected ? 2.5 : 1.5}"
+              stroke-dasharray="${warn || cutOff ? '4,2' : 'none'}"
+              style="cursor:${isPlanner ? 'grab' : 'pointer'}"/>
+      <circle cx="${x + w / 2}" cy="${y + h / 2}" r="1.6"
+              fill="${strokeColor}" pointer-events="none"/>
+      <text x="${x + w / 2}" y="${y + h / 2 + 14}" text-anchor="middle" font-size="9"
+            font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+        ${item.label}${cutOff ? " 🚫" : ""}
+      </text>
+    `
+      : `
       <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
             fill="${colors.fill}" stroke="${strokeColor}"
             stroke-width="${selected ? 2.5 : 1.5}"
