@@ -133,6 +133,8 @@ function speciesCardHtml(p) {
 
 /** One provider build-up, drawn as the layer stack it is rather than a list of numbers. */
 function buildupCardHtml(a) {
+  // Edit/Delete live on the card itself: you are looking at the thing you want
+  // to change, so there is nothing to select from a list first.
   const layers = (a.layers || []).slice().sort((x, y) => x.layerOrder - y.layerOrder);
   const total = layers.reduce((s, l) => s + (l.thicknessMm || 0), 0);
   return `
@@ -148,6 +150,10 @@ function buildupCardHtml(a) {
       <p class="hint" style="margin-top:8px"><strong>${layers.length} layers</strong></p>
       ${layers.map(l => `<p class="hint">${l.layerOrder + 1}. ${l.name} — <strong>${l.thicknessMm} mm</strong> (${l.function}, ${l.thicknessSource})</p>`).join("")}
       ${a.sourceUrl ? `<p class="hint"><a href="${a.sourceUrl}" target="_blank" rel="noopener">Manufacturer source</a></p>` : ""}
+      <div style="margin-top:8px">
+        <button class="btn-export" data-buildup-edit="${a.id}">Edit</button>
+        <button class="btn-export" data-buildup-delete="${a.id}" data-buildup-label="${a.provider} ${a.systemName}">Delete</button>
+      </div>
     </div>`;
 }
 
@@ -165,6 +171,38 @@ function offlineCardHtml() {
     </div>`;
 }
 
+/**
+ * Build-ups replace the generic record form entirely while that domain is
+ * active. Being asked to choose "Material / Provider / Sport / Plant" while
+ * standing in Build-ups is nonsense — the answer is obviously a build-up.
+ */
+function syncDomainEditor() {
+  const generic = document.getElementById("admin-edit-panel") || document.getElementById("data-admin");
+  const isBuildups = dataState.domain === "buildups";
+  if (generic) generic.hidden = isBuildups;
+
+  let createBtn = document.getElementById("btn-new-buildup");
+  const host = document.getElementById("buildup-create-host");
+  if (host) {
+    host.hidden = !isBuildups;
+    if (isBuildups && !createBtn) {
+      host.innerHTML = `<button class="btn-export accent" id="btn-new-buildup"><i class="ti ti-plus" aria-hidden="true"></i>New build-up</button>`;
+      document.getElementById("btn-new-buildup").addEventListener("click", () => openBuildupEditor(null));
+    }
+  }
+  if (!isBuildups && buildupEditorState?.open) closeBuildupEditor();
+}
+
+function wireBuildupCardButtons(items) {
+  document.querySelectorAll("[data-buildup-edit]").forEach(btn =>
+    btn.addEventListener("click", () => {
+      const record = items.find(x => String(x.id) === btn.dataset.buildupEdit);
+      if (record) openBuildupEditor(record);
+    }));
+  document.querySelectorAll("[data-buildup-delete]").forEach(btn =>
+    btn.addEventListener("click", () => deleteBuildup(Number(btn.dataset.buildupDelete), btn.dataset.buildupLabel)));
+}
+
 function renderDataContent(items) {
   const contentEl = document.getElementById("data-content");
   const statusEl = document.getElementById("data-status");
@@ -178,6 +216,7 @@ function renderDataContent(items) {
     return;
   }
 
+  syncDomainEditor();
   const searchField = DOMAIN_SEARCH_FIELD[dataState.domain] || "name";
   const term = dataState.search.trim().toLowerCase();
   const filtered = term ? items.filter(it => (it[searchField] || "").toLowerCase().includes(term)) : items;
@@ -187,6 +226,7 @@ function renderDataContent(items) {
   } else {
     const cardHtml = DOMAIN_CARD_HTML[dataState.domain] || sportCardHtml;
     contentEl.innerHTML = `<div class="step-grid">${filtered.map(cardHtml).join("")}</div>`;
+    if (dataState.domain === "buildups") wireBuildupCardButtons(filtered);
   }
 
   if (statusEl) {
