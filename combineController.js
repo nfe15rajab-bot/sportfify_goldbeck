@@ -141,7 +141,7 @@ function placeTrayItemAt(id, x_m, y_m) {
 
 function updateCombineUI() {
   document.getElementById("field-label").textContent = "Combine — roof layout";
-  if (typeof renderZonePanel === "function") renderZonePanel();
+  if (typeof renderZonePanel === "function" && !document.getElementById("zone-flyout")?.hidden) renderZonePanel();
   document.getElementById("norm-badge").textContent  = "Prototype";
   // Site (map/orientation/sun) moved out to its own top-level mode — see
   // main.js's isSite branch — so this no longer touches initSiteMap().

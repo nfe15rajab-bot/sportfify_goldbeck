@@ -328,13 +328,13 @@ function renderZonePanel() {
   const selected = combineState.selectedKind === "zone" ? getZone(combineState.selectedId) : null;
 
   el.innerHTML = `
-    <div class="section span-2">
+    <div class="section">
       <label>What are you drawing?</label>
       <select id="zone-kind-select">${kindOptions}</select>
       <p class="hint">${(ZONE_KINDS[combineState.zoneKind] || {}).hint || ""}</p>
     </div>
 
-    <div class="section span-2">
+    <div class="section">
       <label>Build-up system</label>
       <select id="zone-assembly-select">${assemblyOptions}</select>
       ${assembly ? `
@@ -344,7 +344,7 @@ function renderZonePanel() {
         <div style="margin:8px 0">${assemblyStripSvg(assembly)}</div>` : ""}
     </div>
 
-    <div class="section span-2">
+    <div class="section">
       <button class="btn-export accent" id="btn-draw-zone">
         <i class="ti ti-square-plus" aria-hidden="true"></i>Draw on the roof
       </button>
@@ -353,7 +353,7 @@ function renderZonePanel() {
     </div>
 
     ${selected ? `
-      <div class="section span-2">
+      <div class="section">
         <label>Selected: ${(ZONE_KINDS[selected.kind] || {}).label || selected.kind}</label>
         <p class="hint">${selected.length_m.toFixed(1)} × ${selected.width_m.toFixed(1)} m —
            <strong>${(selected.length_m * selected.width_m).toFixed(0)} m²</strong></p>
@@ -362,7 +362,7 @@ function renderZonePanel() {
         </button>
       </div>` : ""}
 
-    ${drawn ? `<div class="section span-2"><p class="hint"><strong>${drawn}</strong> zone(s) drawn, ${totalArea.toFixed(0)} m² total</p></div>` : ""}
+    ${drawn ? `<div class="section"><p class="hint"><strong>${drawn}</strong> zone(s) drawn, ${totalArea.toFixed(0)} m² total</p></div>` : ""}
   `;
 
   wireZonePanel();
@@ -430,4 +430,25 @@ document.addEventListener("keydown", e => {
   removeZone(combineState.selectedId);
   drawCombineCanvas();
   renderZonePanel();
+});
+
+
+/* ── Flyout open/close ── */
+
+function toggleZoneFlyout(force) {
+  const fly = document.getElementById("zone-flyout");
+  const btn = document.getElementById("btn-zone-toggle");
+  if (!fly) return;
+  const open = force !== undefined ? force : fly.hidden;
+  fly.hidden = !open;
+  if (btn) btn.classList.toggle("active", open);
+  if (open) renderZonePanel();
+  // Closing the flyout disarms the tool — leaving it armed behind a hidden
+  // panel means the next canvas click draws a zone nobody asked for.
+  else if (combineState.tool === "drawZone") { combineState.tool = null; syncDrawZoneTool(); }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btn-zone-toggle")?.addEventListener("click", () => toggleZoneFlyout());
+  document.getElementById("btn-zone-close")?.addEventListener("click", () => toggleZoneFlyout(false));
 });
