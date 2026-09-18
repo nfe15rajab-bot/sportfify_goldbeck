@@ -10,7 +10,11 @@ const gardenState = {
   length: 10.0,
   width: 6.0,
   quantity: 1,
-  quality: "medium"
+  quality: "medium",
+  // Which real provider system this parcel is built from — replaces the
+  // low/medium/high quality tiers, which named nothing a supplier would
+  // recognise. See assemblies.js.
+  assemblyKey: "zinco_roof_garden"
 };
 
 /* ── Garden activity bar ── */
