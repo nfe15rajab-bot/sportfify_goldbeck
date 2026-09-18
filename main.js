@@ -62,7 +62,7 @@ document.getElementById("modeFamilies").addEventListener("click", () => setMode(
 document.getElementById("modeSession").addEventListener("click", () => setMode("session"));
 document.getElementById("modeSite").addEventListener("click", () => setMode("site"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
-document.getElementById("modeGarden").addEventListener("click", () => setMode("garden"));
+// Garden is no longer a workspace — planting is drawn as a zone in Combine.
 document.getElementById("modeCombine").addEventListener("click", () => setMode("combine"));
 document.getElementById("modeData").addEventListener("click", () => setMode("data"));
 document.getElementById("modeAnalysis").addEventListener("click", () => setMode("analysis"));
@@ -149,7 +149,7 @@ function setMode(mode) {
   document.getElementById("modeSession").classList.toggle("active", isSession);
   document.getElementById("modeSite").classList.toggle("active", isSite);
   document.getElementById("modeSport").classList.toggle("active", isSport);
-  document.getElementById("modeGarden").classList.toggle("active", isGarden);
+  document.getElementById("modeGarden")?.classList.toggle("active", isGarden);
   document.getElementById("modeCombine").classList.toggle("active", isCombine);
   document.getElementById("modeFamilies").classList.toggle("active", isFamilies);
   document.getElementById("modeData").classList.toggle("active", isData);

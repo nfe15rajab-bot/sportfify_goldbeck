@@ -199,6 +199,7 @@ function drawCombineCanvas() {
     </text>
     ${roofShapeSvg(roof, scale, roofOx, roofOy, roofPxW, roofPxH)}
     ${snapGridSvg(roof, scale, roofOx, roofOy)}
+    ${typeof zonesSvg === "function" ? zonesSvg(scale, roofOx, roofOy) : ""}
     ${setbackGuideSvg(roof, scale, roofOx, roofOy)}
   `;
 
@@ -605,6 +606,42 @@ function initCombineInteractions() {
 
     const pt = svgPoint(svg, e);
 
+    if (combineState.tool === "drawZone") {
+      const { scale, roofOx, roofOy } = combineLayout();
+      beginZoneDraw((pt.x - roofOx) / scale, (pt.y - roofOy) / scale);
+      dragState = { kind: "zoneDraw" };
+      svg.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    // A corner handle is tested before the zone body, or grabbing a corner
+    // would move the whole zone instead of resizing it.
+    const handleEl = e.target.closest("[data-zone-handle]");
+    if (handleEl) {
+      dragState = { kind: "zoneResize", id: handleEl.dataset.zoneId, corner: handleEl.dataset.zoneHandle };
+      svg.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    const zoneEl = e.target.closest("[data-zone-id]");
+    if (zoneEl) {
+      const zone = getZone(zoneEl.dataset.zoneId);
+      combineState.selectedKind = "zone";
+      combineState.selectedId = zoneEl.dataset.zoneId;
+      drawCombineCanvas();
+      if (typeof renderZonePanel === "function") renderZonePanel();
+
+      if (document.documentElement.dataset.role === "client" || !zone) return;
+      const { scale, roofOx, roofOy } = combineLayout();
+      dragState = {
+        kind: "zoneMove", id: zone.id,
+        grabXm: (pt.x - roofOx) / scale - zone.x_m,
+        grabYm: (pt.y - roofOy) / scale - zone.y_m,
+      };
+      svg.setPointerCapture(e.pointerId);
+      return;
+    }
+
     if (combineState.tool === "addEntry") {
       const { scale, roofOx, roofOy } = combineLayout();
       addEntryPoint((pt.x - roofOx) / scale, (pt.y - roofOy) / scale);
@@ -677,6 +714,16 @@ function initCombineInteractions() {
   svg.addEventListener("pointermove", e => {
     if (!dragState) return;
 
+    if (dragState.kind === "zoneDraw" || dragState.kind === "zoneMove" || dragState.kind === "zoneResize") {
+      const { scale, roofOx, roofOy } = combineLayout();
+      const zp = svgPoint(svg, e);
+      const xm = (zp.x - roofOx) / scale, ym = (zp.y - roofOy) / scale;
+      if (dragState.kind === "zoneDraw") updateZoneDraw(xm, ym);
+      else if (dragState.kind === "zoneMove") moveZoneTo(dragState.id, xm - dragState.grabXm, ym - dragState.grabYm);
+      else resizeZoneTo(dragState.id, dragState.corner, xm, ym);
+      return;
+    }
+
     if (dragState.kind === "pan") {
       // Client-pixel delta converted into viewBox units via the SVG's own
       // CTM scale factor, so panning tracks the cursor 1:1 regardless of
@@ -712,15 +759,35 @@ function initCombineInteractions() {
     const item = combineState.items.find(i => i.id === dragState.id);
     if (!item) return;
 
-    item.x_m = snapToGrid(dragState.startXm + dxM);
-    item.y_m = snapToGrid(dragState.startYm + dyM);
+    const nextX = snapToGrid(dragState.startXm + dxM);
+    const nextY = snapToGrid(dragState.startYm + dyM);
+
+    // The drag simply doesn't follow into a drawn zone, which reads as the
+    // piece bumping into it rather than as an error.
+    const itemFp = getFootprint(item);
+    if (typeof zonesUnder === "function" && zonesUnder(nextX, nextY, itemFp.w, itemFp.h).length > 0) return;
+
+    item.x_m = nextX;
+    item.y_m = nextY;
     drawCombineCanvas();
   });
 
   ["pointerup", "pointercancel"].forEach(evtName =>
     svg.addEventListener(evtName, () => {
+      const wasDrawingZone = dragState && dragState.kind === "zoneDraw";
+      const wasZoneGesture = dragState && dragState.kind && dragState.kind.startsWith("zone");
       const wasDragging = dragState && dragState.kind !== "pan";
       dragState = null;
+
+      if (wasDrawingZone) {
+        finishZoneDraw();
+        // One rectangle per click of the tool, matching Add Entry Point —
+        // otherwise every later canvas click keeps drawing.
+        combineState.tool = null;
+        if (typeof syncDrawZoneTool === "function") syncDrawZoneTool();
+        return;
+      }
+      if (wasZoneGesture) { if (typeof renderZonePanel === "function") renderZonePanel(); return; }
       // Recompute once the drag actually settles — not mid-drag, where a
       // full candidate search on every pointermove would visibly lag.
       if (wasDragging && typeof refreshSuggestions === "function") refreshSuggestions();

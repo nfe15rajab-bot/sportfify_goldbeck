@@ -111,6 +111,24 @@ function removeFromTray(id) {
 function placeTrayItemAt(id, x_m, y_m) {
   const idx = combineState.tray.findIndex(it => it.id === id);
   if (idx === -1) return;
+
+  // Ground zones are drawn ground, not a hint — an object may not sit on one.
+  // Refused rather than re-cutting the zone underneath, so the design only
+  // changes when the designer changes it.
+  const pending = combineState.tray[idx];
+  const fp = typeof getFootprint === "function" ? getFootprint(pending)
+                                                : { w: pending.length_m, h: pending.width_m };
+  if (typeof zonesUnder === "function") {
+    const blocking = zonesUnder(x_m, y_m, fp.w, fp.h);
+    if (blocking.length > 0) {
+      const kind = (typeof ZONE_KINDS !== "undefined" && ZONE_KINDS[blocking[0].kind]) || { label: "A zone" };
+      if (typeof showToast === "function") {
+        showToast("There's a zone here",
+          `${kind.label} is already drawn on this spot — move or resize it first.`);
+      }
+      return;
+    }
+  }
   const [item] = combineState.tray.splice(idx, 1);
   item.x_m = x_m;
   item.y_m = y_m;
@@ -123,6 +141,7 @@ function placeTrayItemAt(id, x_m, y_m) {
 
 function updateCombineUI() {
   document.getElementById("field-label").textContent = "Combine — roof layout";
+  if (typeof renderZonePanel === "function") renderZonePanel();
   document.getElementById("norm-badge").textContent  = "Prototype";
   // Site (map/orientation/sun) moved out to its own top-level mode — see
   // main.js's isSite branch — so this no longer touches initSiteMap().
