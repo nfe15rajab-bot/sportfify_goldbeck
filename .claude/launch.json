@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["--yes", "serve", ".", "-l", "8123"],
       "port": 8123
+    },
+    {
+      "name": "sportify-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "C:\\Users\\Shadow\\Documents\\Sportify_Revit_and_API\\Sportify.Api\\Sportify.Api\\Sportify.Api.csproj", "--urls", "http://localhost:5107"],
+      "port": 5107
     }
   ]
 }
