@@ -30,6 +30,11 @@ async function fetchDataEntity(key, path) {
 
 function domainFetchPlan() {
   if (dataState.domain === "sports") return { key: "sports", path: "sports" };
+  // Individual species, as opposed to the "vegetation" domain below, which
+  // shows palettes — groupings OF species. The trees were in the database all
+  // along and simply had nothing displaying them.
+  if (dataState.domain === "species") return { key: "species", path: "Plants" };
+  if (dataState.domain === "buildups") return { key: "buildups", path: "RoofAssemblies" };
   if (dataState.domain === "facilities") return { key: "facilities", path: "facilities" };
   if (dataState.domain === "analysisParams") return { key: "analysisParameters", path: "AnalysisParameters" };
   return { key: "palettes", path: "plants/palettes" };
@@ -37,7 +42,7 @@ function domainFetchPlan() {
 
 // Each domain's search box filters against a different field on its items —
 // sports/palettes are named, facility guidelines and analysis parameters are grouped by Title/Label instead.
-const DOMAIN_SEARCH_FIELD = { sports: "name", vegetation: "name", facilities: "title", analysisParams: "label" };
+const DOMAIN_SEARCH_FIELD = { sports: "name", vegetation: "name", facilities: "title", analysisParams: "label", species: "scientificName", buildups: "systemName" };
 
 function variantsTableHtml(variants) {
   if (!variants || variants.length === 0) return "";
@@ -102,7 +107,51 @@ function analysisParamCardHtml(item) {
     </div>`;
 }
 
-const DOMAIN_CARD_HTML = { sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml, analysisParams: analysisParamCardHtml };
+/**
+ * One species. Only the roof dimensions are highlighted — mature height, crown
+ * and substrate depth are what decide whether a plant can go on a roof at all,
+ * and a species without them can't be placed.
+ */
+function speciesCardHtml(p) {
+  const hasDims = p.matureHeightM > 0 && p.crownM > 0;
+  return `
+    <div class="section span-2">
+      <label>${p.scientificName || "(unnamed)"}</label>
+      <p class="hint"><em>${p.commonName || ""}</em>${p.form ? ` · ${p.form}` : ""}${p.category ? ` · ${p.category}` : ""}</p>
+      ${hasDims ? `
+        <div class="dims">
+          <div class="dim-card"><div class="val">${p.heightRange || (p.matureHeightM + " m")}</div><div class="lbl">Mature height</div></div>
+          <div class="dim-card"><div class="val">${p.crownM} m</div><div class="lbl">Crown${p.crownMinM ? ` (${p.crownMinM}–${p.crownMaxM} m)` : ""}</div></div>
+          <div class="dim-card"><div class="val">${p.minSubstrateMm || "—"} mm</div><div class="lbl">Min. substrate</div></div>
+        </div>`
+        : `<p class="hint">⚠ No roof dimensions — can't be placed until height, crown and substrate are filled in.</p>`}
+      ${p.notes ? `<p class="hint">${p.notes}</p>` : ""}
+      ${p.sunRequirement ? `<p class="hint">Sun: ${p.sunRequirement} · Drought: ${p.droughtTolerance || "—"}</p>` : ""}
+      ${p.source ? `<p class="hint">Source: ${p.sourceUrl ? `<a href="${p.sourceUrl}" target="_blank" rel="noopener">${p.source}</a>` : p.source}${p.dimensionsPublished ? " — published figures" : ""}</p>` : ""}
+    </div>`;
+}
+
+/** One provider build-up, drawn as the layer stack it is rather than a list of numbers. */
+function buildupCardHtml(a) {
+  const layers = (a.layers || []).slice().sort((x, y) => x.layerOrder - y.layerOrder);
+  const total = layers.reduce((s, l) => s + (l.thicknessMm || 0), 0);
+  return `
+    <div class="section span-2">
+      <label>${a.provider} — ${a.systemName}</label>
+      <p class="hint">${a.category}${a.providerCountry ? ` · ${a.providerCountry}` : ""}</p>
+      ${a.description ? `<p class="hint">${a.description}</p>` : ""}
+      <div class="dims">
+        <div class="dim-card"><div class="val">${a.buildUpMm ?? total}</div><div class="lbl">Build-up mm${a.buildUpMm ? "" : " (from layers)"}</div></div>
+        <div class="dim-card"><div class="val">${a.saturatedKgM2 ?? "—"}</div><div class="lbl">Saturated kg/m²</div></div>
+        <div class="dim-card"><div class="val">${a.waterStorageLM2 ?? "—"}</div><div class="lbl">Water storage L/m²</div></div>
+      </div>
+      <p class="hint" style="margin-top:8px"><strong>${layers.length} layers</strong></p>
+      ${layers.map(l => `<p class="hint">${l.layerOrder + 1}. ${l.name} — <strong>${l.thicknessMm} mm</strong> (${l.function}, ${l.thicknessSource})</p>`).join("")}
+      ${a.sourceUrl ? `<p class="hint"><a href="${a.sourceUrl}" target="_blank" rel="noopener">Manufacturer source</a></p>` : ""}
+    </div>`;
+}
+
+const DOMAIN_CARD_HTML = { sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml, analysisParams: analysisParamCardHtml, species: speciesCardHtml, buildups: buildupCardHtml };
 
 function offlineCardHtml() {
   return `
@@ -141,7 +190,7 @@ function renderDataContent(items) {
   }
 
   if (statusEl) {
-    const noun = { sports: "sport", vegetation: "palette", facilities: "guideline", analysisParams: "parameter" }[dataState.domain] || "item";
+    const noun = { sports: "sport", vegetation: "palette", facilities: "guideline", analysisParams: "parameter", species: "species", buildups: "build-up" }[dataState.domain] || "item";
     statusEl.textContent = `${filtered.length} ${noun}${filtered.length === 1 ? "" : "s"}${term ? " matching your search" : ""}.`;
   }
 }
