@@ -143,7 +143,8 @@ function buildupCardHtml(a) {
       <p class="hint">${a.category}${a.providerCountry ? ` · ${a.providerCountry}` : ""}</p>
       ${a.description ? `<p class="hint">${a.description}</p>` : ""}
       <div class="dims">
-        <div class="dim-card"><div class="val">${a.buildUpMm ?? total}</div><div class="lbl">Build-up mm${a.buildUpMm ? "" : " (from layers)"}</div></div>
+        <div class="dim-card"><div class="val">${total}</div><div class="lbl">Build-up mm (from layers)</div></div>
+        ${a.buildUpMm ? `<div class="dim-card"><div class="val" style="${Math.abs(total - a.buildUpMm) > 5 ? "color:#f59e0b" : ""}">${a.buildUpMm}</div><div class="lbl">Published${Math.abs(total - a.buildUpMm) > 5 ? " ⚠ differs" : ""}</div></div>` : ""}
         <div class="dim-card"><div class="val">${a.saturatedKgM2 ?? "—"}</div><div class="lbl">Saturated kg/m²</div></div>
         <div class="dim-card"><div class="val">${a.waterStorageLM2 ?? "—"}</div><div class="lbl">Water storage L/m²</div></div>
       </div>

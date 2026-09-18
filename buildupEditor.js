@@ -156,6 +156,30 @@ async function deleteBuildup(id, label) {
   }
 }
 
+/**
+ * Compares the layer total against what the manufacturer publishes.
+ *
+ * They disagree whenever a manufacturer states an overall depth but not every
+ * layer's — the gaps get filled with typical values, and those can add up past
+ * the stated total. Revit builds the layers, so a silent disagreement means
+ * modelling a deeper roof than the supplier is quoting. Better shown than
+ * hidden behind two unrelated boxes.
+ */
+function publishedTotalNote(draft, layerTotal) {
+  const published = Number(draft.buildUpMm);
+  if (!published) return `<p class="hint">No published total to compare against.</p>`;
+
+  const diff = layerTotal - published;
+  if (Math.abs(diff) <= 5) {
+    return `<p class="hint" style="color:#0ea355">Matches the published ${published} mm.</p>`;
+  }
+  return `<p class="hint" style="color:#f59e0b">
+      Manufacturer publishes <strong>${published} mm</strong> — the layers come to
+      <strong>${layerTotal} mm</strong>, ${Math.abs(diff)} mm ${diff > 0 ? "more" : "less"}.
+      Revit builds the layers, so check the typical values against a datasheet.
+    </p>`;
+}
+
 /* ── Rendering ── */
 
 function renderBuildupEditor() {
@@ -200,10 +224,23 @@ function renderBuildupEditor() {
     </div>
 
     <div class="section span-2">
-      <label>Published figures — leave blank if the manufacturer doesn't state one</label>
-      <p class="hint">These are what an engineer checks a deck against. A blank is honest; a guess is not.</p>
+      <label>Build-up thickness — <strong>${total} mm</strong></label>
+      <p class="hint">
+        Adds up from the layers below, and is what Revit actually builds. Not typed:
+        a total someone enters by hand is a second, competing answer to a question
+        the layers already answer.
+      </p>
+      ${publishedTotalNote(d, total)}
     </div>
-    ${field("Build-up (mm)", "buildUpMm", "number")}
+
+    <div class="section span-2">
+      <label>Manufacturer's published figures — leave blank if they don't state one</label>
+      <p class="hint">
+        What an engineer checks a deck against. A blank is honest; a guess is not.
+        The published build-up below is a cross-check against the layers, not a substitute.
+      </p>
+    </div>
+    ${field("Published build-up (mm)", "buildUpMm", "number")}
     ${field("Saturated weight (kg/m²)", "saturatedKgM2", "number")}
     ${field("Water storage (L/m²)", "waterStorageLM2", "number")}
     ${field("Source URL", "sourceUrl", "text", "https://…")}
