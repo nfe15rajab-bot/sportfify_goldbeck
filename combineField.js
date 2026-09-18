@@ -31,6 +31,9 @@ const KIND_COLORS = {
   field:    { stroke: "#3d6fff", fill: "rgba(61,111,255,0.35)" },
   activity: { stroke: "#9c4fe0", fill: "rgba(156,79,224,0.32)" },
   garden:   { stroke: "#0ea355", fill: "rgba(14,163,85,0.35)" },
+  // Plants read as a crown outline rather than a solid block — a tree occupies
+  // its canopy, but you can still see the ground it is standing on.
+  vegetation: { stroke: "#2f7a43", fill: "rgba(47,122,67,0.22)" },
   // Pieces pushed from the Revit Families tab — the user's own loaded
   // content rather than one of the app's built-in presets. Its own colour
   // so a designer can see at a glance which pieces came from their model.
@@ -773,7 +776,8 @@ function initCombineInteractions() {
     // The drag simply doesn't follow into a drawn zone, which reads as the
     // piece bumping into it rather than as an error.
     const itemFp = getFootprint(item);
-    if (typeof zonesUnder === "function" && zonesUnder(nextX, nextY, itemFp.w, itemFp.h).length > 0) return;
+    if (typeof zonesUnder === "function" && item.kind !== "vegetation"
+        && zonesUnder(nextX, nextY, itemFp.w, itemFp.h).length > 0) return;
 
     item.x_m = nextX;
     item.y_m = nextY;

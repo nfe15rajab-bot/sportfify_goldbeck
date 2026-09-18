@@ -62,13 +62,6 @@ const ZONE_KINDS = {
     hint: "The roof build-up itself. Extensive or intensive is chosen by the system below.",
     assemblyCategories: ["extensive", "intensive"],
   },
-  vegetation: {
-    label: "Vegetation",
-    short: "Vegetation",
-    color: "#2f7a43",
-    hint: "Deeper planted areas — only intensive build-ups carry the root depth.",
-    assemblyCategories: ["intensive"],
-  },
 };
 
 let zoneCounter = 0;
@@ -254,6 +247,7 @@ function finishZoneDraw() {
   // a court is refused when dropped on a zone. Blocking one direction only
   // would let the same clash in through the back door.
   const onTop = combineState.items.filter(item => {
+    if (item.kind === "vegetation") return false;   // a plant belongs in a zone
     const fp = getFootprint(item);
     return rectsOverlap({ x: b.x, y: b.y, w: b.w, h: b.h },
                         { x: item.x_m, y: item.y_m, w: fp.w, h: fp.h });
@@ -288,6 +282,7 @@ function finishZoneDraw() {
 /** True if this rectangle would sit on any placed piece. */
 function zoneBoxHitsItem(x_m, y_m, w_m, h_m) {
   return combineState.items.some(item => {
+    if (item.kind === "vegetation") return false;   // a plant belongs in a zone
     const fp = getFootprint(item);
     return rectsOverlap({ x: x_m, y: y_m, w: w_m, h: h_m },
                         { x: item.x_m, y: item.y_m, w: fp.w, h: fp.h });
@@ -511,6 +506,7 @@ function findZoneClashes() {
   const clashes = [];
   combineState.zones.forEach(z => {
     combineState.items.forEach(item => {
+      if (item.kind === "vegetation") return;       // a plant belongs in a zone
       const fp = getFootprint(item);
       if (rectsOverlap({ x: z.x_m, y: z.y_m, w: z.length_m, h: z.width_m },
                        { x: item.x_m, y: item.y_m, w: fp.w, h: fp.h })) {

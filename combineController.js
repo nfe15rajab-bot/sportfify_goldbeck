@@ -118,7 +118,10 @@ function placeTrayItemAt(id, x_m, y_m) {
   const pending = combineState.tray[idx];
   const fp = typeof getFootprint === "function" ? getFootprint(pending)
                                                 : { w: pending.length_m, h: pending.width_m };
-  if (typeof zonesUnder === "function") {
+  // Vegetation is the exception: a tree is meant to stand IN the substrate, so
+  // a green roof zone accepts it rather than refusing it. Everything else — a
+  // court, a piece of equipment — is still refused.
+  if (typeof zonesUnder === "function" && pending.kind !== "vegetation") {
     const blocking = zonesUnder(x_m, y_m, fp.w, fp.h);
     if (blocking.length > 0) {
       const kind = (typeof ZONE_KINDS !== "undefined" && ZONE_KINDS[blocking[0].kind]) || { label: "A zone" };

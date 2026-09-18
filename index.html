@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-18-zone-kinds" />
+  <link rel="stylesheet" href="style.css?v=2026-09-18-vegetation" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -88,6 +88,7 @@
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
+      <button id="btn-vegetation-toggle" class="activity-icon" title="Vegetation — trees, shrubs, planting"><i class="ti ti-tree" aria-hidden="true"></i><span class="activity-icon-label">Plants</span></button>
       <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeAnalysis" class="activity-icon" title="Analysis"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Analysis</span></button>
@@ -656,6 +657,18 @@
               <!-- Anchored to the canvas, not the wizard: drawing a zone is a
                    thing you do ON the roof, and the rules/arrange/review steps
                    are a different activity entirely. -->
+              <aside class="zone-flyout vegetation-flyout" id="vegetation-flyout" hidden>
+                <div class="zone-flyout-header">
+                  <span><i class="ti ti-tree" aria-hidden="true"></i> Vegetation</span>
+                  <button id="btn-vegetation-close" title="Close">&times;</button>
+                </div>
+                <p class="hint">
+                  A tree has a position and a crown — it is placed, not drawn.
+                  Push one to the tray, then drag it onto the roof.
+                </p>
+                <div id="vegetation-panel"></div>
+              </aside>
+
               <aside class="zone-flyout" id="zone-flyout" hidden>
                 <div class="zone-flyout-header">
                   <span><i class="ti ti-topology-star-3" aria-hidden="true"></i> Ground zones</span>
@@ -849,30 +862,31 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-18-zone-kinds"></script>
-  <script src="activitiesData.js?v=2026-09-18-zone-kinds"></script>
-  <script src="zones.js?v=2026-09-18-zone-kinds"></script>
-  <script src="assemblies.js?v=2026-09-18-zone-kinds"></script>
-  <script src="gardenData.js?v=2026-09-18-zone-kinds"></script>
-  <script src="prebuiltSessions.js?v=2026-09-18-zone-kinds"></script>
-  <script src="rules.js?v=2026-09-18-zone-kinds"></script>
-  <script src="sunPosition.js?v=2026-09-18-zone-kinds"></script>
-  <script src="balls.js?v=2026-09-18-zone-kinds"></script>
-  <script src="field.js?v=2026-09-18-zone-kinds"></script>
-  <script src="activityField.js?v=2026-09-18-zone-kinds"></script>
-  <script src="gardenField.js?v=2026-09-18-zone-kinds"></script>
-  <script src="combineField.js?v=2026-09-18-zone-kinds"></script>
-  <script src="siteField.js?v=2026-09-18-zone-kinds"></script>
-  <script src="dataTab.js?v=2026-09-18-zone-kinds"></script>
-  <script src="revitBridge.js?v=2026-09-18-zone-kinds"></script>
-  <script src="sportController.js?v=2026-09-18-zone-kinds"></script>
-  <script src="gardenController.js?v=2026-09-18-zone-kinds"></script>
-  <script src="siteController.js?v=2026-09-18-zone-kinds"></script>
-  <script src="combineController.js?v=2026-09-18-zone-kinds"></script>
-  <script src="analysisController.js?v=2026-09-18-zone-kinds"></script>
-  <script src="compareController.js?v=2026-09-18-zone-kinds"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-18-zone-kinds"></script>
-  <script src="sessionGate.js?v=2026-09-18-zone-kinds"></script>
-  <script src="main.js?v=2026-09-18-zone-kinds"></script>
+  <script src="data.js?v=2026-09-18-vegetation"></script>
+  <script src="activitiesData.js?v=2026-09-18-vegetation"></script>
+  <script src="vegetation.js?v=2026-09-18-vegetation"></script>
+  <script src="zones.js?v=2026-09-18-vegetation"></script>
+  <script src="assemblies.js?v=2026-09-18-vegetation"></script>
+  <script src="gardenData.js?v=2026-09-18-vegetation"></script>
+  <script src="prebuiltSessions.js?v=2026-09-18-vegetation"></script>
+  <script src="rules.js?v=2026-09-18-vegetation"></script>
+  <script src="sunPosition.js?v=2026-09-18-vegetation"></script>
+  <script src="balls.js?v=2026-09-18-vegetation"></script>
+  <script src="field.js?v=2026-09-18-vegetation"></script>
+  <script src="activityField.js?v=2026-09-18-vegetation"></script>
+  <script src="gardenField.js?v=2026-09-18-vegetation"></script>
+  <script src="combineField.js?v=2026-09-18-vegetation"></script>
+  <script src="siteField.js?v=2026-09-18-vegetation"></script>
+  <script src="dataTab.js?v=2026-09-18-vegetation"></script>
+  <script src="revitBridge.js?v=2026-09-18-vegetation"></script>
+  <script src="sportController.js?v=2026-09-18-vegetation"></script>
+  <script src="gardenController.js?v=2026-09-18-vegetation"></script>
+  <script src="siteController.js?v=2026-09-18-vegetation"></script>
+  <script src="combineController.js?v=2026-09-18-vegetation"></script>
+  <script src="analysisController.js?v=2026-09-18-vegetation"></script>
+  <script src="compareController.js?v=2026-09-18-vegetation"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-18-vegetation"></script>
+  <script src="sessionGate.js?v=2026-09-18-vegetation"></script>
+  <script src="main.js?v=2026-09-18-vegetation"></script>
 </body>
 </html>

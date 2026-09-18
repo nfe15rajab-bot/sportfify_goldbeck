@@ -607,3 +607,8 @@ html[data-role="client"] .planner-only { display: none !important; }
    layout — at 290px wide everything reads better stacked. */
 .zone-flyout .section { margin-bottom: 12px; }
 .zone-flyout select { width: 100%; }
+
+/* Vegetation flyout sits on the right of the canvas so it can be open at the
+   same time as the zones panel — you choose a build-up and what stands on it
+   together, not one after the other. */
+.vegetation-flyout { left: auto; right: 12px; }
