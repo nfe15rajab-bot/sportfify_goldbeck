@@ -343,9 +343,36 @@ function drawCombineCanvas() {
  * when the current rules fall short of the recommendation, never changes
  * DESIGN_RULES on its own.
  */
+/**
+ * Off by choice, and it stays off. The advisory recalculates on every drag, so
+ * a designer who has already decided their rules gets the same suggestion
+ * argued at them dozens of times while laying out a roof — the preference is
+ * remembered rather than reset each session.
+ */
+const SMART_RULE_PREF_KEY = "sportify-smart-rules";
+
+function smartRulesEnabled() {
+  try { return localStorage.getItem(SMART_RULE_PREF_KEY) !== "off"; }
+  catch (e) { return true; }
+}
+
+function setSmartRulesEnabled(on) {
+  try { localStorage.setItem(SMART_RULE_PREF_KEY, on ? "on" : "off"); } catch (e) {}
+  const box = document.getElementById("smart-rule-toggle");
+  if (box) box.checked = on;
+  const lbl = document.querySelector('label[for="smart-rule-toggle"]');
+  if (lbl) lbl.textContent = on ? "On" : "Off";
+  renderSmartRuleAdvisory();
+}
+
 function renderSmartRuleAdvisory() {
   const el = document.getElementById("smart-rule-advisory");
   if (!el) return;
+
+  if (!smartRulesEnabled()) {
+    el.innerHTML = `<p class="hint">Off — turn it on to see an area-based recommendation for entries and circulation width.</p>`;
+    return;
+  }
 
   if (combineState.items.length === 0) {
     el.innerHTML = `<p class="hint">Push a few pieces to see an area-based recommendation.</p>`;

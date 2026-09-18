@@ -144,6 +144,15 @@ function placeTrayItemAt(id, x_m, y_m) {
 
 function updateCombineUI() {
   document.getElementById("field-label").textContent = "Combine — roof layout";
+  // Restore the remembered choice and wire the toggle once the panel exists.
+  const smartBox = document.getElementById("smart-rule-toggle");
+  if (smartBox && !smartBox.dataset.wired) {
+    smartBox.dataset.wired = "1";
+    smartBox.checked = smartRulesEnabled();
+    const lbl = document.querySelector('label[for="smart-rule-toggle"]');
+    if (lbl) lbl.textContent = smartBox.checked ? "On" : "Off";
+    smartBox.addEventListener("change", () => setSmartRulesEnabled(smartBox.checked));
+  }
   if (typeof renderZonePanel === "function" && !document.getElementById("zone-flyout")?.hidden) renderZonePanel();
   document.getElementById("norm-badge").textContent  = "Prototype";
   // Site (map/orientation/sun) moved out to its own top-level mode — see
