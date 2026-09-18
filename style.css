@@ -31,7 +31,7 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font-sans); back
    dark in the markup and the toggle always sets one value or the other,
    so there's no "unset" state to fall back to system prefs for. ── */
 html[data-mode="dark"] {
-  --surface-0: #14152a; --surface-1: #1b1d38; --surface-2: #242747;
+  --surface-0: #000000; --surface-1: #1b1d38; --surface-2: #242747;
   --text-primary: #eef0ff; --text-secondary: #a0a3c9; --text-muted: #6f72a0;
   --border: rgba(140,150,255,0.12); --border-strong: rgba(140,150,255,0.22); --border-accent: #7c9bff;
   --bg-accent: rgba(61,111,255,0.22); --bg-success: rgba(20,200,110,0.18); --text-accent: #8fabff; --text-success: #3ee089; --border-success: rgba(20,200,110,0.45);
