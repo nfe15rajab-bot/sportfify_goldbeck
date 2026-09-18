@@ -436,6 +436,11 @@ document.addEventListener("keydown", e => {
 /* ── Flyout open/close ── */
 
 function toggleZoneFlyout(force) {
+  // The flyout lives on the Combine canvas, so opening it from the rail means
+  // going there first — otherwise the button appears to do nothing from Sport.
+  if ((force === undefined || force) && typeof setMode === "function" && activeMode !== "combine") {
+    setMode("combine");
+  }
   const fly = document.getElementById("zone-flyout");
   const btn = document.getElementById("btn-zone-toggle");
   if (!fly) return;

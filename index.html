@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-18-zones-flyout" />
+  <link rel="stylesheet" href="style.css?v=2026-09-18-zones-rail" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -87,6 +87,7 @@
       <button id="modeSite" class="activity-icon" title="Site"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="activity-icon-label">Site</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
+      <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
       <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeAnalysis" class="activity-icon" title="Analysis"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Analysis</span></button>
@@ -650,7 +651,6 @@
                 <button id="btn-combine-zoom-in" title="Zoom in"><i class="ti ti-plus" aria-hidden="true"></i></button>
                 <button id="btn-combine-zoom-out" title="Zoom out"><i class="ti ti-minus" aria-hidden="true"></i></button>
                 <button id="btn-combine-zoom-reset" title="Reset view"><i class="ti ti-focus-2" aria-hidden="true"></i></button>
-                <button id="btn-zone-toggle" title="Ground zones — planting, lawn, walkways"><i class="ti ti-topology-star-3" aria-hidden="true"></i></button>
               </div>
 
               <!-- Anchored to the canvas, not the wizard: drawing a zone is a
@@ -849,30 +849,30 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-18-zones-flyout"></script>
-  <script src="activitiesData.js?v=2026-09-18-zones-flyout"></script>
-  <script src="zones.js?v=2026-09-18-zones-flyout"></script>
-  <script src="assemblies.js?v=2026-09-18-zones-flyout"></script>
-  <script src="gardenData.js?v=2026-09-18-zones-flyout"></script>
-  <script src="prebuiltSessions.js?v=2026-09-18-zones-flyout"></script>
-  <script src="rules.js?v=2026-09-18-zones-flyout"></script>
-  <script src="sunPosition.js?v=2026-09-18-zones-flyout"></script>
-  <script src="balls.js?v=2026-09-18-zones-flyout"></script>
-  <script src="field.js?v=2026-09-18-zones-flyout"></script>
-  <script src="activityField.js?v=2026-09-18-zones-flyout"></script>
-  <script src="gardenField.js?v=2026-09-18-zones-flyout"></script>
-  <script src="combineField.js?v=2026-09-18-zones-flyout"></script>
-  <script src="siteField.js?v=2026-09-18-zones-flyout"></script>
-  <script src="dataTab.js?v=2026-09-18-zones-flyout"></script>
-  <script src="revitBridge.js?v=2026-09-18-zones-flyout"></script>
-  <script src="sportController.js?v=2026-09-18-zones-flyout"></script>
-  <script src="gardenController.js?v=2026-09-18-zones-flyout"></script>
-  <script src="siteController.js?v=2026-09-18-zones-flyout"></script>
-  <script src="combineController.js?v=2026-09-18-zones-flyout"></script>
-  <script src="analysisController.js?v=2026-09-18-zones-flyout"></script>
-  <script src="compareController.js?v=2026-09-18-zones-flyout"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-18-zones-flyout"></script>
-  <script src="sessionGate.js?v=2026-09-18-zones-flyout"></script>
-  <script src="main.js?v=2026-09-18-zones-flyout"></script>
+  <script src="data.js?v=2026-09-18-zones-rail"></script>
+  <script src="activitiesData.js?v=2026-09-18-zones-rail"></script>
+  <script src="zones.js?v=2026-09-18-zones-rail"></script>
+  <script src="assemblies.js?v=2026-09-18-zones-rail"></script>
+  <script src="gardenData.js?v=2026-09-18-zones-rail"></script>
+  <script src="prebuiltSessions.js?v=2026-09-18-zones-rail"></script>
+  <script src="rules.js?v=2026-09-18-zones-rail"></script>
+  <script src="sunPosition.js?v=2026-09-18-zones-rail"></script>
+  <script src="balls.js?v=2026-09-18-zones-rail"></script>
+  <script src="field.js?v=2026-09-18-zones-rail"></script>
+  <script src="activityField.js?v=2026-09-18-zones-rail"></script>
+  <script src="gardenField.js?v=2026-09-18-zones-rail"></script>
+  <script src="combineField.js?v=2026-09-18-zones-rail"></script>
+  <script src="siteField.js?v=2026-09-18-zones-rail"></script>
+  <script src="dataTab.js?v=2026-09-18-zones-rail"></script>
+  <script src="revitBridge.js?v=2026-09-18-zones-rail"></script>
+  <script src="sportController.js?v=2026-09-18-zones-rail"></script>
+  <script src="gardenController.js?v=2026-09-18-zones-rail"></script>
+  <script src="siteController.js?v=2026-09-18-zones-rail"></script>
+  <script src="combineController.js?v=2026-09-18-zones-rail"></script>
+  <script src="analysisController.js?v=2026-09-18-zones-rail"></script>
+  <script src="compareController.js?v=2026-09-18-zones-rail"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-18-zones-rail"></script>
+  <script src="sessionGate.js?v=2026-09-18-zones-rail"></script>
+  <script src="main.js?v=2026-09-18-zones-rail"></script>
 </body>
 </html>
