@@ -257,3 +257,46 @@ function renderAssemblyDetail() {
 }
 
 document.addEventListener("DOMContentLoaded", initAssemblyPicker);
+
+/**
+ * The export shape for one system: everything Revit needs to build the floor
+ * type without consulting a catalog of its own. Layer thicknesses go out in
+ * metres like every other dimension in the payload, and each keeps its
+ * provenance so a schedule can show which figures are the provider's.
+ */
+function buildAssemblyPayload(key) {
+  const a = getAssembly(key);
+  if (!a) return null;
+  return {
+    key,
+    provider: a.provider,
+    provider_country: a.provider_country,
+    system_name: a.system_name,
+    category: a.category,
+    // Prefixed so a type this tool created is identifiable in a project
+    // template that someone else maintains.
+    revit_type_name: `Sportify - ${a.provider} ${a.system_name}`,
+    build_up_mm: a.build_up_mm,
+    saturated_kg_m2: a.saturated_kg_m2,
+    water_storage_l_m2: a.water_storage_l_m2,
+    source_url: a.source_url,
+    total_thickness_m: assemblyLayerTotalMm(a) / 1000,
+    layers: a.layers.map((l, i) => ({
+      order: i,
+      name: l.name,
+      function: l.fn,
+      thickness_m: l.mm / 1000,
+      thickness_source: l.src,
+    })),
+  };
+}
+
+/** Every distinct system used anywhere in a layout, so an import creates each once. */
+function collectUsedAssemblies(items) {
+  const seen = new Map();
+  (items || []).forEach(it => {
+    const a = it.sourceJson && it.sourceJson.garden && it.sourceJson.garden.assembly;
+    if (a && !seen.has(a.key)) seen.set(a.key, a);
+  });
+  return [...seen.values()];
+}

@@ -438,6 +438,10 @@ function buildCombinedPayload() {
       date: siteState.date,
       time: siteState.time
     } : null,
+    // Distinct provider build-up systems used in this layout. Sent once at the
+    // top level rather than repeated inside every garden placement: Revit
+    // creates one floor type per system, not one per parcel.
+    assemblies: typeof collectUsedAssemblies === "function" ? collectUsedAssemblies(combineState.items) : [],
     placements
   };
 

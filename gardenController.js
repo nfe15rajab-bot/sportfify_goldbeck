@@ -124,7 +124,11 @@ function buildGardenPayload() {
       layers: Object.entries(theme.layers).map(([name, config]) => ({
         layer_name: name, thickness_m: config.thickness_m, material: config.material
       })),
-      materials: { waterproofing: mat.waterproofing, drainage: mat.drainage, quality_level: gardenState.quality, reference_material: referenceMaterial, reference_provider: referenceProvider }
+      materials: { waterproofing: mat.waterproofing, drainage: mat.drainage, quality_level: gardenState.quality, reference_material: referenceMaterial, reference_provider: referenceProvider },
+      // The real provider system this parcel is built from — the thing Revit
+      // turns into a floor type. Carries the whole build-up rather than a key,
+      // so the import needs no catalog of its own.
+      assembly: typeof buildAssemblyPayload === "function" ? buildAssemblyPayload(gardenState.assemblyKey) : null
     }
   };
 }
