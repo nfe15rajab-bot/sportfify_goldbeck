@@ -25,71 +25,137 @@
  * 400-600 mm for shrubs, 600-1000 mm for small and large trees.
  */
 
+/**
+ * Real species, not size categories.
+ *
+ * "Small tree" is not something a nursery supplies or a Revit family
+ * represents — Cornus mas is. And once it is a species, its dimensions come
+ * WITH it: crown width is a property of the plant, not a number a designer
+ * types. Where a species is supplied in a range of sizes the range travels
+ * too, and the designer picks within it.
+ *
+ * Trees are the eight Van den Berk specifically recommends for roof gardens,
+ * with each one's published mature height and crown width. Their guidance for
+ * roof planting is also where the tree substrate figure comes from: "you need
+ * at least 70-80 cm root space for trees", and a roof carrying around
+ * 1000 kg/m2 before small trees are possible at all.
+ *
+ * height_m matters beyond drawing: it is what a shading, wind or clearance
+ * analysis needs, and none of that can be reconstructed from a plan footprint.
+ * So it travels in the export whether or not this app uses it yet.
+ *
+ * Sourced figures are marked. Where a dimension is a horticultural norm rather
+ * than a published nursery figure it says so, for the same reason the
+ * assemblies distinguish published from typical: someone specifying a plant
+ * needs to know which numbers came from the grower.
+ */
 const VEGETATION_TYPES = {
-  ground_cover: {
-    label: "Ground cover / sedum",
-    short: "Ground cover",
-    crown_m: 1.0,
-    height_m: 0.2,
+  cornus_mas: {
+    label: "Cornus mas",
+    common: "Cornelian cherry",
+    short: "Cornus mas",
+    form: "tree",
+    height_m: 6, height_range: "5–6 m",
+    crown_m: 5.5, crown_min_m: 5, crown_max_m: 6,
+    min_substrate_mm: 800,
+    color: "#2f7a43",
+    note: "Multi-stemmed small tree, dense round crown. Slow growing.",
+    source: "Van den Berk",
+    source_url: "https://www.vdberk.com/trees/cornus-mas/",
+    dimensions_published: true,
+  },
+  pyrus_salicifolia_pendula: {
+    label: "Pyrus salicifolia 'Pendula'",
+    common: "Weeping willow-leaved pear",
+    short: "Pyrus 'Pendula'",
+    form: "tree",
+    height_m: 6, height_range: "5–6 m",
+    crown_m: 5.5, crown_min_m: 5, crown_max_m: 6,
+    min_substrate_mm: 800,
+    color: "#3f8f4f",
+    note: "Broad weeping crown. Withstands wind and dry soil, tolerates paving.",
+    source: "Van den Berk",
+    source_url: "https://www.vdberk.com/trees/pyrus-salicifolia-pendula/",
+    dimensions_published: true,
+  },
+  pinus_parviflora_glauca: {
+    label: "Pinus parviflora 'Glauca'",
+    common: "Japanese white pine",
+    short: "Pinus 'Glauca'",
+    form: "tree",
+    height_m: 9, height_range: "6–12 m",
+    crown_m: 8, crown_min_m: 6, crown_max_m: 10,
+    min_substrate_mm: 800,
+    color: "#1f5c33",
+    note: "Evergreen, broad pyramidal. Withstands sea wind — but tolerates no paving.",
+    source: "Van den Berk",
+    source_url: "https://www.vdberk.com/trees/pinus-parviflora-glauca/",
+    dimensions_published: true,
+  },
+  carpinus_japonica: {
+    label: "Carpinus japonica",
+    common: "Japanese hornbeam",
+    short: "Carpinus japonica",
+    form: "tree",
+    height_m: 11, height_range: "8–15 m",
+    crown_m: 7, crown_min_m: 6, crown_max_m: 8,
+    min_substrate_mm: 800,
+    color: "#27663a",
+    note: "Vase-shaped becoming rounded. The largest here — check the structure.",
+    source: "Van den Berk",
+    source_url: "https://www.vdberk.com/trees/carpinus-japonica/",
+    dimensions_published: true,
+  },
+
+  lavandula_angustifolia: {
+    label: "Lavandula angustifolia",
+    common: "Lavender",
+    short: "Lavender",
+    form: "shrub",
+    height_m: 0.6, height_range: "0.4–0.8 m",
+    crown_m: 0.8, crown_min_m: 0.6, crown_max_m: 1.0,
+    min_substrate_mm: 200,
+    color: "#7b6fa8",
+    note: "Drought-tolerant sub-shrub, a green roof staple.",
+    source: "Horticultural norm",
+    dimensions_published: false,
+  },
+  festuca_glauca: {
+    label: "Festuca glauca",
+    common: "Blue fescue",
+    short: "Blue fescue",
+    form: "grass",
+    height_m: 0.3, height_range: "0.2–0.4 m",
+    crown_m: 0.4, crown_min_m: 0.3, crown_max_m: 0.5,
+    min_substrate_mm: 150,
+    color: "#6b9e8f",
+    note: "Ornamental grass, clump forming. Tolerates thin substrate.",
+    source: "Horticultural norm",
+    dimensions_published: false,
+  },
+  sedum_mix: {
+    label: "Sedum mix",
+    common: "Stonecrop mat",
+    short: "Sedum",
+    form: "groundcover",
+    height_m: 0.15, height_range: "0.05–0.2 m",
+    crown_m: 1.0, crown_min_m: 0.5, crown_max_m: 2.0,
     min_substrate_mm: 60,
     color: "#7fb069",
-    note: "Mats and low planting. Works on the thinnest extensive build-ups.",
-  },
-  perennials: {
-    label: "Perennials & grasses",
-    short: "Perennials",
-    crown_m: 1.5,
-    height_m: 0.8,
-    min_substrate_mm: 150,
-    color: "#6b9e4f",
-    note: "Herbaceous planting — needs a moderate substrate.",
-  },
-  shrub: {
-    label: "Shrub",
-    short: "Shrub",
-    crown_m: 2.5,
-    height_m: 2.0,
-    min_substrate_mm: 400,
-    color: "#4a8c3f",
-    note: "Woody planting. Intensive build-up territory.",
-  },
-  small_tree: {
-    label: "Small tree",
-    short: "Small tree",
-    crown_m: 4.0,
-    height_m: 6.0,
-    min_substrate_mm: 600,
-    color: "#2f7a43",
-    note: "Ornamental or fruit tree — 600 mm of substrate minimum.",
-  },
-  large_tree: {
-    label: "Large tree",
-    short: "Large tree",
-    crown_m: 8.0,
-    height_m: 12.0,
-    min_substrate_mm: 1000,
-    color: "#1f5c33",
-    note: "Needs a deep build-up and usually a structural check.",
-  },
-  raised_bed: {
-    label: "Raised growing bed",
-    short: "Growing bed",
-    crown_m: 3.0,
-    height_m: 0.8,
-    min_substrate_mm: 300,
-    color: "#6b8f2f",
-    note: "Urban farming — crops in a contained bed.",
+    note: "The extensive green roof default — survives the thinnest build-ups.",
+    source: "Horticultural norm",
+    dimensions_published: false,
   },
 };
 
 const vegetationState = {
-  typeKey: "small_tree",
+  typeKey: "cornus_mas",
   /** Crown diameter in metres, editable: a species is not one fixed size. */
-  crown_m: VEGETATION_TYPES.small_tree.crown_m,
+  crown_m: VEGETATION_TYPES.cornus_mas.crown_m,
 };
 
 function activeVegetationType() {
-  return VEGETATION_TYPES[vegetationState.typeKey] || VEGETATION_TYPES.small_tree;
+  return VEGETATION_TYPES[vegetationState.typeKey] || VEGETATION_TYPES.cornus_mas;
 }
 
 /**
@@ -106,17 +172,29 @@ function pushVegetationToCombine() {
 
   const item = addCombineItem({
     kind: "vegetation",
-    label: type.label,
+    label: type.short,
     length_m: crown,
     width_m: crown,
     sourceJson: {
       version: "1.0",
       generator: "Sportify-Vegetation",
       vegetation: {
-        type_id: vegetationState.typeKey,
+        species_key: vegetationState.typeKey,
+        botanical_name: type.label,
+        common_name: type.common,
+        form: type.form,
         crown_m: crown,
+        // Carried whether or not this app uses it: a shading, wind or clearance
+        // analysis needs height, and it cannot be recovered from a plan.
         height_m: type.height_m,
+        height_range: type.height_range,
         min_substrate_mm: type.min_substrate_mm,
+        // Named so a Revit family can be found or generated per species, the
+        // same way an assembly becomes a floor type.
+        revit_family_name: `Sportify - ${type.label}`,
+        source: type.source,
+        source_url: type.source_url || null,
+        dimensions_published: !!type.dimensions_published,
       },
     },
   });
@@ -179,8 +257,13 @@ function renderVegetationPanel() {
   if (!el) return;
   const type = activeVegetationType();
 
-  const options = Object.entries(VEGETATION_TYPES)
-    .map(([k, v]) => `<option value="${k}"${k === vegetationState.typeKey ? " selected" : ""}>${v.label}</option>`).join("");
+  const forms = { tree: "Trees", shrub: "Shrubs", grass: "Grasses", groundcover: "Ground cover" };
+  const options = Object.entries(forms).map(([form, heading]) => {
+    const inForm = Object.entries(VEGETATION_TYPES).filter(([, v]) => v.form === form);
+    if (!inForm.length) return "";
+    return `<optgroup label="${heading}">` + inForm.map(([k, v]) =>
+      `<option value="${k}"${k === vegetationState.typeKey ? " selected" : ""}>${v.label} — ${v.common}</option>`).join("") + `</optgroup>`;
+  }).join("");
 
   const problems = findVegetationRootProblems();
   const planted = (combineState.items || []).filter(i => i.kind === "vegetation").length;
@@ -189,15 +272,24 @@ function renderVegetationPanel() {
     <div class="section">
       <label>What are you planting?</label>
       <select id="veg-type-select">${options}</select>
-      <p class="hint">${type.note}</p>
+      <p class="hint"><em>${type.common}</em> — ${type.note}</p>
     </div>
 
     <div class="section">
-      <label>Crown diameter (m)</label>
-      <input type="number" id="veg-crown" step="0.5" min="0.5" value="${Number(vegetationState.crown_m).toFixed(1)}">
+      <label>Crown diameter — ${type.crown_min_m}–${type.crown_max_m} m</label>
+      <input type="range" id="veg-crown" style="width:100%"
+             min="${type.crown_min_m}" max="${type.crown_max_m}" step="0.1"
+             value="${Number(vegetationState.crown_m).toFixed(1)}">
       <p class="hint">
-        Mature height ${type.height_m} m · needs <strong>${type.min_substrate_mm} mm</strong> of substrate.
-        The crown is the footprint — what has to clear a court or a parapet.
+        <strong>${Number(vegetationState.crown_m).toFixed(1)} m</strong> crown —
+        the species' own range, since a nursery supplies it at different sizes.
+      </p>
+      <p class="hint">
+        Mature height <strong>${type.height_range}</strong> ·
+        needs <strong>${type.min_substrate_mm} mm</strong> of substrate ·
+        ${type.dimensions_published
+            ? `<a href="${type.source_url}" target="_blank" rel="noopener">${type.source}</a> figures`
+            : `${type.source}`}
       </p>
     </div>
 
