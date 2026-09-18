@@ -286,8 +286,11 @@ function drawCombineCanvas() {
 
   const statusEl = document.getElementById("combine-status");
   if (statusEl) {
-    if (items.length === 0) {
-      statusEl.textContent = "Push a sport, activity, or garden configuration to begin.";
+    const zoneCount = (combineState.zones || []).length;
+    if (items.length === 0 && zoneCount === 0) {
+      statusEl.textContent = "Push a sport or activity, or draw a ground zone, to begin.";
+    } else if (items.length === 0) {
+      statusEl.textContent = `${zoneCount} ground zone(s) drawn. Push a sport or activity to place pieces.`;
     } else if (overlappingIds.size > 0) {
       statusEl.textContent = `⚠ ${overlappingIds.size} piece(s) closer than the ${DESIGN_RULES.clearance_m.toFixed(1)} m clearance rule.`;
     } else if (anyOutOfBounds) {
@@ -296,6 +299,11 @@ function drawCombineCanvas() {
       statusEl.textContent = `${items.length} piece(s) placed. Add an entry point to check circulation.`;
     } else if (circulation.unreachable.size > 0) {
       statusEl.textContent = `⚠ ${circulation.unreachable.size} piece(s) aren't reachable from an entrance.`;
+    } else if (typeof findZoneClashes === "function" && findZoneClashes().length > 0) {
+      const n = findZoneClashes().length;
+      statusEl.textContent = `⚠ ${n} ground zone clash(es) with a placed piece.`;
+    } else if (typeof findZonesOutOfBounds === "function" && findZonesOutOfBounds().length > 0) {
+      statusEl.textContent = "⚠ One or more ground zones extend outside the roof boundary.";
     } else {
       statusEl.textContent = `${items.length} piece(s) placed. Layout OK — all rules satisfied.`;
     }

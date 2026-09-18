@@ -157,9 +157,12 @@ function zonesSvg(scale, roofOx, roofOy) {
   const selectedId = combineState.selectedKind === "zone" ? combineState.selectedId : null;
   const isPlanner = document.documentElement.dataset.role !== "client";
 
+  const violating = typeof zonesInViolation === "function" ? zonesInViolation() : new Set();
+
   let out = "";
   combineState.zones.forEach(z => {
     const kind = ZONE_KINDS[z.kind] || ZONE_KINDS.planting;
+    const bad = violating.has(z.id);
     const x = roofOx + z.x_m * scale;
     const y = roofOy + z.y_m * scale;
     const w = z.length_m * scale;
@@ -169,12 +172,13 @@ function zonesSvg(scale, roofOx, roofOy) {
     out += `
       <rect data-zone-id="${z.id}" x="${x}" y="${y}" width="${w}" height="${h}"
             fill="${kind.color}" fill-opacity="${selected ? 0.5 : 0.35}"
-            stroke="${kind.color}" stroke-width="${selected ? 2.5 : 1}"
+            stroke="${bad ? "#ef4444" : kind.color}" stroke-width="${selected ? 2.5 : bad ? 2 : 1}"
+            stroke-dasharray="${bad ? "4,2" : "none"}"
             style="cursor:${isPlanner ? "move" : "pointer"}"/>
       <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="10"
             font-family="'Titillium Web', Arial, sans-serif" fill="#f4f4f2"
             pointer-events="none" opacity="0.9">
-        ${kind.short} · ${(z.length_m * z.width_m).toFixed(0)} m²
+        ${kind.short} · ${(z.length_m * z.width_m).toFixed(0)} m²${bad ? " ⚠" : ""}
       </text>`;
 
     if (selected && isPlanner) {
@@ -244,6 +248,23 @@ function finishZoneDraw() {
   zoneDraft = null;
   if (!b || b.w < 0.5 || b.h < 0.5) { drawCombineCanvas(); return null; }
 
+  // A zone drawn over a court is refused at the point of drawing, the same way
+  // a court is refused when dropped on a zone. Blocking one direction only
+  // would let the same clash in through the back door.
+  const onTop = combineState.items.filter(item => {
+    const fp = getFootprint(item);
+    return rectsOverlap({ x: b.x, y: b.y, w: b.w, h: b.h },
+                        { x: item.x_m, y: item.y_m, w: fp.w, h: fp.h });
+  });
+  if (onTop.length > 0) {
+    if (typeof showToast === "function") {
+      showToast("Something's already there",
+        `${onTop[0].label} occupies this spot — move it first, or draw the zone around it.`);
+    }
+    drawCombineCanvas();
+    return null;
+  }
+
   const zone = addZone(b.x, b.y, b.w, b.h);
   combineState.selectedKind = "zone";
   combineState.selectedId = zone.id;
@@ -262,11 +283,24 @@ function finishZoneDraw() {
 
 /* ── Move and resize ── */
 
+/** True if this rectangle would sit on any placed piece. */
+function zoneBoxHitsItem(x_m, y_m, w_m, h_m) {
+  return combineState.items.some(item => {
+    const fp = getFootprint(item);
+    return rectsOverlap({ x: x_m, y: y_m, w: w_m, h: h_m },
+                        { x: item.x_m, y: item.y_m, w: fp.w, h: fp.h });
+  });
+}
+
 function moveZoneTo(id, x_m, y_m) {
   const z = getZone(id);
   if (!z) return;
-  z.x_m = snapToGrid(x_m);
-  z.y_m = snapToGrid(y_m);
+  const nx = snapToGrid(x_m), ny = snapToGrid(y_m);
+  // The drag simply stops at the obstruction rather than reporting an error —
+  // the same way a piece behaves when dragged into a zone.
+  if (zoneBoxHitsItem(nx, ny, z.length_m, z.width_m)) return;
+  z.x_m = nx;
+  z.y_m = ny;
   drawCombineCanvas();
 }
 
@@ -292,6 +326,7 @@ function resizeZoneTo(id, corner, x_m, y_m) {
   const w = snapToGrid(Math.abs(right - left));
   const h = snapToGrid(Math.abs(bottom - top));
   if (w < 0.5 || h < 0.5) return;
+  if (zoneBoxHitsItem(x0, y0, w, h)) return;
 
   z.x_m = x0; z.y_m = y0; z.length_m = w; z.width_m = h;
   drawCombineCanvas();
@@ -457,3 +492,47 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-zone-toggle")?.addEventListener("click", () => toggleZoneFlyout());
   document.getElementById("btn-zone-close")?.addEventListener("click", () => toggleZoneFlyout(false));
 });
+
+/* ── Rules ── */
+
+/**
+ * Zones that clash with a placed piece.
+ *
+ * The drop and drag paths already refuse to put a court on a zone, but a zone
+ * can be DRAWN over a court, or resized onto one — the block has to work from
+ * both directions or it is only half a rule. Reported rather than prevented
+ * outright here, so the canvas can show the clash the same way it shows two
+ * courts sitting too close.
+ */
+function findZoneClashes() {
+  ensureZoneState();
+  const clashes = [];
+  combineState.zones.forEach(z => {
+    combineState.items.forEach(item => {
+      const fp = getFootprint(item);
+      if (rectsOverlap({ x: z.x_m, y: z.y_m, w: z.length_m, h: z.width_m },
+                       { x: item.x_m, y: item.y_m, w: fp.w, h: fp.h })) {
+        clashes.push({ zoneId: z.id, itemId: item.id, itemLabel: item.label });
+      }
+    });
+  });
+  return clashes;
+}
+
+/** Zones extending past the roof — the same check placed pieces already get. */
+function findZonesOutOfBounds() {
+  ensureZoneState();
+  const roof = combineState.roof;
+  return combineState.zones
+    .filter(z => z.x_m < 0 || z.y_m < 0 ||
+                 z.x_m + z.length_m > roof.length + 1e-6 ||
+                 z.y_m + z.width_m > roof.width + 1e-6)
+    .map(z => z.id);
+}
+
+/** Ids of every zone in violation, for the canvas to draw in warning colours. */
+function zonesInViolation() {
+  const bad = new Set(findZoneClashes().map(c => c.zoneId));
+  findZonesOutOfBounds().forEach(id => bad.add(id));
+  return bad;
+}
