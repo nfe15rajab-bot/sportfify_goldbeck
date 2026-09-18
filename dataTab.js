@@ -268,7 +268,22 @@ function setDataSearch(term) {
   if (dataState.cache[key]) renderDataContent(dataState.cache[key]);
 }
 
-function retryDataFetch() {
+/**
+ * Drops the cached copy so the next render actually re-reads the API.
+ *
+ * Without this a create or an edit appears to do nothing: the record is
+ * written, the list re-renders from the copy fetched before the write, and the
+ * count never changes — which reads as "the save failed" when it succeeded.
+ */
+function invalidateDataCache(key) {
+  if (key) delete dataState.cache[key];
+  else dataState.cache = {};
+}
+
+function retryDataFetch(options = {}) {
+  // A retry means "go and look again", so the cache goes with it. Callers that
+  // only changed one domain can pass its key instead of dropping everything.
+  invalidateDataCache(options.key);
   dataState.backendOnline = null;
   loadAndRenderDataContent();
 }

@@ -67,7 +67,9 @@ function closeBuildupEditor() {
   buildupEditorState.open = false;
   buildupEditorState.draft = null;
   renderBuildupEditor();
-  if (typeof retryDataFetch === "function") retryDataFetch();
+  // The list is served from a cache, so a write has to drop it or the new
+  // record never appears and the save looks like it failed.
+  if (typeof retryDataFetch === "function") retryDataFetch({ key: "buildups" });
 }
 
 function addBuildupLayer() {
@@ -148,7 +150,7 @@ async function deleteBuildup(id, label) {
     const res = await fetch(`${BUILDUP_API}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error(`API returned ${res.status}`);
     if (typeof assembliesLoaded !== "undefined") assembliesLoaded = false;
-    if (typeof retryDataFetch === "function") retryDataFetch();
+    if (typeof retryDataFetch === "function") retryDataFetch({ key: "buildups" });
   } catch (err) {
     alert(`Couldn't delete: ${err.message}`);
   }
