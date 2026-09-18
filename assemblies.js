@@ -130,9 +130,10 @@ const ASSEMBLIES = {
     ],
   },
 
-  // Not a green roof — the pedestrian surface that goes between the planted
-  // areas. Included because a roof layout is not all vegetation, and the
-  // walkway needs a real build-up in Revit exactly as the planting does.
+  // Kept but not offered as a zone: pedestrian circulation is the negative
+  // space between things, not an area someone draws. This is the build-up that
+  // leftover ground will eventually be given, once the app decides what the
+  // negative space is made of.
   zinco_paved_walkway: {
     provider: "ZinCo",
     provider_country: "Germany",

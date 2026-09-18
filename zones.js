@@ -31,41 +31,43 @@
  * the old GARDEN_ITEMS so nothing a planner could describe before has been
  * lost — only the way it gets sized has changed.
  */
+/**
+ * What you can draw. Two kinds, because there are two real things:
+ *
+ *   GREEN ROOF   the build-up — substrate, drainage, filter, membrane. This is
+ *                the ground itself, and the industry's own split runs through
+ *                it: extensive (thin, sedum, no access) versus intensive (deep,
+ *                accessible, shrubs and trees). That distinction lives in the
+ *                assembly, not in a separate zone kind.
+ *
+ *   VEGETATION   deeper planted areas — beds, raised planting, growing. Needs
+ *                an intensive build-up for root depth, so the systems offered
+ *                narrow accordingly.
+ *
+ * The previous six (planting bed / lawn / trees / urban farming / walkway) came
+ * from the old GARDEN_ITEMS list and did not survive contact with the question
+ * "what is the difference". Planting bed, lawn and urban farming were three
+ * names for an area with plants in it, differing only in WHAT is planted —
+ * which is not a property of the ground.
+ *
+ * Walkway is gone entirely: pedestrian circulation is the negative space
+ * between things, not an area you draw. Its material gets decided later, for
+ * whatever ground is left over.
+ */
 const ZONE_KINDS = {
-  planting: {
-    label: "Planting bed",
-    short: "Planting",
-    color: "#2f7a43",
-    hint: "Shrubs, perennials, ground cover.",
-    assemblyCategories: ["intensive", "extensive"],
-  },
-  lawn: {
-    label: "Lawn / sedum",
-    short: "Lawn",
+  green_roof: {
+    label: "Green roof",
+    short: "Green roof",
     color: "#4a9c5d",
-    hint: "Walkable green or extensive sedum.",
+    hint: "The roof build-up itself. Extensive or intensive is chosen by the system below.",
     assemblyCategories: ["extensive", "intensive"],
   },
-  trees: {
-    label: "Trees & deep planting",
-    short: "Trees",
-    color: "#1f5c33",
-    hint: "Needs an intensive build-up for root depth.",
+  vegetation: {
+    label: "Vegetation",
+    short: "Vegetation",
+    color: "#2f7a43",
+    hint: "Deeper planted areas — only intensive build-ups carry the root depth.",
     assemblyCategories: ["intensive"],
-  },
-  farming: {
-    label: "Urban farming",
-    short: "Farming",
-    color: "#6b8f2f",
-    hint: "Raised beds and crops — intensive substrate.",
-    assemblyCategories: ["intensive"],
-  },
-  walkway: {
-    label: "Pedestrian walkway",
-    short: "Walkway",
-    color: "#8a8f98",
-    hint: "Paved circulation between the active areas.",
-    assemblyCategories: ["walkway"],
   },
 };
 
@@ -80,7 +82,7 @@ let zoneDraft = null;
 
 function ensureZoneState() {
   if (!Array.isArray(combineState.zones)) combineState.zones = [];
-  if (!combineState.zoneKind) combineState.zoneKind = "planting";
+  if (!combineState.zoneKind) combineState.zoneKind = "green_roof";
   if (!combineState.zoneAssembly) combineState.zoneAssembly = defaultAssemblyFor(combineState.zoneKind);
 }
 
@@ -161,7 +163,7 @@ function zonesSvg(scale, roofOx, roofOy) {
 
   let out = "";
   combineState.zones.forEach(z => {
-    const kind = ZONE_KINDS[z.kind] || ZONE_KINDS.planting;
+    const kind = ZONE_KINDS[z.kind] || ZONE_KINDS.green_roof;
     const bad = violating.has(z.id);
     const x = roofOx + z.x_m * scale;
     const y = roofOy + z.y_m * scale;
@@ -195,7 +197,7 @@ function zonesSvg(scale, roofOx, roofOy) {
   });
 
   if (zoneDraft) {
-    const kind = ZONE_KINDS[combineState.zoneKind] || ZONE_KINDS.planting;
+    const kind = ZONE_KINDS[combineState.zoneKind] || ZONE_KINDS.green_roof;
     const b = zoneDraftBox();
     if (b && b.w > 0 && b.h > 0) {
       out += `
