@@ -14,7 +14,7 @@ const DATA_API_BASE = "http://localhost:5107/api";
 const dataState = {
   domain: "sports",       // "sports" | "vegetation" | "facilities"
   search: "",
-  cache: {},               // { sports: Sport[], palettes: PlantPalette[], facilities: FacilityGuideline[] }
+  cache: {},               // { sports: Sport[], species: Plant[], buildups: RoofAssembly[], facilities: FacilityGuideline[] }
   backendOnline: null,     // null = not checked yet, true/false once known
 };
 
@@ -29,20 +29,32 @@ async function fetchDataEntity(key, path) {
 }
 
 function domainFetchPlan() {
-  if (dataState.domain === "sports") return { key: "sports", path: "sports" };
-  // Individual species, as opposed to the "vegetation" domain below, which
-  // shows palettes — groupings OF species. The trees were in the database all
-  // along and simply had nothing displaying them.
-  if (dataState.domain === "species") return { key: "species", path: "Plants" };
   if (dataState.domain === "buildups") return { key: "buildups", path: "RoofAssemblies" };
   if (dataState.domain === "facilities") return { key: "facilities", path: "facilities" };
   if (dataState.domain === "analysisParams") return { key: "analysisParameters", path: "AnalysisParameters" };
-  return { key: "palettes", path: "plants/palettes" };
+  if (dataState.domain === "species") return { key: "species", path: "Plants" };
+  return { key: "sports", path: "sports" };
 }
 
+/**
+ * What each tab actually holds, said once at the top of it.
+ *
+ * Every one of these was a guess until you opened it and read the cards —
+ * "Palettes" in particular meant nothing to anybody, which is part of why it
+ * is gone. A reference catalog that cannot say what it is for is not much of
+ * a reference.
+ */
+const DOMAIN_INTRO = {
+  sports: "The sports this app can lay out, with the norm each follows, the surfaces it can be built in, and every official field size. Read-only: these come from DIN, FIBA, IHF and the rest, and are not ours to invent.",
+  species: "Individual plants you can place on the roof. Each carries its mature height, crown width and the substrate depth its roots need — the Plants panel offers the ones with all three filled in.",
+  buildups: "Manufacturer roof build-up systems — ZinCo, Bauder, Optigrün — layer by layer. A drawn zone references one of these, and it becomes a Revit floor type on import.",
+  facilities: "Reference requirements from the German sports-hall norms. Nothing in the app reads these; they are here to look up.",
+  analysisParams: "The figures the Analysis checks run on, so a threshold can be corrected without a code change.",
+};
+
 // Each domain's search box filters against a different field on its items —
-// sports/palettes are named, facility guidelines and analysis parameters are grouped by Title/Label instead.
-const DOMAIN_SEARCH_FIELD = { sports: "name", vegetation: "name", facilities: "title", analysisParams: "label", species: "scientificName", buildups: "systemName" };
+// sports are named, species by botanical name, guidelines and parameters by Title/Label instead.
+const DOMAIN_SEARCH_FIELD = { sports: "name", facilities: "title", analysisParams: "label", species: "scientificName", buildups: "systemName" };
 
 function variantsTableHtml(variants) {
   if (!variants || variants.length === 0) return "";
@@ -200,10 +212,43 @@ function offlineCardHtml() {
  * active. Being asked to choose "Material / Provider / Sport / Plant" while
  * standing in Build-ups is nonsense — the answer is obviously a build-up.
  */
+/**
+ * Which record types make sense to create or edit from the tab you are
+ * standing in. Offering all nine everywhere is what made "Create new"
+ * meaningless — create new WHAT, while looking at a list of sports?
+ *
+ * Sport itself is not creatable. The sports of the world are not something
+ * this app invents; adding a field size to one of them is.
+ */
+const DOMAIN_ENTITIES = {
+  sports: ["FieldVariant", "Material", "Provider", "Norm"],
+  species: ["Plant"],
+  facilities: ["FacilityGuideline"],
+  analysisParams: ["AnalysisParameter"],
+};
+
+function syncEntityChoices() {
+  const sel = document.getElementById("adminEntityType");
+  if (!sel) return;
+  const allowed = DOMAIN_ENTITIES[dataState.domain] || [];
+  let first = null;
+  [...sel.options].forEach(o => {
+    const ok = allowed.includes(o.value);
+    o.hidden = !ok;
+    o.disabled = !ok;
+    if (ok && !first) first = o.value;
+  });
+  if (first && !allowed.includes(sel.value)) {
+    sel.value = first;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
 function syncDomainEditor() {
   const generic = document.getElementById("admin-edit-panel") || document.getElementById("data-admin");
   const isBuildups = dataState.domain === "buildups";
   if (generic) generic.hidden = isBuildups;
+  if (!isBuildups) syncEntityChoices();
 
   let createBtn = document.getElementById("btn-new-buildup");
   const host = document.getElementById("buildup-create-host");
@@ -241,6 +286,8 @@ function renderDataContent(items) {
   }
 
   syncDomainEditor();
+  const intro = document.getElementById("data-domain-intro");
+  if (intro) intro.textContent = DOMAIN_INTRO[dataState.domain] || "";
   const searchField = DOMAIN_SEARCH_FIELD[dataState.domain] || "name";
   const term = dataState.search.trim().toLowerCase();
   const filtered = term ? items.filter(it => (it[searchField] || "").toLowerCase().includes(term)) : items;
@@ -254,7 +301,7 @@ function renderDataContent(items) {
   }
 
   if (statusEl) {
-    const noun = { sports: "sport", vegetation: "palette", facilities: "guideline", analysisParams: "parameter", species: "species", buildups: "build-up" }[dataState.domain] || "item";
+    const noun = { sports: "sport", facilities: "guideline", analysisParams: "parameter", species: "plant", buildups: "build-up" }[dataState.domain] || "item";
     statusEl.textContent = `${filtered.length} ${noun}${filtered.length === 1 ? "" : "s"}${term ? " matching your search" : ""}.`;
   }
 }
@@ -399,11 +446,6 @@ const ADMIN_ENTITY_FIELDS = {
     { key: "name", label: "Name", type: "text", required: true },
     { key: "category", label: "Category", type: "text", required: true },
   ],
-  PlantPalette: [
-    { key: "name", label: "Name", type: "text", required: true },
-    { key: "type", label: "Type", type: "text", placeholder: "extensive | intensive" },
-    { key: "description", label: "Description", type: "textarea" },
-  ],
   Plant: [
     { key: "commonName", label: "Common name", type: "text", required: true },
     { key: "scientificName", label: "Scientific name", type: "text" },
@@ -448,7 +490,6 @@ const ADMIN_ENTITY_LIST = {
   Provider: { path: "sports/providers", labelField: "name" },
   Norm: { path: "norms", labelField: "code" },
   Sport: { path: "sports", labelField: "name" },
-  PlantPalette: { path: "plants/palettes", labelField: "name" },
   Plant: { path: "plants", labelField: "commonName" },
   FacilityGuideline: { path: "facilities", labelField: "title" },
   AnalysisParameter: { path: "AnalysisParameters", labelField: "label" },
