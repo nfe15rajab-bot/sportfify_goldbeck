@@ -182,8 +182,8 @@ function waterManagementCardHtml() {
   const empty = emptyCardBody(r.status);
   const body = empty ? empty : `
     <p class="hint">${r.totalAreaM2.toFixed(1)} m² of garden coverage, ${r.avgDepthCm.toFixed(0)} cm average buildup depth.</p>
-    <p class="hint">Estimated rainfall retention: <strong>~${r.retentionPercent}%</strong> (illustrative — not a certified hydrology figure).</p>`;
-  return `<div class="section"><label>Water Management <span class="mode-status available">Available now</span></label>${body}</div>`;
+    <p class="hint">Quick estimate of rainfall retention: <strong>~${r.retentionPercent}%</strong> (a rule of thumb, not a hydrology figure). The Soil Percolation analysis in Revit works from the real layers and rain events and is the reference.</p>`;
+  return `<div class="section"><label>Water Management (quick estimate) <span class="mode-status available">Available now</span></label>${body}</div>`;
 }
 
 function windExposureCardHtml() {

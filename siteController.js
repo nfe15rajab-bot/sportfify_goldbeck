@@ -131,6 +131,7 @@ function updateSiteUI() {
   if (typeof drawSunCompass === "function") drawSunCompass(siteState);
   updateWindAndHeightUI();
   if (typeof updateStructureUI === "function") updateStructureUI();
+  if (typeof updateRoofFeaturesUI === "function") updateRoofFeaturesUI();
 }
 
 document.getElementById("siteWindZone").addEventListener("change", e => {

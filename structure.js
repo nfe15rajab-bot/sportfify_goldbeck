@@ -48,7 +48,7 @@ function dynamicSitePayload() {
     snow_zone: combineState.snowZone || null,
     altitude_m: alt != null ? alt : null,
     altitude_set: alt != null,
-    day_schedule: combineState.daySchedule || "sports_day"
+    day_schedule: combineState.daySchedule || null      // null = not chosen: the analysis assumes a sports day and says so
   };
 }
 
@@ -57,7 +57,7 @@ function applyDynamicSite(payload) {
   const sc = (payload && payload.site_conditions) || {};
   combineState.snowZone = sc.snow_zone ? String(sc.snow_zone) : "";
   combineState.altitudeM = sc.altitude_m != null && sc.altitude_set !== false ? sc.altitude_m : null;
-  combineState.daySchedule = sc.day_schedule || "sports_day";
+  combineState.daySchedule = sc.day_schedule ? String(sc.day_schedule) : "";
   const st = payload && payload.structure;
   combineState.naturalFrequencyHz = st && st.natural_frequency_hz > 0 ? st.natural_frequency_hz : null;
 }
@@ -106,7 +106,7 @@ function updateStructureUI() {
     const cap = combineState.deckCapacityKnM2;
     const capText = cap > 0
       ? `Deck capacity ${cap} kN/m² (as entered).`
-      : `Deck capacity not entered: the analysis assumes ${STRUCTURE_PLACEHOLDER_CAPACITY_KN_M2} kN/m² as a placeholder and says so.`;
+      : `Deck capacity not entered: the analysis uses ${STRUCTURE_PLACEHOLDER_CAPACITY_KN_M2} kN/m² as a placeholder (see Analysis assumptions below).`;
     if (st) {
       const vertical = st.gridLines.filter(g => Math.abs(g.y2 - g.y1) >= Math.abs(g.x2 - g.x1)).length;
       status.textContent = `${st.source === "revit" ? "From Revit" : "Entered"}: ${vertical} + ${st.gridLines.length - vertical} grid lines, ${st.columns.length} columns. ${capText}`;
@@ -114,22 +114,7 @@ function updateStructureUI() {
       status.textContent = `No structural grid: push the roof from Revit (its grids and columns come with it), or the analysis assumes a regular 8.4 m grid. ${capText}`;
     }
   }
-  const capInput = document.getElementById("siteDeckCapacity");
-  if (capInput && document.activeElement !== capInput) capInput.value = combineState.deckCapacityKnM2 > 0 ? combineState.deckCapacityKnM2 : "";
-  const freqInput = document.getElementById("siteNaturalFrequency");
-  if (freqInput && document.activeElement !== freqInput) freqInput.value = combineState.naturalFrequencyHz > 0 ? combineState.naturalFrequencyHz : "";
-  const snow = document.getElementById("siteSnowZone");
-  if (snow) snow.value = combineState.snowZone || "";
-  const alt = document.getElementById("siteAltitude");
-  if (alt && document.activeElement !== alt) alt.value = combineState.altitudeM != null ? combineState.altitudeM : "";
-  const schedule = document.getElementById("siteDaySchedule");
-  if (schedule) schedule.value = combineState.daySchedule || "sports_day";
-  const snowStatus = document.getElementById("site-snow-status");
-  if (snowStatus) {
-    snowStatus.textContent = combineState.snowZone
-      ? `Snow zone ${combineState.snowZone}${combineState.altitudeM != null ? ` at ${combineState.altitudeM} m` : ": altitude not given, 100 m is assumed"} for the dynamic analysis.`
-      : "Not set: the dynamic analysis assumes zone 2 at 100 m and says so. The zones are on the German snow zone map.";
-  }
+  if (typeof updateAssumptionsUI === "function") updateAssumptionsUI();   // the deck capacity, frequency, snow, schedule and limits live in the assumptions panel
   const show = document.getElementById("siteShowStructure");
   if (show) show.checked = combineState.showStructure !== false;
   const clear = document.getElementById("btn-clear-structure");
@@ -140,23 +125,6 @@ function redrawCombineIfShown() {
   if (typeof drawCombineCanvas === "function" && typeof activeMode !== "undefined" && activeMode === "combine") drawCombineCanvas();
 }
 
-document.getElementById("siteDeckCapacity")?.addEventListener("input", e => {
-  const v = parseFloat(e.target.value);
-  combineState.deckCapacityKnM2 = Number.isFinite(v) && v > 0 ? v : null;
-  updateStructureUI();
-});
-document.getElementById("siteNaturalFrequency")?.addEventListener("input", e => {
-  const v = parseFloat(e.target.value);
-  combineState.naturalFrequencyHz = Number.isFinite(v) && v > 0 ? v : null;
-  updateStructureUI();
-});
-document.getElementById("siteSnowZone")?.addEventListener("change", e => { combineState.snowZone = e.target.value; updateStructureUI(); });
-document.getElementById("siteAltitude")?.addEventListener("input", e => {
-  const v = parseFloat(e.target.value);
-  combineState.altitudeM = Number.isFinite(v) ? v : null;
-  updateStructureUI();
-});
-document.getElementById("siteDaySchedule")?.addEventListener("change", e => { combineState.daySchedule = e.target.value; updateStructureUI(); });
 document.getElementById("siteShowStructure")?.addEventListener("change", e => {
   combineState.showStructure = e.target.checked;
   redrawCombineIfShown();

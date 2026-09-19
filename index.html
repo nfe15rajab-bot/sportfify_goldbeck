@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-19-dynamic" />
+  <link rel="stylesheet" href="style.css?v=2026-09-19-compare" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -155,36 +155,26 @@
           <p class="hint" id="site-height-status">Comes with a roof pushed from Revit; type a value to override it.</p>
         </div>
         <div class="section planner-only">
-          <label>Structure (grid &amp; deck)</label>
+          <label>Structure grid</label>
           <p class="hint" id="site-structure-status">No structural grid yet.</p>
           <p class="hint" style="display:flex;align-items:center;gap:6px">
             <input type="checkbox" id="siteShowStructure" checked style="margin:0" /> Show grid and columns on the roof
           </p>
-          <input type="number" id="siteDeckCapacity" min="0" step="0.5" placeholder="Deck capacity, kN/m² (G + Q)" title="What the roof deck can carry, characteristic permanent + imposed load, from the structural engineer" />
-          <input type="number" id="siteNaturalFrequency" min="0" step="0.1" placeholder="Deck's first natural frequency, Hz" title="The structural engineer's first vertical natural frequency of the roof deck. Left empty, the dynamic analysis estimates it from the spans (good to about 25%)" />
           <button class="btn-export" id="btn-clear-structure" style="display:none">Remove the grid</button>
         </div>
         <div class="section planner-only">
-          <label>Snow load zone (DIN EN 1991-1-3/NA)</label>
-          <select id="siteSnowZone">
-            <option value="">Not set (assume zone 2)</option>
-            <option value="1">Zone 1</option>
-            <option value="1a">Zone 1a</option>
-            <option value="2">Zone 2</option>
-            <option value="2a">Zone 2a</option>
-            <option value="3">Zone 3</option>
-          </select>
-          <input type="number" id="siteAltitude" step="10" placeholder="Site altitude above sea level, m" />
-          <p class="hint" id="site-snow-status">Not set: the dynamic analysis assumes zone 2 at 100 m and says so.</p>
+          <label>Roof features (from Revit)</label>
+          <p class="hint" id="site-features-status">Nothing from Revit yet.</p>
+          <p class="hint" style="display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="siteShowRoofFeatures" checked style="margin:0" /> Show them on the roof
+          </p>
+          <button class="btn-export" id="btn-use-revit-entries" style="display:none" title="Adds an entry point at every stair, lift and door the model has on this roof">Use them as entry points</button>
+          <div id="site-features-details"></div>
         </div>
         <div class="section planner-only">
-          <label>Use over the day</label>
-          <select id="siteDaySchedule">
-            <option value="sports_day">School and club sports day</option>
-            <option value="event_day">Evening event with full stands</option>
-            <option value="community_day">Community garden day</option>
-          </select>
-          <p class="hint">The day the dynamic analysis plays: how full each court, play area and garden is, hour by hour.</p>
+          <label>Analysis assumptions</label>
+          <p class="hint">The structural analyses rest on a few values the layout cannot know. Enter your own, or accept the built-in one knowingly; until then every structural result is marked PRELIMINARY. Revit asks the same before it runs an analysis.</p>
+          <div id="assumptions-panel"></div>
         </div>
         <div class="section">
           <label>Sun date &amp; time</label>
@@ -472,11 +462,13 @@
           <p id="compare-intro">Three predefined 20 × 25 m roof layouts, built from real reference-database figures. Pick what matters most, or fine-tune below.</p>
         </div>
 
-        <div class="section">
+        <div class="section" id="compareGuideSection">
           <button class="btn-export accent" id="btn-compare-guide" style="width:100%">
             <i class="ti ti-help-circle" aria-hidden="true"></i><span id="btn-compare-guide-label">View Compare Guide</span>
           </button>
         </div>
+
+        <div class="section" id="compareResultsSection" style="display:none"></div>
 
         <div class="section" id="comparePrioritySection">
           <label>Quick priority</label>
@@ -922,34 +914,37 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-19-dynamic"></script>
-  <script src="activitiesData.js?v=2026-09-19-dynamic"></script>
-  <script src="vegetation.js?v=2026-09-19-dynamic"></script>
-  <script src="zones.js?v=2026-09-19-dynamic"></script>
-  <script src="structure.js?v=2026-09-19-dynamic"></script>
-  <script src="assemblies.js?v=2026-09-19-dynamic"></script>
-  <script src="gardenData.js?v=2026-09-19-dynamic"></script>
-  <script src="prebuiltSessions.js?v=2026-09-19-dynamic"></script>
-  <script src="rules.js?v=2026-09-19-dynamic"></script>
-  <script src="sunPosition.js?v=2026-09-19-dynamic"></script>
-  <script src="balls.js?v=2026-09-19-dynamic"></script>
-  <script src="field.js?v=2026-09-19-dynamic"></script>
-  <script src="activityField.js?v=2026-09-19-dynamic"></script>
-  <script src="gardenField.js?v=2026-09-19-dynamic"></script>
-  <script src="combineField.js?v=2026-09-19-dynamic"></script>
-  <script src="siteField.js?v=2026-09-19-dynamic"></script>
-  <script src="buildupEditor.js?v=2026-09-19-dynamic"></script>
-  <script src="dataTab.js?v=2026-09-19-dynamic"></script>
-  <script src="revitBridge.js?v=2026-09-19-dynamic"></script>
-  <script src="sportController.js?v=2026-09-19-dynamic"></script>
-  <script src="gardenController.js?v=2026-09-19-dynamic"></script>
-  <script src="windZones.js?v=2026-09-19-dynamic"></script>
-  <script src="siteController.js?v=2026-09-19-dynamic"></script>
-  <script src="combineController.js?v=2026-09-19-dynamic"></script>
-  <script src="analysisController.js?v=2026-09-19-dynamic"></script>
-  <script src="compareController.js?v=2026-09-19-dynamic"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-19-dynamic"></script>
-  <script src="sessionGate.js?v=2026-09-19-dynamic"></script>
-  <script src="main.js?v=2026-09-19-dynamic"></script>
+  <script src="data.js?v=2026-09-19-compare"></script>
+  <script src="activitiesData.js?v=2026-09-19-compare"></script>
+  <script src="vegetation.js?v=2026-09-19-compare"></script>
+  <script src="zones.js?v=2026-09-19-compare"></script>
+  <script src="assumptions.js?v=2026-09-19-compare"></script>
+  <script src="roofFeatures.js?v=2026-09-19-compare"></script>
+  <script src="structure.js?v=2026-09-19-compare"></script>
+  <script src="assemblies.js?v=2026-09-19-compare"></script>
+  <script src="gardenData.js?v=2026-09-19-compare"></script>
+  <script src="prebuiltSessions.js?v=2026-09-19-compare"></script>
+  <script src="rules.js?v=2026-09-19-compare"></script>
+  <script src="sunPosition.js?v=2026-09-19-compare"></script>
+  <script src="balls.js?v=2026-09-19-compare"></script>
+  <script src="field.js?v=2026-09-19-compare"></script>
+  <script src="activityField.js?v=2026-09-19-compare"></script>
+  <script src="gardenField.js?v=2026-09-19-compare"></script>
+  <script src="combineField.js?v=2026-09-19-compare"></script>
+  <script src="siteField.js?v=2026-09-19-compare"></script>
+  <script src="buildupEditor.js?v=2026-09-19-compare"></script>
+  <script src="dataTab.js?v=2026-09-19-compare"></script>
+  <script src="revitBridge.js?v=2026-09-19-compare"></script>
+  <script src="sportController.js?v=2026-09-19-compare"></script>
+  <script src="gardenController.js?v=2026-09-19-compare"></script>
+  <script src="windZones.js?v=2026-09-19-compare"></script>
+  <script src="siteController.js?v=2026-09-19-compare"></script>
+  <script src="combineController.js?v=2026-09-19-compare"></script>
+  <script src="analysisController.js?v=2026-09-19-compare"></script>
+  <script src="analysisResults.js?v=2026-09-19-compare"></script>
+  <script src="compareController.js?v=2026-09-19-compare"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-19-compare"></script>
+  <script src="sessionGate.js?v=2026-09-19-compare"></script>
+  <script src="main.js?v=2026-09-19-compare"></script>
 </body>
 </html>

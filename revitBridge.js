@@ -45,6 +45,8 @@ async function pollRevitBoundary() {
     // The structural grid and columns under the roof, already in canvas coordinates. A push replaces them (a different
     // roof has a different structure); the deck capacity is the designer's own entry and stays.
     if (typeof structureFromPayload === "function") combineState.structure = structureFromPayload(roof.structure);
+    // The openings, entries, edge, drains, slab and levels the model has on this roof: a different roof has different ones, so a push replaces them.
+    if (typeof roofFeaturesFromPayload === "function") combineState.roofFeatures = roofFeaturesFromPayload(roof.features);
     if (typeof updateSiteUI === "function") updateSiteUI();
     document.getElementById("roofLength").value = roof.length_m;
     document.getElementById("roofWidth").value  = roof.width_m;

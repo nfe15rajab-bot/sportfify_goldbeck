@@ -648,6 +648,13 @@ function setComparePriorityControlsVisible(visible) {
  *    the user has saved.
  */
 function updateCompareUI() {
+  // The rail's other buttons (Garden, Structure, Sport, Safety, Other) show what Revit's analyses found: analysisResults.js.
+  if (typeof compareSub !== "undefined" && compareSub !== "layout" && typeof renderCompareAnalysisView === "function") {
+    renderCompareAnalysisView();
+    return;
+  }
+  if (typeof restoreCompareLayoutPanel === "function") restoreCompareLayoutPanel();
+
   const goldbeckPreset = typeof activeGoldbeckPresetId !== "undefined" ? activeGoldbeckPresetId : null;
   const usingGoldbeck = !!goldbeckPreset && typeof GOLDBECK_PREBUILT_SESSIONS === "object";
 

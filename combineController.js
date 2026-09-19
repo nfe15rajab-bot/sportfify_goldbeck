@@ -13,8 +13,12 @@ const combineState = {
   // The roof's structural grid and columns (from a Revit push or a loaded session; see structure.js), and the deck
   // capacity the structural engineer gave, in kN/m². null = none / not entered.
   structure: null, deckCapacityKnM2: null, showStructure: true,
+  // What the Revit model says about the roof besides its outline and structure (openings, entries, edge, drains, slab, levels): see roofFeatures.js.
+  roofFeatures: null, showRoofFeatures: true,
   // For the dynamic analysis (see structure.js): the deck's first natural frequency (Hz, the engineer's), the site's snow zone and altitude, the day's schedule.
-  naturalFrequencyHz: null, snowZone: "", altitudeM: null, daySchedule: "sports_day",
+  naturalFrequencyHz: null, snowZone: "", altitudeM: null, daySchedule: "",
+  // The comfort limits (g) the designer set, and which built-in analysis assumptions they accepted knowingly (see assumptions.js).
+  comfortWalkingG: null, comfortRhythmicG: null, assumptionsAccepted: [],
   // Pushed-but-not-yet-placed pieces — a "Push to Combine" click lands here
   // first (mini-game inventory tray, rendered beside the roof canvas), not
   // directly on the roof. Dragging a thumbnail out onto the canvas is what
@@ -447,7 +451,10 @@ function buildCombinedPayload() {
       // Height of the roof above the ground, for the wind analysis (roof zones scale with it). From the Revit model
       // when a roof was pushed, or typed in the Site tab; 0 = not known, and the analyses say what they assumed.
       height_above_ground_m: effectiveRoofHeight().height_m,
-      height_source: effectiveRoofHeight().source
+      height_source: effectiveRoofHeight().source,
+      // Openings, entries (stairs, lifts, doors), edge, drains, slab and levels from the Revit model, in this roof's canvas coordinates.
+      // Absent for a roof typed in by hand.
+      ...(typeof roofFeaturesPayload === "function" && roofFeaturesPayload() ? { features: roofFeaturesPayload() } : {})
     },
     // The five planner-tunable thresholds, so a Revit import can draw the
     // same setback inset the canvas shows (as a simple rectangle inset,
@@ -507,6 +514,8 @@ function buildCombinedPayload() {
     // The structural grid and columns (in the roof's canvas coordinates, like the placements) and the deck capacity, for the
     // structural load analysis. Absent when there is neither.
     ...(typeof structurePayload === "function" && structurePayload() ? { structure: structurePayload() } : {}),
+    // Which built-in assumptions of the structural analyses the designer accepted, and the comfort limits they set (assumptions.js).
+    ...(typeof analysisAssumptionsPayload === "function" && analysisAssumptionsPayload() ? { analysis_assumptions: analysisAssumptionsPayload() } : {}),
     placements
   };
 
@@ -631,6 +640,7 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.boundary = rc.source_boundary_polygon || null;
   combineState.roof.originXm = rc.world_origin_x_m || 0;
   combineState.roof.originYm = rc.world_origin_y_m || 0;
+  combineState.roofFeatures = typeof roofFeaturesFromPayload === "function" ? roofFeaturesFromPayload(rc.features) : null;
 
   if (payload.design_rules) {
     DESIGN_RULES.clearance_m = payload.design_rules.clearance_m ?? DESIGN_RULES.clearance_m;
@@ -687,6 +697,7 @@ function applySessionSnapshot(payload, opts = {}) {
   siteState.roofHeightOverride = null;
   document.getElementById("siteRoofHeight").value = "";
   if (typeof applyDynamicSite === "function") applyDynamicSite(payload);
+  if (typeof applyAnalysisAssumptions === "function") applyAnalysisAssumptions(payload);
   if (typeof structureFromPayload === "function") {
     combineState.structure = structureFromPayload(payload.structure);
     combineState.deckCapacityKnM2 = payload.structure && payload.structure.deck_capacity_kn_m2 > 0 ? payload.structure.deck_capacity_kn_m2 : null;

@@ -104,6 +104,13 @@ function setMode(mode) {
 
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
+  else if (isCompare && typeof buildCompareRail === "function") buildCompareRail();   // Compare's own rail: Layout, Garden, Structure, Sport, Safety, Other
+
+  // Revit's analysis results are only polled while a Compare group that shows them is open.
+  if (typeof startResultsPolling === "function") {
+    if (isCompare && typeof compareSub !== "undefined" && compareSub !== "layout") startResultsPolling();
+    else stopResultsPolling();
+  }
 
   // Warm accent for Sport (energetic court sports), green for Garden
   // (nature) — see the html[data-app-mode] rules in style.css. Combine/Data/
@@ -117,7 +124,7 @@ function setMode(mode) {
   // that space to the canvas instead of leaving it empty. Data, Analysis,
   // Compare, Site, and Guide keep the sidebar visible/hidden per their own
   // minimal needs.
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isCompare || isGuide || isSite || isDeliverables || isSession || isFamilies) ? "none" : "flex";
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isAnalysis || isGuide || isSite || isDeliverables || isSession || isFamilies) ? "none" : "flex";
   document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession || isFamilies) ? "none" : "flex";
 
   document.getElementById("siteConfigurator").style.display = isSite ? "block" : "none";
