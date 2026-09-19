@@ -46,9 +46,8 @@ const openBuildUps = new Set();
    for a layer with no price yet. */
 const VOLUME_UNIT_THRESHOLD_MM = 25;
 
-function zoneAreaM2(zone) {
-  return (zone.length_m || 0) * (zone.width_m || 0);
-}
+/* Defined in zones.js, from the polygon. A zone stopped being a rectangle
+   the moment its corners could move, so the box would over-measure it. */
 
 /**
  * Per-layer quantities across every drawn zone, grouped by the layer's own

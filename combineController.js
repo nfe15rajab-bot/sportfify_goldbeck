@@ -626,6 +626,16 @@ function applySessionSnapshot(payload, opts = {}) {
     id: `entry_${Date.now()}_${i}`, x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge,
   }));
 
+  // Zones travelled in the export all along and nothing read them back, so a
+  // resumed session lost every bed that had been drawn. The roof finish rides
+  // on the same restore, since its area is whatever the zones leave.
+  combineState.zones = Array.isArray(payload.zones) && typeof zoneFromPayload === "function"
+    ? payload.zones.map(zoneFromPayload)
+    : [];
+  if (payload.roof_finish?.assembly_key && typeof roofFinishKey !== "undefined") {
+    roofFinishKey = payload.roof_finish.assembly_key;
+  }
+
   combineState.items = payload.placements.map((p, i) => {
     const rotation = p.transform?.rotation_deg || 0;
     const rotated = (rotation % 180) !== 0;

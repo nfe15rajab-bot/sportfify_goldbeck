@@ -82,7 +82,8 @@ function roofPolygonAreaM2() {
 function occupiedAreaM2() {
   const zones = (typeof combineState !== "undefined" && combineState.zones) || [];
   const items = (typeof combineState !== "undefined" && combineState.items) || [];
-  const zoneArea = zones.reduce((s, z) => s + (z.length_m || 0) * (z.width_m || 0), 0);
+  const zoneArea = zones.reduce((s, z) =>
+    s + (typeof zoneAreaM2 === "function" ? zoneAreaM2(z) : (z.length_m || 0) * (z.width_m || 0)), 0);
   // Vegetation is excluded on purpose — see the header.
   const pieceArea = items
     .filter(it => it.kind !== "vegetation")

@@ -674,6 +674,36 @@ function initCombineInteractions() {
 
     // A corner handle is tested before the zone body, or grabbing a corner
     // would move the whole zone instead of resizing it.
+    // A + on an edge inserts a corner there and hands you the drag, so adding
+    // a point and placing it are one gesture rather than two.
+    const addEl = e.target.closest("[data-zone-addpoint]");
+    if (addEl && typeof addZonePoint === "function") {
+      const zid = addEl.dataset.zoneId;
+      const edge = Number(addEl.dataset.zoneAddpoint);
+      addZonePoint(zid, edge);
+      combineState.selectedKind = "zone"; combineState.selectedId = zid;
+      dragState = { kind: "zonePoint", id: zid, index: edge + 1 };
+      drawCombineCanvas();
+      return;
+    }
+
+    const pointEl = e.target.closest("[data-zone-point]");
+    if (pointEl) {
+      const zid = pointEl.dataset.zoneId;
+      const idx = Number(pointEl.dataset.zonePoint);
+      // Double-click removes it; a bed that gained a corner by accident should
+      // not need undo to lose it again.
+      if (e.detail >= 2 && typeof removeZonePoint === "function") {
+        removeZonePoint(zid, idx);
+        drawCombineCanvas();
+        return;
+      }
+      combineState.selectedKind = "zone"; combineState.selectedId = zid;
+      dragState = { kind: "zonePoint", id: zid, index: idx };
+      drawCombineCanvas();
+      return;
+    }
+
     const handleEl = e.target.closest("[data-zone-handle]");
     if (handleEl) {
       dragState = { kind: "zoneResize", id: handleEl.dataset.zoneId, corner: handleEl.dataset.zoneHandle };
@@ -772,13 +802,16 @@ function initCombineInteractions() {
   svg.addEventListener("pointermove", e => {
     if (!dragState) return;
 
-    if (dragState.kind === "zoneDraw" || dragState.kind === "zoneMove" || dragState.kind === "zoneResize") {
+    if (dragState.kind === "zoneDraw" || dragState.kind === "zoneMove"
+        || dragState.kind === "zoneResize" || dragState.kind === "zonePoint") {
       const { scale, roofOx, roofOy } = combineLayout();
       const zp = svgPoint(svg, e);
       const xm = (zp.x - roofOx) / scale, ym = (zp.y - roofOy) / scale;
       if (dragState.kind === "zoneDraw") updateZoneDraw(xm, ym);
       else if (dragState.kind === "zoneMove") moveZoneTo(dragState.id, xm - dragState.grabXm, ym - dragState.grabYm);
+      else if (dragState.kind === "zonePoint") moveZonePoint(dragState.id, dragState.index, xm, ym);
       else resizeZoneTo(dragState.id, dragState.corner, xm, ym);
+      drawCombineCanvas();
       return;
     }
 
