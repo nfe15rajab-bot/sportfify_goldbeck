@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-19-panel-polish3" />
+  <link rel="stylesheet" href="style.css?v=2026-09-19-three-tabs2" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -738,11 +738,51 @@
               <!-- Setup, not a step: you set the rules once. Same flyout pattern
                    as Zones/Plants so everything that configures the roof opens
                    over it rather than competing for the panel. -->
-              <aside class="zone-flyout rules-flyout" id="rules-flyout" hidden>
-                <div class="zone-flyout-header">
-                  <span><i class="ti ti-adjustments" aria-hidden="true"></i> Design rules</span>
-                  <button id="btn-rules-close" title="Close">&times;</button>
+              
+
+              
+              <p class="hint combine-zoom-hint">Scroll to zoom · right-drag to pan</p>
+            </div>
+            <div class="combine-tray" id="combineTray">
+              <div class="combine-tray-header">
+                <span><i class="ti ti-package" aria-hidden="true"></i> Pushed pieces — drag onto the roof</span>
+                <span class="combine-tray-count" id="combineTrayCount">0</span>
+              </div>
+              <div class="combine-tray-items" id="combineTrayItems"></div>
+            </div>
+          </div>
+
+          <div class="panel-resizer" id="stepPaneResizer" title="Drag to resize"></div>
+
+          <div class="combine-step-pane">
+              <div class="design-panel">
+                <!-- Three tabs, not three steps. The old wizard sorted by WHEN
+                     you need a thing, so setup sat in permanent view and the
+                     checks hid behind a click. These sort by WHAT a thing is:
+                     what the design scores, what it breaks, what edits it. -->
+                <div class="design-tabs" id="design-tabs" role="tablist">
+                  <button class="design-tab active" data-tab="design" role="tab">Design</button>
+                  <button class="design-tab" data-tab="rules" role="tab">Rules<span class="rules-badge" id="rules-badge" hidden></span></button>
+                  <button class="design-tab" data-tab="tools" role="tab">Tools</button>
                 </div>
+
+                <div class="design-tab-body" data-tab-body="design">
+                  <div id="design-metrics" class="design-metrics"></div>
+                  <div id="design-detail" class="design-detail" hidden></div>
+                  <!-- renderCombineSummary() still fills this every redraw; the
+                       panel reads it rather than showing bare counts. -->
+                  <div id="combine-summary" class="dims" hidden></div>
+                </div>
+
+                <div class="design-tab-body" data-tab-body="rules" hidden>
+                  <!-- Verification first. Configuring the rules is occasional,
+                       so it sits behind the gear rather than in the way. -->
+                  <div class="rules-tab-head">
+                    <span class="rules-tab-title">Checks against this design</span>
+                    <button class="design-panel-act" id="btn-rules-config" title="Configure the rules" aria-expanded="false"><i class="ti ti-settings" aria-hidden="true"></i></button>
+                  </div>
+                  <div id="rules-panel" class="rules-panel"></div>
+                  <div id="rules-config" class="rules-config" hidden>
               <p class="hint step-intro">These four rules decide what counts as a valid layout — auto-arrange and suggested spots both respect them.</p>
 
               <div class="section">
@@ -792,13 +832,10 @@
                 <p class="hint">Satisfies the "min. entry points" rule above and gives circulation somewhere to connect to.</p>
 
               </div>
-              </aside>
-
-              <aside class="zone-flyout tools-flyout" id="tools-flyout" hidden>
-                <div class="zone-flyout-header">
-                  <span><i class="ti ti-tool" aria-hidden="true"></i> Layout tools</span>
-                  <button id="btn-tools-close" title="Close">&times;</button>
+              </div>
                 </div>
+
+                <div class="design-tab-body" data-tab-body="tools" hidden>
             <p class="hint step-intro">Auto-arrange fits everything at once; suggested spots fine-tune one piece at a time. Both only ever propose spots that already satisfy the rules.</p>
 
             <div class="step-grid">
@@ -842,7 +879,13 @@
               </div>
 
               <div class="section span-2">
-                <label>Suggested spots</label>
+                <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  <span>Suggested spots</span>
+                  <span style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">
+                    <input type="checkbox" id="toggle-suggestions" checked style="margin:0">
+                    <label for="toggle-suggestions" style="margin:0;cursor:pointer">On</label>
+                  </span>
+                </label>
                 <p class="hint" id="suggestions-hint">Select a piece to see suggested spots.</p>
                 <p class="hint">Click a numbered spot (in this list or on the roof) to move the selected piece there instantly.</p>
                 <div id="suggestions-list" class="suggestions-list"></div>
@@ -858,45 +901,9 @@
                 </button>
               </div>
             </div>
-              </aside>
-              <p class="hint combine-zoom-hint">Scroll to zoom · right-drag to pan</p>
-            </div>
-            <div class="combine-tray" id="combineTray">
-              <div class="combine-tray-header">
-                <span><i class="ti ti-package" aria-hidden="true"></i> Pushed pieces — drag onto the roof</span>
-                <span class="combine-tray-count" id="combineTrayCount">0</span>
               </div>
-              <div class="combine-tray-items" id="combineTrayItems"></div>
-            </div>
-          </div>
 
-          <div class="panel-resizer" id="stepPaneResizer" title="Drag to resize"></div>
-
-          <div class="combine-step-pane">
-              <div class="design-panel">
-                <div class="design-panel-head">
-                  <span class="design-panel-title">This design</span>
-                  <button class="design-panel-act" id="btn-open-rules" title="Design rules and entry points"><i class="ti ti-adjustments" aria-hidden="true"></i>Rules</button>
-                  <button class="design-panel-act" id="btn-open-tools" title="Layout tools"><i class="ti ti-tool" aria-hidden="true"></i>Tools</button>
-                </div>
-
-                <!-- Live, never a step: this is the only thing in the panel that
-                     changes as you design, which is the only reason something
-                     earns permanent space here. Click any tile for its breakdown. -->
-                <div id="design-metrics" class="design-metrics"></div>
-                <div id="design-detail" class="design-detail" hidden></div>
-
-                <div class="section span-2">
-                  <label>Design rules checklist</label>
-                  <div id="rules-panel" class="rules-panel"></div>
-                </div>
-
-                <!-- renderCombineSummary() still fills this every redraw; the
-                     panel reads it into the Programmed-area breakdown instead of
-                     showing bare counts, which say nothing on their own. -->
-                <div id="combine-summary" class="dims" hidden></div>
-
-              <div class="export-area">
+                <div class="export-area">
                 <button class="btn-export accent" id="btn-save-compare">
                   <i class="ti ti-chart-bar" aria-hidden="true"></i>Save for Compare
                 </button>
@@ -929,35 +936,35 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-19-panel-polish3"></script>
-  <script src="activitiesData.js?v=2026-09-19-panel-polish3"></script>
-  <script src="vegetation.js?v=2026-09-19-panel-polish3"></script>
-  <script src="zones.js?v=2026-09-19-panel-polish3"></script>
-  <script src="structure.js?v=2026-09-19-panel-polish3"></script>
-  <script src="assemblies.js?v=2026-09-19-panel-polish3"></script>
-  <script src="gardenData.js?v=2026-09-19-panel-polish3"></script>
-  <script src="prebuiltSessions.js?v=2026-09-19-panel-polish3"></script>
-  <script src="rules.js?v=2026-09-19-panel-polish3"></script>
-  <script src="sunPosition.js?v=2026-09-19-panel-polish3"></script>
-  <script src="balls.js?v=2026-09-19-panel-polish3"></script>
-  <script src="field.js?v=2026-09-19-panel-polish3"></script>
-  <script src="activityField.js?v=2026-09-19-panel-polish3"></script>
-  <script src="gardenField.js?v=2026-09-19-panel-polish3"></script>
-  <script src="combineField.js?v=2026-09-19-panel-polish3"></script>
-  <script src="siteField.js?v=2026-09-19-panel-polish3"></script>
-  <script src="buildupEditor.js?v=2026-09-19-panel-polish3"></script>
-  <script src="dataTab.js?v=2026-09-19-panel-polish3"></script>
-  <script src="revitBridge.js?v=2026-09-19-panel-polish3"></script>
-  <script src="sportController.js?v=2026-09-19-panel-polish3"></script>
-  <script src="gardenController.js?v=2026-09-19-panel-polish3"></script>
-  <script src="windZones.js?v=2026-09-19-panel-polish3"></script>
-  <script src="siteController.js?v=2026-09-19-panel-polish3"></script>
-  <script src="combineController.js?v=2026-09-19-panel-polish3"></script>
-  <script src="analysisController.js?v=2026-09-19-panel-polish3"></script>
-  <script src="compareController.js?v=2026-09-19-panel-polish3"></script>
-  <script src="designPanel.js?v=2026-09-19-panel-polish3"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-19-panel-polish3"></script>
-  <script src="sessionGate.js?v=2026-09-19-panel-polish3"></script>
-  <script src="main.js?v=2026-09-19-panel-polish3"></script>
+  <script src="data.js?v=2026-09-19-three-tabs2"></script>
+  <script src="activitiesData.js?v=2026-09-19-three-tabs2"></script>
+  <script src="vegetation.js?v=2026-09-19-three-tabs2"></script>
+  <script src="zones.js?v=2026-09-19-three-tabs2"></script>
+  <script src="structure.js?v=2026-09-19-three-tabs2"></script>
+  <script src="assemblies.js?v=2026-09-19-three-tabs2"></script>
+  <script src="gardenData.js?v=2026-09-19-three-tabs2"></script>
+  <script src="prebuiltSessions.js?v=2026-09-19-three-tabs2"></script>
+  <script src="rules.js?v=2026-09-19-three-tabs2"></script>
+  <script src="sunPosition.js?v=2026-09-19-three-tabs2"></script>
+  <script src="balls.js?v=2026-09-19-three-tabs2"></script>
+  <script src="field.js?v=2026-09-19-three-tabs2"></script>
+  <script src="activityField.js?v=2026-09-19-three-tabs2"></script>
+  <script src="gardenField.js?v=2026-09-19-three-tabs2"></script>
+  <script src="combineField.js?v=2026-09-19-three-tabs2"></script>
+  <script src="siteField.js?v=2026-09-19-three-tabs2"></script>
+  <script src="buildupEditor.js?v=2026-09-19-three-tabs2"></script>
+  <script src="dataTab.js?v=2026-09-19-three-tabs2"></script>
+  <script src="revitBridge.js?v=2026-09-19-three-tabs2"></script>
+  <script src="sportController.js?v=2026-09-19-three-tabs2"></script>
+  <script src="gardenController.js?v=2026-09-19-three-tabs2"></script>
+  <script src="windZones.js?v=2026-09-19-three-tabs2"></script>
+  <script src="siteController.js?v=2026-09-19-three-tabs2"></script>
+  <script src="combineController.js?v=2026-09-19-three-tabs2"></script>
+  <script src="analysisController.js?v=2026-09-19-three-tabs2"></script>
+  <script src="compareController.js?v=2026-09-19-three-tabs2"></script>
+  <script src="designPanel.js?v=2026-09-19-three-tabs2"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-19-three-tabs2"></script>
+  <script src="sessionGate.js?v=2026-09-19-three-tabs2"></script>
+  <script src="main.js?v=2026-09-19-three-tabs2"></script>
 </body>
 </html>

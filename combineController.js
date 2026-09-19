@@ -144,7 +144,11 @@ function updateCombineUI() {
 /** Recomputes suggested spots for whichever item is currently selected (none selected → empty list), then redraws. */
 function refreshSuggestions() {
   const item = combineState.selectedKind === "item" ? combineState.items.find(i => i.id === combineState.selectedId) : null;
-  combineState.suggestions = item && typeof suggestPositionsForItem === "function" ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 1) : [];
+  // Switched off in Tools → no suggestions computed, so none are drawn on the
+  // roof and none are listed. Off means off, not "hidden but still there".
+  const suggestionsOn = typeof suggestionsEnabled === "undefined" || suggestionsEnabled;
+  combineState.suggestions = suggestionsOn && item && typeof suggestPositionsForItem === "function"
+    ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 1) : [];
   if (typeof drawCombineCanvas === "function") drawCombineCanvas();
 }
 

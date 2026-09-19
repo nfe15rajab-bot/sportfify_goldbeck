@@ -285,6 +285,7 @@ function renderDesignPanel(circulation) {
   });
 
   renderDesignDetail(m);
+  updateRulesBadge();
 }
 
 function detailRows(rows) {
@@ -375,20 +376,61 @@ function renderDesignDetail(m) {
   });
 }
 
-/* ── Flyouts: setup and tools, out of the permanent pane ─────────────────── */
+/* ── Tabs ─────────────────────────────────────────────────────────────────
+   Design / Rules / Tools share this pane. Grouped by what a thing IS — what
+   the design scores, what it breaks, what edits it — rather than by when in
+   the process you reach for it, which is what made the old wizard wrong. */
 
-function toggleDesignFlyout(id, open) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  // One at a time — two panels over the same roof is just a worse dialog.
-  ["rules-flyout", "tools-flyout", "zone-flyout", "vegetation-flyout"].forEach(other => {
-    if (other !== id) document.getElementById(other)?.setAttribute("hidden", "");
-  });
-  if (open === undefined) el.hidden = !el.hidden;
-  else el.hidden = !open;
+function setDesignTab(name) {
+  document.querySelectorAll(".design-tab").forEach(b =>
+    b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".design-tab-body").forEach(el =>
+    el.hidden = el.dataset.tabBody !== name);
 }
 
-document.getElementById("btn-open-rules")?.addEventListener("click", () => toggleDesignFlyout("rules-flyout"));
-document.getElementById("btn-open-tools")?.addEventListener("click", () => toggleDesignFlyout("tools-flyout"));
-document.getElementById("btn-rules-close")?.addEventListener("click", () => toggleDesignFlyout("rules-flyout", false));
-document.getElementById("btn-tools-close")?.addEventListener("click", () => toggleDesignFlyout("tools-flyout", false));
+document.getElementById("design-tabs")?.addEventListener("click", e => {
+  const btn = e.target.closest(".design-tab");
+  if (btn) setDesignTab(btn.dataset.tab);
+});
+
+/* Configuring the rules is occasional; checking them is constant. So the
+   settings live behind the gear inside Rules rather than greeting you. */
+document.getElementById("btn-rules-config")?.addEventListener("click", e => {
+  const cfg = document.getElementById("rules-config");
+  const btn = e.currentTarget;
+  if (!cfg) return;
+  cfg.hidden = !cfg.hidden;
+  btn.setAttribute("aria-expanded", String(!cfg.hidden));
+  btn.classList.toggle("on", !cfg.hidden);
+});
+
+/**
+ * A count on the Rules tab, so a broken rule is noticed without going
+ * looking — the one thing the checklist gave you by sitting in permanent
+ * view, kept now that it has a tab of its own.
+ */
+function updateRulesBadge() {
+  const badge = document.getElementById("rules-badge");
+  if (!badge) return;
+  const failed = document.querySelectorAll("#rules-panel .rule-row.fail").length;
+  badge.textContent = failed || "";
+  badge.hidden = failed === 0;
+}
+
+/* ── Suggested spots: on by default, but yours to switch off ───────────── */
+let suggestionsEnabled = true;
+
+function setSuggestionsEnabled(on) {
+  suggestionsEnabled = !!on;
+  const list = document.getElementById("suggestions-list");
+  const hint = document.getElementById("suggestions-hint");
+  if (list) list.hidden = !suggestionsEnabled;
+  if (hint) hint.hidden = !suggestionsEnabled;
+  // Recompute rather than just repaint: combineState.suggestions is gated at
+  // source (combineController.js), so the roof and the list agree.
+  if (typeof refreshSuggestions === "function") refreshSuggestions();
+  else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+}
+
+document.getElementById("toggle-suggestions")?.addEventListener("change", e =>
+  setSuggestionsEnabled(e.target.checked));

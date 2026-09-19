@@ -673,3 +673,36 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* `.dims { display: grid }` beats the hidden attribute, so state it. The
    summary still renders every redraw — the panel reads it, it is not shown. */
 .dims[hidden] { display: none; }
+
+/* ── Panel tabs: Design / Rules / Tools ─────────────────────────────────── */
+.design-tabs {
+  display: flex; gap: 2px; padding: 8px 12px 0;
+  border-bottom: 0.5px solid var(--border);
+  position: sticky; top: 0; background: var(--surface-1); z-index: 2;
+}
+.design-tab {
+  position: relative; flex: 1; padding: 7px 8px 8px;
+  font-size: 12px; font-weight: 600; letter-spacing: .01em;
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  color: var(--text-muted); cursor: pointer;
+}
+.design-tab:hover { color: var(--text-secondary); }
+.design-tab.active { color: var(--text-primary); border-bottom-color: var(--fill-accent); }
+/* A broken rule has to be noticeable from the other two tabs — this is what
+   the checklist used to give you by sitting in permanent view. */
+.rules-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 15px; height: 15px; margin-left: 5px; padding: 0 4px;
+  border-radius: 8px; background: var(--text-fail); color: #fff;
+  font-size: 9px; font-weight: 700; line-height: 1;
+}
+.design-tab-body { padding-bottom: 4px; }
+
+.rules-tab-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px 6px;
+}
+.rules-tab-title { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-right: auto; }
+.design-panel-act.on { border-color: var(--border-accent); color: var(--text-accent); background: var(--bg-accent); }
+.rules-panel { padding: 0 14px; }
+.rules-config { border-top: 0.5px solid var(--border); margin-top: 10px; }
