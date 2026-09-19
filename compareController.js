@@ -156,7 +156,7 @@ function iterationCardHtml(entry) {
 
 function renderIterationsPanels() {
   const html = savedCompareConfigs.length === 0
-    ? `<p class="hint">No saved iterations yet — use "Save for Compare" in Combine's Review step.</p>`
+    ? `<p class="hint">No saved iterations yet — use "Save for Compare" in Combine.</p>`
     : savedCompareConfigs.map(iterationCardHtml).join("");
   ["iterationsListCombine", "iterationsListAnalysis"].forEach(id => {
     const el = document.getElementById(id);
@@ -626,7 +626,7 @@ const COMPARE_EMPTY_HTML = `
   <div class="compare-empty">
     <i class="ti ti-stack-2" aria-hidden="true"></i>
     <h3>No saved iterations yet</h3>
-    <p class="hint">Compare only shows your own work — build a layout in Combine, then use <strong>"Save for Compare"</strong> in its Review step to bring it here. Save up to 3 at once.</p>
+    <p class="hint">Compare only shows your own work — build a layout in Combine, then use <strong>"Save for Compare"</strong> to bring it here. Save up to 3 at once.</p>
     <p class="hint">New to Compare? <button class="btn-link" id="btn-compare-guide-empty">Open the Compare Guide</button> to see a worked example first.</p>
   </div>`;
 
@@ -687,7 +687,7 @@ function updateCompareUI() {
   document.getElementById("norm-badge").textContent = `${savedCompareConfigs.length} of 3 saved`;
 
   if (savedCompareConfigs.length === 0) {
-    document.getElementById("compare-intro").textContent = "Save layouts from Combine's Review step to compare them here — side by side, scored against your own priorities.";
+    document.getElementById("compare-intro").textContent = "Save layouts from Combine to compare them here — side by side, scored against your own priorities.";
     document.getElementById("compare-roof-dims").textContent = "—";
     document.getElementById("compare-roof-area").textContent = "—";
     document.getElementById("compare-roof-hint").textContent = "No saved layouts yet.";

@@ -612,3 +612,61 @@ html[data-role="client"] .planner-only { display: none !important; }
    same time as the zones panel — you choose a build-up and what stands on it
    together, not one after the other. */
 .vegetation-flyout { left: auto; right: 12px; }
+
+/* ── Live design panel (Combine right pane) ──────────────────────────────
+   Replaced the Rules/Arrange/Review wizard. Only things that change as you
+   design live here; setup and per-selection tools moved to flyouts and the
+   selection itself. */
+.design-panel { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.design-panel-head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px; border-bottom: 0.5px solid var(--border);
+  position: sticky; top: 0; background: var(--surface-1); z-index: 2;
+}
+.design-panel-title { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--text-primary); margin-right: auto; }
+.design-panel-act {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; padding: 4px 8px; border-radius: var(--radius);
+  border: 0.5px solid var(--border-strong); background: var(--surface-2);
+  color: var(--text-secondary); cursor: pointer;
+}
+.design-panel-act:hover { border-color: var(--border-accent); color: var(--text-accent); }
+
+.design-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(66px, 1fr));
+  gap: 6px; padding: 10px 14px;
+}
+.design-tile {
+  position: relative; text-align: left; cursor: pointer;
+  background: var(--surface-2); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 7px 9px;
+}
+.design-tile:hover { border-color: var(--border-accent); }
+.design-tile.open { border-color: var(--border-accent); background: var(--bg-accent); }
+/* An empty slot is deliberately visible: a missing figure is information, and
+   hiding it would read as a zero. */
+.design-tile.empty .design-tile-val { color: var(--text-muted); }
+.design-tile-val { display: block; font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+.design-tile-lbl { display: block; font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.design-delta { position: absolute; top: 6px; right: 8px; font-size: 9px; font-weight: 600; }
+.design-delta.up { color: var(--text-fail); }
+.design-delta.down { color: var(--text-success); }
+
+.design-detail {
+  margin: 0 14px 10px; padding: 10px 12px;
+  background: var(--surface-2); border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+.design-detail-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+.design-detail-close { border: 0; background: none; color: var(--text-muted); font-size: 16px; line-height: 1; cursor: pointer; }
+.design-detail-close:hover { color: var(--text-primary); }
+.design-detail-sub { display: block; font-size: 10px; color: var(--text-muted); margin: 10px 0 2px; text-transform: uppercase; letter-spacing: .04em; }
+.design-detail-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.design-detail-table td { padding: 3px 0; border-bottom: 0.5px solid var(--border); color: var(--text-secondary); }
+.design-detail-table td.num { text-align: right; font-weight: 600; color: var(--text-primary); white-space: nowrap; padding-left: 8px; }
+.design-detail-table td.note { text-align: right; font-size: 10px; color: var(--text-muted); white-space: nowrap; padding-left: 8px; }
+.design-detail-table tr:last-child td { border-bottom: 0; }
+
+/* The two flyouts reuse the Zones/Plants pattern, but hold setup rather than
+   drawing tools, so they get more room for the rule fields. */
+.rules-flyout, .tools-flyout { width: min(340px, 90%); max-height: 78%; overflow-y: auto; }

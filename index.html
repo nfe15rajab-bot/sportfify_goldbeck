@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-19-dynamic" />
+  <link rel="stylesheet" href="style.css?v=2026-09-19-panel-polish2" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -461,7 +461,7 @@
         </div>
         <div class="section iterations-section">
           <label><i class="ti ti-stack-2" aria-hidden="true"></i> Saved iterations</label>
-          <p class="hint">Saved from Combine's Review step ("Save for Compare") — select one to analyze it instead.</p>
+          <p class="hint">Saved with Combine's "Save for Compare" — select one to analyze it instead.</p>
           <div class="iterations-list" id="iterationsListAnalysis"></div>
         </div>
       </div>
@@ -734,6 +734,131 @@
                 </p>
                 <div id="zone-panel"></div>
               </aside>
+
+              <!-- Setup, not a step: you set the rules once. Same flyout pattern
+                   as Zones/Plants so everything that configures the roof opens
+                   over it rather than competing for the panel. -->
+              <aside class="zone-flyout rules-flyout" id="rules-flyout" hidden>
+                <div class="zone-flyout-header">
+                  <span><i class="ti ti-adjustments" aria-hidden="true"></i> Design rules</span>
+                  <button id="btn-rules-close" title="Close">&times;</button>
+                </div>
+              <p class="hint step-intro">These four rules decide what counts as a valid layout — auto-arrange and suggested spots both respect them.</p>
+
+              <div class="section">
+                <label>Design rules</label>
+                <div class="rule-explain-grid">
+                  <div class="rule-explain">
+                    <div class="rule-explain-head"><span>Clearance (m)</span><input type="number" id="ruleClearance" class="rule-input" value="1.0" min="0" step="0.1" /></div>
+                    <p class="hint">Minimum gap kept between any two pieces, so there's room to walk between them.</p>
+                  </div>
+                  <div class="rule-explain">
+                    <div class="rule-explain-head"><span>Boundary setback (m)</span><input type="number" id="ruleSetback" class="rule-input" value="1.5" min="0" step="0.1" /></div>
+                    <p class="hint">Minimum gap kept between any piece and the roof edge — a safety margin around the perimeter.</p>
+                  </div>
+                  <div class="rule-explain">
+                    <div class="rule-explain-head"><span>Circulation width (m)</span><input type="number" id="ruleCirculationWidth" class="rule-input" value="1.2" min="0.5" step="0.1" /></div>
+                    <p class="hint">How wide a gap must be to count as a real walkway — narrower gaps don't connect a piece to an entrance, even if nothing overlaps.</p>
+                  </div>
+                  <div class="rule-explain">
+                    <div class="rule-explain-head"><span>Min. entry points</span><input type="number" id="ruleMinEntries" class="rule-input" value="1" min="1" step="1" /></div>
+                    <p class="hint">How many entrances the layout needs. Every piece must have a walkable path back to at least one.</p>
+                  </div>
+                  <div class="rule-explain">
+                    <div class="rule-explain-head"><span>Quiet buffer (m)</span><input type="number" id="ruleQuietBuffer" class="rule-input" value="3.0" min="0" step="0.5" /></div>
+                    <p class="hint">Minimum gap kept between a wellness/garden zone and a loud court or activity — separate from clearance, which only prevents overlap.</p>
+                  </div>
+                </div>
+                <p class="hint">The planner tunes these — the client sees them applied but can't change them.</p>
+              </div>
+
+              <div class="section">
+                <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  <span>Smart recommendation</span>
+                  <span style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">
+                    <input type="checkbox" id="smart-rule-toggle" checked style="margin:0">
+                    <label for="smart-rule-toggle" style="margin:0;cursor:pointer">On</label>
+                  </span>
+                </label>
+                <div id="smart-rule-advisory" class="smart-rule-advisory"></div>
+              </div>
+
+              <div class="section">
+                <label>Entry points</label>
+                <button class="btn-export accent" id="btn-add-entry">
+                  <i class="ti ti-door-enter" aria-hidden="true"></i>Add Entry Point
+                </button>
+                <p class="hint" id="add-entry-hint" style="display:none">Tool active — click near the site edge to drop one pin (click the button again to cancel).</p>
+                <p class="hint">Satisfies the "min. entry points" rule above and gives circulation somewhere to connect to.</p>
+
+              </div>
+              </aside>
+
+              <aside class="zone-flyout tools-flyout" id="tools-flyout" hidden>
+                <div class="zone-flyout-header">
+                  <span><i class="ti ti-tool" aria-hidden="true"></i> Layout tools</span>
+                  <button id="btn-tools-close" title="Close">&times;</button>
+                </div>
+            <p class="hint step-intro">Auto-arrange fits everything at once; suggested spots fine-tune one piece at a time. Both only ever propose spots that already satisfy the rules.</p>
+
+            <div class="step-grid">
+              <div class="section" id="goldbeck-shuffle-section" style="display:none">
+                <label>Goldbeck roof — boundary variant</label>
+                <button class="btn-export accent" id="btn-shuffle-boundary">
+                  <i class="ti ti-dice-5" aria-hidden="true"></i>Shuffle Boundary
+                </button>
+                <p class="hint">Regenerates this pattern with a different garden/sport boundary split — re-checked against every rule before it replaces the current layout.</p>
+              </div>
+
+              <div class="section">
+                <label>Layout</label>
+                <button class="btn-export accent" id="btn-auto-arrange" style="margin-bottom: 6px;">
+                  <i class="ti ti-wand" aria-hidden="true"></i><span data-client-label="Generate My Layout">Generate Rule-Based Layout</span>
+                </button>
+                <p class="hint">Groups sports and garden pieces into two zones with a shared walkway between them.</p>
+                <div class="auto-grid planner-only">
+                  <button class="btn-export" id="btn-auto-left">
+                    <i class="ti ti-arrow-left" aria-hidden="true"></i>Left
+                  </button>
+                  <button class="btn-export" id="btn-auto-right">
+                    <i class="ti ti-arrow-right" aria-hidden="true"></i>Right
+                  </button>
+                  <button class="btn-export" id="btn-auto-front">
+                    <i class="ti ti-arrow-down" aria-hidden="true"></i>Front
+                  </button>
+                  <button class="btn-export" id="btn-auto-behind">
+                    <i class="ti ti-arrow-up" aria-hidden="true"></i>Behind
+                  </button>
+                </div>
+                <p class="hint planner-only">Snap arrows move the selected piece to an edge for fine manual control.</p>
+              </div>
+
+              <div class="section planner-only">
+                <label>Manual placement</label>
+                <p class="hint">Click a piece to select it, drag anywhere to move it.</p>
+                <button class="btn-export" id="btn-rotate">
+                  <i class="ti ti-rotate" aria-hidden="true"></i>Rotate selected 90°
+                </button>
+              </div>
+
+              <div class="section span-2">
+                <label>Suggested spots</label>
+                <p class="hint" id="suggestions-hint">Select a piece to see suggested spots.</p>
+                <p class="hint">Click a numbered spot (in this list or on the roof) to move the selected piece there instantly.</p>
+                <div id="suggestions-list" class="suggestions-list"></div>
+              </div>
+
+              <div class="section span-2">
+                <label>Selection</label>
+                <button class="btn-export" id="btn-remove-selected">
+                  <i class="ti ti-trash" aria-hidden="true"></i>Remove selected
+                </button>
+                <button class="btn-export" id="btn-clear-all" style="margin-top:6px">
+                  <i class="ti ti-eraser" aria-hidden="true"></i>Clear all pieces
+                </button>
+              </div>
+            </div>
+              </aside>
               <p class="hint combine-zoom-hint">Scroll to zoom · right-drag to pan</p>
             </div>
             <div class="combine-tray" id="combineTray">
@@ -748,171 +873,53 @@
           <div class="panel-resizer" id="stepPaneResizer" title="Drag to resize"></div>
 
           <div class="combine-step-pane">
-            <div class="wizard-nav" id="wizard-nav">
-              <button class="wizard-step-btn active" data-step="1"><span class="wizard-step-num">1</span>Rules</button>
-              <button class="wizard-step-btn" data-step="2"><span class="wizard-step-num">2</span>Arrange</button>
-              <button class="wizard-step-btn" data-step="3"><span class="wizard-step-num">3</span>Review</button>
-            </div>
-
-            <div class="wizard-step-body">
-              <div class="wizard-step-content" data-step-content="1">
-                <p class="hint step-intro">These four rules decide what counts as a valid layout — auto-arrange and suggested spots both respect them.</p>
-
-                <div class="section">
-                  <label>Design rules</label>
-                  <div class="rule-explain-grid">
-                    <div class="rule-explain">
-                      <div class="rule-explain-head"><span>Clearance (m)</span><input type="number" id="ruleClearance" class="rule-input" value="1.0" min="0" step="0.1" /></div>
-                      <p class="hint">Minimum gap kept between any two pieces, so there's room to walk between them.</p>
-                    </div>
-                    <div class="rule-explain">
-                      <div class="rule-explain-head"><span>Boundary setback (m)</span><input type="number" id="ruleSetback" class="rule-input" value="1.5" min="0" step="0.1" /></div>
-                      <p class="hint">Minimum gap kept between any piece and the roof edge — a safety margin around the perimeter.</p>
-                    </div>
-                    <div class="rule-explain">
-                      <div class="rule-explain-head"><span>Circulation width (m)</span><input type="number" id="ruleCirculationWidth" class="rule-input" value="1.2" min="0.5" step="0.1" /></div>
-                      <p class="hint">How wide a gap must be to count as a real walkway — narrower gaps don't connect a piece to an entrance, even if nothing overlaps.</p>
-                    </div>
-                    <div class="rule-explain">
-                      <div class="rule-explain-head"><span>Min. entry points</span><input type="number" id="ruleMinEntries" class="rule-input" value="1" min="1" step="1" /></div>
-                      <p class="hint">How many entrances the layout needs. Every piece must have a walkable path back to at least one.</p>
-                    </div>
-                    <div class="rule-explain">
-                      <div class="rule-explain-head"><span>Quiet buffer (m)</span><input type="number" id="ruleQuietBuffer" class="rule-input" value="3.0" min="0" step="0.5" /></div>
-                      <p class="hint">Minimum gap kept between a wellness/garden zone and a loud court or activity — separate from clearance, which only prevents overlap.</p>
-                    </div>
-                  </div>
-                  <p class="hint">The planner tunes these — the client sees them applied but can't change them.</p>
+              <div class="design-panel">
+                <div class="design-panel-head">
+                  <span class="design-panel-title">This design</span>
+                  <button class="design-panel-act" id="btn-open-rules" title="Design rules and entry points"><i class="ti ti-adjustments" aria-hidden="true"></i>Rules</button>
+                  <button class="design-panel-act" id="btn-open-tools" title="Layout tools"><i class="ti ti-tool" aria-hidden="true"></i>Tools</button>
                 </div>
 
-                <div class="section">
-                  <label style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-                    <span>Smart recommendation</span>
-                    <span style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">
-                      <input type="checkbox" id="smart-rule-toggle" checked style="margin:0">
-                      <label for="smart-rule-toggle" style="margin:0;cursor:pointer">On</label>
-                    </span>
-                  </label>
-                  <div id="smart-rule-advisory" class="smart-rule-advisory"></div>
+                <!-- Live, never a step: this is the only thing in the panel that
+                     changes as you design, which is the only reason something
+                     earns permanent space here. Click any tile for its breakdown. -->
+                <div id="design-metrics" class="design-metrics"></div>
+                <div id="design-detail" class="design-detail" hidden></div>
+
+                <div class="section span-2">
+                  <label>Design rules checklist</label>
+                  <div id="rules-panel" class="rules-panel"></div>
                 </div>
 
-                <div class="section">
-                  <label>Entry points</label>
-                  <button class="btn-export accent" id="btn-add-entry">
-                    <i class="ti ti-door-enter" aria-hidden="true"></i>Add Entry Point
-                  </button>
-                  <p class="hint" id="add-entry-hint" style="display:none">Tool active — click near the site edge to drop one pin (click the button again to cancel).</p>
-                  <p class="hint">Satisfies the "min. entry points" rule above and gives circulation somewhere to connect to.</p>
+                <!-- renderCombineSummary() still fills this every redraw; the
+                     panel reads it into the Programmed-area breakdown instead of
+                     showing bare counts, which say nothing on their own. -->
+                <div id="combine-summary" class="dims" hidden></div>
 
-                </div>
+              <div class="export-area">
+                <button class="btn-export accent" id="btn-save-compare">
+                  <i class="ti ti-chart-bar" aria-hidden="true"></i>Save for Compare
+                </button>
+                <button class="btn-export primary" id="btn-combine-json">
+                  <i class="ti ti-file-download" aria-hidden="true"></i><span data-client-label="Download My Design">Export Combined JSON</span>
+                </button>
+                <button class="btn-export" id="btn-combine-png">
+                  <i class="ti ti-photo" aria-hidden="true"></i>Export Roof PNG
+                </button>
+                <button class="btn-export" id="btn-load-session">
+                  <i class="ti ti-upload" aria-hidden="true"></i><span data-client-label="Resume My Design">Load Progress</span>
+                </button>
+                <input type="file" id="load-session-file" accept=".json" style="display:none" />
+                <p class="hint">A Combined JSON export doubles as a save file — load it back in anytime to pick up exactly where you left off.</p>
               </div>
-
-              <div class="wizard-step-content" data-step-content="2" hidden>
-                <p class="hint step-intro">Auto-arrange fits everything at once; suggested spots fine-tune one piece at a time. Both only ever propose spots that already satisfy the rules.</p>
-
-                <div class="step-grid">
-                  <div class="section" id="goldbeck-shuffle-section" style="display:none">
-                    <label>Goldbeck roof — boundary variant</label>
-                    <button class="btn-export accent" id="btn-shuffle-boundary">
-                      <i class="ti ti-dice-5" aria-hidden="true"></i>Shuffle Boundary
-                    </button>
-                    <p class="hint">Regenerates this pattern with a different garden/sport boundary split — re-checked against every rule before it replaces the current layout.</p>
-                  </div>
-
-                  <div class="section">
-                    <label>Layout</label>
-                    <button class="btn-export accent" id="btn-auto-arrange" style="margin-bottom: 6px;">
-                      <i class="ti ti-wand" aria-hidden="true"></i><span data-client-label="Generate My Layout">Generate Rule-Based Layout</span>
-                    </button>
-                    <p class="hint">Groups sports and garden pieces into two zones with a shared walkway between them.</p>
-                    <div class="auto-grid planner-only">
-                      <button class="btn-export" id="btn-auto-left">
-                        <i class="ti ti-arrow-left" aria-hidden="true"></i>Left
-                      </button>
-                      <button class="btn-export" id="btn-auto-right">
-                        <i class="ti ti-arrow-right" aria-hidden="true"></i>Right
-                      </button>
-                      <button class="btn-export" id="btn-auto-front">
-                        <i class="ti ti-arrow-down" aria-hidden="true"></i>Front
-                      </button>
-                      <button class="btn-export" id="btn-auto-behind">
-                        <i class="ti ti-arrow-up" aria-hidden="true"></i>Behind
-                      </button>
-                    </div>
-                    <p class="hint planner-only">Snap arrows move the selected piece to an edge for fine manual control.</p>
-                  </div>
-
-                  <div class="section planner-only">
-                    <label>Manual placement</label>
-                    <p class="hint">Click a piece to select it, drag anywhere to move it.</p>
-                    <button class="btn-export" id="btn-rotate">
-                      <i class="ti ti-rotate" aria-hidden="true"></i>Rotate selected 90°
-                    </button>
-                  </div>
-
-                  <div class="section span-2">
-                    <label>Suggested spots</label>
-                    <p class="hint" id="suggestions-hint">Select a piece to see suggested spots.</p>
-                    <p class="hint">Click a numbered spot (in this list or on the roof) to move the selected piece there instantly.</p>
-                    <div id="suggestions-list" class="suggestions-list"></div>
-                  </div>
-
-                  <div class="section span-2">
-                    <label>Selection</label>
-                    <button class="btn-export" id="btn-remove-selected">
-                      <i class="ti ti-trash" aria-hidden="true"></i>Remove selected
-                    </button>
-                    <button class="btn-export" id="btn-clear-all" style="margin-top:6px">
-                      <i class="ti ti-eraser" aria-hidden="true"></i>Clear all pieces
-                    </button>
-                  </div>
-                </div>
               </div>
-
-              <div class="wizard-step-content" data-step-content="3" hidden>
-                <p class="hint step-intro">A recap of what's on the roof right now, and every rule from step 2 checked against it.</p>
-
-                <div class="step-grid">
-                  <div class="section span-2">
-                    <label>Summary</label>
-                    <div id="combine-summary" class="dims"></div>
-                  </div>
-                  <div class="section span-2">
-                    <label>Design rules checklist</label>
-                    <div id="rules-panel" class="rules-panel"></div>
-                  </div>
-                </div>
-
-                <div class="export-area">
-                  <button class="btn-export accent" id="btn-save-compare">
-                    <i class="ti ti-chart-bar" aria-hidden="true"></i>Save for Compare
-                  </button>
-                  <button class="btn-export primary" id="btn-combine-json">
-                    <i class="ti ti-file-download" aria-hidden="true"></i><span data-client-label="Download My Design">Export Combined JSON</span>
-                  </button>
-                  <button class="btn-export" id="btn-combine-png">
-                    <i class="ti ti-photo" aria-hidden="true"></i>Export Roof PNG
-                  </button>
-                  <button class="btn-export" id="btn-load-session">
-                    <i class="ti ti-upload" aria-hidden="true"></i><span data-client-label="Resume My Design">Load Progress</span>
-                  </button>
-                  <input type="file" id="load-session-file" accept=".json" style="display:none" />
-                  <p class="hint">A Combined JSON export doubles as a save file — load it back in anytime to pick up exactly where you left off.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="wizard-footer">
-              <button class="btn-export" id="wizard-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
-              <button class="btn-export primary" id="wizard-next">Next<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
-            </div>
           </div>
 
           <div class="panel-resizer" id="iterationsPaneResizer" title="Drag to resize"></div>
 
           <aside class="iterations-pane">
             <div class="iterations-pane-header"><i class="ti ti-stack-2" aria-hidden="true"></i> Iterations</div>
-            <p class="hint iterations-pane-hint">Saved from "Save for Compare" (Review step) — select one to load it here.</p>
+            <p class="hint iterations-pane-hint">Saved with "Save for Compare" — select one to load it here.</p>
             <div class="iterations-list" id="iterationsListCombine"></div>
           </aside>
         </div>
@@ -922,34 +929,35 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-19-dynamic"></script>
-  <script src="activitiesData.js?v=2026-09-19-dynamic"></script>
-  <script src="vegetation.js?v=2026-09-19-dynamic"></script>
-  <script src="zones.js?v=2026-09-19-dynamic"></script>
-  <script src="structure.js?v=2026-09-19-dynamic"></script>
-  <script src="assemblies.js?v=2026-09-19-dynamic"></script>
-  <script src="gardenData.js?v=2026-09-19-dynamic"></script>
-  <script src="prebuiltSessions.js?v=2026-09-19-dynamic"></script>
-  <script src="rules.js?v=2026-09-19-dynamic"></script>
-  <script src="sunPosition.js?v=2026-09-19-dynamic"></script>
-  <script src="balls.js?v=2026-09-19-dynamic"></script>
-  <script src="field.js?v=2026-09-19-dynamic"></script>
-  <script src="activityField.js?v=2026-09-19-dynamic"></script>
-  <script src="gardenField.js?v=2026-09-19-dynamic"></script>
-  <script src="combineField.js?v=2026-09-19-dynamic"></script>
-  <script src="siteField.js?v=2026-09-19-dynamic"></script>
-  <script src="buildupEditor.js?v=2026-09-19-dynamic"></script>
-  <script src="dataTab.js?v=2026-09-19-dynamic"></script>
-  <script src="revitBridge.js?v=2026-09-19-dynamic"></script>
-  <script src="sportController.js?v=2026-09-19-dynamic"></script>
-  <script src="gardenController.js?v=2026-09-19-dynamic"></script>
-  <script src="windZones.js?v=2026-09-19-dynamic"></script>
-  <script src="siteController.js?v=2026-09-19-dynamic"></script>
-  <script src="combineController.js?v=2026-09-19-dynamic"></script>
-  <script src="analysisController.js?v=2026-09-19-dynamic"></script>
-  <script src="compareController.js?v=2026-09-19-dynamic"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-19-dynamic"></script>
-  <script src="sessionGate.js?v=2026-09-19-dynamic"></script>
-  <script src="main.js?v=2026-09-19-dynamic"></script>
+  <script src="data.js?v=2026-09-19-panel-polish2"></script>
+  <script src="activitiesData.js?v=2026-09-19-panel-polish2"></script>
+  <script src="vegetation.js?v=2026-09-19-panel-polish2"></script>
+  <script src="zones.js?v=2026-09-19-panel-polish2"></script>
+  <script src="structure.js?v=2026-09-19-panel-polish2"></script>
+  <script src="assemblies.js?v=2026-09-19-panel-polish2"></script>
+  <script src="gardenData.js?v=2026-09-19-panel-polish2"></script>
+  <script src="prebuiltSessions.js?v=2026-09-19-panel-polish2"></script>
+  <script src="rules.js?v=2026-09-19-panel-polish2"></script>
+  <script src="sunPosition.js?v=2026-09-19-panel-polish2"></script>
+  <script src="balls.js?v=2026-09-19-panel-polish2"></script>
+  <script src="field.js?v=2026-09-19-panel-polish2"></script>
+  <script src="activityField.js?v=2026-09-19-panel-polish2"></script>
+  <script src="gardenField.js?v=2026-09-19-panel-polish2"></script>
+  <script src="combineField.js?v=2026-09-19-panel-polish2"></script>
+  <script src="siteField.js?v=2026-09-19-panel-polish2"></script>
+  <script src="buildupEditor.js?v=2026-09-19-panel-polish2"></script>
+  <script src="dataTab.js?v=2026-09-19-panel-polish2"></script>
+  <script src="revitBridge.js?v=2026-09-19-panel-polish2"></script>
+  <script src="sportController.js?v=2026-09-19-panel-polish2"></script>
+  <script src="gardenController.js?v=2026-09-19-panel-polish2"></script>
+  <script src="windZones.js?v=2026-09-19-panel-polish2"></script>
+  <script src="siteController.js?v=2026-09-19-panel-polish2"></script>
+  <script src="combineController.js?v=2026-09-19-panel-polish2"></script>
+  <script src="analysisController.js?v=2026-09-19-panel-polish2"></script>
+  <script src="compareController.js?v=2026-09-19-panel-polish2"></script>
+  <script src="designPanel.js?v=2026-09-19-panel-polish2"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-19-panel-polish2"></script>
+  <script src="sessionGate.js?v=2026-09-19-panel-polish2"></script>
+  <script src="main.js?v=2026-09-19-panel-polish2"></script>
 </body>
 </html>

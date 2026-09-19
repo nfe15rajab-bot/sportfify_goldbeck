@@ -333,6 +333,7 @@ function drawCombineCanvas() {
 
   renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts);
   renderCombineSummary(circulation);
+  if (typeof renderDesignPanel === "function") renderDesignPanel(circulation);
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);
