@@ -670,3 +670,6 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* The two flyouts reuse the Zones/Plants pattern, but hold setup rather than
    drawing tools, so they get more room for the rule fields. */
 .rules-flyout, .tools-flyout { width: min(340px, 90%); max-height: 78%; overflow-y: auto; }
+/* `.dims { display: grid }` beats the hidden attribute, so state it. The
+   summary still renders every redraw — the panel reads it, it is not shown. */
+.dims[hidden] { display: none; }
