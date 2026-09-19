@@ -706,3 +706,29 @@ html[data-role="client"] .planner-only { display: none !important; }
 .design-panel-act.on { border-color: var(--border-accent); color: var(--text-accent); background: var(--bg-accent); }
 .rules-panel { padding: 0 14px; }
 .rules-config { border-top: 0.5px solid var(--border); margin-top: 10px; }
+
+/* ── Cost receipt ────────────────────────────────────────────────────────
+   Reads like a till receipt: what you chose, how many, what it came to.
+   Build-up systems are the one line with a level underneath — you chose the
+   system, its layers came with it. */
+.receipt td { vertical-align: top; }
+.receipt-head td {
+  padding-top: 10px; font-size: 9px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--text-muted); border-bottom: 0.5px solid var(--border-strong);
+}
+.receipt-head:first-child td { padding-top: 0; }
+.receipt-count { font-weight: 700; color: var(--text-accent); }
+.receipt-expandable { cursor: pointer; }
+.receipt-expandable:hover td { color: var(--text-primary); }
+.receipt-caret { display: inline-block; width: 12px; color: var(--text-muted); }
+.receipt-layer td { color: var(--text-muted); border-bottom: 0; padding-top: 1px; padding-bottom: 1px; }
+.receipt-sub { padding-left: 14px; display: inline-block; }
+/* The detail sits under its label rather than in a third column: at this pane
+   width a product name and a quantity cannot share a row without one of them
+   wrapping into slivers. */
+.receipt-sub-line { display: block; font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.receipt-layer .receipt-sub-line { padding-left: 14px; }
+.receipt-total td {
+  padding-top: 8px; border-top: 1px solid var(--border-strong); border-bottom: 0;
+  font-weight: 700; color: var(--text-primary); font-size: 12px;
+}

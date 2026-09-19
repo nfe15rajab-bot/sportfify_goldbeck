@@ -29,6 +29,8 @@ const DESIGN_QUALITY_SCORE = { low: 40, medium: 70, high: 100 };
 /** Last rendered values, so a tile can show what the last change did to it. */
 let lastDesignMetrics = null;
 let openDesignDetail = null;
+/** Which build-up systems are expanded to show their layers. */
+const openBuildUps = new Set();
 
 /* ── Quantities ───────────────────────────────────────────────────────────
    The shopping list. A zone is not bought as "40 m² of ZinCo Roof Garden" —
@@ -89,8 +91,48 @@ function computeQuantityTakeoff() {
   });
 
   const rows = [...lines.values()].sort((a, b) => a.order - b.order);
+
+  // Per system as well as per layer. The receipt lists what you CHOSE — a
+  // ZinCo Roof Garden zone of 40 m2 — and the six layers it is made of belong
+  // one level down, behind that line, not beside the courts.
+  const byAssembly = new Map();
+  zones.forEach(z => {
+    const a = typeof getAssembly === "function" ? getAssembly(z.assemblyKey) : null;
+    const key = z.assemblyKey || "__none";
+    const area = zoneAreaM2(z);
+    const row = byAssembly.get(key) || {
+      key,
+      label: a
+        ? (a.system_name || "").toLowerCase().startsWith((a.provider || "").toLowerCase())
+          ? a.system_name : `${a.provider} ${a.system_name}`
+        : "No build-up chosen",
+      areaM2: 0, zoneCount: 0, cost: 0, layers: [], priced: !!a,
+    };
+    row.areaM2 += area; row.zoneCount += 1;
+    byAssembly.set(key, row);
+  });
+  // Layer figures per system, now that each system's total area is known.
+  byAssembly.forEach(row => {
+    const a = typeof getAssembly === "function" ? getAssembly(row.key) : null;
+    if (!a) return;
+    row.layers = (a.layers || []).map(l => {
+      const mm = l.mm || 0;
+      const byVolume = l.price_unit
+        ? l.price_unit === "EUR/m3"
+        : (mm >= VOLUME_UNIT_THRESHOLD_MM && l.fn !== "vegetation");
+      const qty = byVolume ? row.areaM2 * (mm / 1000) : row.areaM2;
+      return {
+        name: l.name, unit: byVolume ? "m³" : "m²", qty,
+        price: l.price ?? null, cost: l.price != null ? qty * l.price : null,
+        src: l.src, costGroup: l.cost_group || null,
+      };
+    });
+    row.cost = row.layers.reduce((s, l) => s + (l.cost || 0), 0);
+  });
+
   return {
     lines: rows,
+    byAssembly: [...byAssembly.values()].sort((a, b) => b.cost - a.cost),
     zoneCount: zones.length,
     zoneAreaM2: zones.reduce((s, z) => s + zoneAreaM2(z), 0),
     unpricedArea,
@@ -126,33 +168,56 @@ function computePieceCost() {
   const materials = typeof analysisMaterialsCache !== "undefined" ? analysisMaterialsCache : [];
   let total = 0, covered = 0, missing = 0;
   const rows = [];
+  const grouped = new Map();   // identical pieces collapse into one line, "2 x"
   items.filter(it => it.kind !== "vegetation").forEach(it => {
     if (typeof getFootprint !== "function") return;
     const fp = getFootprint(it);
     const area = fp.w * fp.h;
     const name = referenceMaterialName(it);
     const mat = name ? materials.find(m => m.name === name) : null;
-    if (!mat || mat.priceValue == null) { missing++; rows.push({ label: it.label, areaM2: area, cost: null }); return; }
+    const priced = mat && mat.priceValue != null;
+    if (!priced) missing++; else covered++;
     // Per m2 whatever the unit says: a piece is a surface, and a m3 price on a
     // surface material would be a data error rather than something to guess at.
-    const cost = area * mat.priceValue;
-    total += cost; covered++;
-    rows.push({ label: it.label, areaM2: area, cost, material: mat.name,
-                quoted: !!mat.priceIsQuoted, costGroup: mat.costGroupDin276 || null });
+    const cost = priced ? area * mat.priceValue : null;
+    if (cost != null) total += cost;
+
+    const key = `${it.label}||${name || "-"}||${Math.round(area)}`;
+    const row = grouped.get(key) || {
+      label: it.label, areaM2: area, count: 0, cost: 0, unitCost: cost,
+      material: priced ? mat.name : (name || null), priced,
+      quoted: priced ? !!mat.priceIsQuoted : false,
+      costGroup: priced ? (mat.costGroupDin276 || null) : null,
+    };
+    row.count += 1;
+    if (cost != null) row.cost += cost;
+    grouped.set(key, row);
+    rows.push({ label: it.label, areaM2: area, cost, material: priced ? mat.name : null,
+                costGroup: priced ? (mat.costGroupDin276 || null) : null });
   });
-  return { total, covered, missing, rows };
+  return { total, covered, missing, rows, grouped: [...grouped.values()].sort((a, b) => b.cost - a.cost) };
 }
 
 /** Plants are priced per plant, as a nursery sells them. */
 function computePlantCost() {
   const items = (typeof combineState !== "undefined" && combineState.items) || [];
   let total = 0, missing = 0;
+  const grouped = new Map();   // a plant list is per species, never per stem
   items.filter(it => it.kind === "vegetation").forEach(it => {
-    const p = it.sourceJson?.vegetation?.price_eur;
-    if (p == null) { missing++; return; }
-    total += p;
+    const v = it.sourceJson?.vegetation || {};
+    const p = v.price_eur;
+    if (p == null) missing++; else total += p;
+    const name = v.botanical_name || it.label || "Unknown";
+    const row = grouped.get(name) || {
+      label: name, common: v.common_name || "", count: 0,
+      unitCost: p ?? null, cost: 0, priced: p != null,
+      costGroup: v.cost_group || null,
+    };
+    row.count += 1;
+    if (p != null) row.cost += p;
+    grouped.set(name, row);
   });
-  return { total, missing };
+  return { total, missing, grouped: [...grouped.values()].sort((a, b) => b.cost - a.cost) };
 }
 
 /** Plants grouped by species — a plant list is per species, never per stem. */
@@ -380,49 +445,79 @@ function renderDesignDetail(m) {
 
   if (openDesignDetail === "cost") {
     const d = m.cost.detail, t = d.takeoff;
-    title = "Where the cost is";
+    title = "Cost breakdown";
 
     const eur = v => v == null ? "—" : "€ " + Math.round(v).toLocaleString("en-US");
+    const qty = v => v < 10 ? v.toFixed(1) : Math.round(v).toLocaleString("en-US");
 
-    // By DIN 276 cost group first, because that is the shape a German estimate
-    // has to arrive in — a bare total cannot be benchmarked or handed on.
+    /* A receipt, not a summary: every line is something you actually chose,
+       with how many of it and what that came to. Identical items collapse to
+       one line with a count, the way a till receipt does. */
+    const line = (label, sub, right, cls = "") =>
+      `<tr class="${cls}"><td>${label}${sub ? `<span class="receipt-sub-line">${sub}</span>` : ""}</td>` +
+      `<td class="num">${right}</td></tr>`;
+
+    const section = (heading, rows) => rows.length
+      ? `<tr class="receipt-head"><td colspan="2">${heading}</td></tr>` + rows.join("")
+      : "";
+
+    // Two courts the same size at different prices are two different surfaces,
+    // so the surface is what the line has to name.
+    const pieceRows = d.pieces.grouped.map(r => line(
+      `${r.count > 1 ? `<span class="receipt-count">${r.count}×</span> ` : ""}${r.label}`,
+      `${Math.round(r.areaM2)} m²${r.material ? ` · ${r.material}` : ""}${r.priced ? "" : " · no price"}`,
+      r.priced ? eur(r.cost) : "—"));
+
+    const plantRows = d.plants.grouped.map(r => line(
+      `${r.count > 1 ? `<span class="receipt-count">${r.count}×</span> ` : ""}<em>${r.label}</em>`,
+      r.priced ? `${eur(r.unitCost)} each` : "no price",
+      r.priced ? eur(r.cost) : "—"));
+
+    /* Ground is the one thing with a level underneath it. You chose a system;
+       its six layers came with it. So the system is the receipt line and the
+       layers sit behind it, rather than six lines competing with the courts. */
+    const groundRows = t.byAssembly.map(a => {
+      const open = openBuildUps.has(a.key);
+      const head = `<tr class="receipt-expandable${open ? " open" : ""}" data-buildup="${a.key}">
+          <td><span class="receipt-caret">${open ? "▾" : "▸"}</span>${a.label}
+            <span class="receipt-sub-line">${Math.round(a.areaM2)} m²${a.zoneCount > 1 ? ` · ${a.zoneCount} zones` : ""}${open ? "" : " · tap for layers"}</span></td>
+          <td class="num">${a.priced ? eur(a.cost) : "—"}</td></tr>`;
+      if (!open) return head;
+      const layers = a.layers.map(l => line(
+        `<span class="receipt-sub">${l.name}</span>`,
+        `${qty(l.qty)} ${l.unit}${l.price != null ? ` @ ${eur(l.price)}` : ""}`,
+        l.cost == null ? "no price" : eur(l.cost), "receipt-layer")).join("");
+      return head + layers;
+    });
+
+    const receipt = `<table class="design-detail-table receipt">
+        ${section("Courts &amp; equipment", pieceRows)}
+        ${section("Planting", plantRows)}
+        ${section("Ground build-ups", groundRows)}
+        <tr class="receipt-total"><td>Total</td><td class="num">${eur(d.total)}</td></tr>
+      </table>`;
+
+    // By cost group second: the receipt says what you bought, this says where
+    // the money went in the shape a German estimate has to arrive in.
     const groups = new Map();
     const add = (kg, cost) => { if (cost) groups.set(kg || "—", (groups.get(kg || "—") || 0) + cost); };
-    t.lines.forEach(l => add(l.costGroup, l.cost));
-    d.pieces.rows.forEach(r => add(r.costGroup, r.cost));
-    (combineState.items || []).filter(i => i.kind === "vegetation")
-      .forEach(i => add(i.sourceJson?.vegetation?.cost_group, i.sourceJson?.vegetation?.price_eur));
-
+    t.byAssembly.forEach(a => a.layers.forEach(l => add(l.costGroup, l.cost)));
+    d.pieces.grouped.forEach(r => add(r.costGroup, r.cost));
+    d.plants.grouped.forEach(r => add(r.costGroup, r.cost));
     const KG_LABEL = { "363": "Roof coverings", "530": "Surfaces", "560": "Fitted items", "570": "Planted areas" };
-
-    const summary = detailRows([
-      ["Ground build-ups", eur(t.cost), `${t.zoneCount} zone(s)`],
-      ["Courts and equipment", eur(d.pieces.total), `${d.pieces.covered} priced`],
-      ["Plants", eur(d.plants.total), ""],
-      ["<strong>Total</strong>", `<strong>${eur(d.total)}</strong>`, ""],
-    ]);
-
     const byGroup = groups.size
       ? `<label class="design-detail-sub">By DIN 276 cost group</label>` + detailRows(
           [...groups.entries()].sort().map(([kg, c]) => [`KG ${kg}`, eur(c), KG_LABEL[kg] || ""]))
       : "";
 
-    const layers = t.lines.length
-      ? `<label class="design-detail-sub">Build-up, per layer</label>` + detailRows(t.lines.map(l => [
-          l.name,
-          `${l.qty < 10 ? l.qty.toFixed(1) : Math.round(l.qty)} ${l.unit}`,
-          l.price == null ? "no price" : eur(l.cost),
-        ]))
-      : "";
-
-    const unpriced = t.missingPrices + d.pieces.missing + d.plants.missing;
-    body = summary + byGroup + layers
+    const unpriced = d.pieces.missing + d.plants.missing + (t.byAssembly.filter(a => !a.priced).length);
+    body = receipt + byGroup
       + `<p class="hint"><strong>Every price here is estimated</strong>, not quoted — German market rates for
-         material plus installation. They carry that flag in the database, so replacing one with a real
-         supplier quote changes the number and the flag together.</p>`
-      + (unpriced ? `<p class="hint">${unpriced} item(s) carry no price and are excluded from the total,
+         material plus installation. Replacing one with a real supplier quote changes the number and its
+         flag together.</p>`
+      + (unpriced ? `<p class="hint">${unpriced} line(s) carry no price and are left out of the total,
          rather than counted as free.</p>` : "")
-      + (t.lines.length ? "" : `<p class="hint">Draw a ground zone and its build-up becomes an order list here.</p>`);
+      + (d.total ? "" : `<p class="hint">Push a court or draw a ground zone and it appears here.</p>`);
   }
 
   if (openDesignDetail === "co2") {
@@ -475,6 +570,13 @@ function renderDesignDetail(m) {
 
   el.innerHTML = `<div class="design-detail-head"><strong>${title}</strong>
       <button class="design-detail-close" title="Close">&times;</button></div>${body}`;
+  el.querySelectorAll(".receipt-expandable").forEach(tr => {
+    tr.addEventListener("click", () => {
+      const k = tr.dataset.buildup;
+      if (openBuildUps.has(k)) openBuildUps.delete(k); else openBuildUps.add(k);
+      renderDesignDetail(m);
+    });
+  });
   el.querySelector(".design-detail-close")?.addEventListener("click", () => {
     openDesignDetail = null;
     renderDesignDetail(m);
