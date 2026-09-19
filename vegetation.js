@@ -83,6 +83,11 @@ function speciesFromApi(record) {
     source: record.source || "",
     source_url: record.sourceUrl || null,
     dimensions_published: !!record.dimensionsPublished,
+    price: record.priceValue ?? null,
+    price_unit: record.priceUnit || null,
+    price_source: record.priceSource || null,
+    price_quoted: !!record.priceIsQuoted,
+    cost_group: record.costGroupDin276 || null,
   };
 }
 
@@ -154,6 +159,11 @@ function pushVegetationToCombine() {
         source: type.source,
         source_url: type.source_url || null,
         dimensions_published: !!type.dimensions_published,
+        // Travels with the placement so a saved layout still costs the same
+        // later, even if the catalog price moves afterwards.
+        price_eur: type.price ?? null,
+        price_quoted: !!type.price_quoted,
+        cost_group: type.cost_group || null,
       },
     },
   });

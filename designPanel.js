@@ -37,8 +37,11 @@ let openDesignDetail = null;
    weight) is this list times a different column, which is why it is computed
    once here rather than three times in three places.
 
-   Unit rule: a layer thick enough to be ordered by volume is m³; sheet goods
-   are m². 25 mm is the break — below it nothing is sold by the cubic metre. */
+   Unit rule: the layer's own price_unit decides. "EUR/m3" means it is bought
+   by volume, "EUR/m2" by area. A drainage board is 60 mm thick and still sold
+   by the square metre, so thickness alone cannot tell you — only the supplier
+   can, and that is what the field records. The threshold below is the fallback
+   for a layer with no price yet. */
 const VOLUME_UNIT_THRESHOLD_MM = 25;
 
 function zoneAreaM2(zone) {
@@ -61,10 +64,12 @@ function computeQuantityTakeoff() {
 
     (assembly.layers || []).forEach((l, i) => {
       const mm = l.mm || 0;
-      // Vegetation is the exception: its thickness is the planting's height,
-      // not a bulk material you order by volume. It goes by area, and the
-      // species tally under Green is what actually counts the plants.
-      const byVolume = mm >= VOLUME_UNIT_THRESHOLD_MM && l.fn !== "vegetation";
+      // Vegetation is the exception when guessing: its thickness is the
+      // planting's height, not a bulk material. Once a price exists, the
+      // price's unit settles it either way.
+      const byVolume = l.price_unit
+        ? l.price_unit === "EUR/m3"
+        : (mm >= VOLUME_UNIT_THRESHOLD_MM && l.fn !== "vegetation");
       const id = `${l.name}||${l.fn}`;
       const row = lines.get(id) || {
         name: l.name, fn: l.fn, thicknessMm: mm, order: i,
@@ -72,19 +77,67 @@ function computeQuantityTakeoff() {
         // Carried through so a quantity can always be traced back to whether
         // the provider actually published the thickness it was derived from.
         src: l.src, providers: new Set(),
+        price: l.price ?? null, priceQuoted: !!l.price_quoted,
+        costGroup: l.cost_group || null, cost: 0,
       };
-      row.qty += byVolume ? area * (mm / 1000) : area;
+      const qty = byVolume ? area * (mm / 1000) : area;
+      row.qty += qty;
+      if (row.price != null) row.cost += qty * row.price;
       row.providers.add(assembly.provider || "—");
       lines.set(id, row);
     });
   });
 
+  const rows = [...lines.values()].sort((a, b) => a.order - b.order);
   return {
-    lines: [...lines.values()].sort((a, b) => a.order - b.order),
+    lines: rows,
     zoneCount: zones.length,
     zoneAreaM2: zones.reduce((s, z) => s + zoneAreaM2(z), 0),
     unpricedArea,
+    cost: rows.reduce((s, r) => s + r.cost, 0),
+    missingPrices: rows.filter(r => r.price == null).length,
   };
+}
+
+/**
+ * Courts, activity pieces and equipment: area times the reference material's
+ * price per m². A piece with no reference material picked, or a material with
+ * no price, is counted as missing rather than as free — the same rule the LCA
+ * card already follows for carbon.
+ */
+function computePieceCost() {
+  const items = (typeof combineState !== "undefined" && combineState.items) || [];
+  const materials = typeof analysisMaterialsCache !== "undefined" ? analysisMaterialsCache : [];
+  let total = 0, covered = 0, missing = 0;
+  const rows = [];
+  items.filter(it => it.kind !== "vegetation").forEach(it => {
+    if (typeof getFootprint !== "function") return;
+    const fp = getFootprint(it);
+    const area = fp.w * fp.h;
+    const name = it.sourceJson?.materials?.reference_material
+      || it.sourceJson?.garden?.materials?.reference_material;
+    const mat = name ? materials.find(m => m.name === name) : null;
+    if (!mat || mat.priceValue == null) { missing++; rows.push({ label: it.label, areaM2: area, cost: null }); return; }
+    // Per m2 whatever the unit says: a piece is a surface, and a m3 price on a
+    // surface material would be a data error rather than something to guess at.
+    const cost = area * mat.priceValue;
+    total += cost; covered++;
+    rows.push({ label: it.label, areaM2: area, cost, material: mat.name,
+                quoted: !!mat.priceIsQuoted, costGroup: mat.costGroupDin276 || null });
+  });
+  return { total, covered, missing, rows };
+}
+
+/** Plants are priced per plant, as a nursery sells them. */
+function computePlantCost() {
+  const items = (typeof combineState !== "undefined" && combineState.items) || [];
+  let total = 0, missing = 0;
+  items.filter(it => it.kind === "vegetation").forEach(it => {
+    const p = it.sourceJson?.vegetation?.price_eur;
+    if (p == null) { missing++; return; }
+    total += p;
+  });
+  return { total, missing };
 }
 
 /** Plants grouped by species — a plant list is per species, never per stem. */
@@ -219,11 +272,19 @@ function computeDesignMetrics(circulation) {
   const access = computeAccessMetric(circulation);
   const carbon = computeCarbonMetric();
 
+  const pieces = computePieceCost();
+  const plants = computePlantCost();
+  const costTotal = takeoff.cost + pieces.total + plants.total;
+  const anythingPriced = takeoff.cost > 0 || pieces.total > 0 || plants.total > 0;
+
   return {
-    // No price data exists anywhere yet — not in the database, not on the
-    // layers. Shown as an empty slot on purpose: the quantities behind it are
-    // already real, and only the € column is missing.
-    cost: { value: null, reason: "no prices in the catalog yet" },
+    // Ground, pieces and planting, each measured in its own unit and summed.
+    // Null rather than zero when nothing carries a price — an empty roof and
+    // an unpriced one are different facts.
+    cost: {
+      value: anythingPriced ? costTotal : null,
+      detail: { takeoff, pieces, plants, total: costTotal },
+    },
     co2: { value: carbon.totalKg, detail: carbon },
     quality: { value: quality.score, detail: quality },
     access: { value: access.score, detail: access },
@@ -304,19 +365,50 @@ function renderDesignDetail(m) {
   let title = "", body = "";
 
   if (openDesignDetail === "cost") {
-    const t = m.takeoff;
-    title = "What the design is made of";
-    body = t.lines.length
-      ? detailRows(t.lines.map(l => [
+    const d = m.cost.detail, t = d.takeoff;
+    title = "Where the cost is";
+
+    const eur = v => v == null ? "—" : "€ " + Math.round(v).toLocaleString("en-US");
+
+    // By DIN 276 cost group first, because that is the shape a German estimate
+    // has to arrive in — a bare total cannot be benchmarked or handed on.
+    const groups = new Map();
+    const add = (kg, cost) => { if (cost) groups.set(kg || "—", (groups.get(kg || "—") || 0) + cost); };
+    t.lines.forEach(l => add(l.costGroup, l.cost));
+    d.pieces.rows.forEach(r => add(r.costGroup, r.cost));
+    (combineState.items || []).filter(i => i.kind === "vegetation")
+      .forEach(i => add(i.sourceJson?.vegetation?.cost_group, i.sourceJson?.vegetation?.price_eur));
+
+    const KG_LABEL = { "363": "Roof coverings", "530": "Surfaces", "560": "Fitted items", "570": "Planted areas" };
+
+    const summary = detailRows([
+      ["Ground build-ups", eur(t.cost), `${t.zoneCount} zone(s)`],
+      ["Courts and equipment", eur(d.pieces.total), `${d.pieces.covered} priced`],
+      ["Plants", eur(d.plants.total), ""],
+      ["<strong>Total</strong>", `<strong>${eur(d.total)}</strong>`, ""],
+    ]);
+
+    const byGroup = groups.size
+      ? `<label class="design-detail-sub">By DIN 276 cost group</label>` + detailRows(
+          [...groups.entries()].sort().map(([kg, c]) => [`KG ${kg}`, eur(c), KG_LABEL[kg] || ""]))
+      : "";
+
+    const layers = t.lines.length
+      ? `<label class="design-detail-sub">Build-up, per layer</label>` + detailRows(t.lines.map(l => [
           l.name,
           `${l.qty < 10 ? l.qty.toFixed(1) : Math.round(l.qty)} ${l.unit}`,
-          l.src === "published" ? "published" : "typical",
+          l.price == null ? "no price" : eur(l.cost),
         ]))
-        + `<p class="hint">${t.zoneCount} zone(s), ${Math.round(t.zoneAreaM2)} m². These are the order quantities —
-           thickness decides the unit, so substrate is m³ and sheet goods are m².</p>
-           <p class="hint"><strong>No prices in the catalog yet</strong>, so there is no € figure.
-           The quantities above are what a price column would multiply.</p>`
-      : `<p class="hint">Draw a ground zone and its build-up becomes an order list here.</p>`;
+      : "";
+
+    const unpriced = t.missingPrices + d.pieces.missing + d.plants.missing;
+    body = summary + byGroup + layers
+      + `<p class="hint"><strong>Every price here is estimated</strong>, not quoted — German market rates for
+         material plus installation. They carry that flag in the database, so replacing one with a real
+         supplier quote changes the number and the flag together.</p>`
+      + (unpriced ? `<p class="hint">${unpriced} item(s) carry no price and are excluded from the total,
+         rather than counted as free.</p>` : "")
+      + (t.lines.length ? "" : `<p class="hint">Draw a ground zone and its build-up becomes an order list here.</p>`);
   }
 
   if (openDesignDetail === "co2") {

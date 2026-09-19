@@ -82,6 +82,15 @@ function assemblyFromApi(record) {
       fn: l.function,
       mm: l.thicknessMm,
       src: l.thicknessSource,
+      // price_unit decides how the layer is measured as well as what it costs
+      // — "EUR/m3" means take it off by volume, "EUR/m2" by area. One field,
+      // so the two can never disagree about a layer like a drainage board,
+      // which is 60 mm thick but still bought by the square metre.
+      price: l.priceValue ?? null,
+      price_unit: l.priceUnit || null,
+      price_source: l.priceSource || null,
+      price_quoted: !!l.priceIsQuoted,
+      cost_group: l.costGroupDin276 || null,
     })),
   };
 }
