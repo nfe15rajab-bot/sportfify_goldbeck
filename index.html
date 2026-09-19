@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-18-thickness-clarity" />
+  <link rel="stylesheet" href="style.css?v=2026-09-19-wind-zones" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -131,11 +131,28 @@
             <button class="btn-export" id="btn-site-geolocate" title="Use my current location"><i class="ti ti-current-location" aria-hidden="true"></i></button>
           </div>
           <p class="hint" id="site-coords-status">No location set — click the map on the right to place the site.</p>
+          <p class="hint" id="site-region-status"></p>
         </div>
         <div class="section planner-only">
           <label>Roof orientation</label>
           <input type="range" id="siteNorthDeg" min="0" max="359" step="1" value="0" />
           <p class="hint">Degrees clockwise from the top of the canvas to true north — <span id="site-north-val">0°</span>.</p>
+        </div>
+        <div class="section planner-only">
+          <label>Wind zone (DIN EN 1991-1-4/NA)</label>
+          <select id="siteWindZone">
+            <option value="auto">Automatic from the site location</option>
+            <option value="1">Zone 1</option>
+            <option value="2">Zone 2</option>
+            <option value="3">Zone 3</option>
+            <option value="4">Zone 4</option>
+          </select>
+          <p class="hint" id="site-wind-status">Set a site location in Germany and the zone is looked up.</p>
+        </div>
+        <div class="section planner-only">
+          <label>Roof height above ground (m)</label>
+          <input type="number" id="siteRoofHeight" min="0" step="0.5" placeholder="from the Revit model" />
+          <p class="hint" id="site-height-status">Comes with a roof pushed from Revit; type a value to override it.</p>
         </div>
         <div class="section">
           <label>Sun date &amp; time</label>
@@ -873,32 +890,33 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="activitiesData.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="vegetation.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="zones.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="assemblies.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="gardenData.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="prebuiltSessions.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="rules.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="sunPosition.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="balls.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="field.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="activityField.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="gardenField.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="combineField.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="siteField.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="buildupEditor.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="dataTab.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="revitBridge.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="sportController.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="gardenController.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="siteController.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="combineController.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="analysisController.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="compareController.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="sessionGate.js?v=2026-09-18-thickness-clarity"></script>
-  <script src="main.js?v=2026-09-18-thickness-clarity"></script>
+  <script src="data.js?v=2026-09-19-wind-zones"></script>
+  <script src="activitiesData.js?v=2026-09-19-wind-zones"></script>
+  <script src="vegetation.js?v=2026-09-19-wind-zones"></script>
+  <script src="zones.js?v=2026-09-19-wind-zones"></script>
+  <script src="assemblies.js?v=2026-09-19-wind-zones"></script>
+  <script src="gardenData.js?v=2026-09-19-wind-zones"></script>
+  <script src="prebuiltSessions.js?v=2026-09-19-wind-zones"></script>
+  <script src="rules.js?v=2026-09-19-wind-zones"></script>
+  <script src="sunPosition.js?v=2026-09-19-wind-zones"></script>
+  <script src="balls.js?v=2026-09-19-wind-zones"></script>
+  <script src="field.js?v=2026-09-19-wind-zones"></script>
+  <script src="activityField.js?v=2026-09-19-wind-zones"></script>
+  <script src="gardenField.js?v=2026-09-19-wind-zones"></script>
+  <script src="combineField.js?v=2026-09-19-wind-zones"></script>
+  <script src="siteField.js?v=2026-09-19-wind-zones"></script>
+  <script src="buildupEditor.js?v=2026-09-19-wind-zones"></script>
+  <script src="dataTab.js?v=2026-09-19-wind-zones"></script>
+  <script src="revitBridge.js?v=2026-09-19-wind-zones"></script>
+  <script src="sportController.js?v=2026-09-19-wind-zones"></script>
+  <script src="gardenController.js?v=2026-09-19-wind-zones"></script>
+  <script src="windZones.js?v=2026-09-19-wind-zones"></script>
+  <script src="siteController.js?v=2026-09-19-wind-zones"></script>
+  <script src="combineController.js?v=2026-09-19-wind-zones"></script>
+  <script src="analysisController.js?v=2026-09-19-wind-zones"></script>
+  <script src="compareController.js?v=2026-09-19-wind-zones"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-19-wind-zones"></script>
+  <script src="sessionGate.js?v=2026-09-19-wind-zones"></script>
+  <script src="main.js?v=2026-09-19-wind-zones"></script>
 </body>
 </html>

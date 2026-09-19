@@ -39,6 +39,10 @@ async function pollRevitBoundary() {
     // to the export so an import lands the layout ON the roof rather than at
     // Z=0 on the ground.
     combineState.roof.originZm = roof.origin_z_m ?? 0;
+    // How high the roof stands above the ground, worked out by the Revit add-in (topography, else the lowest level).
+    combineState.roof.heightAboveGroundM = roof.height_above_ground_m ?? 0;
+    combineState.roof.heightSource = roof.height_source ?? "";
+    if (typeof updateSiteUI === "function") updateSiteUI();
     document.getElementById("roofLength").value = roof.length_m;
     document.getElementById("roofWidth").value  = roof.width_m;
 

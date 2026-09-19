@@ -37,11 +37,13 @@ function setSiteLocation(lat, lng) {
       const p = siteMarker.getLatLng();
       siteState.lat = p.lat; siteState.lng = p.lng;
       if (typeof updateSiteUI === "function") updateSiteUI();
+      if (typeof resolveSiteRegion === "function") resolveSiteRegion();
     });
   } else {
     siteMarker.setLatLng([lat, lng]);
   }
   if (typeof updateSiteUI === "function") updateSiteUI();
+  if (typeof resolveSiteRegion === "function") resolveSiteRegion();
 }
 
 /**

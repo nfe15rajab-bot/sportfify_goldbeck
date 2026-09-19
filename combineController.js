@@ -7,7 +7,7 @@
  */
 
 const combineState = {
-  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, originZm: 0 },
+  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, originZm: 0, heightAboveGroundM: 0, heightSource: "" },
   items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
   suggestions: [],
   // Pushed-but-not-yet-placed pieces — a "Push to Combine" click lands here
@@ -438,7 +438,11 @@ function buildCombinedPayload() {
       world_origin_y_m: combineState.roof.originYm || 0,
       // Elevation of the pushed roof. Zero when the roof was typed in by hand
       // rather than pushed from Revit, which correctly means "ground level".
-      world_origin_z_m: combineState.roof.originZm || 0
+      world_origin_z_m: combineState.roof.originZm || 0,
+      // Height of the roof above the ground, for the wind analysis (roof zones scale with it). From the Revit model
+      // when a roof was pushed, or typed in the Site tab; 0 = not known, and the analyses say what they assumed.
+      height_above_ground_m: effectiveRoofHeight().height_m,
+      height_source: effectiveRoofHeight().source
     },
     // The five planner-tunable thresholds, so a Revit import can draw the
     // same setback inset the canvas shows (as a simple rectangle inset,
@@ -467,8 +471,22 @@ function buildCombinedPayload() {
       longitude_deg: siteState.lng,
       place_name: siteState.address || null,
       date: siteState.date,
-      time: siteState.time
+      time: siteState.time,
+      // The parts of the address a wind zone is looked up from (Nominatim), so a saved session can be re-read offline.
+      address_parts: siteState.region || null
     } : null,
+    // What the wind analysis needs to know about the site. Kept apart from site_location because a designer can set the
+    // wind zone by hand without a map location, and because orientation is the roof's, not the place's.
+    site_conditions: {
+      wind_zone: effectiveWindZone().zone || null,
+      wind_zone_manual: siteState.windZoneChoice !== "auto",
+      wind_zone_confidence: effectiveWindZone().confidence,
+      wind_zone_source: effectiveWindZone().basis || null,
+      // Degrees: the compass bearing of the top of the canvas, the same convention the sun compass draws with.
+      // null until the designer sets it: 0 is a real answer and must not be mistaken for "unknown".
+      north_deg: siteState.northSet ? siteState.northDeg : null,
+      north_set: siteState.northSet
+    },
     // Distinct provider build-up systems used by the drawn zones. Sent once at
     // the top level rather than repeated inside every zone: Revit creates one
     // floor type per system, not one per patch of ground.
@@ -636,6 +654,29 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.selectedId = null;
   combineState.selectedKind = null;
 
+  const sc = payload.site_conditions;
+  if (sc) {
+    siteState.northSet = sc.north_set ?? sc.north_deg != null;
+    if (sc.north_deg != null) {
+      siteState.northDeg = sc.north_deg;
+      document.getElementById("siteNorthDeg").value = sc.north_deg;
+      document.getElementById("site-north-val").textContent = `${sc.north_deg}°`;
+    }
+    siteState.windZoneChoice = sc.wind_zone_manual && sc.wind_zone ? String(sc.wind_zone) : "auto";
+  } else {
+    siteState.windZoneChoice = "auto";
+  }
+  document.getElementById("siteWindZone").value = siteState.windZoneChoice;
+  if (payload.site_location && payload.site_location.address_parts) {
+    // Re-read from the saved address parts: no connection needed, and the list is the one this build ships.
+    siteState.region = payload.site_location.address_parts;
+    siteState.windZoneAuto = typeof lookupWindZone === "function" ? lookupWindZone(siteState.region) : null;
+  }
+  combineState.roof.heightAboveGroundM = rc.height_above_ground_m || 0;
+  combineState.roof.heightSource = rc.height_source || "";
+  siteState.roofHeightOverride = null;
+  document.getElementById("siteRoofHeight").value = "";
+
   if (payload.site_location) {
     siteState.lat = payload.site_location.latitude_deg ?? siteState.lat;
     siteState.lng = payload.site_location.longitude_deg ?? siteState.lng;
@@ -655,6 +696,7 @@ function applySessionSnapshot(payload, opts = {}) {
     document.getElementById("siteDate").value = siteState.date;
     document.getElementById("siteTime").value = siteState.time;
   }
+  if (typeof updateSiteUI === "function") updateSiteUI();
 
   if (typeof refreshSuggestions === "function") refreshSuggestions();
   else if (typeof drawCombineCanvas === "function") drawCombineCanvas();

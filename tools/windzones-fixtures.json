@@ -1,0 +1,589 @@
+[
+ {
+  "name": "Hamburg (real Nominatim response, 53.5511, 9.9937)",
+  "address": {
+   "road": "Plan",
+   "suburb": "Altstadt",
+   "borough": "Hamburg-Mitte",
+   "city": "Hamburg",
+   "ISO3166-2-lvl4": "DE-HH",
+   "postcode": "20095",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Muenchen (real Nominatim response, 48.1374, 11.5755)",
+  "address": {
+   "tourism": "Glockenspiel",
+   "house_number": "8",
+   "road": "Marienplatz",
+   "quarter": "Kreuzviertel",
+   "suburb": "Altstadt-Lehel",
+   "city": "München",
+   "state": "Bayern",
+   "ISO3166-2-lvl4": "DE-BY",
+   "postcode": "80331",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Stuttgart (real Nominatim response, 48.7758, 9.1829)",
+  "address": {
+   "railway": "Charlottenplatz",
+   "road": "Charlottenplatz",
+   "neighbourhood": "Rathaus",
+   "suburb": "Stuttgart-Mitte",
+   "city": "Stuttgart",
+   "state": "Baden-Württemberg",
+   "ISO3166-2-lvl4": "DE-BW",
+   "postcode": "70173",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 1,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Westerland (real Nominatim response, 54.9079, 8.3033)",
+  "address": {
+   "house_number": "15",
+   "road": "Paulstraße",
+   "town": "Westerland",
+   "municipality": "Sylt",
+   "county": "Kreis Nordfriesland",
+   "state": "Schleswig-Holstein",
+   "ISO3166-2-lvl4": "DE-SH",
+   "postcode": "25980",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 4,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Bergen-Ruegen (real Nominatim response, 54.422, 13.43)",
+  "address": {
+   "road": "Waldstraße",
+   "suburb": "Rugard",
+   "town": "Bergen auf Rügen",
+   "municipality": "Bergen auf Rügen",
+   "county": "Vorpommern-Rügen",
+   "state": "Mecklenburg-Vorpommern",
+   "ISO3166-2-lvl4": "DE-MV",
+   "postcode": "18528",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 4,
+  "confidence": "conservative"
+ },
+ {
+  "name": "Osnabrueck (real Nominatim response, 52.2799, 8.0472)",
+  "address": {
+   "house_number": "1",
+   "road": "Nonnenpfad",
+   "suburb": "Gartlage",
+   "city": "Osnabrück",
+   "state": "Niedersachsen",
+   "ISO3166-2-lvl4": "DE-NI",
+   "postcode": "49074",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 1,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Bremerhaven (real Nominatim response, 53.5396, 8.5809)",
+  "address": {
+   "building": "Haus C",
+   "house_number": "21",
+   "road": "Columbusstraße",
+   "neighbourhood": "Mitte-Süd",
+   "suburb": "Mitte",
+   "city_district": "Stadtbezirk Bremerhaven-Nord",
+   "city": "Bremerhaven",
+   "state": "Bremen",
+   "ISO3166-2-lvl4": "DE-HB",
+   "postcode": "27568",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 4,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Koeln (real Nominatim response, 50.9375, 6.9603)",
+  "address": {
+   "house_number": "1",
+   "road": "Unter Käster",
+   "neighbourhood": "Martinsviertel",
+   "suburb": "Altstadt-Nord",
+   "city_district": "Innenstadt",
+   "city": "Köln",
+   "state": "Nordrhein-Westfalen",
+   "ISO3166-2-lvl4": "DE-NW",
+   "postcode": "50667",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 1,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Kiel (real Nominatim response, 54.3233, 10.1228)",
+  "address": {
+   "house_number": "31",
+   "road": "Eckernförder Straße",
+   "suburb": "Exerzierplatz",
+   "city": "Kiel",
+   "state": "Schleswig-Holstein",
+   "ISO3166-2-lvl4": "DE-SH",
+   "postcode": "24116",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "BadMuender (real Nominatim response, 52.197, 9.467)",
+  "address": {
+   "house_number": "17",
+   "road": "Osterstraße",
+   "village": "Nettelrede",
+   "town": "Bad Münder am Deister",
+   "county": "Landkreis Hameln-Pyrmont",
+   "state": "Niedersachsen",
+   "ISO3166-2-lvl4": "DE-NI",
+   "postcode": "31848",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 2,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Hattingen (real Nominatim response, 51.399, 7.187)",
+  "address": {
+   "house_number": "21",
+   "road": "Schulstraße",
+   "residential": "Innenstadt",
+   "suburb": "Baak",
+   "town": "Hattingen",
+   "county": "Ennepe-Ruhr-Kreis",
+   "state": "Nordrhein-Westfalen",
+   "ISO3166-2-lvl4": "DE-NW",
+   "postcode": "45525",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 1,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Kloster-Sylt-Hoernum (real Nominatim response, 54.76, 8.29)",
+  "address": {
+   "house_number": "11",
+   "road": "Budersandstraße",
+   "village": "Hörnum (Sylt)",
+   "municipality": "Landschaft Sylt",
+   "county": "Kreis Nordfriesland",
+   "state": "Schleswig-Holstein",
+   "ISO3166-2-lvl4": "DE-SH",
+   "postcode": "25997",
+   "country": "Deutschland",
+   "country_code": "de"
+  },
+  "zone": 4,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Rinteln, Schaumburg (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NI",
+   "county": "Landkreis Schaumburg",
+   "town": "Rinteln"
+  },
+  "zone": 1,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Stadthagen, Schaumburg (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NI",
+   "county": "Landkreis Schaumburg",
+   "town": "Stadthagen"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Bramsche, Landkreis Osnabrück (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NI",
+   "county": "Landkreis Osnabrück",
+   "town": "Bramsche"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Fehmarn, Ostholstein (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-SH",
+   "county": "Kreis Ostholstein",
+   "municipality": "Fehmarn"
+  },
+  "zone": 4,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Heiligenhafen, Ostholstein (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-SH",
+   "county": "Kreis Ostholstein",
+   "town": "Heiligenhafen"
+  },
+  "zone": 3,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Eutin, Ostholstein (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-SH",
+   "county": "Kreis Ostholstein",
+   "town": "Eutin"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Helgoland, Pinneberg (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-SH",
+   "county": "Kreis Pinneberg",
+   "municipality": "Helgoland"
+  },
+  "zone": 4,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Elmshorn, Pinneberg (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-SH",
+   "county": "Kreis Pinneberg",
+   "town": "Elmshorn"
+  },
+  "zone": 3,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Scheeßel, Rotenburg (unknown Samtgemeinde membership) (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NI",
+   "county": "Landkreis Rotenburg (Wümme)",
+   "town": "Scheeßel"
+  },
+  "zone": 3,
+  "confidence": "conservative"
+ },
+ {
+  "name": "Zeven, Rotenburg (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NI",
+   "county": "Landkreis Rotenburg (Wümme)",
+   "town": "Zeven"
+  },
+  "zone": 3,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Gladbeck, Recklinghausen (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NW",
+   "county": "Kreis Recklinghausen",
+   "town": "Gladbeck"
+  },
+  "zone": 1,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Herten, Recklinghausen (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NW",
+   "county": "Kreis Recklinghausen",
+   "town": "Herten"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Halle (Westf.), Gütersloh (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NW",
+   "county": "Kreis Gütersloh",
+   "town": "Halle (Westf.)"
+  },
+  "zone": 1,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Gütersloh city (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-NW",
+   "county": "Kreis Gütersloh",
+   "town": "Gütersloh"
+  },
+  "zone": 2,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Konstanz (split Kreis, shore communes unlisted) (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BW",
+   "county": "Landkreis Konstanz",
+   "city": "Konstanz"
+  },
+  "zone": 2,
+  "confidence": "conservative"
+ },
+ {
+  "name": "Friedrichshafen, Bodenseekreis (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BW",
+   "county": "Bodenseekreis",
+   "city": "Friedrichshafen"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Illerkirchberg, Alb-Donau-Kreis (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BW",
+   "county": "Alb-Donau-Kreis",
+   "village": "Illerkirchberg"
+  },
+  "zone": 2,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Ulm (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BW",
+   "city": "Ulm"
+  },
+  "zone": 1,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Füssen, Ostallgäu (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BY",
+   "county": "Landkreis Ostallgäu",
+   "town": "Füssen"
+  },
+  "zone": 1,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Kaufbeuren (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BY",
+   "city": "Kaufbeuren"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Nürnberg (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BY",
+   "city": "Nürnberg"
+  },
+  "zone": 1,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Kiefersfelden, Landkreis Rosenheim (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BY",
+   "county": "Landkreis Rosenheim",
+   "village": "Kiefersfelden"
+  },
+  "zone": 1,
+  "confidence": "gemeinde"
+ },
+ {
+  "name": "Rosenheim city (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BY",
+   "city": "Rosenheim"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Eisenach, Thüringen (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-TH",
+   "city": "Eisenach"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Suhl, Thüringen (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-TH",
+   "city": "Suhl"
+  },
+  "zone": 1,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Trier (left of the Moselle unknown) (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-RP",
+   "city": "Trier"
+  },
+  "zone": 2,
+  "confidence": "conservative"
+ },
+ {
+  "name": "Mainz (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-RP",
+   "city": "Mainz"
+  },
+  "zone": 1,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Rostock city (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-MV",
+   "city": "Rostock"
+  },
+  "zone": 3,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Schwerin (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-MV",
+   "city": "Schwerin"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Berlin (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-BE",
+   "city": "Berlin"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Dresden (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-SN",
+   "city": "Dresden"
+  },
+  "zone": 2,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Frankfurt (Hessen) (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-HE",
+   "city": "Frankfurt am Main"
+  },
+  "zone": 1,
+  "confidence": "kreis"
+ },
+ {
+  "name": "Wien (outside Germany) (constructed)",
+  "address": {
+   "country_code": "at",
+   "ISO3166-2-lvl4": "AT-9",
+   "city": "Wien"
+  },
+  "zone": null,
+  "confidence": "none"
+ },
+ {
+  "name": "Unmatched Landkreis in a state without a default (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-SH",
+   "county": "Kreis Nirgendwo",
+   "town": "Irgendwo"
+  },
+  "zone": null,
+  "confidence": "none"
+ },
+ {
+  "name": "Landkreis Rostock, Gemeinde in an unlisted Amt (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-MV",
+   "county": "Landkreis Rostock",
+   "town": "Bad Doberan"
+  },
+  "zone": 3,
+  "confidence": "conservative"
+ },
+ {
+  "name": "Güstrow, Landkreis Rostock (constructed)",
+  "address": {
+   "country_code": "de",
+   "ISO3166-2-lvl4": "DE-MV",
+   "county": "Landkreis Rostock",
+   "town": "Güstrow"
+  },
+  "zone": 2,
+  "confidence": "gemeinde"
+ }
+]
