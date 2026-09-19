@@ -381,6 +381,8 @@ function renderZonePanel() {
   const selected = combineState.selectedKind === "zone" ? getZone(combineState.selectedId) : null;
 
   el.innerHTML = `
+    ${typeof roofFinishSectionHtml === "function" ? roofFinishSectionHtml() : ""}
+
     <div class="section">
       <label>What are you drawing?</label>
       <select id="zone-kind-select">${kindOptions}</select>
@@ -434,6 +436,8 @@ function assemblyStripSvg(assembly) {
 }
 
 function wireZonePanel() {
+  if (typeof wireRoofFinishSection === "function") wireRoofFinishSection();
+
   const kindSel = document.getElementById("zone-kind-select");
   if (kindSel) kindSel.addEventListener("change", () => {
     combineState.zoneKind = kindSel.value;

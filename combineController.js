@@ -479,6 +479,10 @@ function buildCombinedPayload() {
     // Ground zones — planting, lawn, walkways. A rectangle and a build-up is
     // everything Revit needs to draw a real layered floor, which is why these
     // travel separately from placements rather than pretending to be objects.
+    // The leftover surface, as ONE floor with holes: the roof boundary is the
+    // outer loop and every zone and court is an opening. Revit draws the slab
+    // the way it would be drawn by hand — coplanar, nothing overlapping.
+    roof_finish: typeof buildRoofFinishPayload === "function" ? buildRoofFinishPayload() : null,
     zones: typeof buildZonePayload === "function"
       ? (combineState.zones || []).map(buildZonePayload)
       : [],

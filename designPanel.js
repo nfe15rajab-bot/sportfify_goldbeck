@@ -353,8 +353,12 @@ function computeDesignMetrics(circulation) {
 
   const pieces = computePieceCost();
   const plants = computePlantCost();
-  const costTotal = takeoff.cost + pieces.total + plants.total;
-  const anythingPriced = takeoff.cost > 0 || pieces.total > 0 || plants.total > 0;
+  // The leftover between the courts and the beds is circulation, and it is
+  // built of something — so it costs something.
+  const finish = typeof roofFinishMetrics === "function" ? roofFinishMetrics() : null;
+  const finishCost = finish?.cost || 0;
+  const costTotal = takeoff.cost + pieces.total + plants.total + finishCost;
+  const anythingPriced = takeoff.cost > 0 || pieces.total > 0 || plants.total > 0 || finishCost > 0;
 
   return {
     // Ground, pieces and planting, each measured in its own unit and summed.
@@ -362,7 +366,7 @@ function computeDesignMetrics(circulation) {
     // an unpriced one are different facts.
     cost: {
       value: anythingPriced ? costTotal : null,
-      detail: { takeoff, pieces, plants, total: costTotal },
+      detail: { takeoff, pieces, plants, finish, total: costTotal },
     },
     co2: { value: carbon.totalKg, detail: carbon },
     quality: { value: quality.score, detail: quality },
@@ -490,10 +494,35 @@ function renderDesignDetail(m) {
       return head + layers;
     });
 
+    /* The finish reads as ground, because it is — the same question asked of
+       everything you did not draw on. Expandable for the same reason: you
+       chose a system, its layers came with it. */
+    const f = d.finish;
+    const finishRows = (f && f.assembly) ? (() => {
+      const key = "__finish";
+      const open = openBuildUps.has(key);
+      const label = f.assembly.provider === "Generic"
+        ? f.assembly.system_name : `${f.assembly.provider} ${f.assembly.system_name}`;
+      const head = `<tr class="receipt-expandable${open ? " open" : ""}" data-buildup="${key}">
+          <td><span class="receipt-caret">${open ? "▾" : "▸"}</span>${label}
+            <span class="receipt-sub-line">${Math.round(f.netArea)} m² left over · € ${Math.round(f.perM2)}/m²${open ? "" : " · tap for layers"}</span></td>
+          <td class="num">${eur(f.cost)}</td></tr>`;
+      if (!open) return [head];
+      const layers = (f.assembly.layers || []).map(l => {
+        const byVolume = l.price_unit === "EUR/m3";
+        const q = byVolume ? f.netArea * ((l.mm || 0) / 1000) : f.netArea;
+        return line(`<span class="receipt-sub">${l.name}</span>`,
+          `${qty(q)} ${byVolume ? "m³" : "m²"}${l.price != null ? ` @ ${eur(l.price)}` : ""}`,
+          l.price == null ? "no price" : eur(q * l.price), "receipt-layer");
+      }).join("");
+      return [head + layers];
+    })() : [];
+
     const receipt = `<table class="design-detail-table receipt">
         ${section("Courts &amp; equipment", pieceRows)}
         ${section("Planting", plantRows)}
         ${section("Ground build-ups", groundRows)}
+        ${section("Roof finish", finishRows)}
         <tr class="receipt-total"><td>Total</td><td class="num">${eur(d.total)}</td></tr>
       </table>`;
 
@@ -504,6 +533,11 @@ function renderDesignDetail(m) {
     t.byAssembly.forEach(a => a.layers.forEach(l => add(l.costGroup, l.cost)));
     d.pieces.grouped.forEach(r => add(r.costGroup, r.cost));
     d.plants.grouped.forEach(r => add(r.costGroup, r.cost));
+    if (d.finish?.assembly) (d.finish.assembly.layers || []).forEach(l => {
+      if (l.price == null) return;
+      const q = l.price_unit === "EUR/m3" ? d.finish.netArea * ((l.mm || 0) / 1000) : d.finish.netArea;
+      add(l.cost_group, q * l.price);
+    });
     const KG_LABEL = { "363": "Roof coverings", "530": "Surfaces", "560": "Fitted items", "570": "Planted areas" };
     const byGroup = groups.size
       ? `<label class="design-detail-sub">By DIN 276 cost group</label>` + detailRows(
