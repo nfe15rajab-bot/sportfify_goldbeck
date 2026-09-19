@@ -203,6 +203,7 @@ function drawCombineCanvas() {
     ${roofShapeSvg(roof, scale, roofOx, roofOy, roofPxW, roofPxH)}
     ${snapGridSvg(roof, scale, roofOx, roofOy)}
     ${typeof zonesSvg === "function" ? zonesSvg(scale, roofOx, roofOy) : ""}
+    ${typeof structureSvg === "function" ? structureSvg(scale, roofOx, roofOy) : ""}
     ${setbackGuideSvg(roof, scale, roofOx, roofOy)}
   `;
 

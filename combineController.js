@@ -10,6 +10,9 @@ const combineState = {
   roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, originZm: 0, heightAboveGroundM: 0, heightSource: "" },
   items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
   suggestions: [],
+  // The roof's structural grid and columns (from a Revit push or a loaded session; see structure.js), and the deck
+  // capacity the structural engineer gave, in kN/m². null = none / not entered.
+  structure: null, deckCapacityKnM2: null, showStructure: true,
   // Pushed-but-not-yet-placed pieces — a "Push to Combine" click lands here
   // first (mini-game inventory tray, rendered beside the roof canvas), not
   // directly on the roof. Dragging a thumbnail out onto the canvas is what
@@ -497,6 +500,9 @@ function buildCombinedPayload() {
     zones: typeof buildZonePayload === "function"
       ? (combineState.zones || []).map(buildZonePayload)
       : [],
+    // The structural grid and columns (in the roof's canvas coordinates, like the placements) and the deck capacity, for the
+    // structural load analysis. Absent when there is neither.
+    ...(typeof structurePayload === "function" && structurePayload() ? { structure: structurePayload() } : {}),
     placements
   };
 
@@ -676,6 +682,10 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.heightSource = rc.height_source || "";
   siteState.roofHeightOverride = null;
   document.getElementById("siteRoofHeight").value = "";
+  if (typeof structureFromPayload === "function") {
+    combineState.structure = structureFromPayload(payload.structure);
+    combineState.deckCapacityKnM2 = payload.structure && payload.structure.deck_capacity_kn_m2 > 0 ? payload.structure.deck_capacity_kn_m2 : null;
+  }
 
   if (payload.site_location) {
     siteState.lat = payload.site_location.latitude_deg ?? siteState.lat;

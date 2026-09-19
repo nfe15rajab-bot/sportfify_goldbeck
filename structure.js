@@ -1,0 +1,116 @@
+/**
+ * structure.js — the roof's structural grid and columns, and the deck capacity.
+ *
+ * The grid lines and columns come with a roof pushed from Revit (revitBridge.js), already in the roof's own plan
+ * coordinates: x right, y DOWN from the top edge, the same as everything drawn on the Combine canvas. They are drawn
+ * over the roof so the layout can be judged against the structure it sits on, and they travel in the export
+ * ("structure") for the structural load analysis, which sums the weight of the layout bay by bay.
+ *
+ * The deck capacity is the one number the layout cannot know: what the structural engineer says the roof deck can carry,
+ * characteristic permanent + imposed load in kN/m². Until it is entered the analysis uses a placeholder and says so.
+ */
+
+const STRUCTURE_PLACEHOLDER_CAPACITY_KN_M2 = 8; // shown in the hint only; the analysis owns the real default (StructureModel.DefaultCapacityKnM2)
+
+/** The export's "structure" block (or a Revit push's roof.structure) as the app keeps it, or null when it carries no grid and no columns. */
+function structureFromPayload(s) {
+  if (!s) return null;
+  const gridLines = (s.grid_lines || [])
+    .filter(g => g && g.start_m && g.end_m)
+    .map(g => ({ name: g.name || "", x1: g.start_m.x_m, y1: g.start_m.y_m, x2: g.end_m.x_m, y2: g.end_m.y_m }));
+  const columns = (s.columns || []).map(c => ({ label: c.label || "", x: c.x_m, y: c.y_m }));
+  if (!gridLines.length && !columns.length) return null;
+  return { source: s.source || "revit", gridLines, columns };
+}
+
+/** The "structure" block of the export: null when there is nothing to say, else the grid (if any) and the deck capacity (if entered). */
+function structurePayload() {
+  const st = combineState.structure;
+  const cap = combineState.deckCapacityKnM2;
+  if (!st && !(cap > 0)) return null;
+  return {
+    source: st ? st.source : "manual",
+    deck_capacity_kn_m2: cap > 0 ? cap : null,
+    grid_lines: st ? st.gridLines.map(g => ({ name: g.name, start_m: { x_m: g.x1, y_m: g.y1 }, end_m: { x_m: g.x2, y_m: g.y2 } })) : [],
+    columns: st ? st.columns.map(c => ({ label: c.label, x_m: c.x, y_m: c.y })) : []
+  };
+}
+
+/** Grid lines (chain-dotted, with a name bubble outside the roof edge) and columns, for the Combine canvas. Not interactive. */
+function structureSvg(scale, roofOx, roofOy) {
+  const st = combineState.structure;
+  if (!st || combineState.showStructure === false) return "";
+  const BUBBLE_R = 8;
+  let out = "";
+
+  st.gridLines.forEach(g => {
+    const ax = roofOx + g.x1 * scale, ay = roofOy + g.y1 * scale;
+    const bx = roofOx + g.x2 * scale, by = roofOy + g.y2 * scale;
+    out += `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="#5b8def" stroke-width="1"
+                  stroke-dasharray="10,3,2,3" opacity="0.75" pointer-events="none"/>`;
+    if (!g.name) return;
+    // The bubble sits just beyond the line's top end (vertical lines) or left end (horizontal ones), where a drawing would put it.
+    const vertical = Math.abs(g.y2 - g.y1) >= Math.abs(g.x2 - g.x1);
+    const startFirst = vertical ? g.y1 <= g.y2 : g.x1 <= g.x2;
+    const [px, py, qx, qy] = startFirst ? [ax, ay, bx, by] : [bx, by, ax, ay];
+    const len = Math.hypot(qx - px, qy - py) || 1;
+    const cx = px - (qx - px) / len * (BUBBLE_R + 2);
+    const cy = py - (qy - py) / len * (BUBBLE_R + 2);
+    out += `<circle cx="${cx}" cy="${cy}" r="${BUBBLE_R}" fill="#fff" stroke="#5b8def" stroke-width="1" pointer-events="none"/>
+            <text x="${cx}" y="${cy + 3.5}" text-anchor="middle" font-size="10" font-weight="600"
+                  font-family="'Titillium Web', Arial, sans-serif" fill="#2f5fbf" pointer-events="none">${escapeStructureText(g.name)}</text>`;
+  });
+
+  st.columns.forEach(c => {
+    const x = roofOx + c.x * scale, y = roofOy + c.y * scale;
+    out += `<rect x="${x - 3.5}" y="${y - 3.5}" width="7" height="7" fill="#334155" stroke="#fff" stroke-width="0.8" pointer-events="none"/>`;
+  });
+  return out;
+}
+
+function escapeStructureText(s) {
+  return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+}
+
+/** Status line, capacity field and checkbox in the Site tab. Safe to call before the elements exist. */
+function updateStructureUI() {
+  const status = document.getElementById("site-structure-status");
+  const st = combineState.structure;
+  if (status) {
+    const cap = combineState.deckCapacityKnM2;
+    const capText = cap > 0
+      ? `Deck capacity ${cap} kN/m² (as entered).`
+      : `Deck capacity not entered: the analysis assumes ${STRUCTURE_PLACEHOLDER_CAPACITY_KN_M2} kN/m² as a placeholder and says so.`;
+    if (st) {
+      const vertical = st.gridLines.filter(g => Math.abs(g.y2 - g.y1) >= Math.abs(g.x2 - g.x1)).length;
+      status.textContent = `${st.source === "revit" ? "From Revit" : "Entered"}: ${vertical} + ${st.gridLines.length - vertical} grid lines, ${st.columns.length} columns. ${capText}`;
+    } else {
+      status.textContent = `No structural grid: push the roof from Revit (its grids and columns come with it), or the analysis assumes a regular 8.4 m grid. ${capText}`;
+    }
+  }
+  const capInput = document.getElementById("siteDeckCapacity");
+  if (capInput && document.activeElement !== capInput) capInput.value = combineState.deckCapacityKnM2 > 0 ? combineState.deckCapacityKnM2 : "";
+  const show = document.getElementById("siteShowStructure");
+  if (show) show.checked = combineState.showStructure !== false;
+  const clear = document.getElementById("btn-clear-structure");
+  if (clear) clear.style.display = st ? "" : "none";
+}
+
+function redrawCombineIfShown() {
+  if (typeof drawCombineCanvas === "function" && typeof activeMode !== "undefined" && activeMode === "combine") drawCombineCanvas();
+}
+
+document.getElementById("siteDeckCapacity")?.addEventListener("input", e => {
+  const v = parseFloat(e.target.value);
+  combineState.deckCapacityKnM2 = Number.isFinite(v) && v > 0 ? v : null;
+  updateStructureUI();
+});
+document.getElementById("siteShowStructure")?.addEventListener("change", e => {
+  combineState.showStructure = e.target.checked;
+  redrawCombineIfShown();
+});
+document.getElementById("btn-clear-structure")?.addEventListener("click", () => {
+  combineState.structure = null;
+  updateStructureUI();
+  redrawCombineIfShown();
+});

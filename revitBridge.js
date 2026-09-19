@@ -42,6 +42,9 @@ async function pollRevitBoundary() {
     // How high the roof stands above the ground, worked out by the Revit add-in (topography, else the lowest level).
     combineState.roof.heightAboveGroundM = roof.height_above_ground_m ?? 0;
     combineState.roof.heightSource = roof.height_source ?? "";
+    // The structural grid and columns under the roof, already in canvas coordinates. A push replaces them (a different
+    // roof has a different structure); the deck capacity is the designer's own entry and stays.
+    if (typeof structureFromPayload === "function") combineState.structure = structureFromPayload(roof.structure);
     if (typeof updateSiteUI === "function") updateSiteUI();
     document.getElementById("roofLength").value = roof.length_m;
     document.getElementById("roofWidth").value  = roof.width_m;

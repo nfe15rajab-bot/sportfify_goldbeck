@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-19-wind-zones" />
+  <link rel="stylesheet" href="style.css?v=2026-09-19-structure" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -153,6 +153,15 @@
           <label>Roof height above ground (m)</label>
           <input type="number" id="siteRoofHeight" min="0" step="0.5" placeholder="from the Revit model" />
           <p class="hint" id="site-height-status">Comes with a roof pushed from Revit; type a value to override it.</p>
+        </div>
+        <div class="section planner-only">
+          <label>Structure (grid &amp; deck)</label>
+          <p class="hint" id="site-structure-status">No structural grid yet.</p>
+          <p class="hint" style="display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="siteShowStructure" checked style="margin:0" /> Show grid and columns on the roof
+          </p>
+          <input type="number" id="siteDeckCapacity" min="0" step="0.5" placeholder="Deck capacity, kN/m² (G + Q)" title="What the roof deck can carry, characteristic permanent + imposed load, from the structural engineer" />
+          <button class="btn-export" id="btn-clear-structure" style="display:none">Remove the grid</button>
         </div>
         <div class="section">
           <label>Sun date &amp; time</label>
@@ -890,33 +899,34 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-19-wind-zones"></script>
-  <script src="activitiesData.js?v=2026-09-19-wind-zones"></script>
-  <script src="vegetation.js?v=2026-09-19-wind-zones"></script>
-  <script src="zones.js?v=2026-09-19-wind-zones"></script>
-  <script src="assemblies.js?v=2026-09-19-wind-zones"></script>
-  <script src="gardenData.js?v=2026-09-19-wind-zones"></script>
-  <script src="prebuiltSessions.js?v=2026-09-19-wind-zones"></script>
-  <script src="rules.js?v=2026-09-19-wind-zones"></script>
-  <script src="sunPosition.js?v=2026-09-19-wind-zones"></script>
-  <script src="balls.js?v=2026-09-19-wind-zones"></script>
-  <script src="field.js?v=2026-09-19-wind-zones"></script>
-  <script src="activityField.js?v=2026-09-19-wind-zones"></script>
-  <script src="gardenField.js?v=2026-09-19-wind-zones"></script>
-  <script src="combineField.js?v=2026-09-19-wind-zones"></script>
-  <script src="siteField.js?v=2026-09-19-wind-zones"></script>
-  <script src="buildupEditor.js?v=2026-09-19-wind-zones"></script>
-  <script src="dataTab.js?v=2026-09-19-wind-zones"></script>
-  <script src="revitBridge.js?v=2026-09-19-wind-zones"></script>
-  <script src="sportController.js?v=2026-09-19-wind-zones"></script>
-  <script src="gardenController.js?v=2026-09-19-wind-zones"></script>
-  <script src="windZones.js?v=2026-09-19-wind-zones"></script>
-  <script src="siteController.js?v=2026-09-19-wind-zones"></script>
-  <script src="combineController.js?v=2026-09-19-wind-zones"></script>
-  <script src="analysisController.js?v=2026-09-19-wind-zones"></script>
-  <script src="compareController.js?v=2026-09-19-wind-zones"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-19-wind-zones"></script>
-  <script src="sessionGate.js?v=2026-09-19-wind-zones"></script>
-  <script src="main.js?v=2026-09-19-wind-zones"></script>
+  <script src="data.js?v=2026-09-19-structure"></script>
+  <script src="activitiesData.js?v=2026-09-19-structure"></script>
+  <script src="vegetation.js?v=2026-09-19-structure"></script>
+  <script src="zones.js?v=2026-09-19-structure"></script>
+  <script src="structure.js?v=2026-09-19-structure"></script>
+  <script src="assemblies.js?v=2026-09-19-structure"></script>
+  <script src="gardenData.js?v=2026-09-19-structure"></script>
+  <script src="prebuiltSessions.js?v=2026-09-19-structure"></script>
+  <script src="rules.js?v=2026-09-19-structure"></script>
+  <script src="sunPosition.js?v=2026-09-19-structure"></script>
+  <script src="balls.js?v=2026-09-19-structure"></script>
+  <script src="field.js?v=2026-09-19-structure"></script>
+  <script src="activityField.js?v=2026-09-19-structure"></script>
+  <script src="gardenField.js?v=2026-09-19-structure"></script>
+  <script src="combineField.js?v=2026-09-19-structure"></script>
+  <script src="siteField.js?v=2026-09-19-structure"></script>
+  <script src="buildupEditor.js?v=2026-09-19-structure"></script>
+  <script src="dataTab.js?v=2026-09-19-structure"></script>
+  <script src="revitBridge.js?v=2026-09-19-structure"></script>
+  <script src="sportController.js?v=2026-09-19-structure"></script>
+  <script src="gardenController.js?v=2026-09-19-structure"></script>
+  <script src="windZones.js?v=2026-09-19-structure"></script>
+  <script src="siteController.js?v=2026-09-19-structure"></script>
+  <script src="combineController.js?v=2026-09-19-structure"></script>
+  <script src="analysisController.js?v=2026-09-19-structure"></script>
+  <script src="compareController.js?v=2026-09-19-structure"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-19-structure"></script>
+  <script src="sessionGate.js?v=2026-09-19-structure"></script>
+  <script src="main.js?v=2026-09-19-structure"></script>
 </body>
 </html>
