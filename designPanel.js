@@ -100,6 +100,22 @@ function computeQuantityTakeoff() {
 }
 
 /**
+ * Which catalog material a placed piece is made of.
+ *
+ * A layout saved before the tier default existed — or any prebuilt session —
+ * carries no reference material at all, which made it read as free and as
+ * carbon-neutral. Falling back to what its quality tier means fixes both,
+ * since cost and carbon look the piece up the same way.
+ */
+function referenceMaterialName(item) {
+  const m = item.sourceJson?.materials || item.sourceJson?.garden?.materials || {};
+  return m.reference_material
+    || (typeof QUALITY_REFERENCE_MATERIAL !== "undefined"
+        ? QUALITY_REFERENCE_MATERIAL[m.quality_level] : null)
+    || null;
+}
+
+/**
  * Courts, activity pieces and equipment: area times the reference material's
  * price per m². A piece with no reference material picked, or a material with
  * no price, is counted as missing rather than as free — the same rule the LCA
@@ -114,8 +130,7 @@ function computePieceCost() {
     if (typeof getFootprint !== "function") return;
     const fp = getFootprint(it);
     const area = fp.w * fp.h;
-    const name = it.sourceJson?.materials?.reference_material
-      || it.sourceJson?.garden?.materials?.reference_material;
+    const name = referenceMaterialName(it);
     const mat = name ? materials.find(m => m.name === name) : null;
     if (!mat || mat.priceValue == null) { missing++; rows.push({ label: it.label, areaM2: area, cost: null }); return; }
     // Per m2 whatever the unit says: a piece is a surface, and a m3 price on a
@@ -253,8 +268,7 @@ function computeCarbonMetric() {
   }
   let totalKg = 0, covered = 0;
   items.forEach(it => {
-    const name = it.sourceJson?.materials?.reference_material
-      || it.sourceJson?.garden?.materials?.reference_material;
+    const name = referenceMaterialName(it);
     const mat = name ? materials.find(m => m.name === name) : null;
     if (mat && mat.embodiedCarbonValue != null) {
       const fp = getFootprint(it);

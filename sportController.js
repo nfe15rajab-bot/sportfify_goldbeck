@@ -112,7 +112,10 @@ function updateActivityUI() {
 
 /* ── Sport Listeners & Exports ── */
 document.getElementById("variant").addEventListener("change", e => { state.variant = e.target.value; updateUI(); });
-document.getElementById("capacity").addEventListener("input", e => { state.capacity = Number(e.target.value); document.getElementById("cap-val").textContent = state.capacity === 0 ? "No stands" : `${state.capacity} seats`; updateUI(); });
+// Spectator stands removed: a rooftop court is not a venue with seating, and
+// the slider only ever added grandstand geometry nobody was designing for.
+// state.capacity stays at 0 so drawField(), the DXF export and the payload all
+// keep working unchanged — they simply always draw no stands.
 document.querySelectorAll("#sportConfigurator .q-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("#sportConfigurator .q-btn").forEach(b => b.classList.remove("active"));
@@ -147,7 +150,11 @@ initSportReferenceDropdowns();
 function buildSportPayload() {
   const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
   const mat = MATERIALS[state.quality];
-  const referenceMaterial = readReferenceSelection(document.getElementById("sportMaterialSelect"), document.getElementById("sportMaterialManual"), sportMaterialRefOptions);
+  // Falls back to the tier's own surface when nothing was picked, so a court
+  // always arrives with a material — and therefore a price — rather than
+  // depending on an optional dropdown somebody has to remember.
+  const referenceMaterial = readReferenceSelection(document.getElementById("sportMaterialSelect"), document.getElementById("sportMaterialManual"), sportMaterialRefOptions)
+    || QUALITY_REFERENCE_MATERIAL[state.quality] || null;
   const referenceProvider = readReferenceSelection(document.getElementById("sportProviderSelect"), document.getElementById("sportProviderManual"), sportProviderRefOptions);
   return {
     version: "1.0", generator: "Sportify",
