@@ -112,6 +112,18 @@ function analysisParamCardHtml(item) {
  * and substrate depth are what decide whether a plant can go on a roof at all,
  * and a species without them can't be placed.
  */
+/**
+ * A price, with how sure of it we are. Every catalog figure carries a
+ * quoted/estimated flag, and showing the number without the flag would be
+ * worse than showing nothing — the same rule the thicknesses follow.
+ */
+function priceHint(value, unit, quoted, source) {
+  if (value == null) return `<p class="hint">No price yet.</p>`;
+  const u = (unit || "").replace("EUR/", "").replace("m2", "m²").replace("m3", "m³");
+  return `<p class="hint"><strong>€ ${value}${u ? " / " + u : ""}</strong> — ` +
+    `${quoted ? "supplier quote" : "estimated"}${source ? `<br><span class="hint">${source}</span>` : ""}</p>`;
+}
+
 function speciesCardHtml(p) {
   const hasDims = p.matureHeightM > 0 && p.crownM > 0;
   return `
@@ -125,6 +137,7 @@ function speciesCardHtml(p) {
           <div class="dim-card"><div class="val">${p.minSubstrateMm || "—"} mm</div><div class="lbl">Min. substrate</div></div>
         </div>`
         : `<p class="hint">⚠ No roof dimensions — can't be placed until height, crown and substrate are filled in.</p>`}
+      ${priceHint(p.priceValue, p.priceUnit, p.priceIsQuoted, p.priceSource)}
       ${p.notes ? `<p class="hint">${p.notes}</p>` : ""}
       ${p.sunRequirement ? `<p class="hint">Sun: ${p.sunRequirement} · Drought: ${p.droughtTolerance || "—"}</p>` : ""}
       ${p.source ? `<p class="hint">Source: ${p.sourceUrl ? `<a href="${p.sourceUrl}" target="_blank" rel="noopener">${p.source}</a>` : p.source}${p.dimensionsPublished ? " — published figures" : ""}</p>` : ""}
@@ -147,6 +160,16 @@ function buildupCardHtml(a) {
         ${a.buildUpMm ? `<div class="dim-card"><div class="val" style="${Math.abs(total - a.buildUpMm) > 5 ? "color:#f59e0b" : ""}">${a.buildUpMm}</div><div class="lbl">Published${Math.abs(total - a.buildUpMm) > 5 ? " ⚠ differs" : ""}</div></div>` : ""}
         <div class="dim-card"><div class="val">${a.saturatedKgM2 ?? "—"}</div><div class="lbl">Saturated kg/m²</div></div>
         <div class="dim-card"><div class="val">${a.waterStorageLM2 ?? "—"}</div><div class="lbl">Water storage L/m²</div></div>
+        <div class="dim-card"><div class="val">${(() => {
+          // Per m2 of zone: volume layers priced through their own thickness,
+          // sheet goods straight per m2. The same arithmetic the cost panel
+          // does, so the catalog and the receipt cannot disagree.
+          const per = layers.reduce((sum, l) => {
+            if (l.priceValue == null) return sum;
+            return sum + (l.priceUnit === "EUR/m3" ? l.priceValue * ((l.thicknessMm || 0) / 1000) : l.priceValue);
+          }, 0);
+          return per ? "€ " + Math.round(per) : "—";
+        })()}</div><div class="lbl">Per m² (estimated)</div></div>
       </div>
       <p class="hint" style="margin-top:8px"><strong>${layers.length} layers</strong></p>
       ${layers.map(l => `<p class="hint">${l.layerOrder + 1}. ${l.name} — <strong>${l.thicknessMm} mm</strong> (${l.function}, ${l.thicknessSource})</p>`).join("")}

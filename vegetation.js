@@ -291,6 +291,11 @@ function renderVegetationPanel() {
             ? `<a href="${type.source_url}" target="_blank" rel="noopener">${type.source}</a> figures`
             : `${type.source}`}
       </p>
+      <p class="hint">
+        ${type.price == null
+          ? `No price in the catalog for this species yet.`
+          : `<strong>€ ${type.price}</strong> per plant — ${type.price_quoted ? "supplier quote" : "estimated"}`}
+      </p>
     </div>
 
     <div class="section">
