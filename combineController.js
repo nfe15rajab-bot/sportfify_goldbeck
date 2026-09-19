@@ -13,6 +13,8 @@ const combineState = {
   // The roof's structural grid and columns (from a Revit push or a loaded session; see structure.js), and the deck
   // capacity the structural engineer gave, in kN/m². null = none / not entered.
   structure: null, deckCapacityKnM2: null, showStructure: true,
+  // For the dynamic analysis (see structure.js): the deck's first natural frequency (Hz, the engineer's), the site's snow zone and altitude, the day's schedule.
+  naturalFrequencyHz: null, snowZone: "", altitudeM: null, daySchedule: "sports_day",
   // Pushed-but-not-yet-placed pieces — a "Push to Combine" click lands here
   // first (mini-game inventory tray, rendered beside the roof canvas), not
   // directly on the roof. Dragging a thumbnail out onto the canvas is what
@@ -488,7 +490,9 @@ function buildCombinedPayload() {
       // Degrees: the compass bearing of the top of the canvas, the same convention the sun compass draws with.
       // null until the designer sets it: 0 is a real answer and must not be mistaken for "unknown".
       north_deg: siteState.northSet ? siteState.northDeg : null,
-      north_set: siteState.northSet
+      north_set: siteState.northSet,
+      // Snow zone, altitude and the day's schedule, for the dynamic analysis.
+      ...(typeof dynamicSitePayload === "function" ? dynamicSitePayload() : {})
     },
     // Distinct provider build-up systems used by the drawn zones. Sent once at
     // the top level rather than repeated inside every zone: Revit creates one
@@ -682,6 +686,7 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.heightSource = rc.height_source || "";
   siteState.roofHeightOverride = null;
   document.getElementById("siteRoofHeight").value = "";
+  if (typeof applyDynamicSite === "function") applyDynamicSite(payload);
   if (typeof structureFromPayload === "function") {
     combineState.structure = structureFromPayload(payload.structure);
     combineState.deckCapacityKnM2 = payload.structure && payload.structure.deck_capacity_kn_m2 > 0 ? payload.structure.deck_capacity_kn_m2 : null;
