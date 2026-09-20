@@ -54,13 +54,14 @@ def main() -> int:
 
     data_path = ROOT / "data.js"
     text = io.open(data_path, encoding="utf-8").read()
-    io.open(data_path, "w", encoding="utf-8").write(
+    # newline="\n": the repository is LF (.gitattributes); Python's text mode would write CRLF on Windows and make the whole file a diff
+    io.open(data_path, "w", encoding="utf-8", newline="\n").write(
         text.replace(f'const SPORTIFY_BUILD = "{old}"', f'const SPORTIFY_BUILD = "{new}"'))
 
     index_path = ROOT / "index.html"
     html = io.open(index_path, encoding="utf-8").read()
     stamped = html.count(f"?v={old}")
-    io.open(index_path, "w", encoding="utf-8").write(html.replace(f"?v={old}", f"?v={new}"))
+    io.open(index_path, "w", encoding="utf-8", newline="\n").write(html.replace(f"?v={old}", f"?v={new}"))
 
     print(f"{old}  ->  {new}")
     print(f"  data.js: SPORTIFY_BUILD updated")
