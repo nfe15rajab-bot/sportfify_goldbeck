@@ -16,7 +16,28 @@ function drawField(sport, variant, capacity, isDark) {
   // The variant is set BEFORE the panel renders: the panel states which court
   // this is, and reading a stale variant made it call a mini court regulation.
   if (sport === "basketball" && typeof basketballState !== "undefined") basketballState.variant = variant;
+  if (sport === "volleyball" && typeof volleyballState !== "undefined") volleyballState.variant = variant;
+
+  // A sport that names its own surface hides the generic material controls; a
+  // sport that does not has to get them back, so this runs for every sport
+  // rather than only for the specified ones.
+  const specifiesItsOwn = sport === "basketball" || sport === "volleyball";
+  document.querySelectorAll("#field-params .section").forEach(sec => {
+    const l = sec.querySelector("label")?.textContent?.trim();
+    if (l === "Material quality" || l === "Reference material (database)"
+        || l === "Reference provider (database)") sec.hidden = specifiesItsOwn;
+  });
+  if (!specifiesItsOwn) {
+    const host = document.getElementById("sport-spec-panel");
+    if (host) host.innerHTML = "";
+  }
+
   if (typeof syncBasketballPanel === "function") syncBasketballPanel(sport);
+  if (typeof syncVolleyballPanel === "function") syncVolleyballPanel(sport);
+  if (sport === "volleyball" && typeof drawVolleyballPreview === "function") {
+    drawVolleyballPreview(svg, isDark);
+    return;
+  }
   if (sport === "basketball" && typeof drawBasketballPreview === "function") {
     drawBasketballPreview(svg, isDark);
     return;

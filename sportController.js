@@ -167,6 +167,8 @@ function buildSportPayload() {
     // whatever the panel happens to show later.
     basketball: (state.sport === "basketball" && typeof basketballPlacementPayload === "function")
       ? basketballPlacementPayload() : undefined,
+    volleyball: (state.sport === "volleyball" && typeof volleyballPlacementPayload === "function")
+      ? volleyballPlacementPayload() : undefined,
     layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"],
   };
 }
@@ -319,6 +321,19 @@ document.getElementById("btn-push-activity").addEventListener("click", () => {
 
 document.getElementById("btn-push-sport").addEventListener("click", () => {
   const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
-  addCombineItem({ kind: "field", label: `${state.sport} (${state.variant})`, length_m: d.l + d.runoff * 2, width_m: d.w + d.runoff * 2, sourceJson: buildSportPayload() });
+
+  // A sport that specifies itself works out its own footprint. Volleyball's
+  // free zone is 6.5 m at the ends for FIVB events and 5 m at the sides, which
+  // the single `runoff` figure cannot express — and the piece on the roof has
+  // to be the same size as the thing the panel just drew.
+  const fp = (state.sport === "volleyball" && typeof volleyballFootprint === "function")
+    ? volleyballFootprint()
+    : { length_m: d.l + d.runoff * 2, width_m: d.w + d.runoff * 2 };
+
+  addCombineItem({
+    kind: "field", label: `${state.sport} (${state.variant})`,
+    length_m: fp.length_m, width_m: fp.width_m,
+    sourceJson: buildSportPayload(),
+  });
   setMode("combine");
 });

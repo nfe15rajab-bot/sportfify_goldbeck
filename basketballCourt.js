@@ -495,18 +495,6 @@ function syncBasketballPanel(sport) {
       });
     return;
   }
-  // A sport that names its own surface should not also be offered the generic
-  // material quality and reference-material pickers. Those drive cost and
-  // carbon for unspecified sports; basketball's surface row carries its own
-  // price and weight, so the generic ones are a second answer to one question.
-  document.querySelectorAll("#field-params .section").forEach(sec => {
-    const label = sec.querySelector("label")?.textContent?.trim();
-    if (label === "Material quality" || label === "Reference material (database)"
-        || label === "Reference provider (database)") {
-      sec.hidden = isBasketball;
-    }
-  });
-
   host.innerHTML = isBasketball ? basketballPanelHtml() : "";
   if (!isBasketball) return;
 
