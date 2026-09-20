@@ -168,6 +168,86 @@ function padelWeight(state = padelState) {
   return { parts, total_kg, area_m2, perM2_kg: total_kg / area_m2, halfLen };
 }
 
+
+/* ── How a surface actually looks ───────────────────────────────────────────
+   The three surfaces are not the same material in three colours. Turf is dyed
+   fibre — the colour is slightly muted and the pile catches light in lines.
+   Acrylic is paint on a bound base — flat, saturated, faintly sheened.
+   Pigmented concrete is grey first and tinted second, whatever pigment went
+   in. Drawing all three as one flat fill would say they are interchangeable,
+   and the difference is exactly what a client is choosing between. */
+
+function hexToRgb(hex) {
+  const h = hex.replace("#", "");
+  return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+}
+function rgbToHex([r, g, b]) {
+  return "#" + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+}
+/** Moves a colour toward grey (t=1) or away from it (t<0 saturates). */
+function mixToGrey(hex, t) {
+  const [r, g, b] = hexToRgb(hex);
+  const grey = 0.299 * r + 0.587 * g + 0.114 * b;
+  return rgbToHex([r + (grey - r) * t, g + (grey - g) * t, b + (grey - b) * t]);
+}
+function shade(hex, t) {          // t>0 lighter, t<0 darker
+  const [r, g, b] = hexToRgb(hex);
+  const to = t > 0 ? 255 : 0, a = Math.abs(t);
+  return rgbToHex([r + (to - r) * a, g + (to - g) * a, b + (to - b) * a]);
+}
+
+/**
+ * The drawn appearance of a surface — base colour plus the texture that makes
+ * it read as that material. Also what the Revit material is built from, so the
+ * court looks the same in the model as it did in the panel.
+ */
+function padelSurfaceAppearance(state = padelState) {
+  const picked = PADEL_OPTIONS.surfaceColour.values[state.surfaceColour]?.hex || "#2f6fb5";
+  switch (state.surface) {
+    case "concrete":
+      // Grey first, pigment second. A "blue" concrete court is a grey court
+      // with a blue cast, and showing it as vivid blue would be a promise the
+      // material cannot keep.
+      return { base: mixToGrey(picked, 0.66), texture: "speckle",
+               accent: shade(mixToGrey(picked, 0.66), -0.18), gloss: 0 };
+    case "acrylic":
+      // Paint: the most saturated of the three, and the only one with a sheen.
+      return { base: mixToGrey(picked, -0.12), texture: "sheen",
+               accent: shade(picked, 0.12), gloss: 0.18 };
+    case "artificial_grass":
+    default:
+      // Dyed fibre: slightly muted, and the pile reads as fine lines.
+      return { base: mixToGrey(picked, 0.14), texture: "pile",
+               accent: shade(mixToGrey(picked, 0.14), -0.14), gloss: 0 };
+  }
+}
+
+/** The <defs> pattern for a surface, unique per court so two can differ. */
+function padelSurfaceDefs(id, state = padelState, sy = 10) {
+  const a = padelSurfaceAppearance(state);
+  const step = Math.max(2.5, sy * 0.28);
+  if (a.texture === "pile") {
+    return `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${step}" height="${step}">
+        <rect width="${step}" height="${step}" fill="${a.base}"/>
+        <line x1="0" y1="0" x2="0" y2="${step}" stroke="${a.accent}" stroke-width="0.6" stroke-opacity="0.55"/>
+      </pattern>`;
+  }
+  if (a.texture === "speckle") {
+    return `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${step * 1.6}" height="${step * 1.6}">
+        <rect width="${step * 1.6}" height="${step * 1.6}" fill="${a.base}"/>
+        <circle cx="${step * 0.4}" cy="${step * 0.5}" r="0.55" fill="${a.accent}" fill-opacity="0.7"/>
+        <circle cx="${step * 1.2}" cy="${step * 1.1}" r="0.45" fill="${a.accent}" fill-opacity="0.55"/>
+        <circle cx="${step * 0.9}" cy="${step * 0.2}" r="0.35" fill="${a.accent}" fill-opacity="0.45"/>
+      </pattern>`;
+  }
+  // Acrylic: no grain at all — a smooth wash with a soft highlight.
+  return `<linearGradient id="${id}" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="${a.accent}"/>
+      <stop offset="0.55" stop-color="${a.base}"/>
+      <stop offset="1" stop-color="${shade(a.base, -0.1)}"/>
+    </linearGradient>`;
+}
+
 /* ── Drawing ────────────────────────────────────────────────────────────────
    One renderer, any scale. The configurator preview and the Combine canvas
    both call it — a padel court that reads as a padel court in the panel and as
@@ -185,7 +265,7 @@ function padelCourtSvg(x, y, w, h, state = padelState, detail = "full", isDark =
   const sx = w / d.length_m;          // px per metre along the court
   const sy = h / d.width_m;
 
-  const surfaceHex = PADEL_OPTIONS.surfaceColour.values[state.surfaceColour]?.hex || "#2f6fb5";
+  const fillId = `padelSurf_${Math.random().toString(36).slice(2, 8)}`;
   const line = "#ffffff";
   const glass = isDark ? "#9fd8ff" : "#6fb7e8";
   const frame = isDark ? "#d6d9e8" : "#3a3f57";
@@ -197,8 +277,9 @@ function padelCourtSvg(x, y, w, h, state = padelState, detail = "full", isDark =
 
   let s = "";
 
-  // Playing surface
-  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${surfaceHex}" fill-opacity="0.92"/>`;
+  // Playing surface — the material's own texture, not a flat colour.
+  s += `<defs>${padelSurfaceDefs(fillId, state, sy)}</defs>`;
+  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${fillId})"/>`;
 
   // ── Markings ──
   // Service lines, one each side of the net, and the centre line between each
