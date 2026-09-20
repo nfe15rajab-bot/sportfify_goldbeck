@@ -422,6 +422,10 @@ function drawCombineCanvas() {
   renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts);
   renderCombineSummary(circulation);
   if (typeof renderDesignPanel === "function") renderDesignPanel(circulation);
+  // What is selected, and a record of the change — both read the state the
+  // redraw just finished producing, so neither needs telling separately.
+  if (typeof renderInspector === "function") renderInspector();
+  if (typeof recordCombineHistory === "function") recordCombineHistory();
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);

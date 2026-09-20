@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-20-furniture-cost" />
+  <link rel="stylesheet" href="style.css?v=2026-09-20-undo-inspector" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -940,9 +940,16 @@
           <div class="panel-resizer" id="iterationsPaneResizer" title="Drag to resize"></div>
 
           <aside class="iterations-pane">
-            <div class="iterations-pane-header"><i class="ti ti-stack-2" aria-hidden="true"></i> Iterations</div>
-            <p class="hint iterations-pane-hint">Saved with "Save for Compare" — select one to load it here.</p>
-            <div class="iterations-list" id="iterationsListCombine"></div>
+            <!-- Two things share this pane. What is selected wins, because a
+                 question you just asked by clicking beats a list that is empty
+                 most of the time. -->
+            <div id="selection-inspector" class="selection-inspector" hidden></div>
+
+            <div id="iterations-fallback">
+              <div class="iterations-pane-header"><i class="ti ti-stack-2" aria-hidden="true"></i> Iterations</div>
+              <p class="hint iterations-pane-hint">Saved with "Save for Compare" — select one to load it here.</p>
+              <div class="iterations-list" id="iterationsListCombine"></div>
+            </div>
           </aside>
         </div>
       </div>
@@ -951,40 +958,42 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-20-furniture-cost"></script>
-  <script src="activitiesData.js?v=2026-09-20-furniture-cost"></script>
-  <script src="vegetation.js?v=2026-09-20-furniture-cost"></script>
-  <script src="furniture.js?v=2026-09-20-furniture-cost"></script>
-  <script src="zones.js?v=2026-09-20-furniture-cost"></script>
-  <script src="roofFinish.js?v=2026-09-20-furniture-cost"></script>
-  <script src="structure.js?v=2026-09-20-furniture-cost"></script>
-  <script src="assemblies.js?v=2026-09-20-furniture-cost"></script>
-  <script src="gardenData.js?v=2026-09-20-furniture-cost"></script>
-  <script src="prebuiltSessions.js?v=2026-09-20-furniture-cost"></script>
-  <script src="rules.js?v=2026-09-20-furniture-cost"></script>
-  <script src="sunPosition.js?v=2026-09-20-furniture-cost"></script>
-  <script src="balls.js?v=2026-09-20-furniture-cost"></script>
-  <script src="field.js?v=2026-09-20-furniture-cost"></script>
-  <script src="basketballCourt.js?v=2026-09-20-furniture-cost"></script>
-  <script src="volleyballCourt.js?v=2026-09-20-furniture-cost"></script>
-  <script src="activityField.js?v=2026-09-20-furniture-cost"></script>
-  <script src="padelCourt.js?v=2026-09-20-furniture-cost"></script>
-  <script src="gardenField.js?v=2026-09-20-furniture-cost"></script>
-  <script src="combineField.js?v=2026-09-20-furniture-cost"></script>
-  <script src="siteField.js?v=2026-09-20-furniture-cost"></script>
-  <script src="buildupEditor.js?v=2026-09-20-furniture-cost"></script>
-  <script src="dataTab.js?v=2026-09-20-furniture-cost"></script>
-  <script src="revitBridge.js?v=2026-09-20-furniture-cost"></script>
-  <script src="sportController.js?v=2026-09-20-furniture-cost"></script>
-  <script src="gardenController.js?v=2026-09-20-furniture-cost"></script>
-  <script src="windZones.js?v=2026-09-20-furniture-cost"></script>
-  <script src="siteController.js?v=2026-09-20-furniture-cost"></script>
-  <script src="combineController.js?v=2026-09-20-furniture-cost"></script>
-  <script src="analysisController.js?v=2026-09-20-furniture-cost"></script>
-  <script src="compareController.js?v=2026-09-20-furniture-cost"></script>
-  <script src="designPanel.js?v=2026-09-20-furniture-cost"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-20-furniture-cost"></script>
-  <script src="sessionGate.js?v=2026-09-20-furniture-cost"></script>
-  <script src="main.js?v=2026-09-20-furniture-cost"></script>
+  <script src="data.js?v=2026-09-20-undo-inspector"></script>
+  <script src="activitiesData.js?v=2026-09-20-undo-inspector"></script>
+  <script src="vegetation.js?v=2026-09-20-undo-inspector"></script>
+  <script src="furniture.js?v=2026-09-20-undo-inspector"></script>
+  <script src="zones.js?v=2026-09-20-undo-inspector"></script>
+  <script src="roofFinish.js?v=2026-09-20-undo-inspector"></script>
+  <script src="structure.js?v=2026-09-20-undo-inspector"></script>
+  <script src="assemblies.js?v=2026-09-20-undo-inspector"></script>
+  <script src="gardenData.js?v=2026-09-20-undo-inspector"></script>
+  <script src="prebuiltSessions.js?v=2026-09-20-undo-inspector"></script>
+  <script src="rules.js?v=2026-09-20-undo-inspector"></script>
+  <script src="sunPosition.js?v=2026-09-20-undo-inspector"></script>
+  <script src="balls.js?v=2026-09-20-undo-inspector"></script>
+  <script src="field.js?v=2026-09-20-undo-inspector"></script>
+  <script src="basketballCourt.js?v=2026-09-20-undo-inspector"></script>
+  <script src="volleyballCourt.js?v=2026-09-20-undo-inspector"></script>
+  <script src="activityField.js?v=2026-09-20-undo-inspector"></script>
+  <script src="padelCourt.js?v=2026-09-20-undo-inspector"></script>
+  <script src="gardenField.js?v=2026-09-20-undo-inspector"></script>
+  <script src="combineField.js?v=2026-09-20-undo-inspector"></script>
+  <script src="siteField.js?v=2026-09-20-undo-inspector"></script>
+  <script src="buildupEditor.js?v=2026-09-20-undo-inspector"></script>
+  <script src="dataTab.js?v=2026-09-20-undo-inspector"></script>
+  <script src="revitBridge.js?v=2026-09-20-undo-inspector"></script>
+  <script src="sportController.js?v=2026-09-20-undo-inspector"></script>
+  <script src="gardenController.js?v=2026-09-20-undo-inspector"></script>
+  <script src="windZones.js?v=2026-09-20-undo-inspector"></script>
+  <script src="siteController.js?v=2026-09-20-undo-inspector"></script>
+  <script src="combineController.js?v=2026-09-20-undo-inspector"></script>
+  <script src="analysisController.js?v=2026-09-20-undo-inspector"></script>
+  <script src="compareController.js?v=2026-09-20-undo-inspector"></script>
+  <script src="designPanel.js?v=2026-09-20-undo-inspector"></script>
+  <script src="inspector.js?v=2026-09-20-undo-inspector"></script>
+  <script src="combineHistory.js?v=2026-09-20-undo-inspector"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-20-undo-inspector"></script>
+  <script src="sessionGate.js?v=2026-09-20-undo-inspector"></script>
+  <script src="main.js?v=2026-09-20-undo-inspector"></script>
 </body>
 </html>

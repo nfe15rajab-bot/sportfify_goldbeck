@@ -732,3 +732,10 @@ html[data-role="client"] .planner-only { display: none !important; }
   padding-top: 8px; border-top: 1px solid var(--border-strong); border-bottom: 0;
   font-weight: 700; color: var(--text-primary); font-size: 12px;
 }
+
+/* ── Selection inspector (outermost pane) ────────────────────────────────── */
+.selection-inspector { font-size: 11px; }
+.inspector-head { margin-bottom: 8px; }
+.inspector-head strong { display: block; font-size: 12px; color: var(--text-primary); line-height: 1.25; }
+.inspector-head .hint { display: block; margin-top: 2px; }
+.selection-inspector .design-detail-table { width: 100%; }
