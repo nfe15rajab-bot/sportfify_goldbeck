@@ -1,7 +1,7 @@
 /**
  * workspaceBridge.js — the web app and the Sportify folder on the user's machine, both ways, with nothing to import or export by hand.
  *
- * The installer makes the folder (default Documents\Sportify, or one the user chose) with a subfolder for every kind of deliverable, and the Revit add-in
+ * The installer makes the folder (default Documents\Sportify Workspace, or one the user chose) with a subfolder for every kind of deliverable, and the Revit add-in
  * serves it on localhost:5679 beside the roof, the results and the recordings. This file is the web app's side of that:
  *
  *   connection      polls the add-in (GET /workspace, /deliverables): connected or not, which folder, what is in it
@@ -376,7 +376,7 @@ function renderDeliverables() {
     ? `<span class="res-dot live"></span> Connected to Revit. Everything you export here is kept in <code>${wsEsc(workspaceState.folder)}</code>
         <button class="btn-export ws-inline-btn" data-ws-action="openFolder"><i class="ti ti-folder-open" aria-hidden="true"></i>Open folder</button>`
     : workspaceState.connected === false
-      ? `<span class="res-dot off"></span> Revit is not connected. Exports download through the browser, and the analysis, PDF and schedule buttons wait for Revit (open a project with the Sportify add-in loaded). Your folder is created by the installer, by default <em>Documents\\Sportify</em>.`
+      ? `<span class="res-dot off"></span> Revit is not connected. Exports download through the browser, and the analysis, PDF and schedule buttons wait for Revit (open a project with the Sportify add-in loaded). Your folder is created by the installer, by default <em>Documents\\Sportify Workspace</em>.`
       : `<span class="res-dot"></span> Looking for Revit...`;
 
   const actions = document.getElementById("dl-actions");

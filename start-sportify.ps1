@@ -1,4 +1,4 @@
-# Serves this folder over http://localhost and opens it in the default
+﻿# Serves this folder over http://localhost and opens it in the default
 # browser. Pure PowerShell/.NET — nothing to install, nothing to compile.
 $root = $PSScriptRoot
 
