@@ -508,6 +508,43 @@ const ADMIN_ENTITY_FIELDS = {
     { key: "priceSource", label: "Price source", type: "text" },
     { key: "costGroupDin276", label: "DIN 276 cost group", type: "text", placeholder: "530, 560…" },
   ],
+  FurnitureItem: [
+    // Key is what the export and the Revit family name reference, so it is
+    // required and a duplicate is refused by the API.
+    { key: "key", label: "Key", type: "text", required: true, placeholder: "abes_parkbank_1114 — the stable name exports reference" },
+    { key: "manufacturer", label: "Manufacturer", type: "text", required: true, placeholder: "ABES Public Design" },
+    { key: "manufacturerCountry", label: "Manufacturer country", type: "text", placeholder: "Germany" },
+    { key: "productName", label: "Product name", type: "text", required: true, placeholder: "As the manufacturer writes it" },
+    { key: "category", label: "Category", type: "text", required: true, placeholder: "bench, table, bin, bollard, light — decides how it draws" },
+    { key: "description", label: "Description", type: "textarea", placeholder: "Say if it has armrests — the drawing reads this and draws them" },
+    { key: "material", label: "Material", type: "text", placeholder: "Hot-dip galvanised steel, timber slats…" },
+
+    // ── The picture ──
+    // Empty means the configurator draws the piece to scale from the sizes
+    // below. Fill it only with a photograph someone has cleared for use: the
+    // manufacturers own theirs, and this catalogue gets shown to clients.
+    { key: "imageUrl", label: "Photo URL (optional)", type: "text", placeholder: "Leave empty and the piece is drawn from its dimensions instead" },
+    { key: "imageCredit", label: "Photo credit", type: "text", placeholder: "Who the photograph belongs to — shown under it" },
+
+    // ── Size ──
+    { key: "lengthM", label: "Length m", type: "number", placeholder: "1.8" },
+    { key: "widthM", label: "Width m (depth on plan)", type: "number", placeholder: "0.7" },
+    { key: "heightM", label: "Height m", type: "number", placeholder: "0.8 — a bench over 0.62 is drawn with a backrest" },
+    { key: "dimensionsPublished", label: "Dimensions published? (1 = from the datasheet, 0 = typical)", type: "number", placeholder: "1 or 0" },
+
+    // ── What it does and what it weighs ──
+    { key: "seats", label: "Seats", type: "number", placeholder: "0 for a bin or a bollard" },
+    { key: "weightKg", label: "Weight kg", type: "number" },
+    { key: "weightPublished", label: "Weight published? (1 or 0)", type: "number" },
+    { key: "capacityLitres", label: "Capacity litres (bins)", type: "number" },
+
+    { key: "priceValue", label: "Price", type: "number" },
+    { key: "priceUnit", label: "Price unit", type: "text", placeholder: "EUR/each" },
+    { key: "priceSource", label: "Price source", type: "text" },
+    { key: "priceIsQuoted", label: "Quoted rather than estimated? (1 or 0)", type: "number" },
+    { key: "costGroupDin276", label: "DIN 276 cost group", type: "text", placeholder: "560 for furniture, 550 for a light" },
+    { key: "sourceUrl", label: "Source URL", type: "text", placeholder: "The product page the figures came from" },
+  ],
   Plant: [
     { key: "commonName", label: "Common name", type: "text", required: true },
     { key: "scientificName", label: "Scientific name", type: "text" },
@@ -553,6 +590,7 @@ const ADMIN_ENTITY_LIST = {
   Norm: { path: "norms", labelField: "code" },
   Sport: { path: "sports", labelField: "name" },
   SportOption: { path: "SportOptions", labelField: "label" },
+  FurnitureItem: { path: "Furniture", labelField: "productName" },
   Plant: { path: "plants", labelField: "commonName" },
   FacilityGuideline: { path: "facilities", labelField: "title" },
   AnalysisParameter: { path: "AnalysisParameters", labelField: "label" },
