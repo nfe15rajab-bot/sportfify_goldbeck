@@ -32,6 +32,7 @@ function domainFetchPlan() {
   if (dataState.domain === "buildups") return { key: "buildups", path: "RoofAssemblies" };
   if (dataState.domain === "facilities") return { key: "facilities", path: "facilities" };
   if (dataState.domain === "analysisParams") return { key: "analysisParameters", path: "AnalysisParameters" };
+  if (dataState.domain === "courtOptions") return { key: "courtOptions", path: "SportOptions" };
   if (dataState.domain === "species") return { key: "species", path: "Plants" };
   return { key: "sports", path: "sports" };
 }
@@ -49,12 +50,13 @@ const DOMAIN_INTRO = {
   species: "Individual plants you can place on the roof. Each carries its mature height, crown width and the substrate depth its roots need — the Plants panel offers the ones with all three filled in.",
   buildups: "Manufacturer roof build-up systems — ZinCo, Bauder, Optigrün — layer by layer. A drawn zone references one of these, and it becomes a Revit floor type on import.",
   facilities: "Reference requirements from the German sports-hall norms. Nothing in the app reads these; they are here to look up.",
+  courtOptions: "The choices each sport offers — a padel wall system, a court surface, a basket. The geometry of a court is fixed by its governing body and lives in code; which product it is built from is a decision, and lives here.",
   analysisParams: "The figures the Analysis checks run on, so a threshold can be corrected without a code change.",
 };
 
 // Each domain's search box filters against a different field on its items —
 // sports are named, species by botanical name, guidelines and parameters by Title/Label instead.
-const DOMAIN_SEARCH_FIELD = { sports: "name", facilities: "title", analysisParams: "label", species: "scientificName", buildups: "systemName" };
+const DOMAIN_SEARCH_FIELD = { courtOptions: "label", sports: "name", facilities: "title", analysisParams: "label", species: "scientificName", buildups: "systemName" };
 
 function variantsTableHtml(variants) {
   if (!variants || variants.length === 0) return "";
@@ -193,7 +195,44 @@ function buildupCardHtml(a) {
     </div>`;
 }
 
-const DOMAIN_CARD_HTML = { sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml, analysisParams: analysisParamCardHtml, species: speciesCardHtml, buildups: buildupCardHtml };
+/**
+ * One court option.
+ *
+ * Sport and group lead, because a row means nothing without them — "acrylic"
+ * is a padel surface or a basketball surface and they are priced differently.
+ * Only the figures that apply are shown: a colour has no weight, a basket has
+ * no area, and printing an empty one as zero would be a claim rather than a
+ * blank.
+ */
+function courtOptionCardHtml(o) {
+  const facts = [];
+  if (o.weightKgM2 != null) facts.push([`${o.weightKgM2}`, "kg/m²"]);
+  if (o.weightKgEach != null) facts.push([`${o.weightKgEach}`, "kg each"]);
+  if (o.thicknessMm != null) facts.push([`${o.thicknessMm}`, "mm thick"]);
+  if (o.priceValue != null) {
+    const unit = (o.priceUnit || "").replace("EUR/", "").replace("m2", "m²").replace("each", "each");
+    facts.push([`€ ${o.priceValue}`, unit ? `per ${unit}` : "price"]);
+  }
+  if (o.costGroupDin276) facts.push([`KG ${o.costGroupDin276}`, "DIN 276"]);
+
+  return `
+    <div class="section span-2">
+      <label>${o.label || "(unnamed)"}</label>
+      <p class="hint">
+        <strong>${o.sport}</strong> · ${o.optionGroup} · <code>${o.key}</code>
+        ${o.colourHex ? ` · <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${o.colourHex};vertical-align:middle"></span> ${o.colourHex}` : ""}
+        ${o.textureHint ? ` · ${o.textureHint}` : ""}
+      </p>
+      ${o.note ? `<p class="hint">${o.note}</p>` : ""}
+      ${facts.length ? `<div class="dims">${facts.map(([v, l]) =>
+        `<div class="dim-card"><div class="val">${v}</div><div class="lbl">${l}</div></div>`).join("")}</div>` : ""}
+      ${o.priceValue != null
+        ? `<p class="hint">${o.priceIsQuoted ? "Supplier quote" : "Estimated"}${o.priceSource ? ` — ${o.priceSource}` : ""}</p>`
+        : ""}
+    </div>`;
+}
+
+const DOMAIN_CARD_HTML = { courtOptions: courtOptionCardHtml, sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml, analysisParams: analysisParamCardHtml, species: speciesCardHtml, buildups: buildupCardHtml };
 
 function offlineCardHtml() {
   return `
@@ -223,6 +262,7 @@ function offlineCardHtml() {
 const DOMAIN_ENTITIES = {
   sports: ["FieldVariant", "Material", "Provider", "Norm"],
   species: ["Plant"],
+  courtOptions: ["SportOption"],
   facilities: ["FacilityGuideline"],
   analysisParams: ["AnalysisParameter"],
 };
@@ -301,7 +341,7 @@ function renderDataContent(items) {
   }
 
   if (statusEl) {
-    const noun = { sports: "sport", facilities: "guideline", analysisParams: "parameter", species: "plant", buildups: "build-up" }[dataState.domain] || "item";
+    const noun = { courtOptions: "court option", sports: "sport", facilities: "guideline", analysisParams: "parameter", species: "plant", buildups: "build-up" }[dataState.domain] || "item";
     statusEl.textContent = `${filtered.length} ${noun}${filtered.length === 1 ? "" : "s"}${term ? " matching your search" : ""}.`;
   }
 }
@@ -446,6 +486,28 @@ const ADMIN_ENTITY_FIELDS = {
     { key: "name", label: "Name", type: "text", required: true },
     { key: "category", label: "Category", type: "text", required: true },
   ],
+  SportOption: [
+    // sport + group + key are what the configurator looks a row up by, so all
+    // three are required and a duplicate is refused by the API.
+    { key: "sport", label: "Sport", type: "text", required: true, placeholder: "padel, basketball" },
+    { key: "optionGroup", label: "Option group", type: "text", required: true, placeholder: "surface, wall_system, court_colour, basket" },
+    { key: "key", label: "Key", type: "text", required: true, placeholder: "acrylic — the stable name exports reference" },
+    { key: "label", label: "Label", type: "text", required: true, placeholder: "What the picker shows" },
+    { key: "note", label: "Note", type: "text", placeholder: "The sentence under the picker — what choosing this means" },
+    { key: "sortOrder", label: "Sort order", type: "number" },
+    // Only fill the ones that apply. A colour has no weight; a basket has no
+    // area. An empty field stays empty rather than becoming zero, which is a
+    // different claim.
+    { key: "weightKgM2", label: "Weight kg/m² (surfaces)", type: "number" },
+    { key: "weightKgEach", label: "Weight kg each (baskets, posts)", type: "number" },
+    { key: "thicknessMm", label: "Thickness mm (glass)", type: "number" },
+    { key: "colourHex", label: "Colour hex", type: "text", placeholder: "#2f6fb5" },
+    { key: "textureHint", label: "Texture", type: "text", placeholder: "pile, speckle, sheen, tiles, flat" },
+    { key: "priceValue", label: "Price", type: "number" },
+    { key: "priceUnit", label: "Price unit", type: "text", placeholder: "EUR/m2 or EUR/each" },
+    { key: "priceSource", label: "Price source", type: "text" },
+    { key: "costGroupDin276", label: "DIN 276 cost group", type: "text", placeholder: "530, 560…" },
+  ],
   Plant: [
     { key: "commonName", label: "Common name", type: "text", required: true },
     { key: "scientificName", label: "Scientific name", type: "text" },
@@ -490,6 +552,7 @@ const ADMIN_ENTITY_LIST = {
   Provider: { path: "sports/providers", labelField: "name" },
   Norm: { path: "norms", labelField: "code" },
   Sport: { path: "sports", labelField: "name" },
+  SportOption: { path: "SportOptions", labelField: "label" },
   Plant: { path: "plants", labelField: "commonName" },
   FacilityGuideline: { path: "facilities", labelField: "title" },
   AnalysisParameter: { path: "AnalysisParameters", labelField: "label" },
