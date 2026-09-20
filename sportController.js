@@ -70,8 +70,9 @@ function buildActivityBar() {
         document.getElementById("activityWidth").value = a.width;
         document.getElementById("activityQuantity").value = 1;
         document.getElementById("qty-val").textContent = "1";
-        document.getElementById("activityCapacity").value = 0;
-        document.getElementById("cap-activity-val").textContent = "No limit set";
+        // Capacity removed: an activity's capacity was never a slider. A padel
+        // court holds four players by rule, and a yoga deck holds whatever fits.
+        // state.activityCapacity stays 0 so the payload shape is unchanged.
         document.querySelectorAll("#activity-quality-btns .q-btn").forEach(b => b.classList.remove("active"));
         document.querySelector('#activity-quality-btns .q-btn[data-q="medium"]').classList.add("active");
 
