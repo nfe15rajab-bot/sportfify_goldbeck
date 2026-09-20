@@ -66,6 +66,10 @@ async function loadFurniture() {
       price_quoted: !!r.priceIsQuoted,
       cost_group: r.costGroupDin276 || null,
       source_url: r.sourceUrl || null,
+      // Empty for everything seeded. A photograph is added per product, by a
+      // person who has decided that picture may be used — see furnitureFigureHtml().
+      image_url: r.imageUrl || null,
+      image_credit: r.imageCredit || null,
     };
   });
 
@@ -223,7 +227,15 @@ function furniturePanelHtml() {
   const dimNote = f.dimensions_published ? "published" : "typical — check the datasheet";
   const wNote = f.weight_published ? "published" : "typical";
 
+  const cat = FURNITURE_CATEGORIES[f.category];
+
   return `
+    <div class="section furniture-hero">
+      ${furnitureFigureHtml(f)}
+      <div class="furniture-hero-name">${f.product}</div>
+      <p class="hint">${f.manufacturer.split(" (")[0]}${cat ? ` · ${cat.short}` : ""}</p>
+    </div>
+
     <div class="section">
       <label>What are you placing?</label>
       <div class="furniture-tabs">${tabs}</div>
@@ -232,7 +244,6 @@ function furniturePanelHtml() {
     </div>
 
     <div class="section">
-      <label>${f.product}</label>
       <div class="dims">
         <div class="dim-card"><div class="val">${f.length_m} × ${f.width_m} m</div><div class="lbl">Footprint · ${dimNote}</div></div>
         <div class="dim-card"><div class="val">${f.height_m} m</div><div class="lbl">Height</div></div>
@@ -306,17 +317,6 @@ function renderFurniturePanel() {
   document.getElementById("btn-push-furniture")?.addEventListener("click", pushFurnitureToCombine);
 }
 
-function toggleFurnitureFlyout(force) {
-  const el = document.getElementById("furniture-flyout");
-  if (!el) return;
-  ["zone-flyout", "vegetation-flyout", "rules-flyout", "tools-flyout"].forEach(other =>
-    document.getElementById(other)?.setAttribute("hidden", ""));
-  el.hidden = force === undefined ? !el.hidden : !force;
-  if (!el.hidden) {
-    renderFurniturePanel();
-    if ((force === undefined || force) && typeof setMode === "function" && activeMode !== "combine") setMode("combine");
-  }
-}
 
 /* ── Pushing ─────────────────────────────────────────────────────────────── */
 
@@ -349,7 +349,12 @@ function pushFurnitureToCombine() {
         price_quoted: f.price_quoted,
         cost_group: f.cost_group,
         material: f.material,
+        // Description comes along because the drawing reads it — armrests are
+        // only ever mentioned there — and the inspector draws placed pieces too.
+        description: f.description,
         source_url: f.source_url,
+        image_url: f.image_url,
+        image_credit: f.image_credit,
         revit_family_name: `Sportify - ${f.manufacturer.split(" (")[0]} ${f.product}`,
       },
     },
@@ -357,5 +362,3 @@ function pushFurnitureToCombine() {
   if (typeof setMode === "function") setMode("combine");
 }
 
-document.getElementById("btn-furniture-toggle")?.addEventListener("click", () => toggleFurnitureFlyout());
-document.getElementById("btn-furniture-close")?.addEventListener("click", () => toggleFurnitureFlyout(false));

@@ -332,18 +332,6 @@ function renderVegetationPanel() {
   });
 }
 
-function toggleVegetationFlyout(force) {
-  if ((force === undefined || force) && typeof setMode === "function" && activeMode !== "combine") setMode("combine");
-  const fly = document.getElementById("vegetation-flyout");
-  const btn = document.getElementById("btn-vegetation-toggle");
-  if (!fly) return;
-  const open = force !== undefined ? force : fly.hidden;
-  fly.hidden = !open;
-  if (btn) btn.classList.toggle("active", open);
-  if (open) renderVegetationPanel();
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btn-vegetation-toggle")?.addEventListener("click", () => toggleVegetationFlyout());
-  document.getElementById("btn-vegetation-close")?.addEventListener("click", () => toggleVegetationFlyout(false));
 });

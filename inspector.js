@@ -47,6 +47,10 @@ function describeFurniture(it) {
   return {
     title: f.product || it.label,
     subtitle: `${f.manufacturer || ""} · ${(f.category || "furniture")}`,
+    // Smaller than the catalogue's, and without the 1.75 m caption — by the
+    // time you are inspecting a placed bench you have already seen that once.
+    figure: typeof furnitureFigureHtml === "function"
+      ? furnitureFigureHtml(f, { compact: true, width: 232, height: 118 }) : "",
     rows: [
       row("Footprint", `${f.length_m} × ${f.width_m} m`, f.dimensions_published ? "published" : "typical"),
       row("Height", `${f.height_m} m`),
@@ -188,6 +192,7 @@ function renderInspector() {
       <strong>${d.title}</strong>
       <span class="hint">${d.subtitle || ""}</span>
     </div>
+    ${d.figure || ""}
     ${inspectorTable(d.rows)}
     ${d.material ? `<p class="hint">${d.material}</p>` : ""}
     ${d.source ? `<p class="hint"><a href="${d.source}" target="_blank" rel="noopener">${d.sourceName || "Source"}</a></p>` : ""}

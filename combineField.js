@@ -656,6 +656,63 @@ function renderSuggestions(item, candidates) {
 }
 
 /**
+ * A tray thumbnail: the piece itself, not a coloured square.
+ *
+ * The tray is where you decide which of three pushed pieces to drag out next,
+ * and "rounded rectangle, rounded rectangle, rounded rectangle" does not help
+ * with that. Everything here can already draw itself — the courts draw their
+ * markings on the roof, the furniture draws its elevation in the catalogue —
+ * so the thumbnail reuses those renderers rather than inventing a third
+ * picture of the same object that could drift out of step with them.
+ *
+ * Which view depends on what identifies the thing. A court is its markings, so
+ * it is shown in plan, the same way it will look once dropped. A bench in plan
+ * is a 1.8 m bar and so is a table and so is a bin, so furniture is shown in
+ * elevation instead — the view that answers "which one is this".
+ */
+function trayThumbSvg(item, boxW, boxH) {
+  // Furniture: elevation, stripped of dimensions and the scale figure.
+  if (typeof isFurnitureItem === "function" && isFurnitureItem(item)
+      && typeof furnitureElevationSvg === "function") {
+    const f = item.sourceJson?.furniture;
+    if (f) return furnitureElevationSvg(f, { width: boxW, height: boxH, bare: true });
+  }
+
+  const pad = 3;
+  const fp = typeof getFootprint === "function"
+    ? getFootprint(item) : { w: item.length_m, h: item.width_m };
+  const fit = Math.min((boxW - pad * 2) / fp.w, (boxH - pad * 2) / fp.h);
+  const w = fp.w * fit, h = fp.h * fit;
+  const x = (boxW - w) / 2, y = (boxH - h) / 2;
+  const dark = typeof isDarkMode === "function" && isDarkMode();
+  const colors = (typeof KIND_COLORS !== "undefined" && KIND_COLORS[item.kind]) || { fill: "#6f7681", stroke: "#8a9099" };
+
+  let art;
+  // "simple" throughout: at 64 px the service lines and the three-point arc
+  // turn to mush, and the court is recognised by its outline and key anyway.
+  if (typeof isPadelItem === "function" && isPadelItem(item)) {
+    art = padelCourtSvg(x, y, w, h, padelStateForItem(item), "simple", dark);
+  } else if (typeof isBasketballItem === "function" && isBasketballItem(item)) {
+    art = basketballCourtSvg(x, y, w, h, basketballStateForItem(item), "simple", dark);
+  } else if (typeof isVolleyballItem === "function" && isVolleyballItem(item)) {
+    art = volleyballCourtSvg(x, y, w, h, volleyballStateForItem(item), "simple", dark);
+  } else if (item.kind === "vegetation") {
+    // A crown and a trunk, the same as on the roof.
+    const r = Math.min(w, h) / 2;
+    art = `<circle cx="${boxW / 2}" cy="${boxH / 2}" r="${r}" fill="${colors.fill}"
+                   stroke="${colors.stroke}" stroke-width="1.5"/>
+           <circle cx="${boxW / 2}" cy="${boxH / 2}" r="1.6" fill="${colors.stroke}"/>`;
+  } else {
+    // Anything without a renderer of its own still gets its real proportions,
+    // which is more than the old square said.
+    art = `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"
+                 rx="2" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="1.5"/>`;
+  }
+
+  return `<svg viewBox="0 0 ${boxW} ${boxH}" width="${boxW}" height="${boxH}">${art}</svg>`;
+}
+
+/**
  * Renders the tray's thumbnails from combineState.tray — called at the end
  * of every drawCombineCanvas() so it never drifts out of sync with the
  * roof (tray and canvas are two views of the same combineState).
@@ -676,7 +733,7 @@ function renderCombineTray() {
     return `
       <div class="tray-thumb" data-tray-id="${it.id}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${it.label} — ${it.length_m}m × ${it.width_m}m">
         <button class="tray-thumb-remove" data-tray-remove="${it.id}" title="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>
-        <div class="tray-thumb-box"></div>
+        <div class="tray-thumb-box">${trayThumbSvg(it, 64, 50)}</div>
         <span class="tray-thumb-label">${it.label}</span>
       </div>`;
   }).join("");
@@ -710,7 +767,7 @@ function initTrayDragInteractions() {
 
     const ghost = thumb.cloneNode(true);
     ghost.classList.add("tray-thumb-ghost");
-    ghost.style.left = `${e.clientX - 32}px`;
+    ghost.style.left = `${e.clientX - 39}px`;   // half the thumb's width
     ghost.style.top = `${e.clientY - 32}px`;
     document.body.appendChild(ghost);
 

@@ -605,27 +605,8 @@ document.addEventListener("keydown", e => {
 
 /* ── Flyout open/close ── */
 
-function toggleZoneFlyout(force) {
-  // The flyout lives on the Combine canvas, so opening it from the rail means
-  // going there first — otherwise the button appears to do nothing from Sport.
-  if ((force === undefined || force) && typeof setMode === "function" && activeMode !== "combine") {
-    setMode("combine");
-  }
-  const fly = document.getElementById("zone-flyout");
-  const btn = document.getElementById("btn-zone-toggle");
-  if (!fly) return;
-  const open = force !== undefined ? force : fly.hidden;
-  fly.hidden = !open;
-  if (btn) btn.classList.toggle("active", open);
-  if (open) renderZonePanel();
-  // Closing the flyout disarms the tool — leaving it armed behind a hidden
-  // panel means the next canvas click draws a zone nobody asked for.
-  else if (combineState.tool === "drawZone") { combineState.tool = null; syncDrawZoneTool(); }
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btn-zone-toggle")?.addEventListener("click", () => toggleZoneFlyout());
-  document.getElementById("btn-zone-close")?.addEventListener("click", () => toggleZoneFlyout(false));
 });
 
 /* ── Rules ── */

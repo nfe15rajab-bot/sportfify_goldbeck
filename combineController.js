@@ -66,7 +66,9 @@ document.getElementById("btn-shuffle-boundary")?.addEventListener("click", shuff
  * that now means "open the tools flyout", which is the same intent.
  */
 function setWizardStep(n) {
-  if (n === 2 && typeof toggleDesignFlyout === "function") toggleDesignFlyout("tools-flyout", true);
+  // Tools is a tab now, not a flyout — the old call sites said "jump to
+  // Arrange", which is what that tab is.
+  if (n === 2 && typeof setDesignTab === "function") setDesignTab("tools");
 }
 
 /** Pushed pieces land in the tray, not on the roof — see combineState.tray above. */
