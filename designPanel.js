@@ -693,8 +693,11 @@ function updateRulesBadge() {
   badge.hidden = failed === 0;
 }
 
-/* ── Suggested spots: on by default, but yours to switch off ───────────── */
-let suggestionsEnabled = true;
+/* ── Suggested spots: off by default, yours to switch on ───────────────── */
+// Off unless asked for: the numbered ghosts cover the roof the moment anything
+// is selected, and most of the time you are placing something deliberately
+// rather than asking where it could go.
+let suggestionsEnabled = false;
 
 function setSuggestionsEnabled(on) {
   suggestionsEnabled = !!on;
