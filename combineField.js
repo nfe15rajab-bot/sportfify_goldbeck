@@ -249,6 +249,30 @@ function drawCombineCanvas() {
     // uses, at roof scale — otherwise the two would be making different claims
     // about one court. Rotation is applied to the group rather than baked into
     // the geometry, so the markings turn with it.
+    // A basketball court's markings are the court — a plain rectangle on the
+    // roof says nothing about whether the thing fits or reads as one.
+    if (typeof isBasketballItem === "function" && isBasketballItem(item)) {
+      const st = basketballStateForItem(item);
+      const spin = item.rotation
+        ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
+      // The key, the arcs and the no-charge semicircle collapse into noise
+      // below roughly this width; simple keeps the court legible.
+      const detail = w < 110 ? "simple" : "full";
+      el += `<g${spin}>
+          ${basketballCourtSvg(x, y, w, h, st, detail, isDarkMode())}
+          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+                fill="transparent" stroke="${strokeColor}"
+                stroke-width="${selected ? 2.5 : 1.5}"
+                stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
+                style="cursor:${isPlanner ? "grab" : "pointer"}"/>
+        </g>
+        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
+              font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+          ${item.label}${cutOff ? " 🚫" : ""}
+        </text>`;
+      return;
+    }
+
     if (typeof isPadelItem === "function" && isPadelItem(item)) {
       const st = padelStateForItem(item);
       const spin = item.rotation

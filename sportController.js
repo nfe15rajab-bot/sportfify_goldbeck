@@ -162,6 +162,11 @@ function buildSportPayload() {
     quality_key: typeof getQualityKey === "function" ? getQualityKey(state.sport, state.variant, state.quality) : "",
     field: { sport: state.sport, variant: state.variant, norm: d.norm, dimensions: { length_m: d.l, width_m: d.w, runoff_m: d.runoff, min_height_m: d.h }, capacity: { seats: state.capacity, side_stands: state.capacity > 0 } },
     materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: state.quality, reference_material: referenceMaterial, reference_provider: referenceProvider },
+    // A specified sport carries its own choices, so a placed court keeps the
+    // surface and mounting it was configured with rather than re-reading
+    // whatever the panel happens to show later.
+    basketball: (state.sport === "basketball" && typeof basketballPlacementPayload === "function")
+      ? basketballPlacementPayload() : undefined,
     layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"],
   };
 }
