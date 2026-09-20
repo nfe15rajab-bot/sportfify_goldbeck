@@ -79,11 +79,14 @@ let basketballOptionsLoaded = false;
 
 /** API option_group -> state key, in the order the panel shows them. */
 const BASKETBALL_GROUPS = [
-  ["hoops",        "hoops",       "Baskets"],
-  ["mounting",     "mounting",    "Basket mounting"],
+  ["hoops",        "hoops",       "Court"],
   ["surface",      "surface",     "Surface"],
   ["court_colour", "courtColour", "Court colour"],
-  ["key_colour",   "keyColour",   "Key colour"],
+  // "basket" is a group with one row — the ballasted freestanding basket. It
+  // carries the weight and the price but is not offered as a choice, because a
+  // choice of one is not a choice. If a second is ever added, the picker
+  // appears on its own.
+  ["basket",       "basket",      "Basket"],
 ];
 
 async function loadBasketballOptions() {
@@ -131,10 +134,9 @@ const BASKETBALL_VARIANT_NOTE = {
 const basketballState = {
   variant: "standard",
   hoops: "two",
-  mounting: "ballasted",
   surface: "acrylic",
   courtColour: "blue",
-  keyColour: "contrast",
+  basket: "ballasted",
 };
 
 function basketballDims(state = basketballState) {
@@ -153,7 +155,10 @@ function basketballDims(state = basketballState) {
  */
 function basketballVariantNote(state = basketballState) {
   const d = basketballDims(state);
-  if (state.variant === "standard") return "FIBA regulation playing court.";
+  const half = state.hoops === "one" ? "Half of a" : "";
+  if (state.variant === "standard")
+    return half ? "Half a FIBA regulation court — 14 × 15 m with one basket."
+                : "FIBA regulation playing court.";
   if (state.variant === "competition")
     return `${d.length_m} × ${d.width_m} m is the 28 × 15 m court plus its 2 m free zone — ` +
            `the markings below are the court inside it.`;
@@ -161,21 +166,45 @@ function basketballVariantNote(state = basketballState) {
          `and are not regulation.`;
 }
 
-/** The playing court inside whatever area the variant describes. */
+/**
+ * The playing court inside whatever area the variant describes.
+ *
+ * A half court is genuinely half a court — 14 m deep with one basket — not a
+ * full court with a basket left off. Removing the markings at one end would
+ * have described a court twice the size of the thing being built, and the roof
+ * would have lost 14 m of space that was never needed.
+ */
 function basketballPlayArea(state = basketballState) {
   const d = basketballDims(state);
-  if (state.variant === "competition") return { length_m: 28, width_m: 15, insetX_m: 3, insetY_m: 2 };
-  return { length_m: d.length_m, width_m: d.width_m, insetX_m: 0, insetY_m: 0 };
+  const half = state.hoops === "one";
+  if (state.variant === "competition") {
+    return half
+      ? { length_m: 14, width_m: 15, insetX_m: 3, insetY_m: 2, half: true }
+      : { length_m: 28, width_m: 15, insetX_m: 3, insetY_m: 2, half: false };
+  }
+  return half
+    ? { length_m: d.length_m / 2, width_m: d.width_m, insetX_m: 0, insetY_m: 0, half: true }
+    : { length_m: d.length_m, width_m: d.width_m, insetX_m: 0, insetY_m: 0, half: false };
+}
+
+/** The footprint a half court actually takes on the roof. */
+function basketballFootprint(state = basketballState) {
+  const d = basketballDims(state);
+  const play = basketballPlayArea(state);
+  return {
+    length_m: play.length_m + play.insetX_m * 2,
+    width_m: d.width_m,
+  };
 }
 
 /* ── Weight ──────────────────────────────────────────────────────────────── */
 
 function basketballWeight(state = basketballState) {
-  const d = basketballDims(state);
-  const area = d.length_m * d.width_m;
+  const fp = basketballFootprint(state);
+  const area = fp.length_m * fp.width_m;
   const perM2 = BASKETBALL_OPTIONS.surface?.values?.[state.surface]?.kg_m2 ?? 0;
   const hoopCount = state.hoops === "one" ? 1 : 2;
-  const kgEach = BASKETBALL_OPTIONS.mounting?.values?.[state.mounting]?.kgEach ?? 0;
+  const kgEach = BASKETBALL_OPTIONS.basket?.values?.[state.basket]?.kgEach ?? 0;
 
   const parts = [
     { what: "Playing surface", kg: area * perM2 },
@@ -206,7 +235,6 @@ function basketballAppearance(state = basketballState) {
 
 function basketballKeyFill(state = basketballState) {
   const a = basketballAppearance(state);
-  if (state.keyColour === "matching") return null;
   // A contrasting key, warmer and lighter than the court around it.
   return typeof shade === "function" ? shade(a.base, 0.34) : "#cccccc";
 }
@@ -220,7 +248,7 @@ function basketballKeyFill(state = basketballState) {
  * variant describes — so the caller places it exactly like the padel renderer.
  */
 function basketballCourtSvg(x, y, w, h, state = basketballState, detail = "full", isDark = false) {
-  const area = basketballDims(state);
+  const area = basketballFootprint(state);
   const play = basketballPlayArea(state);
   const s = w / area.length_m;                 // px per metre; the court is drawn to scale
   const a = basketballAppearance(state);
@@ -235,7 +263,10 @@ function basketballCourtSvg(x, y, w, h, state = basketballState, detail = "full"
 
   // Markings scale on a reduced court: a 22 m court with a regulation key
   // would be a different game, and the app should not pretend otherwise.
-  const k = state.variant === "mini" ? play.length_m / BASKETBALL.court.length_m : 1;
+  // Markings scale on a reduced court but NOT on a half court: half a
+  // regulation court still has a regulation key.
+  const fullLength = play.half ? play.length_m * 2 : play.length_m;
+  const k = state.variant === "mini" ? fullLength / BASKETBALL.court.length_m : 1;
   const M = m => m * k * s;
 
   const fillId = `bbSurf_${Math.random().toString(36).slice(2, 8)}`;
@@ -255,8 +286,8 @@ function basketballCourtSvg(x, y, w, h, state = basketballState, detail = "full"
 
   // ── Per end: key, free-throw circle, three-point line, no-charge arc ──
   [0, 1].forEach(end => {
-    const hoops = state.hoops === "one" ? [0] : [0, 1];
-    if (!hoops.includes(end)) return;
+    // A half court has one end, and it is the one with the basket.
+    if (play.half && end === 1) return;
 
     const dir = end === 0 ? 1 : -1;                  // into the court from this endline
     const endX = end === 0 ? px : px + pw;
@@ -309,10 +340,20 @@ function basketballCourtSvg(x, y, w, h, state = basketballState, detail = "full"
   });
 
   // ── Centre line and circle ──
-  const cx = px + pw / 2;
-  out += `<line x1="${cx}" y1="${py}" x2="${cx}" y2="${py + ph}" stroke="${line}" stroke-width="${lw}"/>`;
-  out += `<circle cx="${cx}" cy="${midY}" r="${M(BASKETBALL.centreCircleRadius_m)}"
+  // On a half court the centre line IS the open edge, and the centre circle is
+  // the half of it that falls inside — which is how a half court is painted.
+  if (play.half) {
+    const edge = px + pw;
+    out += `<path d="M ${edge} ${midY - M(BASKETBALL.centreCircleRadius_m)}
+                     A ${M(BASKETBALL.centreCircleRadius_m)} ${M(BASKETBALL.centreCircleRadius_m)} 0 0 0
+                       ${edge} ${midY + M(BASKETBALL.centreCircleRadius_m)}"
                   fill="none" stroke="${line}" stroke-width="${lw}"/>`;
+  } else {
+    const cx = px + pw / 2;
+    out += `<line x1="${cx}" y1="${py}" x2="${cx}" y2="${py + ph}" stroke="${line}" stroke-width="${lw}"/>`;
+    out += `<circle cx="${cx}" cy="${midY}" r="${M(BASKETBALL.centreCircleRadius_m)}"
+                    fill="none" stroke="${line}" stroke-width="${lw}"/>`;
+  }
 
   // ── Perimeter last, so it sits over everything ──
   out += `<rect x="${px}" y="${py}" width="${pw}" height="${ph}"
@@ -353,7 +394,9 @@ function basketballSurfaceDefs(id, state = basketballState, s = 10) {
 /* ── Preview and panel ───────────────────────────────────────────────────── */
 
 function drawBasketballPreview(svg, isDark) {
-  const d = basketballDims();
+  // The footprint, not the full court — a half court is half the size, and
+  // sizing the preview from the full one drew it at twice the scale.
+  const d = basketballFootprint();
   const PADDING = 46, vw = 420, vh = 260;
   const aspect = d.length_m / d.width_m;
   let fw = vw - PADDING * 2, fh = fw / aspect;
@@ -370,21 +413,30 @@ function drawBasketballPreview(svg, isDark) {
     <text x="${ox - 16}" y="${oy + fh / 2}" text-anchor="middle" font-size="11" fill="${dim}"
           font-family="'Titillium Web', Arial, sans-serif"
           transform="rotate(-90, ${ox - 16}, ${oy + fh / 2})">${d.width_m} m</text>
-    <text x="${ox + fw / 2}" y="${oy + fh + 22}" text-anchor="middle" font-size="10" fill="${dim}"
+    <text x="${ox + fw / 2}" y="${Math.min(vh - 6, oy + fh + 22)}" text-anchor="middle" font-size="10" fill="${dim}"
           font-family="'Titillium Web', Arial, sans-serif">
-      rim ${BASKETBALL.basket.rimHeight_m} m · three-point ${BASKETBALL.threePoint.arcRadius_m} m ·
-      key ${BASKETBALL.key.width_m} × ${BASKETBALL.key.depth_m} m ·
-      ${Math.round(w.total_kg).toLocaleString("en-US")} kg
+      ${Math.round(w.total_kg).toLocaleString("en-US")} kg on the deck · ${w.hoopCount} basket${w.hoopCount > 1 ? "s" : ""}
     </text>`;
 }
 
 function basketballPanelHtml() {
   const w = basketballWeight();
+  const fp = basketballFootprint();
+  const play = basketballPlayArea();
+
+  // A picker with one option is not a choice. The basket group has one row, so
+  // it shows as a stated fact instead — and if a second is ever added to the
+  // catalog, the picker appears on its own with nothing changed here.
   const pick = key => {
     const o = BASKETBALL_OPTIONS[key];
     if (!o) return "";
-    const opts = Object.entries(o.values).map(([v, def]) =>
-      `<option value="${v}"${basketballState[key] === v ? " selected" : ""}>${def.label}</option>`).join("");
+    const keys = Object.keys(o.values);
+    if (keys.length <= 1) {
+      const only = o.values[keys[0]];
+      return only ? `<p class="hint"><strong>${o.label}:</strong> ${only.label}${only.note ? ` — ${only.note}` : ""}</p>` : "";
+    }
+    const opts = keys.map(v =>
+      `<option value="${v}"${basketballState[key] === v ? " selected" : ""}>${o.values[v].label}</option>`).join("");
     const note = o.values[basketballState[key]]?.note;
     return `<div class="section">
         <label>${o.label}</label>
@@ -394,26 +446,30 @@ function basketballPanelHtml() {
   };
 
   return `
+    <!-- This court first, because it is the thing being configured. The FIBA
+         figures come after it and read as a reference, not as a description of
+         what is on screen — showing 28 x 15 above a 22 x 13 court made the
+         standard look like the current selection. -->
     <div class="section">
-      <label>Specification — FIBA</label>
+      <label>This court</label>
       <div class="dims">
-        <div class="dim-card"><div class="val">${BASKETBALL.court.length_m} × ${BASKETBALL.court.width_m} m</div><div class="lbl">Playing court</div></div>
-        <div class="dim-card"><div class="val">${BASKETBALL.basket.rimHeight_m} m</div><div class="lbl">Rim height</div></div>
-        <div class="dim-card"><div class="val">${BASKETBALL.threePoint.arcRadius_m} m</div><div class="lbl">Three-point arc</div></div>
-        <div class="dim-card"><div class="val">${BASKETBALL.clearHeight.minimum_m} m</div><div class="lbl">Clear height needed</div></div>
+        <div class="dim-card"><div class="val">${play.length_m} × ${play.width_m} m</div><div class="lbl">Playing area</div></div>
+        <div class="dim-card"><div class="val">${fp.length_m} × ${fp.width_m} m</div><div class="lbl">Footprint on the roof</div></div>
+        <div class="dim-card"><div class="val">${w.hoopCount}</div><div class="lbl">Basket${w.hoopCount > 1 ? "s" : ""}</div></div>
+        <div class="dim-card"><div class="val">${Math.round(w.total_kg).toLocaleString("en-US")} kg</div><div class="lbl">${Math.round(w.perM2_kg)} kg/m² on the deck</div></div>
       </div>
       <p class="hint">${basketballVariantNote()}</p>
     </div>
+
     ${BASKETBALL_GROUPS.map(([, stateKey]) => pick(stateKey)).join("")}
+
     <div class="section">
-      <label>Weight on the deck</label>
-      <div class="dims">
-        ${w.parts.map(p => `<div class="dim-card"><div class="val">${Math.round(p.kg).toLocaleString("en-US")}</div><div class="lbl">${p.what}, kg</div></div>`).join("")}
-        <div class="dim-card"><div class="val">${Math.round(w.perM2_kg)} kg/m²</div><div class="lbl">${Math.round(w.total_kg).toLocaleString("en-US")} kg total</div></div>
-      </div>
-      <p class="hint">
-        Estimated. Ballasted baskets carry their weight in the base — ${w.kgEach} kg each — because a roof
-        has nothing to bolt into. That is the choice, not a detail.
+      <p class="hint" style="opacity:.8">
+        <strong>FIBA reference</strong> — regulation court ${BASKETBALL.court.length_m} × ${BASKETBALL.court.width_m} m ·
+        rim ${BASKETBALL.basket.rimHeight_m} m · three-point ${BASKETBALL.threePoint.arcRadius_m} m ·
+        key ${BASKETBALL.key.width_m} × ${BASKETBALL.key.depth_m} m ·
+        ${BASKETBALL.clearHeight.minimum_m} m clear height needed.
+        The markings above are drawn to these; only the full court matches them exactly.
       </p>
     </div>`;
 }
@@ -439,6 +495,18 @@ function syncBasketballPanel(sport) {
       });
     return;
   }
+  // A sport that names its own surface should not also be offered the generic
+  // material quality and reference-material pickers. Those drive cost and
+  // carbon for unspecified sports; basketball's surface row carries its own
+  // price and weight, so the generic ones are a second answer to one question.
+  document.querySelectorAll("#field-params .section").forEach(sec => {
+    const label = sec.querySelector("label")?.textContent?.trim();
+    if (label === "Material quality" || label === "Reference material (database)"
+        || label === "Reference provider (database)") {
+      sec.hidden = isBasketball;
+    }
+  });
+
   host.innerHTML = isBasketball ? basketballPanelHtml() : "";
   if (!isBasketball) return;
 
@@ -453,7 +521,9 @@ function syncBasketballPanel(sport) {
 
 /** What travels with a placed court. */
 function basketballPlacementPayload(state = basketballState) {
-  const d = basketballDims(state), w = basketballWeight(state), a = basketballAppearance(state);
+  // The footprint, not the variant's full dimensions — a half court occupies
+  // half the roof, and sending the full size would reserve space nobody needs.
+  const d = basketballFootprint(state), w = basketballWeight(state), a = basketballAppearance(state);
   return {
     variant: state.variant,
     hoops: w.hoopCount,

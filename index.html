@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-20-bball-revit" />
+  <link rel="stylesheet" href="style.css?v=2026-09-20-bball-fixes" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -207,9 +207,8 @@
         </div>
 
         <div id="field-params">
+          <!-- Size first: it is the thing everything else describes. -->
           <div class="section">
-            <!-- Filled by a sport that specifies itself (basketballCourt.js). -->
-            <div id="sport-spec-panel"></div>
             <label>Size variant</label>
             <select id="variant">
               <option value="mini">Mini (children)</option>
@@ -217,6 +216,12 @@
               <option value="competition">Competition</option>
             </select>
           </div>
+
+          <!-- Filled by a sport that specifies itself (basketballCourt.js).
+               When it has content the generic material controls below hide:
+               that sport names its own surface, and two places to pick one is
+               two places to disagree. -->
+          <div id="sport-spec-panel"></div>
           
           <div class="section">
             <label>Material quality</label>
@@ -931,38 +936,38 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-20-bball-revit"></script>
-  <script src="activitiesData.js?v=2026-09-20-bball-revit"></script>
-  <script src="vegetation.js?v=2026-09-20-bball-revit"></script>
-  <script src="zones.js?v=2026-09-20-bball-revit"></script>
-  <script src="roofFinish.js?v=2026-09-20-bball-revit"></script>
-  <script src="structure.js?v=2026-09-20-bball-revit"></script>
-  <script src="assemblies.js?v=2026-09-20-bball-revit"></script>
-  <script src="gardenData.js?v=2026-09-20-bball-revit"></script>
-  <script src="prebuiltSessions.js?v=2026-09-20-bball-revit"></script>
-  <script src="rules.js?v=2026-09-20-bball-revit"></script>
-  <script src="sunPosition.js?v=2026-09-20-bball-revit"></script>
-  <script src="balls.js?v=2026-09-20-bball-revit"></script>
-  <script src="field.js?v=2026-09-20-bball-revit"></script>
-  <script src="basketballCourt.js?v=2026-09-20-bball-revit"></script>
-  <script src="activityField.js?v=2026-09-20-bball-revit"></script>
-  <script src="padelCourt.js?v=2026-09-20-bball-revit"></script>
-  <script src="gardenField.js?v=2026-09-20-bball-revit"></script>
-  <script src="combineField.js?v=2026-09-20-bball-revit"></script>
-  <script src="siteField.js?v=2026-09-20-bball-revit"></script>
-  <script src="buildupEditor.js?v=2026-09-20-bball-revit"></script>
-  <script src="dataTab.js?v=2026-09-20-bball-revit"></script>
-  <script src="revitBridge.js?v=2026-09-20-bball-revit"></script>
-  <script src="sportController.js?v=2026-09-20-bball-revit"></script>
-  <script src="gardenController.js?v=2026-09-20-bball-revit"></script>
-  <script src="windZones.js?v=2026-09-20-bball-revit"></script>
-  <script src="siteController.js?v=2026-09-20-bball-revit"></script>
-  <script src="combineController.js?v=2026-09-20-bball-revit"></script>
-  <script src="analysisController.js?v=2026-09-20-bball-revit"></script>
-  <script src="compareController.js?v=2026-09-20-bball-revit"></script>
-  <script src="designPanel.js?v=2026-09-20-bball-revit"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-20-bball-revit"></script>
-  <script src="sessionGate.js?v=2026-09-20-bball-revit"></script>
-  <script src="main.js?v=2026-09-20-bball-revit"></script>
+  <script src="data.js?v=2026-09-20-bball-fixes"></script>
+  <script src="activitiesData.js?v=2026-09-20-bball-fixes"></script>
+  <script src="vegetation.js?v=2026-09-20-bball-fixes"></script>
+  <script src="zones.js?v=2026-09-20-bball-fixes"></script>
+  <script src="roofFinish.js?v=2026-09-20-bball-fixes"></script>
+  <script src="structure.js?v=2026-09-20-bball-fixes"></script>
+  <script src="assemblies.js?v=2026-09-20-bball-fixes"></script>
+  <script src="gardenData.js?v=2026-09-20-bball-fixes"></script>
+  <script src="prebuiltSessions.js?v=2026-09-20-bball-fixes"></script>
+  <script src="rules.js?v=2026-09-20-bball-fixes"></script>
+  <script src="sunPosition.js?v=2026-09-20-bball-fixes"></script>
+  <script src="balls.js?v=2026-09-20-bball-fixes"></script>
+  <script src="field.js?v=2026-09-20-bball-fixes"></script>
+  <script src="basketballCourt.js?v=2026-09-20-bball-fixes"></script>
+  <script src="activityField.js?v=2026-09-20-bball-fixes"></script>
+  <script src="padelCourt.js?v=2026-09-20-bball-fixes"></script>
+  <script src="gardenField.js?v=2026-09-20-bball-fixes"></script>
+  <script src="combineField.js?v=2026-09-20-bball-fixes"></script>
+  <script src="siteField.js?v=2026-09-20-bball-fixes"></script>
+  <script src="buildupEditor.js?v=2026-09-20-bball-fixes"></script>
+  <script src="dataTab.js?v=2026-09-20-bball-fixes"></script>
+  <script src="revitBridge.js?v=2026-09-20-bball-fixes"></script>
+  <script src="sportController.js?v=2026-09-20-bball-fixes"></script>
+  <script src="gardenController.js?v=2026-09-20-bball-fixes"></script>
+  <script src="windZones.js?v=2026-09-20-bball-fixes"></script>
+  <script src="siteController.js?v=2026-09-20-bball-fixes"></script>
+  <script src="combineController.js?v=2026-09-20-bball-fixes"></script>
+  <script src="analysisController.js?v=2026-09-20-bball-fixes"></script>
+  <script src="compareController.js?v=2026-09-20-bball-fixes"></script>
+  <script src="designPanel.js?v=2026-09-20-bball-fixes"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-20-bball-fixes"></script>
+  <script src="sessionGate.js?v=2026-09-20-bball-fixes"></script>
+  <script src="main.js?v=2026-09-20-bball-fixes"></script>
 </body>
 </html>
