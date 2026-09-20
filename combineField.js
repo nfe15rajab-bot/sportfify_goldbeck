@@ -249,6 +249,21 @@ function drawCombineCanvas() {
     // uses, at roof scale — otherwise the two would be making different claims
     // about one court. Rotation is applied to the group rather than baked into
     // the geometry, so the markings turn with it.
+    // Furniture is small — a bench is 1.8 m on a 60 m roof — so it draws a
+    // shape that reads at that size rather than a miniature of itself.
+    if (typeof isFurnitureItem === "function" && isFurnitureItem(item)) {
+      const spin = item.rotation
+        ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
+      el += `<g${spin}>${furnitureSvg(x, y, w, h, item, selected, strokeColor, isPlanner)}</g>`;
+      if (w > 26) {
+        el += `<text x="${x + w / 2}" y="${y + h + 9}" text-anchor="middle" font-size="8"
+                     font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+                 ${item.label}
+               </text>`;
+      }
+      return;
+    }
+
     // Volleyball's free zone is part of the court, so the footprint drawn here
     // is the whole facility — which is the point: it is what has to fit.
     if (typeof isVolleyballItem === "function" && isVolleyballItem(item)) {

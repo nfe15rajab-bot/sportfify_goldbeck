@@ -168,7 +168,7 @@ function computePieceCost() {
   let total = 0, covered = 0, missing = 0;
   const rows = [];
   const grouped = new Map();   // identical pieces collapse into one line, "2 x"
-  items.filter(it => it.kind !== "vegetation").forEach(it => {
+  items.filter(it => it.kind !== "vegetation" && it.kind !== "furniture").forEach(it => {
     if (typeof getFootprint !== "function") return;
     const fp = getFootprint(it);
     const area = fp.w * fp.h;
@@ -195,6 +195,31 @@ function computePieceCost() {
                 costGroup: priced ? (mat.costGroupDin276 || null) : null });
   });
   return { total, covered, missing, rows, grouped: [...grouped.values()].sort((a, b) => b.cost - a.cost) };
+}
+
+/**
+ * Furniture is priced per piece from its own catalog row, not from a reference
+ * material — a bench is a product with a price, not an area of something.
+ */
+function computeFurnitureCost() {
+  const items = (typeof combineState !== "undefined" && combineState.items) || [];
+  let total = 0, missing = 0, seats = 0;
+  const grouped = new Map();
+  items.filter(it => it.kind === "furniture").forEach(it => {
+    const f = it.sourceJson?.furniture || {};
+    if (f.price == null) missing++; else total += f.price;
+    seats += f.seats || 0;
+    const key = f.key || it.label;
+    const row = grouped.get(key) || {
+      label: f.label || it.label, count: 0, unitCost: f.price ?? null,
+      cost: 0, priced: f.price != null, seatsEach: f.seats || 0,
+      costGroup: f.cost_group || null,
+    };
+    row.count += 1;
+    if (f.price != null) row.cost += f.price;
+    grouped.set(key, row);
+  });
+  return { total, missing, seats, grouped: [...grouped.values()].sort((a, b) => b.cost - a.cost) };
 }
 
 /** Plants are priced per plant, as a nursery sells them. */
@@ -352,12 +377,14 @@ function computeDesignMetrics(circulation) {
 
   const pieces = computePieceCost();
   const plants = computePlantCost();
+  const furniture = computeFurnitureCost();
   // The leftover between the courts and the beds is circulation, and it is
   // built of something — so it costs something.
   const finish = typeof roofFinishMetrics === "function" ? roofFinishMetrics() : null;
   const finishCost = finish?.cost || 0;
-  const costTotal = takeoff.cost + pieces.total + plants.total + finishCost;
-  const anythingPriced = takeoff.cost > 0 || pieces.total > 0 || plants.total > 0 || finishCost > 0;
+  const costTotal = takeoff.cost + pieces.total + plants.total + finishCost + furniture.total;
+  const anythingPriced = takeoff.cost > 0 || pieces.total > 0 || plants.total > 0
+                         || finishCost > 0 || furniture.total > 0;
 
   return {
     // Ground, pieces and planting, each measured in its own unit and summed.
@@ -365,7 +392,7 @@ function computeDesignMetrics(circulation) {
     // an unpriced one are different facts.
     cost: {
       value: anythingPriced ? costTotal : null,
-      detail: { takeoff, pieces, plants, finish, total: costTotal },
+      detail: { takeoff, pieces, plants, finish, furniture, total: costTotal },
     },
     co2: { value: carbon.totalKg, detail: carbon },
     quality: { value: quality.score, detail: quality },
@@ -517,8 +544,14 @@ function renderDesignDetail(m) {
       return [head + layers];
     })() : [];
 
+    const furnitureRows = d.furniture.grouped.map(r => line(
+      `${r.count > 1 ? `<span class="receipt-count">${r.count}×</span> ` : ""}${r.label}`,
+      `${r.priced ? `${eur(r.unitCost)} each` : "no price"}${r.seatsEach ? ` · ${r.seatsEach * r.count} seats` : ""}`,
+      r.priced ? eur(r.cost) : "—"));
+
     const receipt = `<table class="design-detail-table receipt">
         ${section("Courts &amp; equipment", pieceRows)}
+        ${section(`Furniture${d.furniture.seats ? ` — ${d.furniture.seats} seats` : ""}`, furnitureRows)}
         ${section("Planting", plantRows)}
         ${section("Ground build-ups", groundRows)}
         ${section("Roof finish", finishRows)}
@@ -532,18 +565,20 @@ function renderDesignDetail(m) {
     t.byAssembly.forEach(a => a.layers.forEach(l => add(l.costGroup, l.cost)));
     d.pieces.grouped.forEach(r => add(r.costGroup, r.cost));
     d.plants.grouped.forEach(r => add(r.costGroup, r.cost));
+    d.furniture.grouped.forEach(r => add(r.costGroup, r.cost));
     if (d.finish?.assembly) (d.finish.assembly.layers || []).forEach(l => {
       if (l.price == null) return;
       const q = l.price_unit === "EUR/m3" ? d.finish.netArea * ((l.mm || 0) / 1000) : d.finish.netArea;
       add(l.cost_group, q * l.price);
     });
-    const KG_LABEL = { "363": "Roof coverings", "530": "Surfaces", "560": "Fitted items", "570": "Planted areas" };
+    const KG_LABEL = { "363": "Roof coverings", "530": "Surfaces", "550": "Outdoor services",
+                       "560": "Fitted items", "570": "Planted areas" };
     const byGroup = groups.size
       ? `<label class="design-detail-sub">By DIN 276 cost group</label>` + detailRows(
           [...groups.entries()].sort().map(([kg, c]) => [`KG ${kg}`, eur(c), KG_LABEL[kg] || ""]))
       : "";
 
-    const unpriced = d.pieces.missing + d.plants.missing + (t.byAssembly.filter(a => !a.priced).length);
+    const unpriced = d.pieces.missing + d.plants.missing + d.furniture.missing + (t.byAssembly.filter(a => !a.priced).length);
     body = receipt + byGroup
       + `<p class="hint"><strong>Every price here is estimated</strong>, not quoted — German market rates for
          material plus installation. Replacing one with a real supplier quote changes the number and its
