@@ -244,6 +244,33 @@ function drawCombineCanvas() {
     // rectangular because that is genuinely their shape. The trunk sits at the
     // centre of the crown.
     const isCrown = item.kind === "vegetation";
+
+    // A specified sport draws itself here too. The same renderer the panel
+    // uses, at roof scale — otherwise the two would be making different claims
+    // about one court. Rotation is applied to the group rather than baked into
+    // the geometry, so the markings turn with it.
+    if (typeof isPadelItem === "function" && isPadelItem(item)) {
+      const st = padelStateForItem(item);
+      const spin = item.rotation
+        ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
+      // Below ~90px across, the service lines and mesh hatch turn to mush —
+      // simple keeps the court legible instead of busy.
+      const detail = w < 90 ? "simple" : "full";
+      el += `<g${spin}>
+          ${padelCourtSvg(x, y, w, h, st, detail, isDarkMode())}
+          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+                fill="transparent" stroke="${strokeColor}"
+                stroke-width="${selected ? 2.5 : 1.5}"
+                stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
+                style="cursor:${isPlanner ? "grab" : "pointer"}"/>
+        </g>
+        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
+              font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+          ${item.label}${cutOff ? " 🚫" : ""}
+        </text>`;
+      return;
+    }
+
     el += isCrown
       ? `
       <circle data-id="${item.id}" cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.min(w, h) / 2}"

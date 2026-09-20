@@ -439,3 +439,59 @@ function syncPadelPanel(activityId) {
     });
   });
 }
+
+/* ── What travels with a placed court ───────────────────────────────────────
+   The chosen options, the weight they produce, and the clear height the court
+   needs above it. Carried on the placement so a saved layout keeps the court
+   it was configured with, and so the structural and clearance checks have
+   something real to read. */
+
+function padelPlacementPayload(state = padelState) {
+  const d = padelDims(state), w = padelWeight(state), a = padelSurfaceAppearance(state);
+  return {
+    court_type: state.courtType,
+    wall_system: state.wallSystem,
+    surface: state.surface,
+    surface_colour: state.surfaceColour,
+    // The drawn appearance, so the Revit material matches what was on screen.
+    appearance_hex: a.base,
+    length_m: d.length_m,
+    width_m: d.width_m,
+    // Geometry Revit builds from, all FIP figures.
+    net_centre_height_m: PADEL.net.centreHeight_m,
+    net_post_height_m: PADEL.net.postHeight_m,
+    service_line_from_net_m: PADEL.serviceLineFromNet_m,
+    back_wall_glass_height_m: PADEL.backWall.glassHeight_m,
+    back_wall_mesh_height_m: PADEL.backWall.meshHeight_m,
+    side_corner_glass: PADEL.sideWall.cornerGlass,
+    side_step_glass: PADEL.sideWall.stepGlass,
+    side_centre_mesh_height_m: PADEL.sideWall.centreMeshHeight_m,
+    glass_thickness_mm: PADEL_OPTIONS.wallSystem.values[state.wallSystem]?.glassThickness_mm ?? 10,
+    // A court needs 6 m of clear air above it. Carried so the clearance can be
+    // checked rather than assumed.
+    clear_height_min_m: PADEL.clearHeight.minimum_m,
+    clear_height_recommended_m: PADEL.clearHeight.recommended_m,
+    weight_kg: Math.round(w.total_kg),
+    weight_kg_m2: Math.round(w.perM2_kg * 10) / 10,
+    weight_breakdown: w.parts.map(p => ({ part: p.what, kg: Math.round(p.kg) })),
+    weight_basis: "estimated",
+    source: "FIP Rules of Padel (2026 revision)",
+  };
+}
+
+/** The options a placed court was configured with, or today's defaults. */
+function padelStateForItem(item) {
+  const p = item?.sourceJson?.padel;
+  if (!p) return padelState;
+  return {
+    courtType: p.court_type || "double",
+    wallSystem: p.wall_system || "panoramic",
+    surface: p.surface || "artificial_grass",
+    surfaceColour: p.surface_colour || "blue",
+  };
+}
+
+/** True when this placed piece is a padel court. */
+function isPadelItem(item) {
+  return item?.sourceJson?.activity?.type_id === "padel_court" || !!item?.sourceJson?.padel;
+}

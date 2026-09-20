@@ -189,6 +189,11 @@ function buildActivityPayload() {
       dimensions: { length_m: state.activityLength, width_m: state.activityWidth },
     },
     materials: { surface: mat.surface, structure: mat.structure, quality_level: state.activityQuality, reference_material: null, reference_provider: null },
+    // A specified sport carries its own choices, so a placed court keeps the
+    // surface and wall system it was configured with rather than re-reading
+    // whatever the panel happens to show later.
+    padel: (state.activityId === "padel_court" && typeof padelPlacementPayload === "function")
+      ? padelPlacementPayload() : undefined,
   };
 }
 
