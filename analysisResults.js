@@ -1,17 +1,19 @@
 /**
- * analysisResults.js — Compare mode's analysis sub-tabs.
+ * analysisResults.js — the Analysis tab's sub-rail of results from Revit.
  *
  * The Revit add-in publishes what its analyses found (GET localhost:5679/analysis-results): the numbers of the garden analyses (rain, wind,
- * erosion), the structural ones (static loads, dynamic analysis), the ball simulation, fire safety and accessibility, LCA, carbon and sun. The
- * Unity recordings that go with them are served beside them (GET /recording). This file shows them here, in Compare, the way Sport shows its
- * sports: a second rail with one button per group.
+ * erosion), the structural ones (static loads, dynamic analysis), the ball simulation, fire safety and accessibility, sun and shade, LCA and carbon. The
+ * Unity recordings that go with them are served beside them (GET /recording). This file shows them here, in the Analysis tab, the way Sport shows its
+ * sports: a second rail with one button per group. (The Revit button "Send All to Web App" sends the physical analyses in one go; each analysis command
+ * also publishes its own result as soon as it has one.) Compare is not in this: it compares the user's saved iterations.
  *
- *   Layout     what Compare always was: saved layouts, scored side by side (compareController.js)
+ *   Overview   what Analysis always was: the app's own early checks on the Combine layout (analysisController.js)
  *   Garden     rain and soil percolation, wind and erosion
  *   Structure  static loads by bay, balance, advice; the dynamic analysis (crowds, weather, resonance)
+ *   Sun        direct sun hours per zone, shade at midday, the shading equipment to place and what it weighs on the deck
  *   Sport      ball trajectories, roof exits and fences
  *   Safety     fire safety and circulation, accessibility
- *   Other      LCA, carbon, sun and shading
+ *   Other      LCA and carbon
  *
  * Nothing is computed here: it reads, lays out and says what state each result is in (from Revit now, received earlier, not run yet). A result
  * that rests on inputs nobody confirmed (deck capacity, snow zone ...) is shown as PRELIMINARY, with the inputs, never as a verdict.
@@ -37,12 +39,12 @@ const RESULT_SECTIONS = {
   accessibility: { title: "Accessibility", run: RUN_PATH_PLAIN + "Accessibility Analysis" },
   lca: { title: "LCA", run: RUN_PATH_PLAIN + "LCA Analysis" },
   carbon_impact: { title: "Carbon impact", run: RUN_PATH_PLAIN + "Carbon Impact Analysis" },
-  sun_and_shading: { title: "Sun and shading", run: RUN_PATH_PLAIN + "Sun & Shading Analysis" }
+  sun_and_shading: { title: "Sun and shade", run: RUN_PATH_UNITY + "Sun & Shade Analysis" }
 };
 
 /** The rail: id, caption, icon, heading and what the group shows. */
-const COMPARE_SUBTABS = [
-  { id: "layout", label: "Layout", icon: "ti-layout-grid", title: "General layout", intro: "" },
+const ANALYSIS_SUBTABS = [
+  { id: "overview", label: "Overview", icon: "ti-layout-grid", title: "Analysis tools", intro: "Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these." },
   {
     id: "garden", label: "Garden", icon: "ti-plant-2", title: "Garden: rain, wind and erosion",
     intro: "What rain, wind and the weather do to the green roofs: how much water each build-up keeps, whether a build-up would lift off or a tree blow over.",
@@ -52,6 +54,16 @@ const COMPARE_SUBTABS = [
     id: "structure", label: "Structure", icon: "ti-building", title: "Structure: loads and dynamics",
     intro: "How heavy each bay of the structural grid is against the deck's capacity, whether the load sits to one side, and how the roof behaves through a day of crowds, weather and rhythmic movement.",
     sections: ["structural_loads", "dynamic_analysis"]
+  },
+  {
+    id: "conditions", label: "Conditions", icon: "ti-cloud-snow", title: "Site conditions: what the roof lives through",
+    intro: "The wind, the snow, the day's use and the sun the analyses assume for this roof, with who decided each, and which results use them. They are entered in the Site conditions tab.",
+    sections: []
+  },
+  {
+    id: "sun", label: "Sun", icon: "ti-sun", title: "Sun: shade and shading equipment",
+    intro: "How much direct sun each part of the roof gets on the design days, which play areas are too sunny at midday and which gardens too shaded, and the shading equipment that would fix it with what it weighs on the deck.",
+    sections: ["sun_and_shading"]
   },
   {
     id: "sport", label: "Sport", icon: "ti-ball-basketball", title: "Sport: ball trajectories",
@@ -64,14 +76,14 @@ const COMPARE_SUBTABS = [
     sections: ["fire_safety", "accessibility"]
   },
   {
-    id: "other", label: "Other", icon: "ti-sun", title: "Sun, carbon and materials",
-    intro: "The remaining Revit analyses: sun and shading, embodied carbon of the materials and the energy the playing surface could harvest.",
-    sections: ["sun_and_shading", "lca", "carbon_impact"]
+    id: "other", label: "Other", icon: "ti-leaf", title: "Carbon and materials",
+    intro: "The remaining Revit analyses: embodied carbon of the materials and the energy the playing surface could harvest.",
+    sections: ["lca", "carbon_impact"]
   }
 ];
 
 const resultsState = { payload: null, receivedAt: null, connected: null, cached: false, raw: null, lastRenderKey: null };
-let compareSub = "layout";
+let analysisSub = "overview";
 let resultsPollHandle = null;
 
 (function loadResultsCache() {
@@ -111,7 +123,10 @@ async function pollAnalysisResults() {
     if (resultsState.connected !== false) changed = true;
     resultsState.connected = false;
   }
-  if (changed) renderCompareIfShowingResults();
+  if (changed) {
+    renderAnalysisIfShowingResults();
+    if (typeof updateRevitLayersUI === "function") updateRevitLayersUI();      // "results from Revit: n of 10" in Combine's layers panel
+  }
 }
 
 function startResultsPolling() {
@@ -125,30 +140,30 @@ function stopResultsPolling() {
   resultsPollHandle = null;
 }
 
-function renderCompareIfShowingResults() {
-  if (typeof activeMode !== "undefined" && activeMode === "compare" && compareSub !== "layout") renderCompareAnalysisView();
+function renderAnalysisIfShowingResults() {
+  if (typeof activeMode !== "undefined" && activeMode === "analysis" && analysisSub !== "overview") renderAnalysisResultsView();
 }
 
 // ---------------------------------------------------------------------------------------------------- the rail
 
-/** Fills the second rail (the one Sport uses for its sports) with Compare's groups. */
-function buildCompareRail() {
+/** Fills the second rail (the one Sport uses for its sports) with the Analysis tab's groups. */
+function buildAnalysisRail() {
   const bar = document.getElementById("activity-bar");
   if (!bar) return;
-  bar.innerHTML = COMPARE_SUBTABS.map(t => `
-    <button class="activity-icon${t.id === compareSub ? " active" : ""}" data-sub="${t.id}" title="${resEsc(t.title)}">
+  bar.innerHTML = ANALYSIS_SUBTABS.map(t => `
+    <button class="activity-icon${t.id === analysisSub ? " active" : ""}" data-sub="${t.id}" title="${resEsc(t.title)}">
       <i class="ti ${t.icon}"></i><span class="activity-icon-label">${resEsc(t.label)}</span>
     </button>`).join("");
-  bar.querySelectorAll(".activity-icon").forEach(btn => btn.addEventListener("click", () => setCompareSub(btn.dataset.sub)));
+  bar.querySelectorAll(".activity-icon").forEach(btn => btn.addEventListener("click", () => setAnalysisSub(btn.dataset.sub)));
 }
 
-function setCompareSub(id) {
-  if (!COMPARE_SUBTABS.some(t => t.id === id)) return;
-  compareSub = id;
+function setAnalysisSub(id) {
+  if (!ANALYSIS_SUBTABS.some(t => t.id === id)) return;
+  analysisSub = id;
   document.querySelectorAll("#activity-bar .activity-icon").forEach(b => b.classList.toggle("active", b.dataset.sub === id));
   resultsState.lastRenderKey = null;
-  if (typeof updateCompareUI === "function") updateCompareUI();
-  if (id === "layout") stopResultsPolling(); else startResultsPolling();
+  if (typeof updateAnalysisUI === "function") updateAnalysisUI();
+  if (id === "overview") stopResultsPolling(); else startResultsPolling();
 }
 
 // ---------------------------------------------------------------------------------------------------- small helpers
@@ -210,7 +225,7 @@ function resInputs(inputs) {
 
 function resPrelim(note) {
   return `<div class="res-prelim"><i class="ti ti-alert-triangle" aria-hidden="true"></i><div><strong>PRELIMINARY</strong> ${resText((note || "").replace(/^PRELIMINARY:?\s*/, ""))}
-    <div class="hint">Enter your own values or accept the built-in ones (Site tab → Analysis assumptions, or the window Revit opens before the analysis) to make this a result rather than a screening.</div></div></div>`;
+    <div class="hint">Enter your own values or accept the built-in ones (the Structure and Site conditions tabs, or the window Revit opens before the analysis) to make this a result rather than a screening.</div></div></div>`;
 }
 
 /** The recording beside the numbers: playable while Revit is running and serving it. */
@@ -301,12 +316,24 @@ function bayPlanSvg(bays, roofL, roofW, prelim) {
   const pad = 6, vw = 680, scale = (vw - 2 * pad) / L, vh = W * scale + 2 * pad;
   const rects = withGeom.map(b => {
     const x = pad + b.x0_m * scale, y = pad + b.y0_m * scale, w = (b.x1_m - b.x0_m) * scale, h = (b.y1_m - b.y0_m) * scale;
-    const big = w > 46 && h > 28;
+    // a bay that is not a rectangle (a skewed grid, a roof with an outline) is drawn as its own polygon, its label at the polygon's centroid
+    const poly = Array.isArray(b.polygon_m) && b.polygon_m.length >= 3 ? b.polygon_m : null;
+    let cx = x + w / 2, cy = y + h / 2, shape;
+    if (poly) {
+      const pts = poly.map(p => [pad + p.x_m * scale, pad + p.y_m * scale]);
+      let a = 0, sx = 0, sy = 0;
+      pts.forEach((p, i) => { const q = pts[(i + 1) % pts.length], cr = p[0] * q[1] - q[0] * p[1]; a += cr; sx += (p[0] + q[0]) * cr; sy += (p[1] + q[1]) * cr; });
+      if (Math.abs(a) > 1e-9) { cx = sx / (3 * a); cy = sy / (3 * a); }
+      const d = pts.map(p => p.join(",")).join(" ");
+      shape = `<polygon points="${d}" fill="${utilisationColour(b.utilisation_percent, prelim)}" fill-opacity="${prelim ? 0.5 : 1}" stroke="#0f172a" stroke-width="1" ${prelim ? 'stroke-dasharray="4,3"' : ""}/>${prelim ? `<polygon points="${d}" fill="url(#prelimHatch)"/>` : ""}`;
+    } else {
+      shape = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${utilisationColour(b.utilisation_percent, prelim)}" fill-opacity="${prelim ? 0.5 : 1}" stroke="#0f172a" stroke-width="1" ${prelim ? 'stroke-dasharray="4,3"' : ""}/>${prelim ? `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#prelimHatch)"/>` : ""}`;
+    }
+    const big = poly ? (b.area_m2 || 0) * scale * scale > 1600 : w > 46 && h > 28;
     return `<g><title>${resEsc(b.label)}${b.grid_names ? " (" + resEsc(b.grid_names) + ")" : ""}: ${resNum(b.load_kn_m2, 1)} kN/m², ${resNum(b.utilisation_percent, 0)}% of the capacity, about ${resNum(b.persons, 0)} people</title>
-      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${utilisationColour(b.utilisation_percent, prelim)}" fill-opacity="${prelim ? 0.5 : 1}" stroke="#0f172a" stroke-width="1" ${prelim ? 'stroke-dasharray="4,3"' : ""}/>
-      ${prelim ? `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#prelimHatch)"/>` : ""}
-      ${big ? `<text x="${x + w / 2}" y="${y + h / 2 - 2}" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">${resNum(b.utilisation_percent, 0)}%</text>
-      <text x="${x + w / 2}" y="${y + h / 2 + 12}" text-anchor="middle" font-size="9.5" fill="#0f172a">${resEsc(b.label)}</text>` : ""}</g>`;
+      ${shape}
+      ${big ? `<text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">${resNum(b.utilisation_percent, 0)}%</text>
+      <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="9.5" fill="#0f172a">${resEsc(b.label)}</text>` : ""}</g>`;
   }).join("");
   const defs = prelim ? `<defs><pattern id="prelimHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#0f172a" stroke-width="1.6" opacity="0.45"/></pattern></defs>` : "";
   return `<svg class="res-plan" viewBox="0 0 ${vw} ${vh}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bays of the structural grid coloured by load against the deck capacity">${defs}${rects}</svg>
@@ -348,7 +375,7 @@ function dynamicCard(r) {
     ${resTile("Most crowded", resEsc(r.busiest_bay || "—"), resNum(r.busiest_bay_peak_density, 2) + " people/m²")}
     ${resTile("Snow", "sk " + resNum(r.snow_sk_kn_m2, 2), "zone " + resEsc(r.snow_zone || "—") + (r.snow_assumed ? " (assumed)" : "") + ", kN/m²")}
     ${resTile("Cloudburst", "+" + resNum(r.rain_peak_added_kn, 0) + " kN", "water added to the build-ups")}
-    ${resTile("Deck frequency", resNum(r.lowest_frequency_hz, 1) + " to " + resNum(r.highest_frequency_hz, 1) + " Hz", r.frequency_estimated ? "estimated from the spans (±25%)" : "the engineer's figure")}
+    ${resTile("Deck frequency", resNum(r.lowest_frequency_hz, 1) + " to " + resNum(r.highest_frequency_hz, 1) + " Hz", r.frequency_estimated ? (r.slab_depth_given ? "estimated from the slab's " + resNum(r.slab_depth_mm, 0) + " mm and the spans (±25%)" : "estimated from the spans, slab thickness not given (±25%)") : "the engineer's figure")}
     ${resTile("Resonance", resNum(r.worst_acceleration_g, 3) + " g", (r.worst_resonance_bay ? resEsc(r.worst_resonance_bay) + ", " + resText(String(r.worst_resonance_activity || "").toLowerCase()) : "") + " · limit " + resNum(r.worst_limit_g, 2) + " g", r.bays_exceeding_comfort > 0 ? "bad" : "ok")}
     ${resTile("Bays above the comfort limit", String(r.bays_exceeding_comfort), "of " + r.bays_checked + " under some activity", r.bays_exceeding_comfort > 0 ? "bad" : "ok")}
   </div>`;
@@ -363,6 +390,79 @@ function dynamicCard(r) {
 function renderStructureResults() {
   const s = resSection("structural_loads"), d = resSection("dynamic_analysis");
   return (s ? structuralCard(s) : resNotRun("structural_loads")) + (d ? dynamicCard(d) : resNotRun("dynamic_analysis"));
+}
+
+// ---------------------------------------------------------------------------------------------------- sun
+
+const SUN_STATUS_TEXT = { ok: "ok", "too-sunny": "too sunny", "too-shaded": "too shaded" };
+
+function sunStatusPill(status) {
+  const tone = status === "ok" ? "ok" : status === "too-sunny" ? "bad" : "warn";
+  return `<span class="res-pill tone-${tone}">${resEsc(SUN_STATUS_TEXT[status] || status || "—")}</span>`;
+}
+
+function sunCard(r) {
+  // A result from before the sun analysis existed only said the sun had been configured: nothing to show but a nudge.
+  if (!Array.isArray(r.days)) {
+    return resCard({ title: RESULT_SECTIONS.sun_and_shading.title, sub: "A result from an earlier version of the add-in", tone: "neutral", chip: "old result",
+      body: `<p class="hint">It carries no sun hours or shading advice. ${resEsc(RESULT_SECTIONS.sun_and_shading.run)} produces the current one.</p>` });
+  }
+  const zones = r.zones || [], equipment = r.equipment || [];
+  const withEquipment = r.pieces > 0;
+  const people = zones.filter(z => z.kind === "people" || z.kind === "spectators");
+  const gardens = zones.filter(z => z.kind === "garden");
+  const sunnyNow = withEquipment ? r.people_zones_too_sunny_after : r.people_zones_too_sunny;
+  const shadedNow = withEquipment ? r.garden_zones_too_shaded_after : r.garden_zones_too_shaded;
+  const tone = r.preliminary ? "prelim" : sunnyNow > 0 || shadedNow > 0 ? "warn" : "ok";
+  const chip = r.preliminary ? "PRELIMINARY"
+    : r.people_zones_too_sunny > 0 ? (withEquipment ? `${r.people_zones_too_sunny} too sunny, ${sunnyNow} after` : `${r.people_zones_too_sunny} too sunny`)
+    : r.garden_zones_too_shaded > 0 ? `${r.garden_zones_too_shaded} too shaded` : "balanced";
+  const arrow = (before, after) => withEquipment ? `${before} → ${after}` : String(before);
+
+  const tiles = `<div class="res-tiles">
+    ${resTile("People zones too sunny", arrow(r.people_zones_too_sunny, r.people_zones_too_sunny_after), "of " + r.people_zones + " at midday" + (withEquipment ? ", before → with the equipment" : ""), sunnyNow > 0 ? "warn" : "ok")}
+    ${resTile("Gardens too shaded", arrow(r.garden_zones_too_shaded, r.garden_zones_too_shaded_after), "of " + r.garden_zones + ", under " + resNum(r.garden_min_sun_hours, 1) + " h of sun on 21 June", shadedNow > 0 ? "warn" : "ok")}
+    ${resTile("Equipment", String(r.pieces), withEquipment ? "+" + resNum(r.added_load_kn, 1) + " kN on the deck" : "none needed or none that fits", "")}
+    ${withEquipment ? resTile("Deck's busiest bay", resNum(r.deck_peak_utilisation_before_percent, 0) + "% → " + resNum(r.deck_peak_utilisation_after_percent, 0) + "%", "of the deck capacity, " + r.deck_bays_over_before + " → " + r.deck_bays_over_after + " bays over", r.deck_bays_over_after > r.deck_bays_over_before ? "bad" : "") : ""}
+    ${resTile("Site", resNum(r.latitude_deg, 1) + "° N", (r.latitude_assumed ? "latitude assumed" : "latitude from the site") + ", roof turned " + resNum(r.north_deg, 0) + "°" + (r.north_assumed ? " (assumed)" : ""))}
+    ${withEquipment && r.peak_wind_pressure_pa > 0 ? resTile("Wind on the equipment", resNum(r.peak_wind_pressure_pa, 0) + " Pa", "peak pressure at the roof: anchors need the structural engineer") : ""}
+  </div>`;
+
+  const shadeBars = people.length ? `<div class="res-bars"><div class="res-bars-title">Shade between 11 and 16 h on 21 June, against the target of ${resNum(r.shade_target_percent, 0)}%</div>
+    ${people.map(z => {
+      const value = withEquipment ? z.after_peak_shade_percent : z.peak_shade_percent, status = withEquipment ? z.after_status : z.status;
+      return resBar(resText(z.label), value, 100, { ref: r.shade_target_percent, tone: r.preliminary ? "prelim" : status === "ok" ? "ok" : "bad",
+        text: withEquipment ? `${resNum(z.peak_shade_percent, 0)}% → ${resNum(z.after_peak_shade_percent, 0)}%` : `${resNum(z.peak_shade_percent, 0)}%` });
+    }).join("")}</div>` : "";
+
+  const days = `<table class="res-table"><thead><tr><th>Day</th><th>Sun up</th><th>Noon height</th><th>Roof, mean sun hours</th></tr></thead><tbody>
+    ${r.days.map(d => `<tr><td>${resText(d.name)}</td><td>${resNum(d.sunrise_h, 1)} to ${resNum(d.sunset_h, 1)} h</td><td>${resNum(d.noon_elevation_deg, 0)}°</td>
+      <td>${resNum(d.roof_mean_sun_hours, 1)} h${withEquipment ? " → " + resNum(d.roof_mean_sun_hours_after, 1) + " h" : ""}</td></tr>`).join("")}</tbody></table>`;
+
+  const zoneTable = zones.length ? `<details class="res-details"><summary>Every zone (${zones.length})</summary><table class="res-table"><thead><tr><th>Zone</th><th>m²</th><th>Sun h: 21 Jun</th><th>21 Mar</th><th>21 Dec</th><th>Midday shade</th><th>Verdict</th></tr></thead><tbody>
+    ${zones.map(z => {
+      const judged = z.kind !== "court";
+      return `<tr><td>${resText(z.label)} <span class="res-muted">${resEsc(z.kind)}</span></td><td>${resNum(z.area_m2, 0)}</td>
+        <td>${resNum(z.sun_hours_june, 1)}${withEquipment && judged ? " → " + resNum(z.after_sun_hours_june, 1) : ""}</td><td>${resNum(z.sun_hours_march, 1)}</td><td>${resNum(z.sun_hours_december, 1)}</td>
+        <td>${resNum(z.peak_shade_percent, 0)}%${withEquipment && judged ? " → " + resNum(z.after_peak_shade_percent, 0) + "%" : ""}</td>
+        <td>${judged ? sunStatusPill(withEquipment ? z.after_status : z.status) : '<span class="res-muted">never covered</span>'}</td></tr>`;
+    }).join("")}</tbody></table></details>` : "";
+
+  const equipmentTable = equipment.length ? `<div class="res-bars-title">Shading equipment to place</div><table class="res-table"><thead><tr><th>Piece</th><th>At (m)</th><th>Size (m)</th><th>For</th><th>Shade there</th><th>Weight</th><th>Wind uplift</th></tr></thead><tbody>
+    ${equipment.map(p => `<tr><td>${resText(p.name)}</td><td>${resNum(p.x_m + p.width_m / 2, 1)}, ${resNum(p.y_m + p.depth_m / 2, 1)}</td>
+      <td>${resNum(p.width_m, 1)} x ${resNum(p.depth_m, 1)}, ${resNum(p.height_m, 1)} high</td><td>${resText(p.zone)}</td>
+      <td>${resNum(p.shade_before_percent, 0)}% → ${resNum(p.shade_after_percent, 0)}%</td><td>${resNum(p.added_load_kn, 1)} kN</td><td>${p.wind_uplift_kn > 0.05 ? resNum(p.wind_uplift_kn, 1) + " kN" : "—"}</td></tr>`).join("")}</tbody></table>` : "";
+
+  return resCard({
+    title: RESULT_SECTIONS.sun_and_shading.title, sub: r.case_study, tone, chip,
+    prelim: r.preliminary ? r.preliminary_note : "",
+    body: tiles + shadeBars + days + equipmentTable + resFindings(r.findings) + zoneTable + resVideo(r.video_path) + resInputs(r.inputs) + resAssumptions(r.assumptions)
+  });
+}
+
+function renderSunResults() {
+  const r = resSection("sun_and_shading");
+  return r ? sunCard(r) : resNotRun("sun_and_shading");
 }
 
 // ---------------------------------------------------------------------------------------------------- sport
@@ -436,13 +536,6 @@ function renderSafetyResults() {
 
 function renderOtherResults() {
   let out = "";
-  const ss = resSection("sun_and_shading");
-  out += ss ? resCard({
-    title: RESULT_SECTIONS.sun_and_shading.title, tone: ss.location_configured ? "ok" : "warn", chip: ss.location_configured ? "location set" : "no location",
-    sub: "So far this only sets Revit's sun and points at its own shadow tools",
-    body: `<div class="res-tiles">${resTile("Configured for", resEsc(ss.configured_for_date_time || "—"), "Revit's own Sun Path and Shadows do the rendering")}</div>`
-  }) : resNotRun("sun_and_shading");
-
   const lca = resSection("lca");
   out += lca ? resCard({
     title: RESULT_SECTIONS.lca.title, tone: lca.missing_count ? "warn" : "ok", chip: lca.missing_count ? `${lca.missing_count} pieces missing data` : "all pieces covered",
@@ -467,49 +560,56 @@ function resultsStatusHtml() {
     return `<span class="res-dot live"></span> Live from Revit${t ? `, received ${t}` : ""}.`;
   if (resultsState.connected === true) return `<span class="res-dot live"></span> Connected to Revit. Nothing has been analysed yet in this session.`;
   if (resultsState.payload) return `<span class="res-dot stale"></span> Revit is not connected. Showing the last results received${t ? ` (${t}${resultsState.cached ? ", earlier session" : ""})` : ""}.`;
-  if (resultsState.connected === false) return `<span class="res-dot off"></span> Revit is not connected. Run an analysis in Revit and its results appear here.`;
+  if (resultsState.connected === false) return `<span class="res-dot off"></span> Revit is not connected. Open this project in Revit and click Send All to Web App (Sportify ribbon, Physical Analysis panel): the results appear here.`;
   return `<span class="res-dot"></span> Looking for Revit...`;
 }
 
-function renderCompareAnalysisView() {
-  const tab = COMPARE_SUBTABS.find(t => t.id === compareSub);
-  if (!tab || tab.id === "layout") return;
+function renderAnalysisResultsView() {
+  const tab = ANALYSIS_SUBTABS.find(t => t.id === analysisSub);
+  if (!tab || tab.id === "overview") return;
 
-  const key = JSON.stringify([compareSub, resultsState.raw, resultsState.receivedAt, resultsState.connected, resultsState.cached]);
+  const key = JSON.stringify([analysisSub, resultsState.raw, resultsState.receivedAt, resultsState.connected, resultsState.cached, typeof workspaceState !== "undefined" ? workspaceState.stamp : 0]);
   if (key === resultsState.lastRenderKey) return;   // nothing changed: leave a playing video alone
   resultsState.lastRenderKey = key;
 
   // the left panel: what this group is, where its results come from, what has run
-  document.getElementById("compare-heading").textContent = tab.title;
-  document.getElementById("compare-intro").textContent = tab.intro;
-  document.getElementById("field-label").textContent = `Compare — ${tab.title}`;
-  document.getElementById("norm-badge").textContent = "results from Revit";
-  ["comparePrioritySection", "compareFineTuneSection", "compareRoofSection", "compareGuideSection"].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = "none";
-  });
-  const panel = document.getElementById("compareResultsSection");
+  document.getElementById("analysis-heading").textContent = tab.title;
+  document.getElementById("analysis-intro").textContent = tab.intro;
+  const iterations = document.getElementById("analysisIterationsSection");
+  if (iterations) iterations.style.display = "none";
+  const panel = document.getElementById("analysisResultsSection");
   if (panel) {
     panel.style.display = "";
-    panel.innerHTML = `<label>Results</label><p class="hint res-status">${resultsStatusHtml()}</p>
+    panel.innerHTML = (typeof wsRunPanelHtml === "function" ? wsRunPanelHtml() : "") + `<label>Results</label><p class="hint res-status">${resultsStatusHtml()}</p>
       <ul class="res-run-list">${tab.sections.map(n => `<li class="${resSection(n) ? "done" : ""}"><i class="ti ${resSection(n) ? "ti-circle-check" : "ti-circle-dashed"}" aria-hidden="true"></i>
         <span><strong>${resEsc(RESULT_SECTIONS[n].title)}</strong><br><span class="hint">${resSection(n) ? "received" : resEsc(RESULT_SECTIONS[n].run)}</span></span></li>`).join("")}</ul>
-      <p class="hint">Numbers and recordings come from the Revit add-in. What a result rests on (its inputs and assumptions) is under each card; anything unconfirmed is marked PRELIMINARY.</p>`;
+      <p class="hint">Run analysis (above) runs them in the Revit add-in on your current layout, with nothing to export or import; in Revit, <strong>Send All to Web App</strong> (Physical Analysis panel) does the same and each analysis button sends its own. What a result rests on (its inputs and assumptions) is under each card; anything unconfirmed is marked PRELIMINARY.</p>`;
   }
 
-  const body = compareSub === "garden" ? renderGardenResults()
-    : compareSub === "structure" ? renderStructureResults()
-    : compareSub === "sport" ? renderSportResults()
-    : compareSub === "safety" ? renderSafetyResults()
+  const body = analysisSub === "garden" ? renderGardenResults()
+    : analysisSub === "structure" ? (typeof structureInputsCardHtml === "function" ? structureInputsCardHtml(true) : "") + renderStructureResults()
+    : analysisSub === "conditions" ? (typeof renderConditionsResults === "function" ? renderConditionsResults() : "")
+    : analysisSub === "sun" ? renderSunResults()
+    : analysisSub === "sport" ? renderSportResults()
+    : analysisSub === "safety" ? renderSafetyResults()
     : renderOtherResults();
-  const content = document.getElementById("compare-content");
-  if (content) content.innerHTML = `<div class="res-wrap">${body}</div>`;
+  // the charts of these analyses, drawn by the add-in for the layout on screen, under the numbers
+  const charts = typeof wsChartsHtml === "function" && tab.sections.length ? wsChartsHtml(tab.sections) : "";
+  if (typeof ensureCharts === "function" && tab.sections.length) ensureCharts();
+  const content = document.getElementById("analysis-content");
+  if (content) content.innerHTML = `<div class="res-wrap">${body}${charts}</div>`;
 }
 
-/** Undoes what the analysis views changed in the left panel, for the layout view. */
-function restoreCompareLayoutPanel() {
-  const panel = document.getElementById("compareResultsSection");
+/** Undoes what the results views changed in the left panel, for the overview. */
+function restoreAnalysisOverviewPanel() {
+  const overview = ANALYSIS_SUBTABS[0];
+  const heading = document.getElementById("analysis-heading");
+  if (heading) heading.textContent = overview.title;
+  const intro = document.getElementById("analysis-intro");
+  if (intro) intro.textContent = overview.intro;
+  const panel = document.getElementById("analysisResultsSection");
   if (panel) panel.style.display = "none";
-  const guide = document.getElementById("compareGuideSection");
-  if (guide) guide.style.display = "";
+  const iterations = document.getElementById("analysisIterationsSection");
+  if (iterations) iterations.style.display = "";
   resultsState.lastRenderKey = null;
 }

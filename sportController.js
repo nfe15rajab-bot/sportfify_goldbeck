@@ -186,19 +186,14 @@ function buildActivityPayload() {
 
 document.getElementById("btn-json").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(buildSportPayload(), null, 2)], { type: "application/json" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `sportify_${state.sport}_${state.variant}.json`; a.click();
-  URL.revokeObjectURL(a.href);
+  deliverFile("sport", `sportify_${state.sport}_${state.variant}.json`, blob);   // the Sportify folder when Revit is connected, else a download (workspaceBridge.js)
 });
 
 document.getElementById("btn-dxf").addEventListener("click", () => {
   const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
   const dxf = serialiseDXF(buildDXFEntities(d, state.sport, state.capacity));
   const blob = new Blob([dxf], { type: "application/dxf" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `sportify_${state.sport}_${state.variant}.dxf`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  deliverFile("sport", `sportify_${state.sport}_${state.variant}.dxf`, blob);
 });
 
 function buildDXFEntities(d, sport, capacity = 0) {

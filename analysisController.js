@@ -286,12 +286,9 @@ function downloadSunPathPng() {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     URL.revokeObjectURL(url);
     canvas.toBlob(blob => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "sportify_sun_path.png";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      showToast("Chart downloaded", "sportify_sun_path.png — pick this file in Revit's Generate Analysis Report command.");
+      deliverFile("analysis", "sportify_sun_path.png", blob).then(r => {
+        if (!r.kept) showToast("Chart downloaded", "sportify_sun_path.png");
+      });
     }, "image/png");
   };
   img.onerror = () => showToast("Export failed", "Couldn't render the chart to an image.");
@@ -577,6 +574,12 @@ function renderAnalysisContent() {
 }
 
 function updateAnalysisUI() {
+  // The rail's other buttons (Garden, Structure, Sun, Sport, Safety, Other) show what Revit's analyses found: analysisResults.js.
+  if (typeof analysisSub !== "undefined" && analysisSub !== "overview" && typeof renderAnalysisResultsView === "function") {
+    renderAnalysisResultsView();
+    return;
+  }
+  if (typeof restoreAnalysisOverviewPanel === "function") restoreAnalysisOverviewPanel();
   renderAnalysisContent();
   if (typeof renderIterationsPanels === "function") renderIterationsPanels();
 }

@@ -35,6 +35,10 @@ async function pollRevitBoundary() {
     combineState.roof.boundary = roof.boundary_m || null;
     combineState.roof.originXm = roof.origin_x_m ?? 0;
     combineState.roof.originYm = roof.origin_y_m ?? 0;
+    // The plan follows the roof: how far it is turned from the model's axes (0 for a roof square to the model).
+    combineState.roof.rotationDeg = roof.rotation_deg ?? 0;
+    // Which parts of the model this roof has (the ribbon's "Push to Sportify" drop-down pushes them one at a time or all together).
+    combineState.roof.pushedScope = Array.isArray(roof.pushed_scope) ? roof.pushed_scope : null;
     // Height of the pushed roof in the Revit project. Carried straight through
     // to the export so an import lands the layout ON the roof rather than at
     // Z=0 on the ground.
@@ -48,12 +52,14 @@ async function pollRevitBoundary() {
     // The openings, entries, edge, drains, slab and levels the model has on this roof: a different roof has different ones, so a push replaces them.
     if (typeof roofFeaturesFromPayload === "function") combineState.roofFeatures = roofFeaturesFromPayload(roof.features);
     if (typeof updateSiteUI === "function") updateSiteUI();
+    if (typeof updateRevitLayersUI === "function") updateRevitLayersUI();       // what Revit has pushed, layer by layer
     document.getElementById("roofLength").value = roof.length_m;
     document.getElementById("roofWidth").value  = roof.width_m;
 
-    const detail = roof.source_element_name
+    const turned = Math.abs(roof.rotation_deg || 0) > 0.01 ? ` (the roof is turned ${(+roof.rotation_deg).toFixed(1)}° against the Revit model; the plan follows it)` : "";
+    const detail = (roof.source_element_name
       ? `${roof.length_m}m × ${roof.width_m}m from "${roof.source_element_name}"`
-      : `${roof.length_m}m × ${roof.width_m}m`;
+      : `${roof.length_m}m × ${roof.width_m}m`) + turned;
 
     if (statusEl) statusEl.textContent = `🔄 Live from Revit: ${detail}.`;
     showToast("Roof boundary pushed from Revit", detail + (activeMode !== "combine" ? " — switch to Combine to view." : ""));

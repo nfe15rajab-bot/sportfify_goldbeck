@@ -135,8 +135,7 @@ function buildGardenPayload() {
 
 document.getElementById("btn-garden-json").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(buildGardenPayload(), null, 2)], { type: "application/json" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `garden_${gardenState.activeItemId}_${gardenState.themeId}.json`; a.click();
-  URL.revokeObjectURL(a.href);
+  deliverFile("garden", `garden_${gardenState.activeItemId}_${gardenState.themeId}.json`, blob);
 });
 
 document.getElementById("btn-push-garden").addEventListener("click", () => {

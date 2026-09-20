@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-19-compare" />
+  <link rel="stylesheet" href="style.css?v=2026-09-20-workspace" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -85,6 +85,8 @@
 
     <nav class="mode-rail" id="modeRail" title="Sportify workspaces">
       <button id="modeSite" class="activity-icon" title="Site"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="activity-icon-label">Site</span></button>
+      <button id="modeStructure" class="activity-icon" title="Structure — grid, columns, deck capacity, natural frequency"><i class="ti ti-building" aria-hidden="true"></i><span class="activity-icon-label">Structure</span></button>
+      <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Conditions</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
@@ -105,7 +107,7 @@
       <div id="siteConfigurator" style="display:none">
         <div class="panel-header">
           <h2>Site</h2>
-          <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine/Analysis for shading decisions.</p>
+          <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine/Analysis for shading decisions. The roof's structure and the site's conditions (wind, snow, use over the day) have their own tabs.</p>
         </div>
         <div class="section planner-only">
           <label>Roof boundary</label>
@@ -138,31 +140,12 @@
           <input type="range" id="siteNorthDeg" min="0" max="359" step="1" value="0" />
           <p class="hint">Degrees clockwise from the top of the canvas to true north — <span id="site-north-val">0°</span>.</p>
         </div>
-        <div class="section planner-only">
-          <label>Wind zone (DIN EN 1991-1-4/NA)</label>
-          <select id="siteWindZone">
-            <option value="auto">Automatic from the site location</option>
-            <option value="1">Zone 1</option>
-            <option value="2">Zone 2</option>
-            <option value="3">Zone 3</option>
-            <option value="4">Zone 4</option>
-          </select>
-          <p class="hint" id="site-wind-status">Set a site location in Germany and the zone is looked up.</p>
-        </div>
-        <div class="section planner-only">
+                <div class="section planner-only">
           <label>Roof height above ground (m)</label>
           <input type="number" id="siteRoofHeight" min="0" step="0.5" placeholder="from the Revit model" />
           <p class="hint" id="site-height-status">Comes with a roof pushed from Revit; type a value to override it.</p>
         </div>
-        <div class="section planner-only">
-          <label>Structure grid</label>
-          <p class="hint" id="site-structure-status">No structural grid yet.</p>
-          <p class="hint" style="display:flex;align-items:center;gap:6px">
-            <input type="checkbox" id="siteShowStructure" checked style="margin:0" /> Show grid and columns on the roof
-          </p>
-          <button class="btn-export" id="btn-clear-structure" style="display:none">Remove the grid</button>
-        </div>
-        <div class="section planner-only">
+                <div class="section planner-only">
           <label>Roof features (from Revit)</label>
           <p class="hint" id="site-features-status">Nothing from Revit yet.</p>
           <p class="hint" style="display:flex;align-items:center;gap:6px">
@@ -171,12 +154,7 @@
           <button class="btn-export" id="btn-use-revit-entries" style="display:none" title="Adds an entry point at every stair, lift and door the model has on this roof">Use them as entry points</button>
           <div id="site-features-details"></div>
         </div>
-        <div class="section planner-only">
-          <label>Analysis assumptions</label>
-          <p class="hint">The structural analyses rest on a few values the layout cannot know. Enter your own, or accept the built-in one knowingly; until then every structural result is marked PRELIMINARY. Revit asks the same before it runs an analysis.</p>
-          <div id="assumptions-panel"></div>
-        </div>
-        <div class="section">
+                <div class="section">
           <label>Sun date &amp; time</label>
           <div class="input-row">
             <input type="date" id="siteDate" />
@@ -187,6 +165,51 @@
           <label>Sun position</label>
           <div id="sun-compass" class="sun-compass"></div>
           <p class="hint" id="sun-summary">Set a site location to see sun position and shading guidance.</p>
+        </div>
+      </div>
+
+      <div id="structureConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Structure</h2>
+          <p>What the roof deck is made of and what it can carry: the grid and columns from Revit, the deck capacity, the natural frequency and the comfort limits. The static and dynamic structural analyses rest on them.</p>
+        </div>
+  <div class="section planner-only">
+            <label>Structural grid</label>
+            <p class="hint" id="site-structure-status">No structural grid yet.</p>
+            <p class="hint" style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" id="siteShowStructure" checked style="margin:0" /> Show grid and columns on the roof
+            </p>
+            <button class="btn-export" id="btn-clear-structure" style="display:none">Remove the grid</button>
+          </div>
+
+        <div class="section planner-only">
+          <label>Deck, frequency and comfort</label>
+          <p class="hint">Enter the structural engineer's values, or accept the built-in ones knowingly; until then every structural result is marked PRELIMINARY. Revit asks for the same values before it runs an analysis.</p>
+          <div id="assumptions-panel-structure" class="assumptions-panel"></div>
+        </div>
+      </div>
+
+      <div id="conditionsConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Site conditions</h2>
+          <p>What the roof lives through: the wind zone, the snow, the day's use and the sun and shade targets. Where the roof is and how it is turned stay in the Site tab.</p>
+        </div>
+  <div class="section planner-only">
+            <label>Wind zone (DIN EN 1991-1-4/NA)</label>
+            <select id="siteWindZone">
+              <option value="auto">Automatic from the site location</option>
+              <option value="1">Zone 1</option>
+              <option value="2">Zone 2</option>
+              <option value="3">Zone 3</option>
+              <option value="4">Zone 4</option>
+            </select>
+            <p class="hint" id="site-wind-status">Set a site location in Germany and the zone is looked up.</p>
+          </div>
+
+        <div class="section planner-only">
+          <label>Snow, use and sun</label>
+          <p class="hint">The same choice as for the structure: enter your own value, or accept the built-in one knowingly. Results that use an unconfirmed value are marked PRELIMINARY.</p>
+          <div id="assumptions-panel-conditions" class="assumptions-panel"></div>
         </div>
       </div>
 
@@ -446,10 +469,11 @@
 
       <div id="analysisConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Analysis tools</h2>
-          <p>Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these.</p>
+          <h2 id="analysis-heading">Analysis tools</h2>
+          <p id="analysis-intro">Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these.</p>
         </div>
-        <div class="section iterations-section">
+        <div class="section" id="analysisResultsSection" style="display:none"></div>
+        <div class="section iterations-section" id="analysisIterationsSection">
           <label><i class="ti ti-stack-2" aria-hidden="true"></i> Saved iterations</label>
           <p class="hint">Saved from Combine's Review step ("Save for Compare") — select one to analyze it instead.</p>
           <div class="iterations-list" id="iterationsListAnalysis"></div>
@@ -467,8 +491,6 @@
             <i class="ti ti-help-circle" aria-hidden="true"></i><span id="btn-compare-guide-label">View Compare Guide</span>
           </button>
         </div>
-
-        <div class="section" id="compareResultsSection" style="display:none"></div>
 
         <div class="section" id="comparePrioritySection">
           <label>Quick priority</label>
@@ -538,6 +560,9 @@
         <div id="site-content" style="display:none">
           <div id="site-map" class="site-map"></div>
         </div>
+
+        <div id="structure-content" style="display:none"><div class="res-wrap" id="structure-view"></div></div>
+        <div id="conditions-content" style="display:none"><div class="res-wrap" id="conditions-view"></div></div>
 
         <div id="data-content" style="display:none"></div>
 
@@ -642,7 +667,8 @@
           <div class="guide-wrap">
             <div class="guide-hero">
               <h1>Deliverables</h1>
-              <p class="hint">Real, working exports grouped by discipline — each button downloads the actual current state, not a placeholder.</p>
+              <p class="hint">Everything Sportify makes, in one folder on your machine with a subfolder for every kind of deliverable. With Revit connected the app and Revit share that folder: exports are saved there by themselves, the analyses run on your layout with one button, and nothing has to be imported or exported by hand.</p>
+              <p class="hint ws-status" id="dl-status"></p>
             </div>
 
             <div class="deliverables-grid">
@@ -657,14 +683,18 @@
               </div>
               <div class="deliverable-group">
                 <div class="deliverable-group-title"><i class="ti ti-layout-grid" aria-hidden="true"></i>Combine</div>
-                <button class="deliverable-item" id="btn-deliver-combine-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Combined JSON<small>Full session — feeds the Revit add-in</small></span></button>
+                <button class="deliverable-item" id="btn-deliver-combine-json"><i class="ti ti-file-code" aria-hidden="true"></i><span>Combined JSON<small>Full session, also sent to Revit</small></span></button>
                 <button class="deliverable-item" id="btn-deliver-combine-png"><i class="ti ti-photo" aria-hidden="true"></i><span>Roof PNG<small>Current arrangement as an image</small></span></button>
               </div>
-              <div class="deliverable-group deliverable-group-note">
-                <div class="deliverable-group-title"><i class="ti ti-building-factory-2" aria-hidden="true"></i>Revit</div>
-                <p class="hint">Analysis reports, functional diagrams, and schedules are still placeholder commands in the add-in's ribbon — not generating real files yet.</p>
+              <div class="deliverable-group">
+                <div class="deliverable-group-title"><i class="ti ti-building-factory-2" aria-hidden="true"></i>Analysis and Revit</div>
+                <div id="dl-actions" class="dl-actions"></div>
               </div>
             </div>
+            <div id="dl-message"></div>
+
+            <h2 class="dl-heading">Your Sportify folder</h2>
+            <div id="dl-folders" class="dl-folders"></div>
           </div>
         </div>
 
@@ -694,6 +724,8 @@
           <div class="combine-roof-pane">
             <div class="combine-canvas-wrap">
               <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+              <!-- Combine's "Revit layers" switch (revitLayers.js): what the Revit model has, drawn over the roof only when turned on -->
+              <div class="revit-layers" id="revit-layers"></div>
               <div class="combine-zoom-controls">
                 <button id="btn-combine-zoom-in" title="Zoom in"><i class="ti ti-plus" aria-hidden="true"></i></button>
                 <button id="btn-combine-zoom-out" title="Zoom out"><i class="ti ti-minus" aria-hidden="true"></i></button>
@@ -914,37 +946,40 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-19-compare"></script>
-  <script src="activitiesData.js?v=2026-09-19-compare"></script>
-  <script src="vegetation.js?v=2026-09-19-compare"></script>
-  <script src="zones.js?v=2026-09-19-compare"></script>
-  <script src="assumptions.js?v=2026-09-19-compare"></script>
-  <script src="roofFeatures.js?v=2026-09-19-compare"></script>
-  <script src="structure.js?v=2026-09-19-compare"></script>
-  <script src="assemblies.js?v=2026-09-19-compare"></script>
-  <script src="gardenData.js?v=2026-09-19-compare"></script>
-  <script src="prebuiltSessions.js?v=2026-09-19-compare"></script>
-  <script src="rules.js?v=2026-09-19-compare"></script>
-  <script src="sunPosition.js?v=2026-09-19-compare"></script>
-  <script src="balls.js?v=2026-09-19-compare"></script>
-  <script src="field.js?v=2026-09-19-compare"></script>
-  <script src="activityField.js?v=2026-09-19-compare"></script>
-  <script src="gardenField.js?v=2026-09-19-compare"></script>
-  <script src="combineField.js?v=2026-09-19-compare"></script>
-  <script src="siteField.js?v=2026-09-19-compare"></script>
-  <script src="buildupEditor.js?v=2026-09-19-compare"></script>
-  <script src="dataTab.js?v=2026-09-19-compare"></script>
-  <script src="revitBridge.js?v=2026-09-19-compare"></script>
-  <script src="sportController.js?v=2026-09-19-compare"></script>
-  <script src="gardenController.js?v=2026-09-19-compare"></script>
-  <script src="windZones.js?v=2026-09-19-compare"></script>
-  <script src="siteController.js?v=2026-09-19-compare"></script>
-  <script src="combineController.js?v=2026-09-19-compare"></script>
-  <script src="analysisController.js?v=2026-09-19-compare"></script>
-  <script src="analysisResults.js?v=2026-09-19-compare"></script>
-  <script src="compareController.js?v=2026-09-19-compare"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-19-compare"></script>
-  <script src="sessionGate.js?v=2026-09-19-compare"></script>
-  <script src="main.js?v=2026-09-19-compare"></script>
+  <script src="data.js?v=2026-09-20-workspace"></script>
+  <script src="activitiesData.js?v=2026-09-20-workspace"></script>
+  <script src="vegetation.js?v=2026-09-20-workspace"></script>
+  <script src="zones.js?v=2026-09-20-workspace"></script>
+  <script src="assumptions.js?v=2026-09-20-workspace"></script>
+  <script src="roofFeatures.js?v=2026-09-20-workspace"></script>
+  <script src="structure.js?v=2026-09-20-workspace"></script>
+  <script src="assemblies.js?v=2026-09-20-workspace"></script>
+  <script src="gardenData.js?v=2026-09-20-workspace"></script>
+  <script src="prebuiltSessions.js?v=2026-09-20-workspace"></script>
+  <script src="rules.js?v=2026-09-20-workspace"></script>
+  <script src="sunPosition.js?v=2026-09-20-workspace"></script>
+  <script src="balls.js?v=2026-09-20-workspace"></script>
+  <script src="field.js?v=2026-09-20-workspace"></script>
+  <script src="activityField.js?v=2026-09-20-workspace"></script>
+  <script src="gardenField.js?v=2026-09-20-workspace"></script>
+  <script src="combineField.js?v=2026-09-20-workspace"></script>
+  <script src="siteField.js?v=2026-09-20-workspace"></script>
+  <script src="buildupEditor.js?v=2026-09-20-workspace"></script>
+  <script src="dataTab.js?v=2026-09-20-workspace"></script>
+  <script src="revitBridge.js?v=2026-09-20-workspace"></script>
+  <script src="sportController.js?v=2026-09-20-workspace"></script>
+  <script src="gardenController.js?v=2026-09-20-workspace"></script>
+  <script src="windZones.js?v=2026-09-20-workspace"></script>
+  <script src="siteController.js?v=2026-09-20-workspace"></script>
+  <script src="combineController.js?v=2026-09-20-workspace"></script>
+  <script src="analysisController.js?v=2026-09-20-workspace"></script>
+  <script src="analysisResults.js?v=2026-09-20-workspace"></script>
+  <script src="siteTabs.js?v=2026-09-20-workspace"></script>
+  <script src="workspaceBridge.js?v=2026-09-20-workspace"></script>
+  <script src="revitLayers.js?v=2026-09-20-workspace"></script>
+  <script src="compareController.js?v=2026-09-20-workspace"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-20-workspace"></script>
+  <script src="sessionGate.js?v=2026-09-20-workspace"></script>
+  <script src="main.js?v=2026-09-20-workspace"></script>
 </body>
 </html>

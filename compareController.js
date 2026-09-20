@@ -328,7 +328,7 @@ function miniRoofSvg(state) {
 function layoutAndScoreConfig(def) {
   const roof = def.roof || COMPARE_ROOF;
   const state = {
-    roof: { ...roof, boundary: null, originXm: 0, originYm: 0 },
+    roof: { ...roof, boundary: null, originXm: 0, originYm: 0, rotationDeg: 0 },
     items: def.items.map((it, i) => ({ ...it, id: `${def.id}_item_${i}`, rotation: it.rotation || 0, x_m: it.x_m ?? 0, y_m: it.y_m ?? 0 })),
     entryPoints: [],
   };
@@ -637,6 +637,91 @@ function setComparePriorityControlsVisible(visible) {
   });
 }
 
+/* ── Structure and site conditions, iteration by iteration ──
+ * The scored cards compare what was PLACED. What a layout is judged against is just as much a part of an iteration: the structure it stands on, and the
+ * conditions it lives through. Each saved iteration carries them in its payload (structure, site_conditions, analysis_assumptions), so they are laid side by
+ * side here: the rows that differ between the iterations first, the ones that are the same in all of them folded away. A value nobody entered is shown as
+ * the built-in one, and whether it was accepted, so "the same" never hides a default that only one iteration confirmed.
+ */
+
+function cmpAccepted(p, key) {
+  return ((p.analysis_assumptions && p.analysis_assumptions.accepted) || []).includes(key);
+}
+
+/** An input: what was entered (formatted), else the built-in value and whether it was accepted. */
+function cmpInput(p, key, value, format) {
+  const def = typeof assumptionDef === "function" ? assumptionDef(key) : null;
+  if (value != null && value !== "") return { text: format ? format(value) : String(value), state: "entered" };
+  return { text: "built-in" + (def ? ": " + assumptionText(def.defaultText) : ""), state: cmpAccepted(p, key) ? "accepted" : "unconfirmed" };
+}
+
+function cmpChoice(key, value) {
+  const def = typeof assumptionDef === "function" ? assumptionDef(key) : null;
+  const c = def && def.choices ? def.choices.find(x => x.key === value) : null;
+  return c ? c.label : String(value);
+}
+
+const COMPARE_INPUT_ROWS = [
+  { group: "Structure", label: "Structural grid", get: p => {
+      const st = p.structure;
+      const lines = st && Array.isArray(st.grid_lines) ? st.grid_lines.length : 0;
+      const cols = st && Array.isArray(st.columns) ? st.columns.length : 0;
+      return lines || cols ? { text: `${lines} grid lines, ${cols} columns`, state: "entered" } : { text: "none (a regular grid is assumed)", state: "none" };
+    } },
+  { group: "Structure", label: "Deck capacity", get: p => cmpInput(p, "deck_capacity", p.structure && p.structure.deck_capacity_kn_m2, v => v + " kN/m²") },
+  { group: "Structure", label: "Natural frequency", get: p => cmpInput(p, "natural_frequency", p.structure && p.structure.natural_frequency_hz, v => v + " Hz") },
+  { group: "Structure", label: "Comfort limit, walking", get: p => cmpInput(p, "comfort_limit_walking", p.analysis_assumptions && p.analysis_assumptions.comfort_limit_walking_g, v => v + " g") },
+  { group: "Structure", label: "Comfort limit, rhythmic", get: p => cmpInput(p, "comfort_limit_rhythmic", p.analysis_assumptions && p.analysis_assumptions.comfort_limit_rhythmic_g, v => v + " g") },
+  { group: "Site conditions", label: "Wind zone", get: p => {
+      const sc = p.site_conditions || {};
+      return sc.wind_zone ? { text: `Zone ${sc.wind_zone}${sc.wind_zone_manual ? " (set by hand)" : ""}`, state: "entered" } : { text: "not known", state: "none" };
+    } },
+  { group: "Site conditions", label: "Snow zone", get: p => cmpInput(p, "snow_zone", p.site_conditions && p.site_conditions.snow_zone, v => cmpChoice("snow_zone", String(v))) },
+  { group: "Site conditions", label: "Altitude", get: p => { const sc = p.site_conditions || {}; return cmpInput(p, "altitude", sc.altitude_set === false ? null : sc.altitude_m, v => v + " m"); } },
+  { group: "Site conditions", label: "Use over the day", get: p => cmpInput(p, "day_schedule", p.site_conditions && p.site_conditions.day_schedule, v => cmpChoice("day_schedule", String(v))) },
+  { group: "Site conditions", label: "Roof orientation", get: p => { const sc = p.site_conditions || {}; return cmpInput(p, "roof_north", sc.north_set ? sc.north_deg : null, v => v + "°"); } },
+  { group: "Site conditions", label: "Latitude", get: p => {
+      const typed = p.analysis_assumptions && p.analysis_assumptions.site_latitude_deg;
+      const mapped = p.site_location && p.site_location.latitude_deg;
+      return cmpInput(p, "site_latitude", typed != null ? typed : mapped, v => (Math.round(v * 1e4) / 1e4) + "° N");
+    } },
+  { group: "Site conditions", label: "Shade target", get: p => cmpInput(p, "shade_target", p.analysis_assumptions && p.analysis_assumptions.shade_target_percent, v => v + "%") },
+  { group: "Site conditions", label: "Sun the gardens need", get: p => cmpInput(p, "garden_min_sun", p.analysis_assumptions && p.analysis_assumptions.garden_min_sun_hours, v => v + " h") },
+  { group: "Site conditions", label: "Shading equipment", get: p => cmpInput(p, "shade_equipment", p.analysis_assumptions && p.analysis_assumptions.shade_equipment, v => cmpChoice("shade_equipment", String(v))) }
+];
+
+const COMPARE_INPUT_STATE_TEXT = { entered: "", accepted: " (accepted)", unconfirmed: " (not confirmed)", none: "" };
+
+function compareInputsCardHtml() {
+  const entries = savedCompareConfigs;
+  if (!entries.length || typeof resCard !== "function") return "";
+  const esc = typeof resEsc === "function" ? resEsc : String;
+  const rows = COMPARE_INPUT_ROWS.map(r => {
+    const cells = entries.map(e => { try { return r.get(e.payload || {}); } catch (err) { return { text: "—", state: "none" }; } });
+    return { row: r, cells, differs: new Set(cells.map(c => c.text + "|" + c.state)).size > 1 };
+  });
+  const differing = rows.filter(r => r.differs);
+  const same = rows.filter(r => !r.differs);
+
+  const head = `<tr><th>Input</th>${entries.map(e => `<th>${esc(e.name)}</th>`).join("")}</tr>`;
+  const line = r => `<tr class="${r.differs ? "compare-input-differs" : ""}"><td>${esc(r.row.group)}: ${esc(r.row.label)}</td>${r.cells.map(c =>
+    `<td class="compare-input-${c.state}">${esc(c.text)}<span class="res-muted">${COMPARE_INPUT_STATE_TEXT[c.state]}</span></td>`).join("")}</tr>`;
+
+  const verdict = entries.length < 2
+    ? "Save a second iteration from Combine's Review step to see how their structure and conditions differ."
+    : differing.length === 0
+      ? "The iterations rest on the same structure and the same site conditions: what differs between them is the layout."
+      : `${differing.length} of ${rows.length} inputs differ between the iterations: a result that differs may be down to these and not to the layout.`;
+
+  return `<div class="res-wrap compare-inputs">${resCard({
+    title: "Structure and site conditions", sub: "What each iteration was judged against (from what was saved with it).",
+    tone: differing.length ? "warn" : "ok", chip: entries.length < 2 ? "one iteration" : differing.length ? `${differing.length} differ` : "same",
+    body: `<p class="hint">${esc(verdict)}</p>
+      ${differing.length ? `<table class="res-table"><thead>${head}</thead><tbody>${differing.map(line).join("")}</tbody></table>` : ""}
+      ${same.length ? `<details class="res-details"${differing.length ? "" : " open"}><summary>${differing.length ? "The same in every iteration" : "Inputs"} (${same.length})</summary><table class="res-table"><thead>${head}</thead><tbody>${same.map(line).join("")}</tbody></table></details>` : ""}`
+  })}</div>`;
+}
+
 /**
  * Two views, toggled by #btn-compare-guide:
  *  - Default ("My Comparisons"): ONLY savedCompareConfigs — the user's own
@@ -648,13 +733,6 @@ function setComparePriorityControlsVisible(visible) {
  *    the user has saved.
  */
 function updateCompareUI() {
-  // The rail's other buttons (Garden, Structure, Sport, Safety, Other) show what Revit's analyses found: analysisResults.js.
-  if (typeof compareSub !== "undefined" && compareSub !== "layout" && typeof renderCompareAnalysisView === "function") {
-    renderCompareAnalysisView();
-    return;
-  }
-  if (typeof restoreCompareLayoutPanel === "function") restoreCompareLayoutPanel();
-
   const goldbeckPreset = typeof activeGoldbeckPresetId !== "undefined" ? activeGoldbeckPresetId : null;
   const usingGoldbeck = !!goldbeckPreset && typeof GOLDBECK_PREBUILT_SESSIONS === "object";
 
@@ -718,7 +796,7 @@ function updateCompareUI() {
   setComparePriorityControlsVisible(true);
   compareResultsCache = slotDefs.map(layoutAndScoreConfig);
   compareCardsBuilt = false;
-  if (contentEl) contentEl.innerHTML = `<div class="compare-cards" id="compareCards"></div>`;
+  if (contentEl) contentEl.innerHTML = `<div class="compare-cards" id="compareCards"></div>` + compareInputsCardHtml();
   renderCompareResults(compareResultsCache, computeWeights());
 }
 

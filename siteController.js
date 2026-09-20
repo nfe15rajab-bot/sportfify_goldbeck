@@ -29,7 +29,7 @@ function pickRegion(addr) {
 /** The wind zone the analysis will use, and where it came from. */
 function effectiveWindZone() {
   if (siteState.windZoneChoice !== "auto") {
-    return { zone: Number(siteState.windZoneChoice), confidence: "manual", basis: "set by hand in the Site tab", note: "" };
+    return { zone: Number(siteState.windZoneChoice), confidence: "manual", basis: "set by hand in the Site conditions tab", note: "" };
   }
   const auto = siteState.windZoneAuto;
   return auto && auto.zone ? auto : { zone: null, confidence: "none", basis: "", note: auto ? auto.note : "" };
@@ -109,6 +109,7 @@ function updateWindAndHeightUI() {
 
 /** Refreshes the site-location readout + sun compass/summary from siteState — mirrors updateGardenUI/updateCombineUI's role for the new Site & Sun panel. */
 function updateSiteUI() {
+  if (typeof updateAssumptionsUI === "function") updateAssumptionsUI();   // the latitude and the orientation are also inputs of the sun analysis (assumptions panel)
   const coordsEl = document.getElementById("site-coords-status");
   if (coordsEl) {
     coordsEl.textContent = siteState.lat == null
@@ -132,6 +133,7 @@ function updateSiteUI() {
   updateWindAndHeightUI();
   if (typeof updateStructureUI === "function") updateStructureUI();
   if (typeof updateRoofFeaturesUI === "function") updateRoofFeaturesUI();
+  if (typeof updateSiteTabsUI === "function") updateSiteTabsUI();      // the Structure and Site conditions tabs show the same site
 }
 
 document.getElementById("siteWindZone").addEventListener("change", e => {

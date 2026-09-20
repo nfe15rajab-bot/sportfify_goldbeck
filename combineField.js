@@ -201,6 +201,7 @@ function drawCombineCanvas() {
       Roof boundary — ${roof.length} m × ${roof.width} m
     </text>
     ${roofShapeSvg(roof, scale, roofOx, roofOy, roofPxW, roofPxH)}
+    ${typeof revitBoundarySvg === "function" ? revitBoundarySvg(scale, roofOx, roofOy) : ""}
     ${snapGridSvg(roof, scale, roofOx, roofOy)}
     ${typeof zonesSvg === "function" ? zonesSvg(scale, roofOx, roofOy) : ""}
     ${typeof structureSvg === "function" ? structureSvg(scale, roofOx, roofOy) : ""}

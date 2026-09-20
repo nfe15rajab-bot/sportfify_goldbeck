@@ -7,18 +7,25 @@
  */
 
 const combineState = {
-  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, originZm: 0, heightAboveGroundM: 0, heightSource: "" },
+  // rotationDeg: how far the plan is turned from the Revit model's X axis (counter-clockwise), for a roof that is turned against the model:
+  // the Revit add-in turns the plan to follow the roof, and the import turns it back. 0 for a roof typed in by hand.
+  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, rotationDeg: 0, pushedScope: null, originZm: 0, heightAboveGroundM: 0, heightSource: "" },
   items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
   suggestions: [],
   // The roof's structural grid and columns (from a Revit push or a loaded session; see structure.js), and the deck
   // capacity the structural engineer gave, in kN/m². null = none / not entered.
   structure: null, deckCapacityKnM2: null, showStructure: true,
+  // Combine's "Revit layers" switch (revitLayers.js): off until turned on; `shown` holds the layers the designer switched on or off by hand.
+  revitLayers: { on: false, shown: {} },
   // What the Revit model says about the roof besides its outline and structure (openings, entries, edge, drains, slab, levels): see roofFeatures.js.
   roofFeatures: null, showRoofFeatures: true,
   // For the dynamic analysis (see structure.js): the deck's first natural frequency (Hz, the engineer's), the site's snow zone and altitude, the day's schedule.
   naturalFrequencyHz: null, snowZone: "", altitudeM: null, daySchedule: "",
   // The comfort limits (g) the designer set, and which built-in analysis assumptions they accepted knowingly (see assumptions.js).
   comfortWalkingG: null, comfortRhythmicG: null, assumptionsAccepted: [],
+  // For the sun and shade analysis: the shade target (% of a people zone) and the sun the gardens need (h), the equipment kinds that may be
+  // recommended ("" = all), and a latitude typed by the designer (the Site tab's map is used when this is null).
+  shadeTargetPercent: null, gardenMinSunHours: null, shadeEquipment: "", siteLatitudeDeg: null,
   // Pushed-but-not-yet-placed pieces — a "Push to Combine" click lands here
   // first (mini-game inventory tray, rendered beside the roof canvas), not
   // directly on the roof. Dragging a thumbnail out onto the canvas is what
@@ -210,8 +217,8 @@ function applySmartRuleRecommendation(rec) {
   showToast("Smart rules applied", `Circulation width and minimum entries raised for ~${rec.totalAreaM2} m² programmed.`);
 }
 
-document.getElementById("roofLength").addEventListener("input", e => { combineState.roof.length = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
-document.getElementById("roofWidth").addEventListener("input", e => { combineState.roof.width = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("roofLength").addEventListener("input", e => { combineState.roof.length = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; combineState.roof.rotationDeg = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("roofWidth").addEventListener("input", e => { combineState.roof.width = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; combineState.roof.rotationDeg = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 // Manual Revit Import
 document.getElementById("btn-import-revit").addEventListener("click", () => { document.getElementById("import-revit-file").click(); });
@@ -231,6 +238,7 @@ document.getElementById("import-revit-file").addEventListener("change", e => {
       combineState.roof.boundary = roof.boundary_m || null;
       combineState.roof.originXm = roof.origin_x_m ?? 0;
       combineState.roof.originYm = roof.origin_y_m ?? 0;
+      combineState.roof.rotationDeg = roof.rotation_deg ?? 0;
       document.getElementById("roofLength").value = roof.length_m;
       document.getElementById("roofWidth").value  = roof.width_m;
 
@@ -445,6 +453,8 @@ function buildCombinedPayload() {
       // roof was set manually rather than pushed from Revit.
       world_origin_x_m: combineState.roof.originXm || 0,
       world_origin_y_m: combineState.roof.originYm || 0,
+      // How far the plan is turned from the Revit model's X axis (degrees, counter-clockwise): the import turns everything back by it.
+      rotation_deg: combineState.roof.rotationDeg || 0,
       // Elevation of the pushed roof. Zero when the roof was typed in by hand
       // rather than pushed from Revit, which correctly means "ground level".
       world_origin_z_m: combineState.roof.originZm || 0,
@@ -536,23 +546,20 @@ function downloadCombinedSession() {
   const payload = buildCombinedPayload();
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `sportify_combined_revit.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  // Kept in the Sportify folder (Layouts) when Revit is connected, else downloaded (workspaceBridge.js).
+  deliverFile("layouts", `sportify_combined_revit.json`, blob).then(r => {
+    if (!r.kept) showToast("Session saved", "Downloaded — load it back in anytime to pick up exactly where you left off.");
+  });
 
   // Best-effort live push to Revit's Auto Import toggle — same
   // fire-and-forget style as the rest of the Revit bridge in this file.
   // Revit not running (or the add-in not loaded) just means this silently
-  // fails; the local download above already succeeded either way.
+  // fails; the file above was kept or downloaded either way.
   fetch(REVIT_COMBINED_LAYOUT_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   }).catch(() => {});
-
-  showToast("Session saved", "Downloaded — load it back in anytime to pick up exactly where you left off.");
 }
 
 document.getElementById("btn-combine-json").addEventListener("click", downloadCombinedSession);
@@ -583,13 +590,7 @@ function downloadCombineRoofPng() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     URL.revokeObjectURL(url);
-    canvas.toBlob(blob => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "sportify_combine_roof.png";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
+    canvas.toBlob(blob => { deliverFile("layouts", "sportify_combine_roof.png", blob); });
   };
   img.onerror = () => { URL.revokeObjectURL(url); showToast("PNG export failed", "Couldn't rasterize the roof canvas."); };
   img.src = url;
@@ -640,6 +641,7 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.boundary = rc.source_boundary_polygon || null;
   combineState.roof.originXm = rc.world_origin_x_m || 0;
   combineState.roof.originYm = rc.world_origin_y_m || 0;
+  combineState.roof.rotationDeg = rc.rotation_deg || 0;
   combineState.roofFeatures = typeof roofFeaturesFromPayload === "function" ? roofFeaturesFromPayload(rc.features) : null;
 
   if (payload.design_rules) {
