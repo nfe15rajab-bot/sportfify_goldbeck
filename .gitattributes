@@ -1,0 +1,17 @@
+# Line endings, spelled out so they do not depend on each machine's core.autocrlf (which is why some files were CRLF and others LF in the working tree):
+# text is LF in the repository AND in the working tree. Only what Windows itself needs stays CRLF.
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# never converted
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.pdf binary
