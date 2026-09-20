@@ -799,3 +799,72 @@ html[data-mode="dark"] .res-pill.state-unconfirmed { color: #fbbf24; }
 .revit-layer-list .revit-layer { min-width: 0; }
 .dl-folder .hint { font-size: 10.5px; line-height: 1.35; margin: 2px 0 0; }
 .dl-folder h3 { font-size: 12px; font-weight: 700; }
+
+/* ── Algorithmic placement mode (algoPlacementUI.js) ── */
+#combineConfigurator { position: relative; }
+.placement-switch-bar { display: flex; justify-content: flex-start; }
+.placement-switch { display: inline-flex; background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: 999px; padding: 2px; gap: 2px; }
+.placement-switch button { display: inline-flex; align-items: center; gap: 5px; border: none; background: transparent; color: var(--text-secondary); font: 600 11.5px var(--font-sans); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.placement-switch button i { font-size: 14px; }
+.placement-switch button:hover { color: var(--text-primary); }
+.placement-switch button.active { background: var(--fill-accent); color: var(--on-accent); }
+.algo-placement { position: absolute; inset: 0; z-index: 30; background: var(--surface-0); display: flex; flex-direction: column; overflow: hidden; }
+.algo-placement[hidden] { display: none; }
+.algo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 16px 20px 10px; border-bottom: 0.5px solid var(--border); }
+.algo-head h2 { margin: 0 0 4px; font-size: 16px; display: flex; align-items: center; gap: 7px; }
+.algo-head h2 i { color: var(--text-accent); }
+.algo-head .hint { margin: 0; max-width: 620px; }
+.algo-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(340px, 470px) minmax(0, 1fr); gap: 16px; padding: 14px 20px 18px; }
+.algo-left { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 6px; }
+.algo-right { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.algo-card { background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.algo-card h3 { margin: 0; font-size: 12px; font-weight: 700; display: flex; align-items: baseline; gap: 8px; }
+.algo-card h3 small { font-weight: 500; font-size: 10.5px; color: var(--text-muted); }
+.algo-card .hint { margin: 0; font-size: 11px; }
+.algo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.algo-grid label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-secondary); }
+.algo-check { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; color: var(--text-primary); cursor: pointer; }
+.algo-check input { width: auto !important; margin-top: 2px; }
+.algo-check small { color: var(--text-muted); }
+.algo-row-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.algo-row-buttons .btn-export { width: auto; padding: 5px 10px; font-size: 11px; }
+.algo-row-buttons .btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+.algo-blocks { display: flex; flex-direction: column; gap: 6px; }
+.algo-block { display: grid; grid-template-columns: 86px repeat(4, minmax(0, 1fr)) 24px; gap: 5px; align-items: center; }
+.algo-block label { display: flex; align-items: center; gap: 3px; font-size: 10.5px; color: var(--text-muted); }
+.algo-block input, .algo-block select { padding: 4px 5px !important; font-size: 11px; min-width: 0; }
+.algo-block select { background: var(--surface-1); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: var(--radius); }
+.algo-block button { border: none; background: transparent; color: var(--text-muted); font-size: 16px; cursor: pointer; border-radius: 4px; }
+.algo-block button:hover { color: var(--text-fail); background: var(--bg-fail); }
+.algo-empty { margin: 0; font-size: 11px; color: var(--text-muted); }
+.algo-sports { display: flex; flex-direction: column; gap: 5px; }
+.algo-sports.disabled { opacity: 0.45; }
+.algo-sport { display: grid; grid-template-columns: 14px minmax(0, 1fr) 76px 48px 104px 78px; gap: 8px; align-items: center; font-size: 11.5px; }
+.algo-swatch { width: 14px; height: 14px; border-radius: 3px; border: 0.5px solid rgba(0,0,0,0.3); }
+.algo-sport-name i { color: var(--text-muted); font-size: 11px; }
+.algo-sport-size, .algo-sport-area { color: var(--text-muted); font-size: 10.5px; }
+.algo-qty { display: inline-flex; align-items: center; gap: 3px; }
+.algo-qty button { width: 24px; height: 24px; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-primary); border-radius: 5px; cursor: pointer; font-size: 14px; line-height: 1; }
+.algo-qty button:hover { border-color: var(--border-accent); color: var(--text-accent); }
+.algo-qty input { width: 44px !important; text-align: center; padding: 4px !important; }
+.algo-fit { color: var(--text-fail); font-size: 10.5px; font-weight: 600; }
+.algo-preview { background: #f7f7f7; border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 8px; display: flex; justify-content: center; align-items: center; min-height: 200px; }
+.algo-preview svg { width: 100%; max-height: 46vh; height: auto; touch-action: none; }
+.algo-preview-empty { color: #5a5a5a; font-size: 12px; text-align: center; padding: 30px 12px; }
+.algo-warn { margin: 0; font-size: 11.5px; color: var(--text-fail); white-space: pre-wrap; }
+.algo-warn:empty { display: none; }
+.algo-summary { margin: 0; font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.algo-summary.ok { color: var(--text-success); }
+.algo-summary.bad { color: var(--text-fail); }
+.algo-bar { height: 8px; border-radius: 999px; background: var(--surface-1); border: 0.5px solid var(--border); overflow: hidden; }
+.algo-bar > div { height: 100%; width: 0; background: var(--text-success); transition: width 0.2s; }
+.algo-bar > div.bad { background: var(--text-fail); }
+.algo-bar > div.busy { background: var(--fill-accent); }
+.algo-report { margin: 0; font: 11px/1.5 var(--font-mono, ui-monospace, Consolas, monospace); color: var(--text-secondary); white-space: pre-wrap; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 10px; }
+.algo-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.algo-actions .btn-export { width: auto; padding: 7px 12px; }
+.algo-actions .btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (max-width: 1000px) { .algo-body { grid-template-columns: 1fr; overflow-y: auto; } .algo-left, .algo-right { overflow: visible; } }
+@media (max-width: 1000px) { .algo-right { order: -1; } }
+.algo-right > *, .algo-left > * { flex-shrink: 0; }
+.algo-preview { overflow: hidden; }

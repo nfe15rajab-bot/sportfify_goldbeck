@@ -721,7 +721,10 @@
         </div>
 
         <div id="combineConfigurator" style="display:none">
+          <!-- Algorithmic placement (algoPlacementUI.js): an alternative to placing pieces by hand; covers the board while it is chosen -->
+          <div class="algo-placement" id="algo-placement" hidden></div>
           <div class="combine-roof-pane">
+            <div class="placement-switch-bar" data-placement-switch></div>
             <div class="combine-canvas-wrap">
               <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
               <!-- Combine's "Revit layers" switch (revitLayers.js): what the Revit model has, drawn over the roof only when turned on -->
@@ -976,6 +979,8 @@
   <script src="analysisResults.js?v=2026-09-20-workspace"></script>
   <script src="siteTabs.js?v=2026-09-20-workspace"></script>
   <script src="workspaceBridge.js?v=2026-09-20-workspace"></script>
+  <script src="algoPlacementCore.js?v=2026-09-20-workspace"></script>
+  <script src="algoPlacementUI.js?v=2026-09-20-workspace"></script>
   <script src="revitLayers.js?v=2026-09-20-workspace"></script>
   <script src="compareController.js?v=2026-09-20-workspace"></script>
   <script src="revitFamiliesTab.js?v=2026-09-20-workspace"></script>
