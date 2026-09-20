@@ -260,7 +260,7 @@ function zonesSvg(scale, roofOx, roofOy) {
             stroke-dasharray="${bad ? "4,2" : "none"}"
             style="cursor:${isPlanner ? "move" : "pointer"}"/>
       <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10"
-            font-family="'Titillium Web', Arial, sans-serif" fill="#f4f4f2"
+            font-family="'Titillium Web', Arial, sans-serif" fill="${typeof canvasLabelFill === "function" ? canvasLabelFill() : "#f4f4f2"}"
             pointer-events="none" opacity="0.9">
         ${kind.short} · ${zoneAreaM2(z).toFixed(0)} m²${bad ? " ⚠" : ""}
       </text>`;
@@ -303,7 +303,7 @@ function zonesSvg(scale, roofOx, roofOy) {
               stroke="${kind.color}" stroke-width="1.5" stroke-dasharray="4,3"
               pointer-events="none"/>
         <text x="${roofOx + (b.x + b.w / 2) * scale}" y="${roofOy + (b.y + b.h / 2) * scale + 4}"
-              text-anchor="middle" font-size="10" fill="#f4f4f2" pointer-events="none">
+              text-anchor="middle" font-size="10" fill="${typeof canvasLabelFill === "function" ? canvasLabelFill() : "#f4f4f2"}" pointer-events="none">
           ${b.w.toFixed(1)} × ${b.h.toFixed(1)} m
         </text>`;
     }

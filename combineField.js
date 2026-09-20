@@ -187,6 +187,18 @@ function addEntryPoint(xm, ym) {
   if (typeof refreshSuggestions === "function") refreshSuggestions();
 }
 
+/**
+ * The colour a label on the canvas has to be.
+ *
+ * These were hardcoded near-white, which reads on the dark canvas and vanishes
+ * on the light one. A label sitting on a saturated court can stay white in
+ * both themes; a label sitting on the canvas background — every piece name,
+ * which is drawn below its shape — cannot.
+ */
+function canvasLabelFill() {
+  return (typeof isDarkMode === "function" && isDarkMode()) ? "#e8ece8" : "#2a2d3a";
+}
+
 function drawCombineCanvas() {
   const svg = document.getElementById("combine-canvas");
   if (!svg) return;
@@ -197,7 +209,7 @@ function drawCombineCanvas() {
 
   let el = `
     <text x="${CVW / 2}" y="24" text-anchor="middle" font-size="12"
-          font-family="'Titillium Web', Arial, sans-serif" fill="#444">
+          font-family="'Titillium Web', Arial, sans-serif" fill="${isDarkMode() ? "#8c90a8" : "#666"}">
       Roof boundary — ${roof.length} m × ${roof.width} m
     </text>
     ${roofShapeSvg(roof, scale, roofOx, roofOy, roofPxW, roofPxH)}
@@ -255,9 +267,12 @@ function drawCombineCanvas() {
       const spin = item.rotation
         ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
       el += `<g${spin}>${furnitureSvg(x, y, w, h, item, selected, strokeColor, isPlanner)}</g>`;
-      if (w > 26) {
+      // Below about 26 px the name is wider than the thing it names, so it is
+      // left off — unless the piece is selected, which is the moment you are
+      // asking what it is.
+      if (w > 26 || selected) {
         el += `<text x="${x + w / 2}" y="${y + h + 9}" text-anchor="middle" font-size="8"
-                     font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+                     font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
                  ${item.label}
                </text>`;
       }
@@ -280,7 +295,7 @@ function drawCombineCanvas() {
                 style="cursor:${isPlanner ? "grab" : "pointer"}"/>
         </g>
         <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
-              font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
           ${item.label}${cutOff ? " 🚫" : ""}
         </text>`;
       return;
@@ -304,7 +319,7 @@ function drawCombineCanvas() {
                 style="cursor:${isPlanner ? "grab" : "pointer"}"/>
         </g>
         <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
-              font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
           ${item.label}${cutOff ? " 🚫" : ""}
         </text>`;
       return;
@@ -326,7 +341,7 @@ function drawCombineCanvas() {
                 style="cursor:${isPlanner ? "grab" : "pointer"}"/>
         </g>
         <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
-              font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
           ${item.label}${cutOff ? " 🚫" : ""}
         </text>`;
       return;
@@ -342,7 +357,7 @@ function drawCombineCanvas() {
       <circle cx="${x + w / 2}" cy="${y + h / 2}" r="1.6"
               fill="${strokeColor}" pointer-events="none"/>
       <text x="${x + w / 2}" y="${y + h / 2 + 14}" text-anchor="middle" font-size="9"
-            font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+            font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
         ${item.label}${cutOff ? " 🚫" : ""}
       </text>
     `
@@ -353,7 +368,7 @@ function drawCombineCanvas() {
             stroke-dasharray="${warn || cutOff ? '4,2' : 'none'}"
             style="cursor:${isPlanner ? 'grab' : 'pointer'}"/>
       <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="10"
-            font-family="'Titillium Web', Arial, sans-serif" fill="#1a1a18" pointer-events="none">
+            font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
         ${item.label}${item.rotation ? " (rotated)" : ""}${cutOff ? " 🚫" : ""}
       </text>
     `;
