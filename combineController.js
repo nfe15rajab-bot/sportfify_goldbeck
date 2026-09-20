@@ -482,6 +482,9 @@ function buildCombinedPayload() {
     // The leftover surface, as ONE floor with holes: the roof boundary is the
     // outer loop and every zone and court is an opening. Revit draws the slab
     // the way it would be drawn by hand — coplanar, nothing overlapping.
+    // Named so an importer can tell "no build-up chosen" from "the catalog was
+    // not loaded when this was exported" — they look identical on the far side.
+    unresolved_assemblies: typeof unresolvedAssemblyKeys === "function" ? unresolvedAssemblyKeys() : [],
     roof_finish: typeof buildRoofFinishPayload === "function" ? buildRoofFinishPayload() : null,
     zones: typeof buildZonePayload === "function"
       ? (combineState.zones || []).map(buildZonePayload)
@@ -632,6 +635,14 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.zones = Array.isArray(payload.zones) && typeof zoneFromPayload === "function"
     ? payload.zones.map(zoneFromPayload)
     : [];
+  // The catalog is fetched lazily when the Zones panel opens — which a resumed
+  // session need never do. Without it every zone exports with its build-up
+  // unresolved, and Revit reports a floor type that was never described.
+  if (combineState.zones.length && typeof assembliesLoaded !== "undefined" && !assembliesLoaded
+      && typeof loadAssemblies === "function") {
+    loadAssemblies().then(() => { if (typeof drawCombineCanvas === "function") drawCombineCanvas(); })
+                    .catch(() => { /* the panels report it; the export warns below */ });
+  }
   if (payload.roof_finish?.assembly_key && typeof roofFinishKey !== "undefined") {
     roofFinishKey = payload.roof_finish.assembly_key;
   }

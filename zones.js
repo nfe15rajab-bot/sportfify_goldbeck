@@ -716,13 +716,35 @@ function zoneFromPayload(z, i) {
 }
 
 /** Every distinct build-up used by the drawn zones, so an import creates each floor type once. */
+/**
+ * Every build-up the export refers to, zones and the roof finish alike.
+ *
+ * The finish was missing from this list, which meant Revit looked up a system
+ * the export had never described and quietly drew no floor. Anything that
+ * names an assembly_key has to have that assembly here, or the far side is
+ * reading a reference to nothing.
+ */
 function collectZoneAssemblies() {
   ensureZoneState();
   const seen = new Map();
-  combineState.zones.forEach(z => {
-    if (!z.assemblyKey || seen.has(z.assemblyKey)) return;
-    const payload = typeof buildAssemblyPayload === "function" ? buildAssemblyPayload(z.assemblyKey) : null;
-    if (payload) seen.set(z.assemblyKey, payload);
-  });
+  const add = key => {
+    if (!key || seen.has(key)) return;
+    const payload = typeof buildAssemblyPayload === "function" ? buildAssemblyPayload(key) : null;
+    if (payload) seen.set(key, payload);
+  };
+  combineState.zones.forEach(z => add(z.assemblyKey));
+  if (typeof roofFinishKey !== "undefined") add(roofFinishKey);
   return [...seen.values()];
+}
+
+/**
+ * Build-ups an export refers to but cannot describe, because the catalog was
+ * never fetched. Silence here produced "no floor type was built for its
+ * build-up system" in Revit, with nothing on this side to explain it.
+ */
+function unresolvedAssemblyKeys() {
+  ensureZoneState();
+  const keys = new Set(combineState.zones.map(z => z.assemblyKey).filter(Boolean));
+  if (typeof roofFinishKey !== "undefined" && roofFinishKey) keys.add(roofFinishKey);
+  return [...keys].filter(k => !(typeof getAssembly === "function" && getAssembly(k)));
 }
