@@ -65,48 +65,64 @@ const PADEL = {
 };
 
 /* ── The four things that are actually a choice ─────────────────────────────
-   Everything above is fixed by the rules. Everything here changes the cost,
-   the weight and the look, and a client would be shown all four. */
-const PADEL_OPTIONS = {
-  courtType: {
-    label: "Court type",
-    values: {
-      double: { label: "Double — 20 × 10 m", note: "The standard court." },
-      single: { label: "Single — 20 × 6 m", note: "Narrower, for singles play." },
-    },
-  },
-  wallSystem: {
-    label: "Wall system",
-    values: {
-      panoramic: {
-        label: "Panoramic",
-        note: "Frameless glass ends — no corner posts in the sightline. The premium build.",
-        glassThickness_mm: 12,
-      },
-      standard: {
-        label: "Standard framed",
-        note: "Glass panels in a steel frame. More posts, lower cost.",
-        glassThickness_mm: 10,
-      },
-    },
-  },
-  surface: {
-    label: "Surface",
-    values: {
-      artificial_grass: { label: "Artificial grass", note: "20–25 mm pile with sand infill. The usual choice." },
-      concrete:         { label: "Porous concrete", note: "Hard, fast, low maintenance." },
-      acrylic:          { label: "Acrylic", note: "Hard court finish over a bound base." },
-    },
-  },
-  surfaceColour: {
-    label: "Surface colour",
-    values: {
-      blue:       { label: "Blue",       hex: "#2f6fb5" },
-      green:      { label: "Green",      hex: "#3f8f52" },
-      terracotta: { label: "Terracotta", hex: "#b5613a" },
-    },
-  },
-};
+   Everything above is fixed by the rules. These are products, and products
+   live in the database — adding a fourth surface is a row in the Data tab, not
+   a change to this file. They started life as constants here, which meant a
+   landscape architect needed a developer to add a colour.
+
+   No fallback, deliberately, the same as the build-up and species catalogs: a
+   built-in copy that quietly stands in when the API is down means two catalogs
+   that drift, and a court specified from the stale one without anyone knowing. */
+
+const PADEL_OPTIONS_API = "http://localhost:5107/api/SportOptions?sport=padel";
+
+/** { courtType: {label, values:{key:{label,note,...}}}, ... } once loaded. */
+let PADEL_OPTIONS = {};
+let padelOptionsLoaded = false;
+
+/** The API's option_group names, in the order the panel shows them. */
+const PADEL_GROUPS = [
+  ["court_type",     "courtType",     "Court type"],
+  ["wall_system",    "wallSystem",    "Wall system"],
+  ["surface",        "surface",       "Surface"],
+  ["surface_colour", "surfaceColour", "Surface colour"],
+];
+
+async function loadPadelOptions() {
+  const res = await fetch(PADEL_OPTIONS_API, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Sport options API returned ${res.status}`);
+  const rows = await res.json();
+
+  PADEL_OPTIONS = {};
+  PADEL_GROUPS.forEach(([apiGroup, stateKey, label]) => {
+    const values = {};
+    rows.filter(r => r.optionGroup === apiGroup)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .forEach(r => {
+          values[r.key] = {
+            label: r.label,
+            note: r.note || "",
+            hex: r.colourHex || null,
+            texture: r.textureHint || null,
+            glassThickness_mm: r.thicknessMm ?? null,
+            weight_kg_m2: r.weightKgM2 ?? null,
+            price: r.priceValue ?? null,
+            price_unit: r.priceUnit || null,
+            price_quoted: !!r.priceIsQuoted,
+            cost_group: r.costGroupDin276 || null,
+          };
+        });
+    if (Object.keys(values).length) PADEL_OPTIONS[stateKey] = { label, values };
+  });
+
+  padelOptionsLoaded = true;
+  // A default that named an option the catalog no longer has would silently
+  // configure a court nobody chose.
+  Object.entries(PADEL_OPTIONS).forEach(([key, group]) => {
+    if (!group.values[padelState[key]]) padelState[key] = Object.keys(group.values)[0];
+  });
+  return PADEL_OPTIONS;
+}
 
 const padelState = {
   courtType: "double",
@@ -131,11 +147,8 @@ const PADEL_WEIGHTS = {
   mesh_kg_m2: 3.5,               // panel plus its frame
   steelFrame_kg_m2_court: 9,     // posts and rails, spread over the court
   net_kg: 80,                    // net, cable and posts
-  surface: {
-    artificial_grass: 15,        // pile plus sand infill — the infill dominates
-    concrete: 0,                 // part of the deck build-up, not the court
-    acrylic: 6,
-  },
+  // The surface's own weight comes from the catalog row, so changing a product
+  // changes the deck load without touching this file.
 };
 
 function padelWeight(state = padelState) {
@@ -162,7 +175,7 @@ function padelWeight(state = padelState) {
     { what: "Mesh panels",    kg: (backMesh_m2 + sideMesh_m2) * PADEL_WEIGHTS.mesh_kg_m2 },
     { what: "Steel frame",    kg: area_m2 * PADEL_WEIGHTS.steelFrame_kg_m2_court },
     { what: "Net and posts",  kg: PADEL_WEIGHTS.net_kg },
-    { what: "Playing surface", kg: area_m2 * (PADEL_WEIGHTS.surface[state.surface] ?? 0) },
+    { what: "Playing surface", kg: area_m2 * (PADEL_OPTIONS.surface?.values?.[state.surface]?.weight_kg_m2 ?? 0) },
   ];
   const total_kg = parts.reduce((s, p) => s + p.kg, 0);
   return { parts, total_kg, area_m2, perM2_kg: total_kg / area_m2, halfLen };
@@ -202,18 +215,23 @@ function shade(hex, t) {          // t>0 lighter, t<0 darker
  * court looks the same in the model as it did in the panel.
  */
 function padelSurfaceAppearance(state = padelState) {
-  const picked = PADEL_OPTIONS.surfaceColour.values[state.surfaceColour]?.hex || "#2f6fb5";
-  switch (state.surface) {
+  const picked = PADEL_OPTIONS.surfaceColour?.values?.[state.surfaceColour]?.hex || "#2f6fb5";
+  // The texture is a property of the product, so it comes from the catalog —
+  // a new surface added in the Data tab says for itself how it should read.
+  switch (PADEL_OPTIONS.surface?.values?.[state.surface]?.texture || state.surface) {
+    case "speckle":
     case "concrete":
       // Grey first, pigment second. A "blue" concrete court is a grey court
       // with a blue cast, and showing it as vivid blue would be a promise the
       // material cannot keep.
       return { base: mixToGrey(picked, 0.66), texture: "speckle",
                accent: shade(mixToGrey(picked, 0.66), -0.18), gloss: 0 };
+    case "sheen":
     case "acrylic":
       // Paint: the most saturated of the three, and the only one with a sheen.
       return { base: mixToGrey(picked, -0.12), texture: "sheen",
                accent: shade(picked, 0.12), gloss: 0.18 };
+    case "pile":
     case "artificial_grass":
     default:
       // Dyed fibre: slightly muted, and the pile reads as fine lines.
@@ -377,6 +395,7 @@ function padelPanelHtml() {
   const d = padelDims(), w = padelWeight();
   const pick = (key) => {
     const o = PADEL_OPTIONS[key];
+    if (!o) return "";
     const opts = Object.entries(o.values).map(([v, def]) =>
       `<option value="${v}"${padelState[key] === v ? " selected" : ""}>${def.label}</option>`).join("");
     const note = o.values[padelState[key]]?.note;
@@ -401,10 +420,7 @@ function padelPanelHtml() {
         target="_blank" rel="noopener">FIP rules</a>, so not editable — a court built to other numbers is not a padel court.
       </p>
     </div>
-    ${pick("courtType")}
-    ${pick("wallSystem")}
-    ${pick("surface")}
-    ${pick("surfaceColour")}
+    ${PADEL_GROUPS.map(([, stateKey]) => pick(stateKey)).join("")}
     <div class="section">
       <label>Weight on the deck</label>
       <div class="dims">
@@ -420,6 +436,26 @@ function syncPadelPanel(activityId) {
   const host = document.getElementById("activity-spec-panel");
   if (!host) return;
   const isPadel = activityId === "padel_court";
+
+  // The catalog lives in the database, so there is nothing to configure until
+  // it has been fetched. Said plainly rather than shown as empty dropdowns,
+  // which would read as "this court has no options".
+  if (isPadel && !padelOptionsLoaded) {
+    host.innerHTML = `<div class="section"><p class="hint">Loading court options…</p></div>`;
+    loadPadelOptions()
+      .then(() => syncPadelPanel(activityId))
+      .catch(err => {
+        host.innerHTML = `
+          <div class="section">
+            <label>Reference database unavailable</label>
+            <p class="hint">Court options live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
+            <button class="btn-export accent" id="btn-padel-retry">Retry</button>
+          </div>`;
+        document.getElementById("btn-padel-retry")?.addEventListener("click", () => syncPadelPanel(activityId));
+      });
+    return;
+  }
 
   document.querySelectorAll("#activity-params .section").forEach(sec => {
     const label = sec.querySelector("label")?.textContent?.trim();
@@ -466,7 +502,7 @@ function padelPlacementPayload(state = padelState) {
     side_corner_glass: PADEL.sideWall.cornerGlass,
     side_step_glass: PADEL.sideWall.stepGlass,
     side_centre_mesh_height_m: PADEL.sideWall.centreMeshHeight_m,
-    glass_thickness_mm: PADEL_OPTIONS.wallSystem.values[state.wallSystem]?.glassThickness_mm ?? 10,
+    glass_thickness_mm: PADEL_OPTIONS.wallSystem?.values?.[state.wallSystem]?.glassThickness_mm ?? 10,
     // A court needs 6 m of clear air above it. Carried so the clearance can be
     // checked rather than assumed.
     clear_height_min_m: PADEL.clearHeight.minimum_m,

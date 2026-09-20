@@ -65,58 +65,67 @@ const BASKETBALL = {
   runoff_m: 2.0,
 };
 
-/* ── The choices that are genuinely a choice ─────────────────────────────── */
-const BASKETBALL_OPTIONS = {
-  variant: {
-    label: "Court size",
-    values: {
-      standard:    { label: "FIBA full court — 28 × 15 m", note: "The regulation playing court." },
-      mini:        { label: "Reduced — 22 × 13 m", note: "Training and school courts. Markings scale with it." },
-      competition: { label: "Competition area — 34 × 19 m", note: "The 28 × 15 court plus its 2 m free zone all round." },
-    },
-  },
-  hoops: {
-    label: "Baskets",
-    values: {
-      two: { label: "Two — full court", note: "A basket at each end." },
-      one: { label: "One — half court", note: "The usual choice where space is short." },
-    },
-  },
-  mounting: {
-    label: "Basket mounting",
-    values: {
-      // You cannot dig a foundation on a roof, so this is a real decision
-      // and the weight difference between the two is large.
-      ballasted: { label: "Ballasted, freestanding", note: "No fixing to the deck. The ballast is the weight.", kgEach: 900 },
-      bolted:    { label: "Bolted to the structure", note: "Lighter, but it has to land on something that can take it.", kgEach: 260 },
-    },
-  },
-  surface: {
-    label: "Surface",
-    values: {
-      acrylic:      { label: "Acrylic hard court", note: "Painted acrylic over a bound base. The outdoor default.", kg_m2: 6 },
-      polyurethane: { label: "Poured polyurethane", note: "Seamless, more forgiving underfoot, more expensive.", kg_m2: 8 },
-      tiles:        { label: "Modular tiles", note: "Clipped polypropylene. Drains, and lifts for access.", kg_m2: 5 },
-    },
-  },
-  courtColour: {
-    label: "Court colour",
-    values: {
-      blue:       { label: "Blue",       hex: "#2f6fb5" },
-      green:      { label: "Green",      hex: "#3f8f52" },
-      terracotta: { label: "Terracotta", hex: "#b5613a" },
-      grey:       { label: "Grey",       hex: "#6d737c" },
-    },
-  },
-  keyColour: {
-    label: "Key colour",
-    values: {
-      // A contrasting key is the convention, and reading as one colour would
-      // lose the thing that makes a basketball court recognisable at a glance.
-      contrast:  { label: "Contrasting", note: "The usual: a different colour inside the key." },
-      matching:  { label: "Same as court", note: "Markings only, no colour block." },
-    },
-  },
+/* ── The choices that are genuinely a choice ─────────────────────────────────
+   Products, so they live in the database — same as padel's, in the same table.
+   Adding a surface or a different basket mounting is a row in the Data tab.
+
+   No fallback: a built-in copy that stands in when the API is down means two
+   catalogs that drift, and a court specified from the stale one. */
+
+const BASKETBALL_OPTIONS_API = "http://localhost:5107/api/SportOptions?sport=basketball";
+
+let BASKETBALL_OPTIONS = {};
+let basketballOptionsLoaded = false;
+
+/** API option_group -> state key, in the order the panel shows them. */
+const BASKETBALL_GROUPS = [
+  ["hoops",        "hoops",       "Baskets"],
+  ["mounting",     "mounting",    "Basket mounting"],
+  ["surface",      "surface",     "Surface"],
+  ["court_colour", "courtColour", "Court colour"],
+  ["key_colour",   "keyColour",   "Key colour"],
+];
+
+async function loadBasketballOptions() {
+  const res = await fetch(BASKETBALL_OPTIONS_API, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Sport options API returned ${res.status}`);
+  const rows = await res.json();
+
+  BASKETBALL_OPTIONS = {};
+  BASKETBALL_GROUPS.forEach(([apiGroup, stateKey, label]) => {
+    const values = {};
+    rows.filter(r => r.optionGroup === apiGroup)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .forEach(r => {
+          values[r.key] = {
+            label: r.label,
+            note: r.note || "",
+            hex: r.colourHex || null,
+            texture: r.textureHint || null,
+            kg_m2: r.weightKgM2 ?? null,
+            kgEach: r.weightKgEach ?? null,
+            price: r.priceValue ?? null,
+            price_unit: r.priceUnit || null,
+            price_quoted: !!r.priceIsQuoted,
+            cost_group: r.costGroupDin276 || null,
+          };
+        });
+    if (Object.keys(values).length) BASKETBALL_OPTIONS[stateKey] = { label, values };
+  });
+
+  basketballOptionsLoaded = true;
+  Object.entries(BASKETBALL_OPTIONS).forEach(([key, group]) => {
+    if (!group.values[basketballState[key]]) basketballState[key] = Object.keys(group.values)[0];
+  });
+  return BASKETBALL_OPTIONS;
+}
+
+/* The size variant stays here: it is not a product, it is which court this is,
+   and it already comes from the sports database through FIELDS. */
+const BASKETBALL_VARIANT_NOTE = {
+  standard:    "FIBA regulation playing court.",
+  mini:        "reduced",
+  competition: "with free zone",
 };
 
 const basketballState = {
@@ -164,9 +173,9 @@ function basketballPlayArea(state = basketballState) {
 function basketballWeight(state = basketballState) {
   const d = basketballDims(state);
   const area = d.length_m * d.width_m;
-  const perM2 = BASKETBALL_OPTIONS.surface.values[state.surface]?.kg_m2 ?? 6;
+  const perM2 = BASKETBALL_OPTIONS.surface?.values?.[state.surface]?.kg_m2 ?? 0;
   const hoopCount = state.hoops === "one" ? 1 : 2;
-  const kgEach = BASKETBALL_OPTIONS.mounting.values[state.mounting]?.kgEach ?? 900;
+  const kgEach = BASKETBALL_OPTIONS.mounting?.values?.[state.mounting]?.kgEach ?? 0;
 
   const parts = [
     { what: "Playing surface", kg: area * perM2 },
@@ -179,10 +188,11 @@ function basketballWeight(state = basketballState) {
 /* ── Appearance ──────────────────────────────────────────────────────────── */
 
 function basketballAppearance(state = basketballState) {
-  const picked = BASKETBALL_OPTIONS.courtColour.values[state.courtColour]?.hex || "#2f6fb5";
+  const picked = BASKETBALL_OPTIONS.courtColour?.values?.[state.courtColour]?.hex || "#2f6fb5";
   const mix = (hex, t) => (typeof mixToGrey === "function" ? mixToGrey(hex, t) : hex);
   const sh = (hex, t) => (typeof shade === "function" ? shade(hex, t) : hex);
-  switch (state.surface) {
+  // The texture is a property of the product, from the catalog.
+  switch (BASKETBALL_OPTIONS.surface?.values?.[state.surface]?.texture || state.surface) {
     case "tiles":
       // Modular tiles read as a grid, because they are one.
       return { base: mix(picked, 0.08), texture: "tiles", accent: sh(picked, -0.22) };
@@ -372,6 +382,7 @@ function basketballPanelHtml() {
   const w = basketballWeight();
   const pick = key => {
     const o = BASKETBALL_OPTIONS[key];
+    if (!o) return "";
     const opts = Object.entries(o.values).map(([v, def]) =>
       `<option value="${v}"${basketballState[key] === v ? " selected" : ""}>${def.label}</option>`).join("");
     const note = o.values[basketballState[key]]?.note;
@@ -393,11 +404,7 @@ function basketballPanelHtml() {
       </div>
       <p class="hint">${basketballVariantNote()}</p>
     </div>
-    ${pick("hoops")}
-    ${pick("mounting")}
-    ${pick("surface")}
-    ${pick("courtColour")}
-    ${pick("keyColour")}
+    ${BASKETBALL_GROUPS.map(([, stateKey]) => pick(stateKey)).join("")}
     <div class="section">
       <label>Weight on the deck</label>
       <div class="dims">
@@ -415,6 +422,23 @@ function syncBasketballPanel(sport) {
   const host = document.getElementById("sport-spec-panel");
   if (!host) return;
   const isBasketball = sport === "basketball";
+
+  if (isBasketball && !basketballOptionsLoaded) {
+    host.innerHTML = `<div class="section"><p class="hint">Loading court options…</p></div>`;
+    loadBasketballOptions()
+      .then(() => { syncBasketballPanel(sport); if (typeof drawField === "function") drawField(sport, basketballState.variant, 0, isDarkMode()); })
+      .catch(err => {
+        host.innerHTML = `
+          <div class="section">
+            <label>Reference database unavailable</label>
+            <p class="hint">Court options live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
+            <button class="btn-export accent" id="btn-bball-retry">Retry</button>
+          </div>`;
+        document.getElementById("btn-bball-retry")?.addEventListener("click", () => syncBasketballPanel(sport));
+      });
+    return;
+  }
   host.innerHTML = isBasketball ? basketballPanelHtml() : "";
   if (!isBasketball) return;
 
