@@ -11,6 +11,17 @@ function drawField(sport, variant, capacity, isDark) {
   const d = FIELDS[sport]?.[variant] || FIELDS.polyvalent.mini;
   const svg = document.getElementById("field");
 
+  // A specified sport draws itself. On a basketball court the markings ARE
+  // the court — a plain rectangle says nothing about whether it is one.
+  // The variant is set BEFORE the panel renders: the panel states which court
+  // this is, and reading a stale variant made it call a mini court regulation.
+  if (sport === "basketball" && typeof basketballState !== "undefined") basketballState.variant = variant;
+  if (typeof syncBasketballPanel === "function") syncBasketballPanel(sport);
+  if (sport === "basketball" && typeof drawBasketballPreview === "function") {
+    drawBasketballPreview(svg, isDark);
+    return;
+  }
+
   const aspect = d.l / d.w;
   let fw, fh;
   if (aspect > (VW - PAD * 2) / (VH - PAD * 2)) {
