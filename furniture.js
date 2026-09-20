@@ -26,7 +26,11 @@ const FURNITURE_API = "http://localhost:5107/api/Furniture";
 let FURNITURE = {};
 let furnitureLoaded = false;
 
-const furnitureState = { key: null };
+// Category first, then the product inside it. One dropdown holding every
+// bench, bin, bollard and light stops being findable the moment the catalog is
+// real — and a catalog that cannot be added to without becoming unusable is
+// not much of a catalog.
+const furnitureState = { category: null, key: null };
 
 /** How each category reads on the canvas — it has to be legible at 2 m wide. */
 const FURNITURE_CATEGORIES = {
@@ -66,10 +70,35 @@ async function loadFurniture() {
   });
 
   furnitureLoaded = true;
-  if (!furnitureState.key || !FURNITURE[furnitureState.key]) {
-    furnitureState.key = Object.keys(FURNITURE)[0] || null;
+  if (!furnitureState.category || !furnitureInCategory(furnitureState.category).length) {
+    furnitureState.category = furnitureCategoriesPresent()[0] || null;
   }
+  ensureFurnitureSelection();
   return FURNITURE;
+}
+
+/** Only the categories the catalog actually has something in. */
+function furnitureCategoriesPresent() {
+  return Object.keys(FURNITURE_CATEGORIES)
+    .filter(cat => Object.values(FURNITURE).some(f => f.category === cat));
+}
+
+function furnitureInCategory(cat) {
+  return Object.values(FURNITURE)
+    .filter(f => f.category === cat)
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/**
+ * Keeps the chosen product inside the chosen category. Switching to Bins while
+ * a bench is still selected would show one product and describe another.
+ */
+function ensureFurnitureSelection() {
+  const inCat = furnitureInCategory(furnitureState.category);
+  if (!inCat.length) { furnitureState.key = null; return; }
+  if (!furnitureState.key || FURNITURE[furnitureState.key]?.category !== furnitureState.category) {
+    furnitureState.key = inCat[0].key;
+  }
 }
 
 function activeFurniture() {
@@ -178,12 +207,17 @@ function furniturePanelHtml() {
   const f = activeFurniture();
   if (!f) return `<div class="section"><p class="hint">No furniture in the catalog yet.</p></div>`;
 
-  const groups = Object.entries(FURNITURE_CATEGORIES).map(([cat, meta]) => {
-    const inCat = Object.values(FURNITURE).filter(x => x.category === cat);
-    if (!inCat.length) return "";
-    return `<optgroup label="${meta.label}">` + inCat.map(x =>
-      `<option value="${x.key}"${x.key === furnitureState.key ? " selected" : ""}>${x.label}</option>`).join("") + `</optgroup>`;
+  const tabs = furnitureCategoriesPresent().map(cat => {
+    const meta = FURNITURE_CATEGORIES[cat];
+    const n = furnitureInCategory(cat).length;
+    return `<button class="furniture-tab${cat === furnitureState.category ? " active" : ""}"
+                    data-furniture-cat="${cat}" title="${meta.label}">
+              ${meta.label}<span class="furniture-tab-count">${n}</span>
+            </button>`;
   }).join("");
+
+  const options = furnitureInCategory(furnitureState.category).map(x =>
+    `<option value="${x.key}"${x.key === furnitureState.key ? " selected" : ""}>${x.label}</option>`).join("");
 
   const t = furnitureTotals();
   const dimNote = f.dimensions_published ? "published" : "typical — check the datasheet";
@@ -192,7 +226,8 @@ function furniturePanelHtml() {
   return `
     <div class="section">
       <label>What are you placing?</label>
-      <select id="furniture-select">${groups}</select>
+      <div class="furniture-tabs">${tabs}</div>
+      <select id="furniture-select">${options}</select>
       <p class="hint">${f.description}</p>
     </div>
 
@@ -257,6 +292,13 @@ function renderFurniturePanel() {
 
   el.innerHTML = furniturePanelHtml();
 
+  el.querySelectorAll("[data-furniture-cat]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      furnitureState.category = btn.dataset.furnitureCat;
+      ensureFurnitureSelection();
+      renderFurniturePanel();
+    });
+  });
   document.getElementById("furniture-select")?.addEventListener("change", e => {
     furnitureState.key = e.target.value;
     renderFurniturePanel();
