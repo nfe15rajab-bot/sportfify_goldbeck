@@ -1,0 +1,48 @@
+name: checks
+
+# The web app's JavaScript is one of three copies of the analysis logic (the others are the Revit add-in's C# and the Unity project's). The checks that keep them the same
+# live in the Revit/API repository (Sportify.Simulation/Tools/README.md); this workflow runs them against THIS repository's files, so a change here that the C# side does
+# not follow (rules.js, assumptions.js) fails before it is merged. It also checks that every script parses and runs the wind-zone lookup test.
+#
+# The other repository is checked out next to this one: the branch with the same name as this one if there is one (work that spans both repositories uses the same
+# branch name), else its default branch. If that repository is private, add a repository secret API_REPO_TOKEN (a token that can read it).
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: web
+
+      - name: Check out the Revit / API repository
+        shell: pwsh
+        env:
+          API_REPO_TOKEN: ${{ secrets.API_REPO_TOKEN }}
+        run: |
+          $auth = if ($env:API_REPO_TOKEN) { "x-access-token:$($env:API_REPO_TOKEN)@" } else { "" }
+          $url = "https://${auth}github.com/nfe15rajab-bot/Sportify_Revit_and_API.git"
+          $branch = "${{ github.head_ref || github.ref_name }}"
+          git clone --depth 1 --branch $branch $url api 2>$null
+          if ($LASTEXITCODE -ne 0) { git clone --depth 1 $url api 2>$null }
+          if (-not (Test-Path api/Sportify.Simulation/Tools/run-checks.js)) { Write-Error "The Revit / API repository could not be checked out (private? add the API_REPO_TOKEN secret)."; exit 1 }
+          $global:LASTEXITCODE = 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run every check, against this repository's files
+        shell: pwsh
+        run: |
+          node api/Sportify.Simulation/Tools/run-checks.js --web web --require-web
+          exit $LASTEXITCODE
