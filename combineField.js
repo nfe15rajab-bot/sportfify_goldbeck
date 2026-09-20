@@ -187,6 +187,18 @@ function addEntryPoint(xm, ym) {
   if (typeof refreshSuggestions === "function") refreshSuggestions();
 }
 
+/**
+ * The colour a label on the canvas has to be.
+ *
+ * These were hardcoded near-white, which reads on the dark canvas and vanishes
+ * on the light one. A label sitting on a saturated court can stay white in
+ * both themes; a label sitting on the canvas background — every piece name,
+ * which is drawn below its shape — cannot.
+ */
+function canvasLabelFill() {
+  return (typeof isDarkMode === "function" && isDarkMode()) ? "#e8ece8" : "#2a2d3a";
+}
+
 function drawCombineCanvas() {
   const svg = document.getElementById("combine-canvas");
   if (!svg) return;
@@ -197,7 +209,7 @@ function drawCombineCanvas() {
 
   let el = `
     <text x="${CVW / 2}" y="24" text-anchor="middle" font-size="12"
-          font-family="'Titillium Web', Arial, sans-serif" fill="#444">
+          font-family="'Titillium Web', Arial, sans-serif" fill="${isDarkMode() ? "#8c90a8" : "#666"}">
       Roof boundary — ${roof.length} m × ${roof.width} m
     </text>
     ${roofShapeSvg(roof, scale, roofOx, roofOy, roofPxW, roofPxH)}
@@ -246,6 +258,97 @@ function drawCombineCanvas() {
     // rectangular because that is genuinely their shape. The trunk sits at the
     // centre of the crown.
     const isCrown = item.kind === "vegetation";
+
+    // A specified sport draws itself here too. The same renderer the panel
+    // uses, at roof scale — otherwise the two would be making different claims
+    // about one court. Rotation is applied to the group rather than baked into
+    // the geometry, so the markings turn with it.
+    // Furniture is small — a bench is 1.8 m on a 60 m roof — so it draws a
+    // shape that reads at that size rather than a miniature of itself.
+    if (typeof isFurnitureItem === "function" && isFurnitureItem(item)) {
+      const spin = item.rotation
+        ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
+      el += `<g${spin}>${furnitureSvg(x, y, w, h, item, selected, strokeColor, isPlanner)}</g>`;
+      // Below about 26 px the name is wider than the thing it names, so it is
+      // left off — unless the piece is selected, which is the moment you are
+      // asking what it is.
+      if (w > 26 || selected) {
+        el += `<text x="${x + w / 2}" y="${y + h + 9}" text-anchor="middle" font-size="8"
+                     font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
+                 ${item.label}
+               </text>`;
+      }
+      return;
+    }
+
+    // Volleyball's free zone is part of the court, so the footprint drawn here
+    // is the whole facility — which is the point: it is what has to fit.
+    if (typeof isVolleyballItem === "function" && isVolleyballItem(item)) {
+      const st = volleyballStateForItem(item);
+      const spin = item.rotation
+        ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
+      const detail = w < 110 ? "simple" : "full";
+      el += `<g${spin}>
+          ${volleyballCourtSvg(x, y, w, h, st, detail, isDarkMode())}
+          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+                fill="transparent" stroke="${strokeColor}"
+                stroke-width="${selected ? 2.5 : 1.5}"
+                stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
+                style="cursor:${isPlanner ? "grab" : "pointer"}"/>
+        </g>
+        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
+              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
+          ${item.label}${cutOff ? " 🚫" : ""}
+        </text>`;
+      return;
+    }
+
+    // A basketball court's markings are the court — a plain rectangle on the
+    // roof says nothing about whether the thing fits or reads as one.
+    if (typeof isBasketballItem === "function" && isBasketballItem(item)) {
+      const st = basketballStateForItem(item);
+      const spin = item.rotation
+        ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
+      // The key, the arcs and the no-charge semicircle collapse into noise
+      // below roughly this width; simple keeps the court legible.
+      const detail = w < 110 ? "simple" : "full";
+      el += `<g${spin}>
+          ${basketballCourtSvg(x, y, w, h, st, detail, isDarkMode())}
+          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+                fill="transparent" stroke="${strokeColor}"
+                stroke-width="${selected ? 2.5 : 1.5}"
+                stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
+                style="cursor:${isPlanner ? "grab" : "pointer"}"/>
+        </g>
+        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
+              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
+          ${item.label}${cutOff ? " 🚫" : ""}
+        </text>`;
+      return;
+    }
+
+    if (typeof isPadelItem === "function" && isPadelItem(item)) {
+      const st = padelStateForItem(item);
+      const spin = item.rotation
+        ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
+      // Below ~90px across, the service lines and mesh hatch turn to mush —
+      // simple keeps the court legible instead of busy.
+      const detail = w < 90 ? "simple" : "full";
+      el += `<g${spin}>
+          ${padelCourtSvg(x, y, w, h, st, detail, isDarkMode())}
+          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+                fill="transparent" stroke="${strokeColor}"
+                stroke-width="${selected ? 2.5 : 1.5}"
+                stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
+                style="cursor:${isPlanner ? "grab" : "pointer"}"/>
+        </g>
+        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
+              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
+          ${item.label}${cutOff ? " 🚫" : ""}
+        </text>`;
+      return;
+    }
+
     el += isCrown
       ? `
       <circle data-id="${item.id}" cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.min(w, h) / 2}"
@@ -256,7 +359,7 @@ function drawCombineCanvas() {
       <circle cx="${x + w / 2}" cy="${y + h / 2}" r="1.6"
               fill="${strokeColor}" pointer-events="none"/>
       <text x="${x + w / 2}" y="${y + h / 2 + 14}" text-anchor="middle" font-size="9"
-            font-family="'Titillium Web', Arial, sans-serif" fill="#e8ece8" pointer-events="none">
+            font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
         ${item.label}${cutOff ? " 🚫" : ""}
       </text>
     `
@@ -267,7 +370,7 @@ function drawCombineCanvas() {
             stroke-dasharray="${warn || cutOff ? '4,2' : 'none'}"
             style="cursor:${isPlanner ? 'grab' : 'pointer'}"/>
       <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="10"
-            font-family="'Titillium Web', Arial, sans-serif" fill="#1a1a18" pointer-events="none">
+            font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
         ${item.label}${item.rotation ? " (rotated)" : ""}${cutOff ? " 🚫" : ""}
       </text>
     `;
@@ -335,6 +438,11 @@ function drawCombineCanvas() {
 
   renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts);
   renderCombineSummary(circulation);
+  if (typeof renderDesignPanel === "function") renderDesignPanel(circulation);
+  // What is selected, and a record of the change — both read the state the
+  // redraw just finished producing, so neither needs telling separately.
+  if (typeof renderInspector === "function") renderInspector();
+  if (typeof recordCombineHistory === "function") recordCombineHistory();
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);
@@ -550,6 +658,63 @@ function renderSuggestions(item, candidates) {
 }
 
 /**
+ * A tray thumbnail: the piece itself, not a coloured square.
+ *
+ * The tray is where you decide which of three pushed pieces to drag out next,
+ * and "rounded rectangle, rounded rectangle, rounded rectangle" does not help
+ * with that. Everything here can already draw itself — the courts draw their
+ * markings on the roof, the furniture draws its elevation in the catalogue —
+ * so the thumbnail reuses those renderers rather than inventing a third
+ * picture of the same object that could drift out of step with them.
+ *
+ * Which view depends on what identifies the thing. A court is its markings, so
+ * it is shown in plan, the same way it will look once dropped. A bench in plan
+ * is a 1.8 m bar and so is a table and so is a bin, so furniture is shown in
+ * elevation instead — the view that answers "which one is this".
+ */
+function trayThumbSvg(item, boxW, boxH) {
+  // Furniture: elevation, stripped of dimensions and the scale figure.
+  if (typeof isFurnitureItem === "function" && isFurnitureItem(item)
+      && typeof furnitureElevationSvg === "function") {
+    const f = item.sourceJson?.furniture;
+    if (f) return furnitureElevationSvg(f, { width: boxW, height: boxH, bare: true });
+  }
+
+  const pad = 3;
+  const fp = typeof getFootprint === "function"
+    ? getFootprint(item) : { w: item.length_m, h: item.width_m };
+  const fit = Math.min((boxW - pad * 2) / fp.w, (boxH - pad * 2) / fp.h);
+  const w = fp.w * fit, h = fp.h * fit;
+  const x = (boxW - w) / 2, y = (boxH - h) / 2;
+  const dark = typeof isDarkMode === "function" && isDarkMode();
+  const colors = (typeof KIND_COLORS !== "undefined" && KIND_COLORS[item.kind]) || { fill: "#6f7681", stroke: "#8a9099" };
+
+  let art;
+  // "simple" throughout: at 64 px the service lines and the three-point arc
+  // turn to mush, and the court is recognised by its outline and key anyway.
+  if (typeof isPadelItem === "function" && isPadelItem(item)) {
+    art = padelCourtSvg(x, y, w, h, padelStateForItem(item), "simple", dark);
+  } else if (typeof isBasketballItem === "function" && isBasketballItem(item)) {
+    art = basketballCourtSvg(x, y, w, h, basketballStateForItem(item), "simple", dark);
+  } else if (typeof isVolleyballItem === "function" && isVolleyballItem(item)) {
+    art = volleyballCourtSvg(x, y, w, h, volleyballStateForItem(item), "simple", dark);
+  } else if (item.kind === "vegetation") {
+    // A crown and a trunk, the same as on the roof.
+    const r = Math.min(w, h) / 2;
+    art = `<circle cx="${boxW / 2}" cy="${boxH / 2}" r="${r}" fill="${colors.fill}"
+                   stroke="${colors.stroke}" stroke-width="1.5"/>
+           <circle cx="${boxW / 2}" cy="${boxH / 2}" r="1.6" fill="${colors.stroke}"/>`;
+  } else {
+    // Anything without a renderer of its own still gets its real proportions,
+    // which is more than the old square said.
+    art = `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"
+                 rx="2" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="1.5"/>`;
+  }
+
+  return `<svg viewBox="0 0 ${boxW} ${boxH}" width="${boxW}" height="${boxH}">${art}</svg>`;
+}
+
+/**
  * Renders the tray's thumbnails from combineState.tray — called at the end
  * of every drawCombineCanvas() so it never drifts out of sync with the
  * roof (tray and canvas are two views of the same combineState).
@@ -570,7 +735,7 @@ function renderCombineTray() {
     return `
       <div class="tray-thumb" data-tray-id="${it.id}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${it.label} — ${it.length_m}m × ${it.width_m}m">
         <button class="tray-thumb-remove" data-tray-remove="${it.id}" title="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>
-        <div class="tray-thumb-box"></div>
+        <div class="tray-thumb-box">${trayThumbSvg(it, 64, 50)}</div>
         <span class="tray-thumb-label">${it.label}</span>
       </div>`;
   }).join("");
@@ -604,7 +769,7 @@ function initTrayDragInteractions() {
 
     const ghost = thumb.cloneNode(true);
     ghost.classList.add("tray-thumb-ghost");
-    ghost.style.left = `${e.clientX - 32}px`;
+    ghost.style.left = `${e.clientX - 39}px`;   // half the thumb's width
     ghost.style.top = `${e.clientY - 32}px`;
     document.body.appendChild(ghost);
 
@@ -675,6 +840,36 @@ function initCombineInteractions() {
 
     // A corner handle is tested before the zone body, or grabbing a corner
     // would move the whole zone instead of resizing it.
+    // A + on an edge inserts a corner there and hands you the drag, so adding
+    // a point and placing it are one gesture rather than two.
+    const addEl = e.target.closest("[data-zone-addpoint]");
+    if (addEl && typeof addZonePoint === "function") {
+      const zid = addEl.dataset.zoneId;
+      const edge = Number(addEl.dataset.zoneAddpoint);
+      addZonePoint(zid, edge);
+      combineState.selectedKind = "zone"; combineState.selectedId = zid;
+      dragState = { kind: "zonePoint", id: zid, index: edge + 1 };
+      drawCombineCanvas();
+      return;
+    }
+
+    const pointEl = e.target.closest("[data-zone-point]");
+    if (pointEl) {
+      const zid = pointEl.dataset.zoneId;
+      const idx = Number(pointEl.dataset.zonePoint);
+      // Double-click removes it; a bed that gained a corner by accident should
+      // not need undo to lose it again.
+      if (e.detail >= 2 && typeof removeZonePoint === "function") {
+        removeZonePoint(zid, idx);
+        drawCombineCanvas();
+        return;
+      }
+      combineState.selectedKind = "zone"; combineState.selectedId = zid;
+      dragState = { kind: "zonePoint", id: zid, index: idx };
+      drawCombineCanvas();
+      return;
+    }
+
     const handleEl = e.target.closest("[data-zone-handle]");
     if (handleEl) {
       dragState = { kind: "zoneResize", id: handleEl.dataset.zoneId, corner: handleEl.dataset.zoneHandle };
@@ -773,13 +968,16 @@ function initCombineInteractions() {
   svg.addEventListener("pointermove", e => {
     if (!dragState) return;
 
-    if (dragState.kind === "zoneDraw" || dragState.kind === "zoneMove" || dragState.kind === "zoneResize") {
+    if (dragState.kind === "zoneDraw" || dragState.kind === "zoneMove"
+        || dragState.kind === "zoneResize" || dragState.kind === "zonePoint") {
       const { scale, roofOx, roofOy } = combineLayout();
       const zp = svgPoint(svg, e);
       const xm = (zp.x - roofOx) / scale, ym = (zp.y - roofOy) / scale;
       if (dragState.kind === "zoneDraw") updateZoneDraw(xm, ym);
       else if (dragState.kind === "zoneMove") moveZoneTo(dragState.id, xm - dragState.grabXm, ym - dragState.grabYm);
+      else if (dragState.kind === "zonePoint") moveZonePoint(dragState.id, dragState.index, xm, ym);
       else resizeZoneTo(dragState.id, dragState.corner, xm, ym);
+      drawCombineCanvas();
       return;
     }
 

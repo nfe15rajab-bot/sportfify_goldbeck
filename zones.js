@@ -93,19 +93,102 @@ function defaultAssemblyFor(kindKey) {
   return list.length ? list[0].key : null;
 }
 
+/* ── Shape ────────────────────────────────────────────────────────────────
+   A zone is a polygon. It starts as a rectangle because dragging one out is
+   the fastest way to say "about here", but a bed is not a rectangle and the
+   shape has to be able to follow what the roof actually leaves.
+
+   `points` is the truth. x_m / y_m / length_m / width_m are its bounding box,
+   kept in step on every change, because the clash checks, the canvas ordering
+   and the rule engine all read the box and none of them need the polygon.
+   Area does not come from the box — see zoneAreaM2. */
+
+function rectPoints(x_m, y_m, length_m, width_m) {
+  return [
+    { x_m, y_m },
+    { x_m: x_m + length_m, y_m },
+    { x_m: x_m + length_m, y_m: y_m + width_m },
+    { x_m, y_m: y_m + width_m },
+  ];
+}
+
+/** Recomputes the bounding box from the points. Call after any shape change. */
+function syncZoneBounds(zone) {
+  const xs = zone.points.map(p => p.x_m);
+  const ys = zone.points.map(p => p.y_m);
+  zone.x_m = Math.min(...xs);
+  zone.y_m = Math.min(...ys);
+  zone.length_m = Math.max(...xs) - zone.x_m;
+  zone.width_m = Math.max(...ys) - zone.y_m;
+  return zone;
+}
+
+/**
+ * True area, by the shoelace — not the bounding box.
+ *
+ * The moment a zone stops being a rectangle these two diverge, and everything
+ * downstream is measured in square metres of real surface: the substrate to
+ * order, the weight the deck carries, the leftover the roof finish covers.
+ */
+function zoneAreaM2(zone) {
+  const pts = zone.points;
+  if (!Array.isArray(pts) || pts.length < 3) {
+    return (zone.length_m || 0) * (zone.width_m || 0);
+  }
+  let twice = 0;
+  for (let i = 0, n = pts.length; i < n; i++) {
+    const a = pts[i], b = pts[(i + 1) % n];
+    twice += a.x_m * b.y_m - b.x_m * a.y_m;
+  }
+  return Math.abs(twice) / 2;
+}
+
 function addZone(x_m, y_m, length_m, width_m) {
   ensureZoneState();
   const zone = {
     id: `zone_${Date.now()}_${zoneCounter++}`,
     kind: combineState.zoneKind,
     assemblyKey: combineState.zoneAssembly,
-    x_m: snapToGrid(x_m),
-    y_m: snapToGrid(y_m),
-    length_m: snapToGrid(length_m),
-    width_m: snapToGrid(width_m),
+    points: rectPoints(snapToGrid(x_m), snapToGrid(y_m), snapToGrid(length_m), snapToGrid(width_m)),
   };
+  syncZoneBounds(zone);
   combineState.zones.push(zone);
   return zone;
+}
+
+/** Moves one vertex, and only that one. */
+function moveZonePoint(id, index, x_m, y_m) {
+  const zone = getZone(id);
+  if (!zone || !zone.points[index]) return;
+  zone.points[index] = { x_m: snapToGrid(x_m), y_m: snapToGrid(y_m) };
+  syncZoneBounds(zone);
+}
+
+/**
+ * Inserts a vertex at the midpoint of edge `index`, so the handle you clicked
+ * becomes a corner you can drag. Splitting an existing edge rather than
+ * appending keeps the winding order intact — a point added at the end would
+ * cross the outline back on itself.
+ */
+function addZonePoint(id, index) {
+  const zone = getZone(id);
+  if (!zone) return;
+  const a = zone.points[index];
+  const b = zone.points[(index + 1) % zone.points.length];
+  zone.points.splice(index + 1, 0, {
+    x_m: snapToGrid((a.x_m + b.x_m) / 2),
+    y_m: snapToGrid((a.y_m + b.y_m) / 2),
+  });
+  syncZoneBounds(zone);
+}
+
+/** Removes a vertex. Three is the floor — below that there is no area left. */
+function removeZonePoint(id, index) {
+  const zone = getZone(id);
+  if (!zone || zone.points.length <= 3) return false;
+  zone.points.splice(index, 1);
+  syncZoneBounds(zone);
+  return true;
 }
 
 function removeZone(id) {
@@ -164,27 +247,47 @@ function zonesSvg(scale, roofOx, roofOy) {
     const h = z.width_m * scale;
     const selected = z.id === selectedId;
 
+    const px = p => roofOx + p.x_m * scale;
+    const py = p => roofOy + p.y_m * scale;
+    const poly = z.points.map(p => `${px(p)},${py(p)}`).join(" ");
+    const cx = z.points.reduce((s, p) => s + px(p), 0) / z.points.length;
+    const cy = z.points.reduce((s, p) => s + py(p), 0) / z.points.length;
+
     out += `
-      <rect data-zone-id="${z.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+      <polygon data-zone-id="${z.id}" points="${poly}"
             fill="${kind.color}" fill-opacity="${selected ? 0.5 : 0.35}"
             stroke="${bad ? "#ef4444" : kind.color}" stroke-width="${selected ? 2.5 : bad ? 2 : 1}"
             stroke-dasharray="${bad ? "4,2" : "none"}"
             style="cursor:${isPlanner ? "move" : "pointer"}"/>
-      <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="10"
-            font-family="'Titillium Web', Arial, sans-serif" fill="#f4f4f2"
+      <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10"
+            font-family="'Titillium Web', Arial, sans-serif" fill="${typeof canvasLabelFill === "function" ? canvasLabelFill() : "#f4f4f2"}"
             pointer-events="none" opacity="0.9">
-        ${kind.short} · ${(z.length_m * z.width_m).toFixed(0)} m²${bad ? " ⚠" : ""}
+        ${kind.short} · ${zoneAreaM2(z).toFixed(0)} m²${bad ? " ⚠" : ""}
       </text>`;
 
     if (selected && isPlanner) {
-      // One handle per corner. Which corner is grabbed decides which edges move,
-      // so a zone can be resized from any side without a separate mode.
-      [["nw", x, y], ["ne", x + w, y], ["se", x + w, y + h], ["sw", x, y + h]].forEach(([corner, hx, hy]) => {
-        out += `<rect data-zone-handle="${corner}" data-zone-id="${z.id}"
-                      x="${hx - ZONE_HANDLE / 2}" y="${hy - ZONE_HANDLE / 2}"
+      // A handle per vertex, dragging that vertex alone — a bed is not a
+      // rectangle, and resizing from a corner could only ever keep it one.
+      z.points.forEach((p, i) => {
+        out += `<rect data-zone-point="${i}" data-zone-id="${z.id}"
+                      x="${px(p) - ZONE_HANDLE / 2}" y="${py(p) - ZONE_HANDLE / 2}"
                       width="${ZONE_HANDLE}" height="${ZONE_HANDLE}"
                       fill="#f4f4f2" stroke="${kind.color}" stroke-width="1"
-                      style="cursor:${corner === "nw" || corner === "se" ? "nwse-resize" : "nesw-resize"}"/>`;
+                      style="cursor:grab">
+                  <title>Drag to move this corner · double-click to remove it</title>
+                </rect>`;
+      });
+      // And a smaller one on every edge: click it and that midpoint becomes a
+      // corner, which is how the outline gains detail where it needs it.
+      z.points.forEach((p, i) => {
+        const q = z.points[(i + 1) % z.points.length];
+        const mx = (px(p) + px(q)) / 2, my = (py(p) + py(q)) / 2;
+        out += `<circle data-zone-addpoint="${i}" data-zone-id="${z.id}"
+                        cx="${mx}" cy="${my}" r="${ZONE_HANDLE / 2}"
+                        fill="${kind.color}" fill-opacity="0.85" stroke="#f4f4f2" stroke-width="1"
+                        style="cursor:copy">
+                  <title>Add a corner here</title>
+                </circle>`;
       });
     }
   });
@@ -200,7 +303,7 @@ function zonesSvg(scale, roofOx, roofOy) {
               stroke="${kind.color}" stroke-width="1.5" stroke-dasharray="4,3"
               pointer-events="none"/>
         <text x="${roofOx + (b.x + b.w / 2) * scale}" y="${roofOy + (b.y + b.h / 2) * scale + 4}"
-              text-anchor="middle" font-size="10" fill="#f4f4f2" pointer-events="none">
+              text-anchor="middle" font-size="10" fill="${typeof canvasLabelFill === "function" ? canvasLabelFill() : "#f4f4f2"}" pointer-events="none">
           ${b.w.toFixed(1)} × ${b.h.toFixed(1)} m
         </text>`;
     }
@@ -290,6 +393,16 @@ function zoneBoxHitsItem(x_m, y_m, w_m, h_m) {
 }
 
 function moveZoneTo(id, x_m, y_m) {
+  // Translate the outline, not the box: the box is only ever derived from it.
+  const zoneForMove = getZone(id);
+  if (zoneForMove && Array.isArray(zoneForMove.points)) {
+    const dx = snapToGrid(x_m) - zoneForMove.x_m;
+    const dy = snapToGrid(y_m) - zoneForMove.y_m;
+    zoneForMove.points = zoneForMove.points.map(p => ({ x_m: p.x_m + dx, y_m: p.y_m + dy }));
+    syncZoneBounds(zoneForMove);
+    return;
+  }
+
   const z = getZone(id);
   if (!z) return;
   const nx = snapToGrid(x_m), ny = snapToGrid(y_m);
@@ -381,6 +494,8 @@ function renderZonePanel() {
   const selected = combineState.selectedKind === "zone" ? getZone(combineState.selectedId) : null;
 
   el.innerHTML = `
+    ${typeof roofFinishSectionHtml === "function" ? roofFinishSectionHtml() : ""}
+
     <div class="section">
       <label>What are you drawing?</label>
       <select id="zone-kind-select">${kindOptions}</select>
@@ -434,6 +549,8 @@ function assemblyStripSvg(assembly) {
 }
 
 function wireZonePanel() {
+  if (typeof wireRoofFinishSection === "function") wireRoofFinishSection();
+
   const kindSel = document.getElementById("zone-kind-select");
   if (kindSel) kindSel.addEventListener("change", () => {
     combineState.zoneKind = kindSel.value;
@@ -488,27 +605,8 @@ document.addEventListener("keydown", e => {
 
 /* ── Flyout open/close ── */
 
-function toggleZoneFlyout(force) {
-  // The flyout lives on the Combine canvas, so opening it from the rail means
-  // going there first — otherwise the button appears to do nothing from Sport.
-  if ((force === undefined || force) && typeof setMode === "function" && activeMode !== "combine") {
-    setMode("combine");
-  }
-  const fly = document.getElementById("zone-flyout");
-  const btn = document.getElementById("btn-zone-toggle");
-  if (!fly) return;
-  const open = force !== undefined ? force : fly.hidden;
-  fly.hidden = !open;
-  if (btn) btn.classList.toggle("active", open);
-  if (open) renderZonePanel();
-  // Closing the flyout disarms the tool — leaving it armed behind a hidden
-  // panel means the next canvas click draws a zone nobody asked for.
-  else if (combineState.tool === "drawZone") { combineState.tool = null; syncDrawZoneTool(); }
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btn-zone-toggle")?.addEventListener("click", () => toggleZoneFlyout());
-  document.getElementById("btn-zone-close")?.addEventListener("click", () => toggleZoneFlyout(false));
 });
 
 /* ── Rules ── */
@@ -575,19 +673,59 @@ function buildZonePayload(zone) {
       width_m: zone.length_m,
       height_m: zone.width_m,
     },
-    area_m2: zone.length_m * zone.width_m,
+    // The real shape. bounding_box stays for anything that only needs extents;
+    // this is what Revit sketches the floor from and what a reload restores.
+    points: (zone.points || []).map(p => ({ x_m: p.x_m, y_m: p.y_m })),
+    area_m2: zoneAreaM2(zone),
     assembly_key: zone.assemblyKey,
   };
 }
 
+/** Rebuilds a zone from its exported form — a reload, or a loaded save file. */
+function zoneFromPayload(z, i) {
+  const bb = z.bounding_box || {};
+  const zone = {
+    id: z.id || `zone_${Date.now()}_${i}`,
+    kind: z.kind || "green_roof",
+    assemblyKey: z.assembly_key || null,
+    points: Array.isArray(z.points) && z.points.length >= 3
+      ? z.points.map(p => ({ x_m: p.x_m, y_m: p.y_m }))
+      // An export from before zones had corners: rebuild the rectangle it was.
+      : rectPoints(bb.top_left_x_m || 0, bb.top_left_y_m || 0, bb.width_m || 0, bb.height_m || 0),
+  };
+  return syncZoneBounds(zone);
+}
+
 /** Every distinct build-up used by the drawn zones, so an import creates each floor type once. */
+/**
+ * Every build-up the export refers to, zones and the roof finish alike.
+ *
+ * The finish was missing from this list, which meant Revit looked up a system
+ * the export had never described and quietly drew no floor. Anything that
+ * names an assembly_key has to have that assembly here, or the far side is
+ * reading a reference to nothing.
+ */
 function collectZoneAssemblies() {
   ensureZoneState();
   const seen = new Map();
-  combineState.zones.forEach(z => {
-    if (!z.assemblyKey || seen.has(z.assemblyKey)) return;
-    const payload = typeof buildAssemblyPayload === "function" ? buildAssemblyPayload(z.assemblyKey) : null;
-    if (payload) seen.set(z.assemblyKey, payload);
-  });
+  const add = key => {
+    if (!key || seen.has(key)) return;
+    const payload = typeof buildAssemblyPayload === "function" ? buildAssemblyPayload(key) : null;
+    if (payload) seen.set(key, payload);
+  };
+  combineState.zones.forEach(z => add(z.assemblyKey));
+  if (typeof roofFinishKey !== "undefined") add(roofFinishKey);
   return [...seen.values()];
+}
+
+/**
+ * Build-ups an export refers to but cannot describe, because the catalog was
+ * never fetched. Silence here produced "no floor type was built for its
+ * build-up system" in Revit, with nothing on this side to explain it.
+ */
+function unresolvedAssemblyKeys() {
+  ensureZoneState();
+  const keys = new Set(combineState.zones.map(z => z.assemblyKey).filter(Boolean));
+  if (typeof roofFinishKey !== "undefined" && roofFinishKey) keys.add(roofFinishKey);
+  return [...keys].filter(k => !(typeof getAssembly === "function" && getAssembly(k)));
 }

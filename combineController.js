@@ -66,45 +66,21 @@ function shuffleGoldbeckBoundary() {
 document.getElementById("btn-shuffle-boundary")?.addEventListener("click", shuffleGoldbeckBoundary);
 
 /**
- * ── Combine wizard: step-by-step panel navigation ──
- * The DOM itself is the source of truth for which step is showing (each
- * step's hidden attribute), so nothing needs to re-sync this on mode
- * switches — the panel is left exactly as the user left it.
+ * ── Panel navigation: gone on purpose ──
+ * The Rules / Arrange / Review wizard used to own the right pane. It sorted
+ * things by WHEN you need them, which left a one-time setup screen in
+ * permanent view and hid the rule checklist — the one thing that changes
+ * continuously — one click away. Setup and layout tools are flyouts over the
+ * canvas now (designPanel.js), and the pane shows only live state.
+ *
+ * Kept as a shim because a few call sites used to say "jump to Arrange";
+ * that now means "open the tools flyout", which is the same intent.
  */
-const WIZARD_STEPS = 3; // Site moved out to its own top-level mode (see index.html/main.js) — wizard is now Rules/Arrange/Review
-let combineWizardStep = 1;
-const wizardStepsVisited = new Set([1]);
-
 function setWizardStep(n) {
-  combineWizardStep = Math.max(1, Math.min(WIZARD_STEPS, n));
-  wizardStepsVisited.add(combineWizardStep);
-  document.querySelectorAll(".wizard-step-content").forEach(el => {
-    const isCurrent = Number(el.dataset.stepContent) === combineWizardStep;
-    el.hidden = !isCurrent;
-    if (isCurrent) {
-      // Restart the fade-in on every step change, not just first reveal —
-      // same reflow trick used for the rules panel / score badge pops.
-      el.classList.remove("step-enter");
-      void el.offsetWidth;
-      el.classList.add("step-enter");
-    }
-  });
-  document.querySelectorAll(".wizard-step-btn").forEach(btn => {
-    const step = Number(btn.dataset.step);
-    btn.classList.toggle("active", step === combineWizardStep);
-    btn.classList.toggle("visited", wizardStepsVisited.has(step) && step !== combineWizardStep);
-  });
-  document.getElementById("wizard-back").style.display = combineWizardStep === 1 ? "none" : "flex";
-  document.getElementById("wizard-next").style.display = combineWizardStep === WIZARD_STEPS ? "none" : "flex";
+  // Tools is a tab now, not a flyout — the old call sites said "jump to
+  // Arrange", which is what that tab is.
+  if (n === 2 && typeof setDesignTab === "function") setDesignTab("tools");
 }
-
-document.getElementById("wizard-nav").addEventListener("click", e => {
-  const btn = e.target.closest(".wizard-step-btn");
-  if (btn) setWizardStep(Number(btn.dataset.step));
-});
-document.getElementById("wizard-back").addEventListener("click", () => setWizardStep(combineWizardStep - 1));
-document.getElementById("wizard-next").addEventListener("click", () => setWizardStep(combineWizardStep + 1));
-setWizardStep(1);
 
 /** Pushed pieces land in the tray, not on the roof — see combineState.tray above. */
 function addCombineItem({ kind, label, length_m, width_m, sourceJson }) {
@@ -181,7 +157,11 @@ function updateCombineUI() {
 /** Recomputes suggested spots for whichever item is currently selected (none selected → empty list), then redraws. */
 function refreshSuggestions() {
   const item = combineState.selectedKind === "item" ? combineState.items.find(i => i.id === combineState.selectedId) : null;
-  combineState.suggestions = item && typeof suggestPositionsForItem === "function" ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 1) : [];
+  // Switched off in Tools → no suggestions computed, so none are drawn on the
+  // roof and none are listed. Off means off, not "hidden but still there".
+  const suggestionsOn = typeof suggestionsEnabled === "undefined" || suggestionsEnabled;
+  combineState.suggestions = suggestionsOn && item && typeof suggestPositionsForItem === "function"
+    ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 1) : [];
   if (typeof drawCombineCanvas === "function") drawCombineCanvas();
 }
 
@@ -518,6 +498,13 @@ function buildCombinedPayload() {
     // Ground zones — planting, lawn, walkways. A rectangle and a build-up is
     // everything Revit needs to draw a real layered floor, which is why these
     // travel separately from placements rather than pretending to be objects.
+    // The leftover surface, as ONE floor with holes: the roof boundary is the
+    // outer loop and every zone and court is an opening. Revit draws the slab
+    // the way it would be drawn by hand — coplanar, nothing overlapping.
+    // Named so an importer can tell "no build-up chosen" from "the catalog was
+    // not loaded when this was exported" — they look identical on the far side.
+    unresolved_assemblies: typeof unresolvedAssemblyKeys === "function" ? unresolvedAssemblyKeys() : [],
+    roof_finish: typeof buildRoofFinishPayload === "function" ? buildRoofFinishPayload() : null,
     zones: typeof buildZonePayload === "function"
       ? (combineState.zones || []).map(buildZonePayload)
       : [],
@@ -655,6 +642,24 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.entryPoints = (payload.entry_points || []).map((ep, i) => ({
     id: `entry_${Date.now()}_${i}`, x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge,
   }));
+
+  // Zones travelled in the export all along and nothing read them back, so a
+  // resumed session lost every bed that had been drawn. The roof finish rides
+  // on the same restore, since its area is whatever the zones leave.
+  combineState.zones = Array.isArray(payload.zones) && typeof zoneFromPayload === "function"
+    ? payload.zones.map(zoneFromPayload)
+    : [];
+  // The catalog is fetched lazily when the Zones panel opens — which a resumed
+  // session need never do. Without it every zone exports with its build-up
+  // unresolved, and Revit reports a floor type that was never described.
+  if (combineState.zones.length && typeof assembliesLoaded !== "undefined" && !assembliesLoaded
+      && typeof loadAssemblies === "function") {
+    loadAssemblies().then(() => { if (typeof drawCombineCanvas === "function") drawCombineCanvas(); })
+                    .catch(() => { /* the panels report it; the export warns below */ });
+  }
+  if (payload.roof_finish?.assembly_key && typeof roofFinishKey !== "undefined") {
+    roofFinishKey = payload.roof_finish.assembly_key;
+  }
 
   combineState.items = payload.placements.map((p, i) => {
     const rotation = p.transform?.rotation_deg || 0;

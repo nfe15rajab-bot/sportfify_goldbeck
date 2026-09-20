@@ -30,6 +30,26 @@ const ALGO_CATALOGUE = {
   "Sandpit": { kind: "activity", id: "sand_pit" }
 };
 
+/**
+ * Basketball and volleyball are specified by their own modules (basketballCourt.js, volleyballCourt.js), not sized: what a court takes on the roof is what its
+ * specification says (a volleyball court is the regulation court plus its free zone whatever the size variant; a basketball court with one basket is half a court),
+ * and a placed court carries its own choices (surface, mounting, colours) so it does not follow the Sport panel afterwards. A court the algorithm places is treated
+ * as one pushed from the Sport panel: the packing engine reserves the specified footprint, and Apply gives the piece the module's own payload.
+ * The tool's table in algoPlacementCore.js (and its test against the Rhino original) are not touched: the sizes are adopted here.
+ */
+const ALGO_SPECIFIED = {
+  "Basketball Court": {
+    field: "basketball",
+    ready: () => typeof basketballState !== "undefined" && typeof basketballFootprint === "function" && typeof basketballPlacementPayload === "function",
+    state: () => basketballState, footprint: s => basketballFootprint(s), payload: s => basketballPlacementPayload(s)
+  },
+  "Volleyball": {
+    field: "volleyball",
+    ready: () => typeof volleyballState !== "undefined" && typeof volleyballFootprint === "function" && typeof volleyballPlacementPayload === "function",
+    state: () => volleyballState, footprint: s => volleyballFootprint(s), payload: s => volleyballPlacementPayload(s)
+  }
+};
+
 const ALGO_BLOCK_SIZES = { lift: [2.5, 2.5], ramp: [6.0, 1.5], stair: [4.0, 2.0] };
 const ALGO_BLOCK_LABELS = { lift: "Lift", ramp: "Ramp", stair: "Stair" };
 
@@ -66,6 +86,30 @@ function algoSave() {
 const algoEsc = s => String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 const algoRound = v => Math.round(v * 1000) / 1000;
 const algoRgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+
+/** The specifying module's state as the Sport panel has it now, with the size variant the packing tool uses; null for a sport that is not specified (or its module is not loaded). */
+function algoSpecifiedState(name) {
+  const spec = ALGO_SPECIFIED[name];
+  return spec && spec.ready() ? Object.assign({}, spec.state(), { variant: ALGO_CATALOGUE[name].variant }) : null;
+}
+
+/**
+ * The packing engine's table gets the specified footprint of every specified sport (long side, short side). True when a size changed, so that a plan made with the old
+ * one is thrown away. `swap` remembers that the specification's own length runs along the short side (a half court is 11 m long and 13 m wide): the piece is then
+ * created in the specification's orientation and turned to whichever way the packer laid it.
+ */
+function algoAdoptSpecifiedSizes() {
+  let changed = false;
+  for (const name of Object.keys(ALGO_SPECIFIED)) {
+    const st = algoSpecifiedState(name), sp = AlgoPlacement.SPORTS.find(s => s.name === name);
+    if (!st || !sp) continue;
+    const fp = ALGO_SPECIFIED[name].footprint(st);
+    const long = algoRound(Math.max(fp.length_m, fp.width_m)), short = algoRound(Math.min(fp.length_m, fp.width_m));
+    const swap = fp.length_m < fp.width_m;
+    if (sp.long !== long || sp.short !== short || sp.swap !== swap) { sp.long = long; sp.short = short; sp.swap = swap; changed = true; }
+  }
+  return changed;
+}
 
 // ------------------------------------------------------------------------------------------------ what the roof gives
 
@@ -112,7 +156,7 @@ function algoRequests() {
 
 function algoSiteKey() {
   const s = algoState.settings;
-  return JSON.stringify([algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.x, b.y, b.w, b.h]), algoKeepClearBoxes()]);
+  return JSON.stringify([algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), AlgoPlacement.SPORTS.map(sp => [sp.long, sp.short])]);
 }
 
 function algoInputKey() {
@@ -162,6 +206,7 @@ function algoSetMode(mode) {
 function algoBuildPanel() {
   const panel = document.getElementById("algo-placement");
   if (!panel) return;
+  algoAdoptSpecifiedSizes();
   const s = algoState.settings;
   const sportRows = AlgoPlacement.SPORTS.map((sp, i) => `<div class="algo-sport" data-sport="${i}">
       <span class="algo-swatch" style="background:${algoRgb(sp.color)}"></span>
@@ -352,6 +397,7 @@ function algoRefreshBlocks() {
 
 async function algoPreview(msg) {
   if (algoState.mode !== "algo") return;
+  if (algoAdoptSpecifiedSizes() && algoState.built) { algoState.plan = null; algoState.planKey = ""; algoState.fit = null; algoState.fitKey = ""; algoBuildPanel(); }   // the Sport panel changed a court's specification
   const token = ++algoState.token;
   algoState.msg = msg || "";
   const ready = algoState.blocks.length > 0;
@@ -620,20 +666,31 @@ function algoBindDrag(host) {
 
 // ------------------------------------------------------------------------------------------------ apply to Combine
 
+/** The piece's own (unrotated) length and width: the packer's long and short side, in the specification's orientation for a specified sport (see algoAdoptSpecifiedSizes). */
+function algoItemFrame(sp) {
+  return sp.swap ? { length_m: sp.short, width_m: sp.long } : { length_m: sp.long, width_m: sp.short };
+}
+
 function algoCatalogueSource(name, sp) {
   const cat = ALGO_CATALOGUE[name];
   const quality = "medium";
   if (cat.kind === "field" && typeof FIELDS !== "undefined" && FIELDS[cat.sport]) {
     const d = FIELDS[cat.sport][cat.variant] || Object.values(FIELDS[cat.sport])[0];
     const mat = typeof MATERIALS !== "undefined" ? MATERIALS[quality] : { floor: "", marking: "", gradin: "" };
-    return {
+    const frame = algoItemFrame(sp);
+    const src = {
       version: "1.0", generator: "Sportify-Algorithmic-Placement",
       quality_key: typeof getQualityKey === "function" ? getQualityKey(cat.sport, cat.variant, quality) : "",
       // the packing tool's sizes are FINAL envelopes (run-off included), so the run-off is not added again
-      field: { sport: cat.sport, variant: cat.variant, norm: d.norm, dimensions: { length_m: sp.long, width_m: sp.short, runoff_m: 0, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
+      field: { sport: cat.sport, variant: cat.variant, norm: d.norm, dimensions: { length_m: frame.length_m, width_m: frame.width_m, runoff_m: 0, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
       materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: quality, reference_material: null, reference_provider: null },
       layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"]
     };
+    // A specified sport carries its own choices, as when it is pushed from the Sport panel: the court keeps the surface and mounting it was placed with
+    // instead of following whatever the panel shows later, and Revit builds it from these numbers (basketballCourt.js, volleyballCourt.js).
+    const spec = ALGO_SPECIFIED[name], st = spec ? algoSpecifiedState(name) : null;
+    if (st) src[spec.field] = spec.payload(st);
+    return src;
   }
   const a = typeof ACTIVITIES !== "undefined" ? ACTIVITIES[cat.id] : null;
   const mat = typeof ACTIVITY_MATERIALS !== "undefined" ? ACTIVITY_MATERIALS[quality] : { surface: "", structure: "" };
@@ -643,6 +700,15 @@ function algoCatalogueSource(name, sp) {
     activity: { type_id: cat.id, category: a ? a.category : "court", norm: a ? a.norm : "", dimensions: { length_m: sp.long, width_m: sp.short } },
     materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null }
   };
+}
+
+/** Garden zones went on the board with no build-up: say why in words, instead of leaving zones that look finished and are skipped by Revit. */
+function algoWarnNoBuildUp() {
+  if (typeof showToast !== "function") return;
+  const loaded = typeof assembliesLoaded !== "undefined" && assembliesLoaded;
+  showToast(loaded ? "No build-up for the garden" : "Garden zones have no build-up yet",
+    (loaded ? "The catalogue has no green roof build-up." : "The build-up catalogue could not be loaded (is the Sportify API running?).") +
+    " The zones are on the board, but Revit will not build them until a build-up is chosen in the Zones panel.");
 }
 
 /** Takes away everything a previous Apply put on the board (courts, garden zones, entry points), and nothing else. */
@@ -658,32 +724,49 @@ function algoClearApplied(announce) {
   return removed;
 }
 
-function algoApply() {
+async function algoApply() {
+  if (algoAdoptSpecifiedSizes()) {      // a court's specification was changed in the Sport panel since this layout was checked: check it again before it goes on the board
+    algoState.plan = null; algoState.planKey = ""; algoState.fit = null; algoState.fitKey = "";
+    if (algoState.built) algoBuildPanel();
+    algoSchedulePreview(0);
+    if (typeof showToast === "function") showToast("Court sizes changed", "A court's specification changed in the Sport panel, so the layout is being checked again. Apply once it is done.");
+    return;
+  }
   const plan = algoState.plan;
   if (!plan || !plan.courts.length || algoState.busy) return;
   const handPlaced = combineState.items.filter(i => !i.algorithmic).length + (combineState.zones || []).filter(z => !z.algorithmic).length;
   if (handPlaced > 0 && !window.confirm(`The Combine board has ${handPlaced} piece${handPlaced === 1 ? "" : "s"} you placed by hand. Applying replaces the board with this layout. Continue?`)) return;
+  // The build-up catalogue comes from the API and is fetched lazily (assemblies.js). Fetch it first, so the garden zones are made with their build-up in one step (one
+  // Undo takes the whole Apply back) instead of being given one afterwards: a zone without one is reported by Revit as a floor type that was never described.
+  if (algoState.settings.gardenZones && typeof loadAssemblies === "function" && typeof assembliesLoaded !== "undefined" && !assembliesLoaded) {
+    try { await loadAssemblies(); } catch (e) { /* algoWarnNoBuildUp says so once the zones are made */ }
+    if (algoState.plan !== plan || algoState.busy) return;       // the layout changed while the catalogue was coming: nothing has been applied yet
+  }
   combineState.items = []; combineState.zones = []; combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
   combineState.tray = combineState.tray || [];
 
   const stamp = Date.now();
   plan.courts.forEach((c, i) => {
     const sp = AlgoPlacement.SPORTS.find(s => s.name === c.name);
+    const frame = algoItemFrame(sp);
     combineState.items.push({
       id: `algo_${stamp}_${i}`, kind: ALGO_CATALOGUE[c.name].kind, label: c.name,
-      length_m: sp.long, width_m: sp.short, rotation: c.rotated ? 90 : 0,
+      length_m: frame.length_m, width_m: frame.width_m, rotation: c.rotated !== !!sp.swap ? 90 : 0,
       x_m: algoRound(c.rect[0]), y_m: algoRound(c.rect[1]),
       sourceJson: algoCatalogueSource(c.name, sp), algorithmic: true
     });
   });
 
-  let zoneCount = 0;
-  if (algoState.settings.gardenZones && typeof ensureZoneState === "function") {
+  let zoneCount = 0, withoutBuildUp = false;
+  if (algoState.settings.gardenZones && typeof ensureZoneState === "function" && typeof rectPoints === "function") {
     ensureZoneState();
     const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
+    withoutBuildUp = !assembly;
     const rects = algoState.site.bandRects.concat(plan.pockets).filter(r => r[2] - r[0] >= 0.3 && r[3] - r[1] >= 0.3);
     rects.forEach((r, i) => {
-      combineState.zones.push({ id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, x_m: algoRound(r[0]), y_m: algoRound(r[1]), length_m: algoRound(r[2] - r[0]), width_m: algoRound(r[3] - r[1]), algorithmic: true });
+      // A zone is a polygon (zones.js): `points` is the truth and the box is derived from it, so the pocket is made as the rectangle it is.
+      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
+      combineState.zones.push(syncZoneBounds(zone));
       zoneCount++;
     });
   }
@@ -703,6 +786,7 @@ function algoApply() {
   if (typeof resetCombineView === "function") resetCombineView();
   if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
   if (typeof showToast === "function") showToast("Placed on the board", `${plan.courts.length} court${plan.courts.length === 1 ? "" : "s"}${zoneCount ? `, ${zoneCount} garden zone${zoneCount === 1 ? "" : "s"}` : ""}${entryCount ? `, ${entryCount} entry point${entryCount === 1 ? "" : "s"}` : ""}. Move any piece by hand; the pathways are the space between them.`);
+  if (zoneCount && withoutBuildUp) algoWarnNoBuildUp();            // last, so it is the toast that stays on screen
 }
 
 // ------------------------------------------------------------------------------------------------ start

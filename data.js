@@ -7,7 +7,7 @@
  * script the page loads so every later file can rely on it — and so a stale
  * cached page is visible at a glance instead of being inferred from JSON
  * fields that mysteriously fail to appear. */
-const SPORTIFY_BUILD = "2026-09-20-workspace";
+const SPORTIFY_BUILD = "2026-09-20-14";
 console.log("Sportify build:", SPORTIFY_BUILD);
 
 const FIELDS = {
@@ -47,6 +47,23 @@ const MATERIALS = {
   low:    { floor: "PVC sheet",          marking: "Painted",        gradin: "Steel basic" },
   medium: { floor: "Sports vinyl (2-layer)", marking: "Adhesive tape", gradin: "Steel coated" },
   high:   { floor: "Hardwood parquet",   marking: "Inlay wood",     gradin: "Aluminum seating" },
+};
+
+/**
+ * Which catalog material each quality tier means.
+ *
+ * The tier names a surface in plain words; the catalog row is what carries the
+ * price, the norm and the carbon figure. Without this link a pushed court had
+ * no material picked, so it had no price — the reference dropdown was optional
+ * and nobody filled it in.
+ *
+ * Picking one in the Sport tab still overrides this; it is the starting point,
+ * not a lock.
+ */
+const QUALITY_REFERENCE_MATERIAL = {
+  low:    "PVC sheet, single-layer (economy)",
+  medium: "Sports vinyl / PVC flooring",
+  high:   "Wood sprung floor / parquet",
 };
 
 /**

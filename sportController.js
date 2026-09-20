@@ -70,8 +70,9 @@ function buildActivityBar() {
         document.getElementById("activityWidth").value = a.width;
         document.getElementById("activityQuantity").value = 1;
         document.getElementById("qty-val").textContent = "1";
-        document.getElementById("activityCapacity").value = 0;
-        document.getElementById("cap-activity-val").textContent = "No limit set";
+        // Capacity removed: an activity's capacity was never a slider. A padel
+        // court holds four players by rule, and a yoga deck holds whatever fits.
+        // state.activityCapacity stays 0 so the payload shape is unchanged.
         document.querySelectorAll("#activity-quality-btns .q-btn").forEach(b => b.classList.remove("active"));
         document.querySelector('#activity-quality-btns .q-btn[data-q="medium"]').classList.add("active");
 
@@ -112,7 +113,10 @@ function updateActivityUI() {
 
 /* ── Sport Listeners & Exports ── */
 document.getElementById("variant").addEventListener("change", e => { state.variant = e.target.value; updateUI(); });
-document.getElementById("capacity").addEventListener("input", e => { state.capacity = Number(e.target.value); document.getElementById("cap-val").textContent = state.capacity === 0 ? "No stands" : `${state.capacity} seats`; updateUI(); });
+// Spectator stands removed: a rooftop court is not a venue with seating, and
+// the slider only ever added grandstand geometry nobody was designing for.
+// state.capacity stays at 0 so drawField(), the DXF export and the payload all
+// keep working unchanged — they simply always draw no stands.
 document.querySelectorAll("#sportConfigurator .q-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("#sportConfigurator .q-btn").forEach(b => b.classList.remove("active"));
@@ -147,13 +151,24 @@ initSportReferenceDropdowns();
 function buildSportPayload() {
   const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
   const mat = MATERIALS[state.quality];
-  const referenceMaterial = readReferenceSelection(document.getElementById("sportMaterialSelect"), document.getElementById("sportMaterialManual"), sportMaterialRefOptions);
+  // Falls back to the tier's own surface when nothing was picked, so a court
+  // always arrives with a material — and therefore a price — rather than
+  // depending on an optional dropdown somebody has to remember.
+  const referenceMaterial = readReferenceSelection(document.getElementById("sportMaterialSelect"), document.getElementById("sportMaterialManual"), sportMaterialRefOptions)
+    || QUALITY_REFERENCE_MATERIAL[state.quality] || null;
   const referenceProvider = readReferenceSelection(document.getElementById("sportProviderSelect"), document.getElementById("sportProviderManual"), sportProviderRefOptions);
   return {
     version: "1.0", generator: "Sportify",
     quality_key: typeof getQualityKey === "function" ? getQualityKey(state.sport, state.variant, state.quality) : "",
     field: { sport: state.sport, variant: state.variant, norm: d.norm, dimensions: { length_m: d.l, width_m: d.w, runoff_m: d.runoff, min_height_m: d.h }, capacity: { seats: state.capacity, side_stands: state.capacity > 0 } },
     materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: state.quality, reference_material: referenceMaterial, reference_provider: referenceProvider },
+    // A specified sport carries its own choices, so a placed court keeps the
+    // surface and mounting it was configured with rather than re-reading
+    // whatever the panel happens to show later.
+    basketball: (state.sport === "basketball" && typeof basketballPlacementPayload === "function")
+      ? basketballPlacementPayload() : undefined,
+    volleyball: (state.sport === "volleyball" && typeof volleyballPlacementPayload === "function")
+      ? volleyballPlacementPayload() : undefined,
     layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"],
   };
 }
@@ -181,6 +196,11 @@ function buildActivityPayload() {
       dimensions: { length_m: state.activityLength, width_m: state.activityWidth },
     },
     materials: { surface: mat.surface, structure: mat.structure, quality_level: state.activityQuality, reference_material: null, reference_provider: null },
+    // A specified sport carries its own choices, so a placed court keeps the
+    // surface and wall system it was configured with rather than re-reading
+    // whatever the panel happens to show later.
+    padel: (state.activityId === "padel_court" && typeof padelPlacementPayload === "function")
+      ? padelPlacementPayload() : undefined,
   };
 }
 
@@ -296,6 +316,19 @@ document.getElementById("btn-push-activity").addEventListener("click", () => {
 
 document.getElementById("btn-push-sport").addEventListener("click", () => {
   const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
-  addCombineItem({ kind: "field", label: `${state.sport} (${state.variant})`, length_m: d.l + d.runoff * 2, width_m: d.w + d.runoff * 2, sourceJson: buildSportPayload() });
+
+  // A sport that specifies itself works out its own footprint. Volleyball's
+  // free zone is 6.5 m at the ends for FIVB events and 5 m at the sides, which
+  // the single `runoff` figure cannot express — and the piece on the roof has
+  // to be the same size as the thing the panel just drew.
+  const fp = (state.sport === "volleyball" && typeof volleyballFootprint === "function")
+    ? volleyballFootprint()
+    : { length_m: d.l + d.runoff * 2, width_m: d.w + d.runoff * 2 };
+
+  addCombineItem({
+    kind: "field", label: `${state.sport} (${state.variant})`,
+    length_m: fp.length_m, width_m: fp.width_m,
+    sourceJson: buildSportPayload(),
+  });
   setMode("combine");
 });

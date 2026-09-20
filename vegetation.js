@@ -83,6 +83,11 @@ function speciesFromApi(record) {
     source: record.source || "",
     source_url: record.sourceUrl || null,
     dimensions_published: !!record.dimensionsPublished,
+    price: record.priceValue ?? null,
+    price_unit: record.priceUnit || null,
+    price_source: record.priceSource || null,
+    price_quoted: !!record.priceIsQuoted,
+    cost_group: record.costGroupDin276 || null,
   };
 }
 
@@ -154,6 +159,11 @@ function pushVegetationToCombine() {
         source: type.source,
         source_url: type.source_url || null,
         dimensions_published: !!type.dimensions_published,
+        // Travels with the placement so a saved layout still costs the same
+        // later, even if the catalog price moves afterwards.
+        price_eur: type.price ?? null,
+        price_quoted: !!type.price_quoted,
+        cost_group: type.cost_group || null,
       },
     },
   });
@@ -281,6 +291,11 @@ function renderVegetationPanel() {
             ? `<a href="${type.source_url}" target="_blank" rel="noopener">${type.source}</a> figures`
             : `${type.source}`}
       </p>
+      <p class="hint">
+        ${type.price == null
+          ? `No price in the catalog for this species yet.`
+          : `<strong>€ ${type.price}</strong> per plant — ${type.price_quoted ? "supplier quote" : "estimated"}`}
+      </p>
     </div>
 
     <div class="section">
@@ -317,18 +332,6 @@ function renderVegetationPanel() {
   });
 }
 
-function toggleVegetationFlyout(force) {
-  if ((force === undefined || force) && typeof setMode === "function" && activeMode !== "combine") setMode("combine");
-  const fly = document.getElementById("vegetation-flyout");
-  const btn = document.getElementById("btn-vegetation-toggle");
-  if (!fly) return;
-  const open = force !== undefined ? force : fly.hidden;
-  fly.hidden = !open;
-  if (btn) btn.classList.toggle("active", open);
-  if (open) renderVegetationPanel();
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btn-vegetation-toggle")?.addEventListener("click", () => toggleVegetationFlyout());
-  document.getElementById("btn-vegetation-close")?.addEventListener("click", () => toggleVegetationFlyout(false));
 });
