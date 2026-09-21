@@ -397,10 +397,10 @@ function padelPanelHtml() {
     const o = PADEL_OPTIONS[key];
     if (!o) return "";
     const opts = Object.entries(o.values).map(([v, def]) =>
-      `<option value="${v}"${padelState[key] === v ? " selected" : ""}>${def.label}</option>`).join("");
+      `<option value="${v}"${padelState[key] === v ? " selected" : ""}>${escapeHtml(def.label)}</option>`).join("");
     const note = o.values[padelState[key]]?.note;
     return `<div class="section">
-        <label>${o.label}</label>
+        <label>${escapeHtml(o.label)}</label>
         <select data-padel="${key}">${opts}</select>
         ${note ? `<p class="hint">${note}</p>` : ""}
       </div>`;
@@ -448,7 +448,7 @@ function syncPadelPanel(activityId) {
         host.innerHTML = `
           <div class="section">
             <label>Reference database unavailable</label>
-            <p class="hint">Court options live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Court options live in the Sportify API, and it isn't answering (${escapeHtml(err.message)}).</p>
             <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
             <button class="btn-export accent" id="btn-padel-retry">Retry</button>
           </div>`;

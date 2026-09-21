@@ -124,7 +124,7 @@ function assumptionText(s) {
 }
 
 function assumptionEscape(s) {
-  return String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  return escapeHtml(s);
 }
 
 function assumptionValue(key) {
@@ -245,17 +245,17 @@ function assumptionControlHtml(def) {
   if (def.kind === "choice") {
     const options = [`<option value="">Built-in: ${assumptionEscape(assumptionText(def.defaultText))}</option>`]
       .concat(def.choices.map(c => `<option value="${assumptionEscape(c.key)}">${assumptionEscape(c.label)}</option>`));
-    return `<select id="${id}" data-key="${def.key}">${options.join("")}</select>`;
+    return `<select id="${id}" data-key="${escapeHtml(def.key)}">${options.join("")}</select>`;
   }
   const placeholder = def.default == null ? assumptionText(def.defaultText) : `Built-in: ${assumptionText(def.defaultText)}`;
   const unit = def.unit ? `<span class="assump-unit">${assumptionEscape(assumptionText(def.unit))}</span>` : "";
   const step = def.max <= 1 ? "0.005" : def.max <= 50 ? "0.1" : "10";
-  return `<div class="assump-number"><input type="number" id="${id}" data-key="${def.key}" min="${def.min}" max="${def.max}" step="${step}" placeholder="${assumptionEscape(placeholder)}" />${unit}</div>`;
+  return `<div class="assump-number"><input type="number" id="${id}" data-key="${escapeHtml(def.key)}" min="${def.min}" max="${def.max}" step="${step}" placeholder="${assumptionEscape(placeholder)}" />${unit}</div>`;
 }
 
 function assumptionRowHtml(def) {
   return `
-    <div class="assump-row" data-key="${def.key}">
+    <div class="assump-row" data-key="${escapeHtml(def.key)}">
       <div class="assump-head">
         <span class="assump-label">${assumptionEscape(def.label)}</span>
         <span class="assump-status status-${def.status}" title="Where the built-in value comes from">${ASSUMPTION_STATUS_TEXT[def.status] || def.status}</span>
@@ -263,7 +263,7 @@ function assumptionRowHtml(def) {
       ${assumptionControlHtml(def)}
       <div class="assump-state">
         <span class="assump-badge" data-role="badge"></span>
-        <button type="button" class="assump-accept" data-key="${def.key}" data-role="accept"></button>
+        <button type="button" class="assump-accept" data-key="${escapeHtml(def.key)}" data-role="accept"></button>
       </div>
       <p class="hint" data-role="hint"></p>
     </div>`;
@@ -356,7 +356,7 @@ function updateAssumptionsUI() {
     const keys = assumptionGroupKeys(group);
 
     keys.map(k => assumptionDef(k)).filter(Boolean).forEach(def => {
-      const row = host.querySelector(`.assump-row[data-key="${def.key}"]`);
+      const row = host.querySelector(`.assump-row[data-key="${escapeHtml(def.key)}"]`);
       if (!row) return;
       const state = assumptionState(def.key);
       const input = row.querySelector("[data-key]");

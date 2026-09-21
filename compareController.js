@@ -148,9 +148,9 @@ function miniIterationSvg(payload) {
 
 function iterationCardHtml(entry) {
   return `
-    <button class="iteration-card" data-iteration-id="${entry.id}">
+    <button class="iteration-card" data-iteration-id="${escapeHtml(entry.id)}">
       <div class="iteration-card-thumb">${miniIterationSvg(entry.payload)}</div>
-      <div class="iteration-card-label">${entry.name}</div>
+      <div class="iteration-card-label">${escapeHtml(entry.name)}</div>
     </button>`;
 }
 
@@ -369,7 +369,7 @@ function layoutAndScoreConfig(def) {
     id: def.id, name: def.name, tagline: def.tagline,
     goldbeckPresetId: def.goldbeckPresetId || null,
     scores,
-    checklistHtml: checklist.map(c => `<div class="compare-rule-row ${c.pass ? "pass" : "fail"}"><i class="ti ${c.pass ? "ti-check" : "ti-x"}" aria-hidden="true"></i>${c.label}</div>`).join(""),
+    checklistHtml: checklist.map(c => `<div class="compare-rule-row ${c.pass ? "pass" : "fail"}"><i class="ti ${c.pass ? "ti-check" : "ti-x"}" aria-hidden="true"></i>${escapeHtml(c.label)}</div>`).join(""),
     statsLine: `${Math.round(totalItemAreaM2)} m² programmed · ${water.totalAreaM2 ? Math.round(water.totalAreaM2) + " m² garden (" + water.retentionPercent + "% retention)" : "no garden coverage"} · ${maxDist.toFixed(1)} m longest route to an entrance`,
     roofSvg: miniRoofSvg(state),
     rawSnapshot: stateToSnapshot(state),
@@ -465,11 +465,11 @@ let compareCardsBuilt = false;
 
 function cardShellHtml(r) {
   return `
-    <div class="compare-card" data-config-id="${r.id}">
+    <div class="compare-card" data-config-id="${escapeHtml(r.id)}">
       <div class="compare-card-head">
-        <span class="compare-rank" id="rank-${r.id}">—</span>
+        <span class="compare-rank" id="rank-${escapeHtml(r.id)}">—</span>
         <div>
-          <div class="compare-card-title">${r.name}</div>
+          <div class="compare-card-title">${escapeHtml(r.name)}</div>
           <p class="hint">${r.tagline}</p>
         </div>
       </div>
@@ -480,13 +480,13 @@ function cardShellHtml(r) {
         ${COMPARE_AXES.map(([label, key]) => `
           <div class="compare-bar-row">
             <span class="compare-bar-label">${label}</span>
-            <div class="compare-bar-track"><div class="compare-bar-fill" id="bar-${r.id}-${key}" style="width:0%"></div></div>
-            <span class="compare-bar-val" id="val-${r.id}-${key}">0</span>
+            <div class="compare-bar-track"><div class="compare-bar-fill" id="bar-${escapeHtml(r.id)}-${key}" style="width:0%"></div></div>
+            <span class="compare-bar-val" id="val-${escapeHtml(r.id)}-${key}">0</span>
           </div>`).join("")}
       </div>
       <div class="compare-overall">
         <span>Overall match to your priorities</span>
-        <span class="compare-overall-num" id="overall-${r.id}" data-val="0">0</span>
+        <span class="compare-overall-num" id="overall-${escapeHtml(r.id)}" data-val="0">0</span>
       </div>
       <p class="hint compare-load-hint"><i class="ti ti-arrow-right" aria-hidden="true"></i>Click to load into Combine</p>
     </div>`;
@@ -565,12 +565,12 @@ function renderCompareResults(results, weights) {
   container.querySelectorAll(".compare-card").forEach(el => firstRects.set(el.dataset.configId, el.getBoundingClientRect()));
 
   scored.forEach(r => {
-    const el = container.querySelector(`.compare-card[data-config-id="${r.id}"]`);
+    const el = container.querySelector(`.compare-card[data-config-id="${escapeHtml(r.id)}"]`);
     if (el) container.appendChild(el);
   });
 
   scored.forEach(r => {
-    const el = container.querySelector(`.compare-card[data-config-id="${r.id}"]`);
+    const el = container.querySelector(`.compare-card[data-config-id="${escapeHtml(r.id)}"]`);
     const first = firstRects.get(r.id);
     if (!el || !first) return;
     const last = el.getBoundingClientRect();

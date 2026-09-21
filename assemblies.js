@@ -148,7 +148,7 @@ function initAssemblyPicker() {
   const grouped = assembliesByProvider();
   select.innerHTML = Object.entries(grouped).map(([provider, list]) => `
     <optgroup label="${provider}">
-      ${list.map(a => `<option value="${a.key}">${a.system_name} — ${a.category}</option>`).join("")}
+      ${list.map(a => `<option value="${escapeHtml(a.key)}">${escapeHtml(a.system_name)} — ${escapeHtml(a.category)}</option>`).join("")}
     </optgroup>`).join("");
 
   select.addEventListener("change", () => {
@@ -182,10 +182,10 @@ function renderAssemblyDetail() {
     const h = Math.max(6, Math.round((l.mm / totalMm) * 150));
     return `
       <div style="display:flex;align-items:stretch;gap:8px;margin-bottom:2px">
-        <div style="width:54px;height:${h}px;background:${f.color};border-radius:2px;flex:none"></div>
+        <div style="width:54px;height:${h}px;background:${escapeHtml(f.color)};border-radius:2px;flex:none"></div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px">${l.name}</div>
-          <div class="hint">${f.label} · <strong>${l.mm} mm</strong>${
+          <div style="font-size:12px">${escapeHtml(l.name)}</div>
+          <div class="hint">${escapeHtml(f.label)} · <strong>${l.mm} mm</strong>${
             l.src === "published"
               ? ` · <span style="color:#0ea355">published</span>`
               : ` · <span style="color:#f59e0b">typical</span>`}</div>
@@ -198,16 +198,16 @@ function renderAssemblyDetail() {
     : `<div class="hint">${label}: <strong>${value} ${unit}</strong></div>`;
 
   el.innerHTML = `
-    <p class="hint" style="margin-top:6px">${a.description}</p>
+    <p class="hint" style="margin-top:6px">${escapeHtml(a.description)}</p>
     <div style="margin:10px 0">${stack}</div>
     <div class="hint"><strong>Build-up ${totalMm} mm</strong> from the layers above</div>
     ${fact("Published build-up", a.build_up_mm, "mm")}
     ${fact("Saturated weight", a.saturated_kg_m2, "kg/m²")}
     ${fact("Water storage", a.water_storage_l_m2, "L/m²")}
     <p class="hint" style="margin-top:8px">
-      ${publishedPct}% of the build-up is from ${a.provider}'s published figures; the rest are
+      ${publishedPct}% of the build-up is from ${escapeHtml(a.provider)}'s published figures; the rest are
       typical values so the geometry resolves. Check a datasheet before specifying.
-      ${a.source_url ? `<br><a href="${a.source_url}" target="_blank" rel="noopener">${a.provider} source</a>` : ""}
+      ${a.source_url ? `<br><a href="${safeUrl(a.source_url)}" target="_blank" rel="noopener">${escapeHtml(a.provider)} source</a>` : ""}
     </p>`;
 }
 

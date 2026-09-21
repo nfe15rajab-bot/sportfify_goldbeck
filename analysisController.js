@@ -39,7 +39,8 @@ async function initAnalysisReferenceData() {
     // (true, in the sense that it can't be looked up right now) rather
     // than throwing.
   }
-  if (activeMode === "analysis" && typeof updateAnalysisUI === "function") updateAnalysisUI();
+  // main.js (which declares activeMode) is the last script: an API that answers before it has run must not throw here
+  if (typeof activeMode !== "undefined" && activeMode === "analysis" && typeof updateAnalysisUI === "function") updateAnalysisUI();
 }
 initAnalysisReferenceData();
 
@@ -340,10 +341,10 @@ function componentListItemHtml(item) {
   const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
   const active = item.id === selectedComponentId ? " active" : "";
   return `
-    <button class="analysis-component-item${active}" data-component-id="${item.id}">
-      <i class="ti ${KIND_ICONS[item.kind] || "ti-square-rounded"}" aria-hidden="true"></i>
+    <button class="analysis-component-item${active}" data-component-id="${escapeHtml(item.id)}">
+      <i class="ti ${escapeHtml(KIND_ICONS[item.kind] || "ti-square-rounded")}" aria-hidden="true"></i>
       <span class="analysis-component-item-text">
-        <span class="analysis-component-item-label">${item.label}</span>
+        <span class="analysis-component-item-label">${escapeHtml(item.label)}</span>
         <span class="analysis-component-item-dims">${fp.w.toFixed(1)} × ${fp.h.toFixed(1)} m</span>
       </span>
     </button>`;
@@ -389,7 +390,7 @@ function generalSectionHtml(item) {
   return `
     <div class="dims" style="grid-template-columns:repeat(2,1fr);">
       <div class="dim-card"><div class="val">${fp.w.toFixed(1)} × ${fp.h.toFixed(1)} m</div><div class="lbl">Dimensions</div></div>
-      <div class="dim-card"><div class="val">${KIND_LABELS[item.kind] || item.kind}</div><div class="lbl">Kind</div></div>
+      <div class="dim-card"><div class="val">${escapeHtml(KIND_LABELS[item.kind] || item.kind)}</div><div class="lbl">Kind</div></div>
     </div>
     <p class="hint" style="margin-top:8px"><strong>Field of relevance:</strong> ${relevance}</p>
     <p class="hint"><strong>Overall quality:</strong> ${quality}</p>`;
@@ -408,7 +409,7 @@ function materialsSectionHtml(item) {
   if (item.kind === "garden" && item.sourceJson?.garden) {
     const g = item.sourceJson.garden;
     const layers = (g.layers || []).map(l => `
-      <div class="dim-card"><div class="val">${(l.thickness_m * 100).toFixed(0)} cm</div><div class="lbl">${titleCase(l.layer_name)} — ${l.material}</div></div>
+      <div class="dim-card"><div class="val">${(l.thickness_m * 100).toFixed(0)} cm</div><div class="lbl">${escapeHtml(titleCase(l.layer_name))} — ${escapeHtml(l.material)}</div></div>
     `).join("");
     return `
       <p class="hint"><strong>Waterproofing:</strong> ${g.materials?.waterproofing || "—"}</p>
@@ -420,7 +421,7 @@ function materialsSectionHtml(item) {
   if (item.kind === "activity" && item.sourceJson?.materials) {
     const m = item.sourceJson.materials;
     return `
-      <p class="hint"><strong>Surface:</strong> ${m.surface || "—"}</p>
+      <p class="hint"><strong>Surface:</strong> ${escapeHtml(m.surface || "—")}</p>
       <p class="hint"><strong>Structure:</strong> ${m.structure || "—"}</p>
       <p class="hint"><strong>Reference material:</strong> ${m.reference_material || "— none picked"}</p>
       <p class="hint"><strong>Reference provider:</strong> ${m.reference_provider || "— none picked"}</p>`;
@@ -486,7 +487,7 @@ function lcaDetailHtml(item) {
   return `
     <p class="hint"><strong>Reference material:</strong> ${matName}</p>
     <p class="hint">${area.toFixed(1)} m² × ${material.embodiedCarbonValue} ${material.embodiedCarbonUnit} = <strong>~${total.toFixed(0)} kg CO2e</strong> (A1-A3, illustrative).</p>
-    <p class="hint">${material.embodiedCarbonSource || ""}</p>`;
+    <p class="hint">${escapeHtml(material.embodiedCarbonSource || "")}</p>`;
 }
 
 /** Which sections apply to which item kind — the "toggle" the user asked for: automatic per selected item, not a manual switch, since the item's own kind already determines what's relevant. */
@@ -510,10 +511,10 @@ function componentDetailHtml(item) {
   const sections = componentSections(item).map(s => detailSectionHtml(s.icon, s.title, badgeHtml(s.badge), s.html)).join("");
   return `
     <div class="analysis-component-detail-head">
-      <i class="ti ${KIND_ICONS[item.kind] || "ti-square-rounded"}" aria-hidden="true"></i>
+      <i class="ti ${escapeHtml(KIND_ICONS[item.kind] || "ti-square-rounded")}" aria-hidden="true"></i>
       <div>
-        <div class="analysis-component-detail-title">${item.label}</div>
-        <div class="hint">${KIND_LABELS[item.kind] || item.kind} — parameters below are exactly what gets sent to Revit for family placement and deeper analysis.</div>
+        <div class="analysis-component-detail-title">${escapeHtml(item.label)}</div>
+        <div class="hint">${escapeHtml(KIND_LABELS[item.kind] || item.kind)} — parameters below are exactly what gets sent to Revit for family placement and deeper analysis.</div>
       </div>
     </div>
     <div class="analysis-detail-sections">${sections}</div>`;

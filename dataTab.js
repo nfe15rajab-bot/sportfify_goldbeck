@@ -63,19 +63,19 @@ function variantsTableHtml(variants) {
   const rows = variants.map(v => `
     <div class="dim-card">
       <div class="val">${v.lengthM}×${v.widthM} m</div>
-      <div class="lbl">${v.variant} — run-off ${v.runoffM}m, h≥${v.heightMinM}m</div>
+      <div class="lbl">${escapeHtml(v.variant)} — run-off ${v.runoffM}m, h≥${v.heightMinM}m</div>
     </div>`).join("");
   return `<div class="dims" style="grid-template-columns:1fr;">${rows}</div>`;
 }
 
 function sportCardHtml(sport) {
-  const norms = (sport.norms || []).map(n => n.code).join(", ") || "—";
-  const materials = (sport.materials || []).map(m => m.performanceClass ? `${m.name} (${m.normCode} ${m.performanceClass}, force reduction ${m.forceReduction || "—"})` : m.name).join("; ") || "—";
-  const providers = (sport.providers || []).map(p => p.name).join(", ") || "—";
+  const norms = (sport.norms || []).map(n => escapeHtml(n.code)).join(", ") || "—";
+  const materials = (sport.materials || []).map(m => m.performanceClass ? `${escapeHtml(m.name)} (${escapeHtml(m.normCode)} ${escapeHtml(m.performanceClass)}, force reduction ${escapeHtml(m.forceReduction || "—")})` : escapeHtml(m.name)).join("; ") || "—";
+  const providers = (sport.providers || []).map(p => escapeHtml(p.name)).join(", ") || "—";
   return `
     <div class="section span-2">
-      <label>${sport.name}</label>
-      <p class="hint">${sport.category}</p>
+      <label>${escapeHtml(sport.name)}</label>
+      <p class="hint">${escapeHtml(sport.category)}</p>
       <p class="hint"><strong>Norms:</strong> ${norms}</p>
       <p class="hint"><strong>Materials:</strong> ${materials}</p>
       <p class="hint"><strong>Providers:</strong> ${providers}</p>
@@ -85,14 +85,14 @@ function sportCardHtml(sport) {
 }
 
 function paletteCardHtml(palette) {
-  const plants = (palette.plants || []).map(p => `${p.commonName} (${p.scientificName})`).join(", ") || "—";
-  const norms = (palette.norms || []).map(n => n.code).join(", ") || "—";
-  const materials = (palette.materials || []).map(m => m.name).join(", ") || "—";
-  const providers = (palette.providers || []).map(p => p.name).join(", ") || "—";
+  const plants = (palette.plants || []).map(p => `${escapeHtml(p.commonName)} (${escapeHtml(p.scientificName)})`).join(", ") || "—";
+  const norms = (palette.norms || []).map(n => escapeHtml(n.code)).join(", ") || "—";
+  const materials = (palette.materials || []).map(m => escapeHtml(m.name)).join(", ") || "—";
+  const providers = (palette.providers || []).map(p => escapeHtml(p.name)).join(", ") || "—";
   return `
     <div class="section span-2">
-      <label>${palette.name} — ${palette.type}</label>
-      <p class="hint">${palette.description}</p>
+      <label>${escapeHtml(palette.name)} — ${escapeHtml(palette.type)}</label>
+      <p class="hint">${escapeHtml(palette.description)}</p>
       <p class="hint"><strong>Plants:</strong> ${plants}</p>
       <p class="hint"><strong>Norms:</strong> ${norms}</p>
       <p class="hint"><strong>Materials:</strong> ${materials}</p>
@@ -103,21 +103,21 @@ function paletteCardHtml(palette) {
 function facilityCardHtml(item) {
   return `
     <div class="section">
-      <label>${item.title}</label>
-      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${item.category}</p>
-      <p class="hint">${item.requirement}</p>
-      <p class="hint"><strong>Source:</strong> ${item.authority} — ${item.normCode}</p>
+      <label>${escapeHtml(item.title)}</label>
+      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${escapeHtml(item.category)}</p>
+      <p class="hint">${escapeHtml(item.requirement)}</p>
+      <p class="hint"><strong>Source:</strong> ${escapeHtml(item.authority)} — ${escapeHtml(item.normCode)}</p>
     </div>`;
 }
 
 function analysisParamCardHtml(item) {
   return `
     <div class="section">
-      <label>${item.label}</label>
-      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${item.category}</p>
-      <p class="hint"><strong>Value:</strong> ${item.value} ${item.unit}</p>
-      ${item.description ? `<p class="hint">${item.description}</p>` : ""}
-      <p class="hint"><strong>Source:</strong> ${item.authority} — ${item.normCode}</p>
+      <label>${escapeHtml(item.label)}</label>
+      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${escapeHtml(item.category)}</p>
+      <p class="hint"><strong>Value:</strong> ${escapeHtml(item.value)} ${escapeHtml(item.unit)}</p>
+      ${item.description ? `<p class="hint">${escapeHtml(item.description)}</p>` : ""}
+      <p class="hint"><strong>Source:</strong> ${escapeHtml(item.authority)} — ${escapeHtml(item.normCode)}</p>
     </div>`;
 }
 
@@ -134,27 +134,27 @@ function analysisParamCardHtml(item) {
 function priceHint(value, unit, quoted, source) {
   if (value == null) return `<p class="hint">No price yet.</p>`;
   const u = (unit || "").replace("EUR/", "").replace("m2", "m²").replace("m3", "m³");
-  return `<p class="hint"><strong>€ ${value}${u ? " / " + u : ""}</strong> — ` +
-    `${quoted ? "supplier quote" : "estimated"}${source ? `<br><span class="hint">${source}</span>` : ""}</p>`;
+  return `<p class="hint"><strong>€ ${escapeHtml(value)}${u ? " / " + escapeHtml(u) : ""}</strong> — ` +
+    `${quoted ? "supplier quote" : "estimated"}${source ? `<br><span class="hint">${escapeHtml(source)}</span>` : ""}</p>`;
 }
 
 function speciesCardHtml(p) {
   const hasDims = p.matureHeightM > 0 && p.crownM > 0;
   return `
     <div class="section span-2">
-      <label>${p.scientificName || "(unnamed)"}</label>
-      <p class="hint"><em>${p.commonName || ""}</em>${p.form ? ` · ${p.form}` : ""}${p.category ? ` · ${p.category}` : ""}</p>
+      <label>${escapeHtml(p.scientificName || "(unnamed)")}</label>
+      <p class="hint"><em>${escapeHtml(p.commonName || "")}</em>${p.form ? ` · ${escapeHtml(p.form)}` : ""}${p.category ? ` · ${escapeHtml(p.category)}` : ""}</p>
       ${hasDims ? `
         <div class="dims">
-          <div class="dim-card"><div class="val">${p.heightRange || (p.matureHeightM + " m")}</div><div class="lbl">Mature height</div></div>
+          <div class="dim-card"><div class="val">${escapeHtml(p.heightRange || (p.matureHeightM + " m"))}</div><div class="lbl">Mature height</div></div>
           <div class="dim-card"><div class="val">${p.crownM} m</div><div class="lbl">Crown${p.crownMinM ? ` (${p.crownMinM}–${p.crownMaxM} m)` : ""}</div></div>
           <div class="dim-card"><div class="val">${p.minSubstrateMm || "—"} mm</div><div class="lbl">Min. substrate</div></div>
         </div>`
         : `<p class="hint">⚠ No roof dimensions — can't be placed until height, crown and substrate are filled in.</p>`}
-      ${priceHint(p.priceValue, p.priceUnit, p.priceIsQuoted, p.priceSource)}
-      ${p.notes ? `<p class="hint">${p.notes}</p>` : ""}
-      ${p.sunRequirement ? `<p class="hint">Sun: ${p.sunRequirement} · Drought: ${p.droughtTolerance || "—"}</p>` : ""}
-      ${p.source ? `<p class="hint">Source: ${p.sourceUrl ? `<a href="${p.sourceUrl}" target="_blank" rel="noopener">${p.source}</a>` : p.source}${p.dimensionsPublished ? " — published figures" : ""}</p>` : ""}
+      ${escapeHtml(priceHint(p.priceValue, p.priceUnit, p.priceIsQuoted, p.priceSource))}
+      ${p.notes ? `<p class="hint">${escapeHtml(p.notes)}</p>` : ""}
+      ${p.sunRequirement ? `<p class="hint">Sun: ${escapeHtml(p.sunRequirement)} · Drought: ${escapeHtml(p.droughtTolerance || "—")}</p>` : ""}
+      ${p.source ? `<p class="hint">Source: ${p.sourceUrl ? `<a href="${safeUrl(p.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(p.source)}</a>` : escapeHtml(p.source)}${p.dimensionsPublished ? " — published figures" : ""}</p>` : ""}
     </div>`;
 }
 
@@ -166,9 +166,9 @@ function buildupCardHtml(a) {
   const total = layers.reduce((s, l) => s + (l.thicknessMm || 0), 0);
   return `
     <div class="section span-2">
-      <label>${a.provider} — ${a.systemName}</label>
-      <p class="hint">${a.category}${a.providerCountry ? ` · ${a.providerCountry}` : ""}</p>
-      ${a.description ? `<p class="hint">${a.description}</p>` : ""}
+      <label>${escapeHtml(a.provider)} — ${escapeHtml(a.systemName)}</label>
+      <p class="hint">${escapeHtml(a.category)}${a.providerCountry ? ` · ${escapeHtml(a.providerCountry)}` : ""}</p>
+      ${a.description ? `<p class="hint">${escapeHtml(a.description)}</p>` : ""}
       <div class="dims">
         <div class="dim-card"><div class="val">${total}</div><div class="lbl">Build-up mm (from layers)</div></div>
         ${a.buildUpMm ? `<div class="dim-card"><div class="val" style="${Math.abs(total - a.buildUpMm) > 5 ? "color:#f59e0b" : ""}">${a.buildUpMm}</div><div class="lbl">Published${Math.abs(total - a.buildUpMm) > 5 ? " ⚠ differs" : ""}</div></div>` : ""}
@@ -186,11 +186,11 @@ function buildupCardHtml(a) {
         })()}</div><div class="lbl">Per m² (estimated)</div></div>
       </div>
       <p class="hint" style="margin-top:8px"><strong>${layers.length} layers</strong></p>
-      ${layers.map(l => `<p class="hint">${l.layerOrder + 1}. ${l.name} — <strong>${l.thicknessMm} mm</strong> (${l.function}, ${l.thicknessSource})</p>`).join("")}
-      ${a.sourceUrl ? `<p class="hint"><a href="${a.sourceUrl}" target="_blank" rel="noopener">Manufacturer source</a></p>` : ""}
+      ${layers.map(l => `<p class="hint">${l.layerOrder + 1}. ${escapeHtml(l.name)} — <strong>${l.thicknessMm} mm</strong> (${escapeHtml(l.function)}, ${escapeHtml(l.thicknessSource)})</p>`).join("")}
+      ${a.sourceUrl ? `<p class="hint"><a href="${safeUrl(a.sourceUrl)}" target="_blank" rel="noopener">Manufacturer source</a></p>` : ""}
       <div style="margin-top:8px">
-        <button class="btn-export" data-buildup-edit="${a.id}">Edit</button>
-        <button class="btn-export" data-buildup-delete="${a.id}" data-buildup-label="${a.provider} ${a.systemName}">Delete</button>
+        <button class="btn-export" data-buildup-edit="${escapeHtml(a.id)}">Edit</button>
+        <button class="btn-export" data-buildup-delete="${escapeHtml(a.id)}" data-buildup-label="${escapeHtml(a.provider)} ${escapeHtml(a.systemName)}">Delete</button>
       </div>
     </div>`;
 }
@@ -217,17 +217,17 @@ function courtOptionCardHtml(o) {
 
   return `
     <div class="section span-2">
-      <label>${o.label || "(unnamed)"}</label>
+      <label>${escapeHtml(o.label || "(unnamed)")}</label>
       <p class="hint">
-        <strong>${o.sport}</strong> · ${o.optionGroup} · <code>${o.key}</code>
-        ${o.colourHex ? ` · <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${o.colourHex};vertical-align:middle"></span> ${o.colourHex}` : ""}
-        ${o.textureHint ? ` · ${o.textureHint}` : ""}
+        <strong>${escapeHtml(o.sport)}</strong> · ${escapeHtml(o.optionGroup)} · <code>${escapeHtml(o.key)}</code>
+        ${o.colourHex ? ` · <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${escapeHtml(o.colourHex)};vertical-align:middle"></span> ${escapeHtml(o.colourHex)}` : ""}
+        ${o.textureHint ? ` · ${escapeHtml(o.textureHint)}` : ""}
       </p>
-      ${o.note ? `<p class="hint">${o.note}</p>` : ""}
+      ${o.note ? `<p class="hint">${escapeHtml(o.note)}</p>` : ""}
       ${facts.length ? `<div class="dims">${facts.map(([v, l]) =>
-        `<div class="dim-card"><div class="val">${v}</div><div class="lbl">${l}</div></div>`).join("")}</div>` : ""}
+        `<div class="dim-card"><div class="val">${escapeHtml(v)}</div><div class="lbl">${escapeHtml(l)}</div></div>`).join("")}</div>` : ""}
       ${o.priceValue != null
-        ? `<p class="hint">${o.priceIsQuoted ? "Supplier quote" : "Estimated"}${o.priceSource ? ` — ${o.priceSource}` : ""}</p>`
+        ? `<p class="hint">${o.priceIsQuoted ? "Supplier quote" : "Estimated"}${o.priceSource ? ` — ${escapeHtml(o.priceSource)}` : ""}</p>`
         : ""}
     </div>`;
 }
@@ -425,7 +425,7 @@ function wireReferenceDropdown(selectEl, manualEl, items, offline) {
     manualEl.style.display = "block";
   } else {
     selectEl.innerHTML = `<option value="">Select…</option>` +
-      items.map(it => `<option value="${it.id}">${it.name}</option>`).join("") +
+      items.map(it => `<option value="${escapeHtml(it.id)}">${escapeHtml(it.name)}</option>`).join("") +
       `<option value="__manual__">Manual entry…</option>`;
     manualEl.style.display = "none";
   }
@@ -610,10 +610,10 @@ function renderAdminForm(entityType, prefill) {
     const value = current === null || current === undefined ? "" : current;
     return `
     <div>
-      <span>${f.label}${f.required ? " *" : ""}</span>
+      <span>${escapeHtml(f.label)}${f.required ? " *" : ""}</span>
       ${f.type === "textarea"
-        ? `<textarea data-field="${f.key}" rows="2" placeholder="${f.placeholder || ""}">${value}</textarea>`
-        : `<input type="${f.type === "number" ? "number" : "text"}" data-field="${f.key}" placeholder="${f.placeholder || ""}" value="${value}" ${f.type === "number" ? 'step="any"' : ""} />`}
+        ? `<textarea data-field="${escapeHtml(f.key)}" rows="2" placeholder="${escapeHtml(f.placeholder || "")}">${escapeHtml(value)}</textarea>`
+        : `<input type="${f.type === "number" ? "number" : "text"}" data-field="${escapeHtml(f.key)}" placeholder="${escapeHtml(f.placeholder || "")}" value="${escapeHtml(value)}" ${f.type === "number" ? 'step="any"' : ""} />`}
     </div>`;
   }).join("");
 }
@@ -650,7 +650,7 @@ async function loadAdminRecordPicker(entityType) {
     const items = await fetchDataEntity(`admin_${entityType}`, listMeta.path);
     adminEditRecords = items;
     picker.innerHTML = `<option value="">Select a record…</option>` +
-      items.map(it => `<option value="${it.id}">#${it.id} — ${it[listMeta.labelField]}</option>`).join("");
+      items.map(it => `<option value="${escapeHtml(it.id)}">#${escapeHtml(it.id)} — ${escapeHtml(it[listMeta.labelField])}</option>`).join("");
     document.getElementById("adminFormFields").innerHTML = "";
   } catch (err) {
     picker.innerHTML = `<option value="">Backend unreachable</option>`;
@@ -695,7 +695,7 @@ document.getElementById("btn-admin-create").addEventListener("click", async () =
 
   const data = {};
   for (const f of fields) {
-    const el = document.querySelector(`#adminFormFields [data-field="${f.key}"]`);
+    const el = document.querySelector(`#adminFormFields [data-field="${escapeHtml(f.key)}"]`);
     const raw = el ? el.value.trim() : "";
     if (adminMode === "create" && f.required && raw === "") { setAdminStatus(statusId, `${f.label} is required.`, false); return; }
     if (raw === "") continue; // never sent — leaves the field unset (create) or unchanged (edit), rather than blanking it out
@@ -705,10 +705,10 @@ document.getElementById("btn-admin-create").addEventListener("click", async () =
   setAdminStatus(statusId, "Saving…", null);
   try {
     const res = adminMode === "edit"
-      ? await fetch(`${DATA_API_BASE}/admin/records/${entityType}/${adminEditSelected.id}`, {
+      ? await apiWrite(`${DATA_API_BASE}/admin/records/${entityType}/${adminEditSelected.id}`, {
           method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
         })
-      : await fetch(`${DATA_API_BASE}/admin/records`, {
+      : await apiWrite(`${DATA_API_BASE}/admin/records`, {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entityType, data }),
         });
     const body = await res.json().catch(() => null);
@@ -725,6 +725,14 @@ document.getElementById("btn-admin-create").addEventListener("click", async () =
   }
 });
 
+// The SQL import runs whatever SQL it is given, so the API has it only in Development (or when it is switched on): where it is off the button says so instead of failing.
+apiCapabilities().then(cap => {
+  if (cap.sqlImport !== false) return;
+  const button = document.getElementById("btn-admin-import-sql");
+  if (button) button.disabled = true;
+  setAdminStatus("admin-import-status", "SQL import is turned off in this API (it runs only in Development, or when Admin:AllowSqlImport is true).", null);
+});
+
 document.getElementById("btn-admin-import-sql").addEventListener("click", async () => {
   const fileInput = document.getElementById("adminSqlFile");
   const file = fileInput.files[0];
@@ -733,7 +741,7 @@ document.getElementById("btn-admin-import-sql").addEventListener("click", async 
   setAdminStatus("admin-import-status", "Importing…", null);
   try {
     const sql = await file.text();
-    const res = await fetch(`${DATA_API_BASE}/admin/import-sql`, {
+    const res = await apiWrite(`${DATA_API_BASE}/admin/import-sql`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sql }),
     });

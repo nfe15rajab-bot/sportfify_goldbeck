@@ -34,6 +34,7 @@ const ctx = vm.createContext(sandbox);
 const load = f => vm.runInContext(fs.readFileSync(path.join(web, f), "utf8"), ctx, { filename: f });
 const get = expr => vm.runInContext(expr, ctx);
 
+load("escape.js");
 load("localSession.js");
 load("analysisResults.js");
 load("workspaceBridge.js");

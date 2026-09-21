@@ -112,7 +112,7 @@ function structureSvg(scale, roofOx, roofOy, force) {
 }
 
 function escapeStructureText(s) {
-  return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  return escapeHtml(s);
 }
 
 /** Status line and checkbox of the Structure tab's grid section. Safe to call before the elements exist. */

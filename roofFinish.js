@@ -132,8 +132,8 @@ function roofFinishSectionHtml() {
   }
   const m = roofFinishMetrics();
   const opts = options.map(o =>
-    `<option value="${o.key}"${o.key === roofFinishKey ? " selected" : ""}>${
-      o.provider === "Generic" ? o.system_name : `${o.provider} — ${o.system_name}`
+    `<option value="${escapeHtml(o.key)}"${o.key === roofFinishKey ? " selected" : ""}>${
+      o.provider === "Generic" ? escapeHtml(o.system_name) : `${escapeHtml(o.provider)} — ${escapeHtml(o.system_name)}`
     } · €${Math.round(finishPricePerM2(o))}/m²</option>`).join("");
 
   return `<div class="section">

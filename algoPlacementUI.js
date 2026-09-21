@@ -83,7 +83,7 @@ function algoSave() {
   try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings })); } catch (e) { /* not kept */ }
 }
 
-const algoEsc = s => String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const algoEsc = s => escapeHtml(s);
 const algoRound = v => Math.round(v * 1000) / 1000;
 const algoRgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
 
@@ -209,11 +209,11 @@ function algoBuildPanel() {
   algoAdoptSpecifiedSizes();
   const s = algoState.settings;
   const sportRows = AlgoPlacement.SPORTS.map((sp, i) => `<div class="algo-sport" data-sport="${i}">
-      <span class="algo-swatch" style="background:${algoRgb(sp.color)}"></span>
+      <span class="algo-swatch" style="background:${escapeHtml(algoRgb(sp.color))}"></span>
       <span class="algo-sport-name">${algoEsc(sp.name)}${AlgoPlacement.BIG_COURTS.includes(sp.name) ? ' <i class="ti ti-arrows-maximize" title="A big court: needs a path on one side only" aria-hidden="true"></i>' : ""}</span>
-      <span class="algo-sport-size">${sp.long} × ${sp.short} m</span>
+      <span class="algo-sport-size">${sp.long} × ${escapeHtml(sp.short)} m</span>
       <span class="algo-sport-area">${Math.round(sp.long * sp.short)} m²</span>
-      <span class="algo-qty"><button data-act="qty-" data-i="${i}" aria-label="One fewer ${algoEsc(sp.name)}">−</button><input type="number" min="0" max="30" step="1" data-qty="${i}" value="${algoState.qty[sp.name] || 0}" aria-label="How many ${algoEsc(sp.name)}"><button data-act="qty+" data-i="${i}" aria-label="One more ${algoEsc(sp.name)}">+</button></span>
+      <span class="algo-qty"><button data-act="qty-" data-i="${i}" aria-label="One fewer ${algoEsc(sp.name)}">−</button><input type="number" min="0" max="30" step="1" data-qty="${i}" value="${escapeHtml(algoState.qty[sp.name] || 0)}" aria-label="How many ${algoEsc(sp.name)}"><button data-act="qty+" data-i="${i}" aria-label="One more ${algoEsc(sp.name)}">+</button></span>
       <span class="algo-fit" data-fit="${i}"></span>
     </div>`).join("");
 
@@ -379,13 +379,13 @@ function algoBounds() {
 function algoRefreshBlocks() {
   const box = document.getElementById("algo-blocks");
   if (!box) return;
-  box.innerHTML = algoState.blocks.length ? algoState.blocks.map(b => `<div class="algo-block" data-row="${b.id}">
-      <select data-block="${b.id}" data-f="kind" aria-label="Kind">${Object.keys(ALGO_BLOCK_LABELS).map(k => `<option value="${k}" ${k === b.kind ? "selected" : ""}>${ALGO_BLOCK_LABELS[k]}</option>`).join("")}</select>
-      <label>x<input type="number" step="0.5" data-block="${b.id}" data-f="x" value="${b.x}"></label>
-      <label>y<input type="number" step="0.5" data-block="${b.id}" data-f="y" value="${b.y}"></label>
-      <label>w<input type="number" step="0.5" min="0.5" data-block="${b.id}" data-f="w" value="${b.w}"></label>
-      <label>h<input type="number" step="0.5" min="0.5" data-block="${b.id}" data-f="h" value="${b.h}"></label>
-      <button data-act="del-block" data-id="${b.id}" aria-label="Remove" title="Remove">×</button></div>`).join("")
+  box.innerHTML = algoState.blocks.length ? algoState.blocks.map(b => `<div class="algo-block" data-row="${escapeHtml(b.id)}">
+      <select data-block="${escapeHtml(b.id)}" data-f="kind" aria-label="Kind">${Object.keys(ALGO_BLOCK_LABELS).map(k => `<option value="${k}" ${k === b.kind ? "selected" : ""}>${ALGO_BLOCK_LABELS[k]}</option>`).join("")}</select>
+      <label>x<input type="number" step="0.5" data-block="${escapeHtml(b.id)}" data-f="x" value="${b.x}"></label>
+      <label>y<input type="number" step="0.5" data-block="${escapeHtml(b.id)}" data-f="y" value="${b.y}"></label>
+      <label>w<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="w" value="${b.w}"></label>
+      <label>h<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="h" value="${b.h}"></label>
+      <button data-act="del-block" data-id="${escapeHtml(b.id)}" aria-label="Remove" title="Remove">×</button></div>`).join("")
     : `<p class="algo-empty">No lift, ramp or stair yet. Add at least one: the pathways start from them.</p>`;
   const fromRevit = document.getElementById("algo-from-revit");
   if (fromRevit) { const n = algoRevitBlocks().length; fromRevit.disabled = n === 0; fromRevit.title = n ? `${n} from the Revit model` : "Nothing pushed from Revit yet"; }
@@ -615,16 +615,16 @@ function algoDrawPreview() {
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
   algoState.blocks.forEach(blk => {
-    g += `<g class="algo-block-svg" data-drag="${blk.id}" style="cursor:grab"><rect x="${algoRound(blk.x)}" y="${algoRound(blk.y)}" width="${blk.w}" height="${blk.h}" fill="${algoRgb(C.COLOR_VC)}" stroke="#7f1d1d" stroke-width="0.12"/>
-      <text x="${algoRound(blk.x + blk.w / 2)}" y="${algoRound(blk.y + blk.h / 2 + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#fff" pointer-events="none">${ALGO_BLOCK_LABELS[blk.kind][0]}</text><title>${ALGO_BLOCK_LABELS[blk.kind]}: drag to move</title></g>`;
+    g += `<g class="algo-block-svg" data-drag="${escapeHtml(blk.id)}" style="cursor:grab"><rect x="${algoRound(blk.x)}" y="${algoRound(blk.y)}" width="${blk.w}" height="${blk.h}" fill="${algoRgb(C.COLOR_VC)}" stroke="#7f1d1d" stroke-width="0.12"/>
+      <text x="${algoRound(blk.x + blk.w / 2)}" y="${algoRound(blk.y + blk.h / 2 + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#fff" pointer-events="none">${escapeHtml(ALGO_BLOCK_LABELS[blk.kind][0])}</text><title>${escapeHtml(ALGO_BLOCK_LABELS[blk.kind])}: drag to move</title></g>`;
   });
   if (plan) plan.courts.forEach(c => {
     const sp = C.SPORTS.find(s => s.name === c.name), r = c.rect;
     const cx = (r[0] + r[2]) / 2, cy = (r[1] + r[3]) / 2, word = c.name.split(" ")[0];
     const small = r[2] - r[0] < fs * (word.length * 0.62 + 1) && r[3] - r[1] < fs * (word.length * 0.62 + 1);
-    g += `<g pointer-events="none"><rect x="${algoRound(r[0])}" y="${algoRound(r[1])}" width="${algoRound(r[2] - r[0])}" height="${algoRound(r[3] - r[1])}" fill="${algoRgb(sp.color)}" stroke="#282828" stroke-width="0.14"/>
+    g += `<g pointer-events="none"><rect x="${algoRound(r[0])}" y="${algoRound(r[1])}" width="${algoRound(r[2] - r[0])}" height="${algoRound(r[3] - r[1])}" fill="${escapeHtml(algoRgb(sp.color))}" stroke="#282828" stroke-width="0.14"/>
       <text x="${algoRound(cx)}" y="${algoRound(cy + fs * 0.35)}" text-anchor="middle" font-size="${small ? fs * 0.7 : fs}" font-weight="600" fill="#141414">${algoEsc(word)}</text>
-      <title>${algoEsc(c.name)} ${c.long} × ${c.short} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
+      <title>${algoEsc(c.name)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
   });
   g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="none" stroke="#3c3c3c" stroke-width="0.18" pointer-events="none"/>`;
   host.innerHTML = `<svg id="algo-svg" viewBox="${algoRound(vx)} ${algoRound(vy)} ${algoRound(vw)} ${algoRound(vh)}" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:${algoRound(vw / vh)}" role="img" aria-label="Preview of the packed roof">${g}</svg>`;
@@ -656,7 +656,7 @@ function algoBindDrag(host) {
     const rect = drag.el.querySelector("rect"), text = drag.el.querySelector("text");
     rect.setAttribute("x", drag.blk.x); rect.setAttribute("y", drag.blk.y);
     text.setAttribute("x", algoRound(drag.blk.x + drag.blk.w / 2)); text.setAttribute("y", algoRound(drag.blk.y + drag.blk.h / 2 + parseFloat(text.getAttribute("font-size")) * 0.35));
-    const row = document.querySelector(`[data-row="${drag.blk.id}"]`);
+    const row = document.querySelector(`[data-row="${escapeHtml(drag.blk.id)}"]`);
     if (row) { row.querySelector('[data-f="x"]').value = drag.blk.x; row.querySelector('[data-f="y"]').value = drag.blk.y; }
   });
   const end = () => { if (!drag) return; drag.el.style.cursor = "grab"; drag = null; algoChanged(); };

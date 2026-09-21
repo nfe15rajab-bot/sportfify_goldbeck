@@ -96,7 +96,7 @@ function furnitureElevationSvg(f, opts) {
 
   return `
 <svg class="furniture-elevation" viewBox="0 0 ${W} ${H}" width="100%" height="${H}"
-     role="img" aria-label="${f.product || "Furniture"}, ${L} m long and ${h} m high, drawn to scale">
+     role="img" aria-label="${escapeHtml(f.product || "Furniture")}, ${L} m long and ${h} m high, drawn to scale">
   <!-- Everything here stands on a roof, so there is always a ground line. -->
   ${bare ? "" : `<line x1="0" y1="${groundY}" x2="${W}" y2="${groundY}"
         stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>`}
@@ -246,10 +246,9 @@ function furnitureFigureHtml(f, opts) {
   if (f.image_url) {
     const credit = f.image_credit || f.manufacturer || "";
     return `
-      <figure class="furniture-figure" data-furniture-key="${f.key}">
-        <img src="${f.image_url}" alt="${f.product}" loading="lazy"
-             onerror="furnitureImageFailed(this)"/>
-        ${credit ? `<figcaption class="hint">Photo: ${credit}</figcaption>` : ""}
+      <figure class="furniture-figure" data-furniture-key="${escapeHtml(f.key)}">
+        <img src="${safeUrl(f.image_url)}" alt="${escapeHtml(f.product)}" loading="lazy"/>
+        ${credit ? `<figcaption class="hint">Photo: ${escapeHtml(credit)}</figcaption>` : ""}
       </figure>`;
   }
 
@@ -259,6 +258,15 @@ function furnitureFigureHtml(f, opts) {
       <figcaption class="hint">${caption}</figcaption>
     </figure>`;
 }
+
+/**
+ * A photograph that would not load is swapped for the drawing of the same piece. An image's error event does not bubble, so one listener in the capture phase watches
+ * for it: no inline onerror handler in the markup (the page's Content-Security-Policy allows no inline script).
+ */
+document.addEventListener("error", e => {
+  const t = e.target;
+  if (t && t.tagName === "IMG" && t.closest && t.closest(".furniture-figure[data-furniture-key]")) furnitureImageFailed(t);
+}, true);
 
 /** Swaps a photograph that would not load for the drawing of the same piece. */
 function furnitureImageFailed(img) {

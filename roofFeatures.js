@@ -76,7 +76,7 @@ function roofFeaturesSvg(scale, roofOx, roofOy) {
       : e.kind === "railing" ? `stroke="${C.railing}" stroke-width="3" stroke-dasharray="6,3"`
       : e.kind === "partial" ? `stroke="${C.partial}" stroke-width="3" stroke-dasharray="10,4"`
       : `stroke="${C.open}" stroke-width="1.5" stroke-dasharray="2,4"`;
-    out += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${style} opacity="0.85" pointer-events="none"><title>Edge ${e.index + 1}: ${e.kind}${e.height_m ? `, ${e.height_m} m high` : ""}</title></line>`;
+    out += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${style} opacity="0.85" pointer-events="none"><title>Edge ${e.index + 1}: ${escapeHtml(e.kind)}${e.height_m ? `, ${e.height_m} m high` : ""}</title></line>`;
   });
 
   // walls and other tall things standing on the roof: what the sun analysis casts shadows from (a stair house, a plant-room wall, a parapet)

@@ -238,7 +238,7 @@ function showToast(title, message) {
   if (!container) return;
   const toast = document.createElement("div");
   toast.className = "toast";
-  toast.innerHTML = `<div class="toast-title">${title}</div><div class="toast-body">${message}</div>`;
+  toast.innerHTML = `<div class="toast-title">${escapeHtml(title)}</div><div class="toast-body">${escapeHtml(message)}</div>`;      // toasts carry names from catalogues and files: text, never markup
   container.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add("show"));
   setTimeout(() => { toast.classList.remove("show"); setTimeout(() => toast.remove(), 300); }, 3500);

@@ -433,13 +433,13 @@ function basketballPanelHtml() {
     const keys = Object.keys(o.values);
     if (keys.length <= 1) {
       const only = o.values[keys[0]];
-      return only ? `<p class="hint"><strong>${o.label}:</strong> ${only.label}${only.note ? ` — ${only.note}` : ""}</p>` : "";
+      return only ? `<p class="hint"><strong>${escapeHtml(o.label)}:</strong> ${escapeHtml(only.label)}${only.note ? ` — ${escapeHtml(only.note)}` : ""}</p>` : "";
     }
     const opts = keys.map(v =>
-      `<option value="${v}"${basketballState[key] === v ? " selected" : ""}>${o.values[v].label}</option>`).join("");
+      `<option value="${v}"${basketballState[key] === v ? " selected" : ""}>${escapeHtml(o.values[v].label)}</option>`).join("");
     const note = o.values[basketballState[key]]?.note;
     return `<div class="section">
-        <label>${o.label}</label>
+        <label>${escapeHtml(o.label)}</label>
         <select data-basketball="${key}">${opts}</select>
         ${note ? `<p class="hint">${note}</p>` : ""}
       </div>`;
@@ -467,7 +467,7 @@ function basketballPanelHtml() {
       <p class="hint" style="opacity:.8">
         <strong>FIBA reference</strong> — regulation court ${BASKETBALL.court.length_m} × ${BASKETBALL.court.width_m} m ·
         rim ${BASKETBALL.basket.rimHeight_m} m · three-point ${BASKETBALL.threePoint.arcRadius_m} m ·
-        key ${BASKETBALL.key.width_m} × ${BASKETBALL.key.depth_m} m ·
+        key ${escapeHtml(BASKETBALL.key.width_m)} × ${escapeHtml(BASKETBALL.key.depth_m)} m ·
         ${BASKETBALL.clearHeight.minimum_m} m clear height needed.
         The markings above are drawn to these; only the full court matches them exactly.
       </p>
@@ -487,7 +487,7 @@ function syncBasketballPanel(sport) {
         host.innerHTML = `
           <div class="section">
             <label>Reference database unavailable</label>
-            <p class="hint">Court options live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Court options live in the Sportify API, and it isn't answering (${escapeHtml(err.message)}).</p>
             <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
             <button class="btn-export accent" id="btn-bball-retry">Retry</button>
           </div>`;

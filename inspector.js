@@ -22,7 +22,7 @@ function inspectorHost() {
 
 function row(label, value, note) {
   if (value === null || value === undefined || value === "") return "";
-  return `<tr><td>${label}</td><td class="num">${value}</td>${note ? `<td class="note">${note}</td>` : "<td></td>"}</tr>`;
+  return `<tr><td>${escapeHtml(label)}</td><td class="num">${escapeHtml(value)}</td>${note ? `<td class="note">${escapeHtml(note)}</td>` : "<td></td>"}</tr>`;
 }
 
 function inspectorTable(rows) {
@@ -189,12 +189,12 @@ function renderInspector() {
 
   host.innerHTML = `
     <div class="inspector-head">
-      <strong>${d.title}</strong>
-      <span class="hint">${d.subtitle || ""}</span>
+      <strong>${escapeHtml(d.title)}</strong>
+      <span class="hint">${escapeHtml(d.subtitle || "")}</span>
     </div>
     ${d.figure || ""}
     ${inspectorTable(d.rows)}
-    ${d.material ? `<p class="hint">${d.material}</p>` : ""}
-    ${d.source ? `<p class="hint"><a href="${d.source}" target="_blank" rel="noopener">${d.sourceName || "Source"}</a></p>` : ""}
+    ${d.material ? `<p class="hint">${escapeHtml(d.material)}</p>` : ""}
+    ${d.source ? `<p class="hint"><a href="${safeUrl(d.source)}" target="_blank" rel="noopener">${escapeHtml(d.sourceName || "Source")}</a></p>` : ""}
     <p class="hint">Click an empty part of the roof to clear the selection.</p>`;
 }

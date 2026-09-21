@@ -374,13 +374,13 @@ function wsRunPanelHtml() {
   return `<label>Run</label>
     <button class="btn-export primary ws-run-btn" data-ws-action="run" ${!on || noLayout || running ? "disabled" : ""}><i class="ti ${running ? "ti-loader-2 ws-spin" : "ti-player-play"}" aria-hidden="true"></i>${running ? "Running..." : "Run analysis"}</button>
     <p class="hint">${wsEsc(note)}</p>
-    ${workspaceState.message ? `<p class="ws-message tone-${workspaceState.message.tone}">${workspaceState.message.html}</p>` : ""}`;
+    ${workspaceState.message ? `<p class="ws-message tone-${escapeHtml(workspaceState.message.tone)}">${workspaceState.message.html}</p>` : ""}`;
 }
 
 // ------------------------------------------------------------------------------------------------ the Deliverables tab
 
 function wsEsc(s) {
-  return String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  return escapeHtml(s);
 }
 
 function wsSize(bytes) {
@@ -422,7 +422,7 @@ function renderDeliverables() {
       + wsActionButton("diagrams", "ti-route", "Functional diagrams", "Circulation and axonometric, from Revit's views", false);
   }
   const message = document.getElementById("dl-message");
-  if (message) message.innerHTML = workspaceState.message ? `<p class="ws-message tone-${workspaceState.message.tone}">${workspaceState.message.html}</p>` : "";
+  if (message) message.innerHTML = workspaceState.message ? `<p class="ws-message tone-${escapeHtml(workspaceState.message.tone)}">${workspaceState.message.html}</p>` : "";
 
   const folders = document.getElementById("dl-folders");
   if (!folders) return;

@@ -166,10 +166,10 @@ function furnitureSvg(x, y, w, h, item, selected, strokeColour, isPlanner) {
     if (cat.shape === "glow") {
       // A light is drawn with its pool, because what matters about a bollard
       // light on a plan is the bit of route it actually lights.
-      out += `<circle cx="${cx}" cy="${cy}" r="${r * 4}" fill="${cat.colour}" fill-opacity="0.12" pointer-events="none"/>`;
+      out += `<circle cx="${cx}" cy="${cy}" r="${r * 4}" fill="${escapeHtml(cat.colour)}" fill-opacity="0.12" pointer-events="none"/>`;
     }
-    out += `<circle data-id="${item.id}" cx="${cx}" cy="${cy}" r="${r}"
-                    fill="${cat.colour}" fill-opacity="0.85"
+    out += `<circle data-id="${escapeHtml(item.id)}" cx="${cx}" cy="${cy}" r="${r}"
+                    fill="${escapeHtml(cat.colour)}" fill-opacity="0.85"
                     stroke="${strokeColour}" stroke-width="${sw}" style="cursor:${cursor}"/>`;
     return out;
   }
@@ -179,26 +179,26 @@ function furnitureSvg(x, y, w, h, item, selected, strokeColour, isPlanner) {
     // one rather than as a big bench.
     const benchH = Math.max(1.5, h * 0.22);
     return `
-      <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
-            fill="${cat.colour}" fill-opacity="0.32"
+      <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
+            fill="${escapeHtml(cat.colour)}" fill-opacity="0.32"
             stroke="${strokeColour}" stroke-width="${sw}" style="cursor:${cursor}"/>
       <rect x="${x}" y="${cy - h * 0.16}" width="${w}" height="${h * 0.32}"
-            fill="${cat.colour}" fill-opacity="0.9" pointer-events="none"/>
+            fill="${escapeHtml(cat.colour)}" fill-opacity="0.9" pointer-events="none"/>
       <rect x="${x}" y="${y}" width="${w}" height="${benchH}"
-            fill="${cat.colour}" fill-opacity="0.65" pointer-events="none"/>
+            fill="${escapeHtml(cat.colour)}" fill-opacity="0.65" pointer-events="none"/>
       <rect x="${x}" y="${y + h - benchH}" width="${w}" height="${benchH}"
-            fill="${cat.colour}" fill-opacity="0.65" pointer-events="none"/>`;
+            fill="${escapeHtml(cat.colour)}" fill-opacity="0.65" pointer-events="none"/>`;
   }
 
   // Bench: a bar, with a thinner line behind it when it has a backrest —
   // enough to tell the two apart at roof scale.
   const seatH = Math.max(1.5, h * 0.55);
   return `
-    <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
-          fill="${cat.colour}" fill-opacity="0.25"
+    <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
+          fill="${escapeHtml(cat.colour)}" fill-opacity="0.25"
           stroke="${strokeColour}" stroke-width="${sw}" style="cursor:${cursor}"/>
     <rect x="${x}" y="${y + (h - seatH) / 2}" width="${w}" height="${seatH}"
-          fill="${cat.colour}" fill-opacity="0.9" pointer-events="none"/>`;
+          fill="${escapeHtml(cat.colour)}" fill-opacity="0.9" pointer-events="none"/>`;
 }
 
 function isFurnitureItem(item) {
@@ -215,13 +215,13 @@ function furniturePanelHtml() {
     const meta = FURNITURE_CATEGORIES[cat];
     const n = furnitureInCategory(cat).length;
     return `<button class="furniture-tab${cat === furnitureState.category ? " active" : ""}"
-                    data-furniture-cat="${cat}" title="${meta.label}">
-              ${meta.label}<span class="furniture-tab-count">${n}</span>
+                    data-furniture-cat="${cat}" title="${escapeHtml(meta.label)}">
+              ${escapeHtml(meta.label)}<span class="furniture-tab-count">${n}</span>
             </button>`;
   }).join("");
 
   const options = furnitureInCategory(furnitureState.category).map(x =>
-    `<option value="${x.key}"${x.key === furnitureState.key ? " selected" : ""}>${x.label}</option>`).join("");
+    `<option value="${escapeHtml(x.key)}"${x.key === furnitureState.key ? " selected" : ""}>${escapeHtml(x.label)}</option>`).join("");
 
   const t = furnitureTotals();
   const dimNote = f.dimensions_published ? "published" : "typical — check the datasheet";
@@ -232,15 +232,15 @@ function furniturePanelHtml() {
   return `
     <div class="section furniture-hero">
       ${furnitureFigureHtml(f)}
-      <div class="furniture-hero-name">${f.product}</div>
-      <p class="hint">${f.manufacturer.split(" (")[0]}${cat ? ` · ${cat.short}` : ""}</p>
+      <div class="furniture-hero-name">${escapeHtml(f.product)}</div>
+      <p class="hint">${escapeHtml(f.manufacturer.split(" (")[0])}${cat ? ` · ${escapeHtml(cat.short)}` : ""}</p>
     </div>
 
     <div class="section">
       <label>What are you placing?</label>
       <div class="furniture-tabs">${tabs}</div>
       <select id="furniture-select">${options}</select>
-      <p class="hint">${f.description}</p>
+      <p class="hint">${escapeHtml(f.description)}</p>
     </div>
 
     <div class="section">
@@ -253,8 +253,8 @@ function furniturePanelHtml() {
         ${f.price != null ? `<div class="dim-card"><div class="val">€ ${f.price}</div><div class="lbl">${f.price_quoted ? "quoted" : "estimated"}</div></div>` : ""}
       </div>
       <p class="hint">
-        ${f.material}${f.cost_group ? ` · DIN 276 KG ${f.cost_group}` : ""}
-        ${f.source_url ? ` · <a href="${f.source_url}" target="_blank" rel="noopener">${f.manufacturer.split(" (")[0]}</a>` : ""}
+        ${escapeHtml(f.material)}${f.cost_group ? ` · DIN 276 KG ${escapeHtml(f.cost_group)}` : ""}
+        ${f.source_url ? ` · <a href="${safeUrl(f.source_url)}" target="_blank" rel="noopener">${escapeHtml(f.manufacturer.split(" (")[0])}</a>` : ""}
       </p>
     </div>
 
@@ -292,7 +292,7 @@ function renderFurniturePanel() {
         el.innerHTML = `
           <div class="section">
             <label>Reference database unavailable</label>
-            <p class="hint">Furniture lives in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Furniture lives in the Sportify API, and it isn't answering (${escapeHtml(err.message)}).</p>
             <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
             <button class="btn-export accent" id="btn-furn-retry">Retry</button>
           </div>`;

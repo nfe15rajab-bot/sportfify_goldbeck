@@ -86,8 +86,8 @@ function updateRevitLayersUI() {
   const rows = REVIT_LAYERS.map(l => {
     const n = l.n();
     const tip = n ? (l.detail ? l.detail(n) : String(n)) : "Nothing pushed from Revit for this yet";
-    return `<label class="revit-layer${n ? "" : " empty"}" title="${tip}"><input type="checkbox" data-layer="${l.key}" ${revitLayerShown(l.key) ? "checked" : ""} ${n ? "" : "disabled"}>
-      <span class="revit-layer-chip" style="background:${l.color}"></span><span class="revit-layer-name">${l.label}</span><span class="revit-layer-count">${n || "–"}</span></label>`;
+    return `<label class="revit-layer${n ? "" : " empty"}" title="${tip}"><input type="checkbox" data-layer="${escapeHtml(l.key)}" ${revitLayerShown(l.key) ? "checked" : ""} ${n ? "" : "disabled"}>
+      <span class="revit-layer-chip" style="background:${escapeHtml(l.color)}"></span><span class="revit-layer-name">${escapeHtml(l.label)}</span><span class="revit-layer-count">${n || "–"}</span></label>`;
   }).join("");
 
   const haveResults = typeof resultsState !== "undefined" && resultsState.payload && typeof RESULT_SECTIONS !== "undefined";

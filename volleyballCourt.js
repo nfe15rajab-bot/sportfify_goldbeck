@@ -380,18 +380,18 @@ function volleyballPanelHtml() {
     // already decided is a place to build a court that cannot exist.
     if (key === "surface" && beach) {
       const only = o.values[volleyballState.surface];
-      return only ? `<p class="hint"><strong>Surface:</strong> ${only.label} — ${only.note}</p>` : "";
+      return only ? `<p class="hint"><strong>Surface:</strong> ${escapeHtml(only.label)} — ${escapeHtml(only.note)}</p>` : "";
     }
     const keys = Object.keys(o.values).filter(k => key !== "surface" || beach || k !== "sand");
     if (keys.length <= 1) {
       const only = o.values[keys[0]];
-      return only ? `<p class="hint"><strong>${o.label}:</strong> ${only.label}${only.note ? ` — ${only.note}` : ""}</p>` : "";
+      return only ? `<p class="hint"><strong>${escapeHtml(o.label)}:</strong> ${escapeHtml(only.label)}${only.note ? ` — ${escapeHtml(only.note)}` : ""}</p>` : "";
     }
     const opts = keys.map(v =>
-      `<option value="${v}"${volleyballState[key] === v ? " selected" : ""}>${o.values[v].label}</option>`).join("");
+      `<option value="${v}"${volleyballState[key] === v ? " selected" : ""}>${escapeHtml(o.values[v].label)}</option>`).join("");
     const note = o.values[volleyballState[key]]?.note;
     return `<div class="section">
-        <label>${o.label}</label>
+        <label>${escapeHtml(o.label)}</label>
         <select data-volleyball="${key}">${opts}</select>
         ${note ? `<p class="hint">${note}</p>` : ""}
       </div>`;
@@ -457,7 +457,7 @@ function syncVolleyballPanel(sport) {
         host.innerHTML = `
           <div class="section">
             <label>Reference database unavailable</label>
-            <p class="hint">Court options live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Court options live in the Sportify API, and it isn't answering (${escapeHtml(err.message)}).</p>
             <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
             <button class="btn-export accent" id="btn-vball-retry">Retry</button>
           </div>`;

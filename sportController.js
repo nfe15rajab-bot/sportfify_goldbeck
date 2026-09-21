@@ -33,14 +33,14 @@ function buildActivityBar() {
   const bar = document.getElementById("activity-bar");
   let html = "";
   Object.entries(FIELD_SPORTS).forEach(([id, f]) => {
-    html += `<button class="activity-icon${id === state.sport ? " active" : ""}" data-kind="field" data-id="${id}" title="${f.label}">
-               <i class="ti ${f.icon}"></i><span class="activity-icon-label">${f.short}</span>
+    html += `<button class="activity-icon${id === state.sport ? " active" : ""}" data-kind="field" data-id="${id}" title="${escapeHtml(f.label)}">
+               <i class="ti ${f.icon}"></i><span class="activity-icon-label">${escapeHtml(f.short)}</span>
              </button>`;
   });
   html += `<div class="activity-bar-divider"></div>`;
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
-    html += `<button class="activity-icon${id === state.activityId ? " active" : ""}" data-kind="activity" data-id="${id}" title="${a.label}">
-               <i class="ti ${a.icon}"></i><span class="activity-icon-label">${a.short}</span>
+    html += `<button class="activity-icon${id === state.activityId ? " active" : ""}" data-kind="activity" data-id="${id}" title="${escapeHtml(a.label)}">
+               <i class="ti ${a.icon}"></i><span class="activity-icon-label">${escapeHtml(a.short)}</span>
              </button>`;
   });
   bar.innerHTML = html;

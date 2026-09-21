@@ -254,25 +254,25 @@ function zonesSvg(scale, roofOx, roofOy) {
     const cy = z.points.reduce((s, p) => s + py(p), 0) / z.points.length;
 
     out += `
-      <polygon data-zone-id="${z.id}" points="${poly}"
-            fill="${kind.color}" fill-opacity="${selected ? 0.5 : 0.35}"
-            stroke="${bad ? "#ef4444" : kind.color}" stroke-width="${selected ? 2.5 : bad ? 2 : 1}"
+      <polygon data-zone-id="${escapeHtml(z.id)}" points="${poly}"
+            fill="${escapeHtml(kind.color)}" fill-opacity="${selected ? 0.5 : 0.35}"
+            stroke="${bad ? "#ef4444" : escapeHtml(kind.color)}" stroke-width="${selected ? 2.5 : bad ? 2 : 1}"
             stroke-dasharray="${bad ? "4,2" : "none"}"
             style="cursor:${isPlanner ? "move" : "pointer"}"/>
       <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10"
             font-family="'Titillium Web', Arial, sans-serif" fill="${typeof canvasLabelFill === "function" ? canvasLabelFill() : "#f4f4f2"}"
             pointer-events="none" opacity="0.9">
-        ${kind.short} · ${zoneAreaM2(z).toFixed(0)} m²${bad ? " ⚠" : ""}
+        ${escapeHtml(kind.short)} · ${zoneAreaM2(z).toFixed(0)} m²${bad ? " ⚠" : ""}
       </text>`;
 
     if (selected && isPlanner) {
       // A handle per vertex, dragging that vertex alone — a bed is not a
       // rectangle, and resizing from a corner could only ever keep it one.
       z.points.forEach((p, i) => {
-        out += `<rect data-zone-point="${i}" data-zone-id="${z.id}"
+        out += `<rect data-zone-point="${i}" data-zone-id="${escapeHtml(z.id)}"
                       x="${px(p) - ZONE_HANDLE / 2}" y="${py(p) - ZONE_HANDLE / 2}"
                       width="${ZONE_HANDLE}" height="${ZONE_HANDLE}"
-                      fill="#f4f4f2" stroke="${kind.color}" stroke-width="1"
+                      fill="#f4f4f2" stroke="${escapeHtml(kind.color)}" stroke-width="1"
                       style="cursor:grab">
                   <title>Drag to move this corner · double-click to remove it</title>
                 </rect>`;
@@ -282,9 +282,9 @@ function zonesSvg(scale, roofOx, roofOy) {
       z.points.forEach((p, i) => {
         const q = z.points[(i + 1) % z.points.length];
         const mx = (px(p) + px(q)) / 2, my = (py(p) + py(q)) / 2;
-        out += `<circle data-zone-addpoint="${i}" data-zone-id="${z.id}"
+        out += `<circle data-zone-addpoint="${i}" data-zone-id="${escapeHtml(z.id)}"
                         cx="${mx}" cy="${my}" r="${ZONE_HANDLE / 2}"
-                        fill="${kind.color}" fill-opacity="0.85" stroke="#f4f4f2" stroke-width="1"
+                        fill="${escapeHtml(kind.color)}" fill-opacity="0.85" stroke="#f4f4f2" stroke-width="1"
                         style="cursor:copy">
                   <title>Add a corner here</title>
                 </circle>`;
@@ -299,8 +299,8 @@ function zonesSvg(scale, roofOx, roofOy) {
       out += `
         <rect x="${roofOx + b.x * scale}" y="${roofOy + b.y * scale}"
               width="${b.w * scale}" height="${b.h * scale}"
-              fill="${kind.color}" fill-opacity="0.25"
-              stroke="${kind.color}" stroke-width="1.5" stroke-dasharray="4,3"
+              fill="${escapeHtml(kind.color)}" fill-opacity="0.25"
+              stroke="${escapeHtml(kind.color)}" stroke-width="1.5" stroke-dasharray="4,3"
               pointer-events="none"/>
         <text x="${roofOx + (b.x + b.w / 2) * scale}" y="${roofOy + (b.y + b.h / 2) * scale + 4}"
               text-anchor="middle" font-size="10" fill="${typeof canvasLabelFill === "function" ? canvasLabelFill() : "#f4f4f2"}" pointer-events="none">
@@ -466,7 +466,7 @@ function renderZonePanel() {
         el.innerHTML = `
           <div class="section">
             <label>Reference database unavailable</label>
-            <p class="hint">Build-up systems live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Build-up systems live in the Sportify API, and it isn't answering (${escapeHtml(err.message)}).</p>
             <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
             <button class="btn-export accent" id="btn-zone-retry">Retry</button>
           </div>`;
@@ -478,13 +478,13 @@ function renderZonePanel() {
   ensureZoneState();
 
   const kindOptions = Object.entries(ZONE_KINDS)
-    .map(([k, v]) => `<option value="${k}"${k === combineState.zoneKind ? " selected" : ""}>${v.label}</option>`).join("");
+    .map(([k, v]) => `<option value="${k}"${k === combineState.zoneKind ? " selected" : ""}>${escapeHtml(v.label)}</option>`).join("");
 
   const available = assembliesForKind(combineState.zoneKind);
   const assemblyOptions = available.length === 0
     ? `<option value="">No build-up system for this kind yet</option>`
     : available.map(a =>
-        `<option value="${a.key}"${a.key === combineState.zoneAssembly ? " selected" : ""}>${a.provider} — ${a.system_name}</option>`).join("");
+        `<option value="${escapeHtml(a.key)}"${a.key === combineState.zoneAssembly ? " selected" : ""}>${escapeHtml(a.provider)} — ${escapeHtml(a.system_name)}</option>`).join("");
 
   const assembly = typeof getAssembly === "function" ? getAssembly(combineState.zoneAssembly) : null;
   const totalMm = assembly && typeof assemblyLayerTotalMm === "function" ? assemblyLayerTotalMm(assembly) : null;
@@ -499,7 +499,7 @@ function renderZonePanel() {
     <div class="section">
       <label>What are you drawing?</label>
       <select id="zone-kind-select">${kindOptions}</select>
-      <p class="hint">${(ZONE_KINDS[combineState.zoneKind] || {}).hint || ""}</p>
+      <p class="hint">${escapeHtml((ZONE_KINDS[combineState.zoneKind] || {}).hint || "")}</p>
     </div>
 
     <div class="section">
@@ -522,7 +522,7 @@ function renderZonePanel() {
 
     ${selected ? `
       <div class="section">
-        <label>Selected: ${(ZONE_KINDS[selected.kind] || {}).label || selected.kind}</label>
+        <label>Selected: ${escapeHtml((ZONE_KINDS[selected.kind] || {}).label || selected.kind)}</label>
         <p class="hint">${selected.length_m.toFixed(1)} × ${selected.width_m.toFixed(1)} m —
            <strong>${(selected.length_m * selected.width_m).toFixed(0)} m²</strong></p>
         <button class="btn-export" id="btn-delete-zone">
@@ -544,7 +544,7 @@ function assemblyStripSvg(assembly) {
     assembly.layers.map(l => {
       const f = (typeof ASSEMBLY_LAYER_FUNCTIONS !== "undefined" && ASSEMBLY_LAYER_FUNCTIONS[l.fn]) || { color: "#888", label: l.fn };
       const h = Math.max(4, Math.round((l.mm / total) * 60));
-      return `<div title="${l.name} — ${l.mm} mm (${l.src})" style="height:${h}px;background:${f.color}"></div>`;
+      return `<div title="${escapeHtml(l.name)} — ${l.mm} mm (${escapeHtml(l.src)})" style="height:${h}px;background:${escapeHtml(f.color)}"></div>`;
     }).join("") + `</div>`;
 }
 

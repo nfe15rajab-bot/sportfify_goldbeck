@@ -434,9 +434,9 @@ function renderDesignPanel(circulation) {
   host.innerHTML = DESIGN_METRICS.map(def => {
     const v = m[def.key].value;
     return `<button class="design-tile${openDesignDetail === def.key ? " open" : ""}${v == null ? " empty" : ""}"
-              data-metric="${def.key}" title="Show the breakdown">
+              data-metric="${escapeHtml(def.key)}" title="Show the breakdown">
               <span class="design-tile-val">${formatMetric(def.key, v)}</span>
-              <span class="design-tile-lbl">${def.label}</span>
+              <span class="design-tile-lbl">${escapeHtml(def.label)}</span>
               ${metricDeltaHtml(def.key, v)}
             </button>`;
   }).join("");
@@ -499,7 +499,7 @@ function renderDesignDetail(m) {
       r.priced ? eur(r.cost) : "—"));
 
     const plantRows = d.plants.grouped.map(r => line(
-      `${r.count > 1 ? `<span class="receipt-count">${r.count}×</span> ` : ""}<em>${r.label}</em>`,
+      `${r.count > 1 ? `<span class="receipt-count">${r.count}×</span> ` : ""}<em>${escapeHtml(r.label)}</em>`,
       r.priced ? `${eur(r.unitCost)} each` : "no price",
       r.priced ? eur(r.cost) : "—"));
 
@@ -508,13 +508,13 @@ function renderDesignDetail(m) {
        layers sit behind it, rather than six lines competing with the courts. */
     const groundRows = t.byAssembly.map(a => {
       const open = openBuildUps.has(a.key);
-      const head = `<tr class="receipt-expandable${open ? " open" : ""}" data-buildup="${a.key}">
-          <td><span class="receipt-caret">${open ? "▾" : "▸"}</span>${a.label}
+      const head = `<tr class="receipt-expandable${open ? " open" : ""}" data-buildup="${escapeHtml(a.key)}">
+          <td><span class="receipt-caret">${open ? "▾" : "▸"}</span>${escapeHtml(a.label)}
             <span class="receipt-sub-line">${Math.round(a.areaM2)} m²${a.zoneCount > 1 ? ` · ${a.zoneCount} zones` : ""}${open ? "" : " · tap for layers"}</span></td>
           <td class="num">${a.priced ? eur(a.cost) : "—"}</td></tr>`;
       if (!open) return head;
       const layers = a.layers.map(l => line(
-        `<span class="receipt-sub">${l.name}</span>`,
+        `<span class="receipt-sub">${escapeHtml(l.name)}</span>`,
         `${qty(l.qty)} ${l.unit}${l.price != null ? ` @ ${eur(l.price)}` : ""}`,
         l.cost == null ? "no price" : eur(l.cost), "receipt-layer")).join("");
       return head + layers;
@@ -537,7 +537,7 @@ function renderDesignDetail(m) {
       const layers = (f.assembly.layers || []).map(l => {
         const byVolume = l.price_unit === "EUR/m3";
         const q = byVolume ? f.netArea * ((l.mm || 0) / 1000) : f.netArea;
-        return line(`<span class="receipt-sub">${l.name}</span>`,
+        return line(`<span class="receipt-sub">${escapeHtml(l.name)}</span>`,
           `${qty(q)} ${byVolume ? "m³" : "m²"}${l.price != null ? ` @ ${eur(l.price)}` : ""}`,
           l.price == null ? "no price" : eur(q * l.price), "receipt-layer");
       }).join("");
@@ -629,7 +629,7 @@ function renderDesignDetail(m) {
       ["Rain retained", `${g.retentionPercent}%`, "illustrative"],
     ]) + (sp.length
       ? `<label class="design-detail-sub">Species</label>` + detailRows(sp.map(s => [
-          `<em>${s.name}</em>${s.common ? ` — ${s.common}` : ""}`,
+          `<em>${escapeHtml(s.name)}</em>${s.common ? ` — ${escapeHtml(s.common)}` : ""}`,
           `${s.count}×`,
           s.heightM ? `${s.heightM} m tall` : "",
         ]))

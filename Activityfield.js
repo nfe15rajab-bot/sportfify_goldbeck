@@ -64,7 +64,7 @@ function drawActivity(activityId, dims, isDark) {
     <text x="${ox + fw / 2}" y="${oy + fh / 2}"
           text-anchor="middle" dominant-baseline="middle"
           font-size="13" font-weight="600" fill="${stroke}" font-family="'Titillium Web', Arial, sans-serif">
-      ${a.label}
+      ${escapeHtml(a.label)}
     </text>
     <text x="${ox + fw / 2}" y="${oy - 10}"
           text-anchor="middle" font-size="11" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif">

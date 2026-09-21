@@ -25,15 +25,15 @@ function updateActivityBarForMode(mode) {
   let html = `<div class="rail-cat-header">FUNC</div>`;
   Object.entries(GARDEN_ITEMS).forEach(([id, item]) => {
     if (item.category !== "functional") return;
-    html += `<button class="activity-icon${id === gardenState.activeItemId ? " active" : ""}" data-garden-id="${id}" title="${item.label}">
-               <i class="ti ${item.icon}"></i><span class="activity-icon-label">${item.short}</span>
+    html += `<button class="activity-icon${id === gardenState.activeItemId ? " active" : ""}" data-garden-id="${id}" title="${escapeHtml(item.label)}">
+               <i class="ti ${item.icon}"></i><span class="activity-icon-label">${escapeHtml(item.short)}</span>
              </button>`;
   });
   html += `<div class="activity-bar-divider"></div><div class="rail-cat-header">VEG</div>`;
   Object.entries(GARDEN_ITEMS).forEach(([id, item]) => {
     if (item.category !== "vegetation") return;
-    html += `<button class="activity-icon${id === gardenState.activeItemId ? " active" : ""}" data-garden-id="${id}" title="${item.label}">
-               <i class="ti ${item.icon}"></i><span class="activity-icon-label">${item.short}</span>
+    html += `<button class="activity-icon${id === gardenState.activeItemId ? " active" : ""}" data-garden-id="${id}" title="${escapeHtml(item.label)}">
+               <i class="ti ${item.icon}"></i><span class="activity-icon-label">${escapeHtml(item.short)}</span>
              </button>`;
   });
   bar.innerHTML = html;
@@ -65,7 +65,7 @@ function updateGardenUI() {
   document.getElementById("theme-desc").textContent = theme.description;
 
   document.getElementById("garden-layer-dims").innerHTML = Object.entries(theme.layers).map(([key, layer]) => `
-    <div class="dim-card"><div class="val">${(layer.thickness_m * 100).toFixed(0)} cm</div><div class="lbl">${layer.material}</div></div>
+    <div class="dim-card"><div class="val">${(layer.thickness_m * 100).toFixed(0)} cm</div><div class="lbl">${escapeHtml(layer.material)}</div></div>
   `).join("");
 
   if(typeof drawGardenField === "function") drawGardenField(gardenState.activeItemId, gardenState.length, gardenState.width, isDarkMode());

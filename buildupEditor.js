@@ -122,7 +122,7 @@ async function saveBuildup() {
 
   try {
     const editing = buildupEditorState.editingId != null;
-    const res = await fetch(editing ? `${BUILDUP_API}/${buildupEditorState.editingId}` : BUILDUP_API, {
+    const res = await apiWrite(editing ? `${BUILDUP_API}/${buildupEditorState.editingId}` : BUILDUP_API, {
       method: editing ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...d, id: buildupEditorState.editingId ?? 0 }),
@@ -147,7 +147,7 @@ async function saveBuildup() {
 async function deleteBuildup(id, label) {
   if (!confirm(`Delete "${label}"? Any zone already drawn with it keeps its own copy, but it can't be chosen again.`)) return;
   try {
-    const res = await fetch(`${BUILDUP_API}/${id}`, { method: "DELETE" });
+    const res = await apiWrite(`${BUILDUP_API}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error(`API returned ${res.status}`);
     if (typeof assembliesLoaded !== "undefined") assembliesLoaded = false;
     if (typeof retryDataFetch === "function") retryDataFetch({ key: "buildups" });
@@ -220,7 +220,7 @@ function renderBuildupEditor() {
 
     <div class="section span-2">
       <label>Description</label>
-      <input type="text" data-bu-field="description" value="${d.description ?? ""}" placeholder="What the system is for">
+      <input type="text" data-bu-field="description" value="${escapeHtml(d.description ?? "")}" placeholder="What the system is for">
     </div>
 
     <div class="section span-2">
@@ -250,7 +250,7 @@ function renderBuildupEditor() {
       <p class="hint">Order is the specification: vegetation on top, waterproofing at the bottom.</p>
       ${d.layers.map((l, i) => `
         <div class="dim-card" style="display:grid;grid-template-columns:1fr 130px 90px 110px auto;gap:6px;align-items:center;margin-bottom:6px">
-          <input type="text" data-bu-layer="${i}" data-bu-key="name" value="${l.name ?? ""}" placeholder="Product name">
+          <input type="text" data-bu-layer="${i}" data-bu-key="name" value="${escapeHtml(l.name ?? "")}" placeholder="Product name">
           <select data-bu-layer="${i}" data-bu-key="function">
             ${LAYER_FUNCTIONS.map(f => `<option value="${f}"${l.function === f ? " selected" : ""}>${f}</option>`).join("")}
           </select>

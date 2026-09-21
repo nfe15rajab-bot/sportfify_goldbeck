@@ -39,7 +39,7 @@ const get = expr => vm.runInContext(expr, ctx);
 
 // ── the scripts, in index.html's order (only the ones this depends on) ──
 const order = [...fs.readFileSync(path.join(web, "index.html"), "utf8").matchAll(/<script src="([A-Za-z0-9_.]+\.js)/g)].map(m => m[1]);
-const needed = ["data.js", "assemblies.js", "zones.js", "basketballCourt.js", "volleyballCourt.js", "algoPlacementCore.js", "algoPlacementUI.js"];
+const needed = ["escape.js", "data.js", "assemblies.js", "zones.js", "basketballCourt.js", "volleyballCourt.js", "algoPlacementCore.js", "algoPlacementUI.js"];
 const missing = needed.filter(f => !order.some(o => o.toLowerCase() === f.toLowerCase()));
 check("index.html loads every script this depends on", missing.length === 0, missing.join(", "));
 const pos = f => order.findIndex(o => o.toLowerCase() === f.toLowerCase());

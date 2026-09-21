@@ -149,7 +149,7 @@ function buildAnalysisRail() {
   const bar = document.getElementById("activity-bar");
   if (!bar) return;
   bar.innerHTML = ANALYSIS_SUBTABS.map(t => `
-    <button class="activity-icon${t.id === analysisSub ? " active" : ""}" data-sub="${t.id}" title="${resEsc(t.title)}">
+    <button class="activity-icon${t.id === analysisSub ? " active" : ""}" data-sub="${escapeHtml(t.id)}" title="${resEsc(t.title)}">
       <i class="ti ${t.icon}"></i><span class="activity-icon-label">${resEsc(t.label)}</span>
     </button>`).join("");
   bar.querySelectorAll(".activity-icon").forEach(btn => btn.addEventListener("click", () => setAnalysisSub(btn.dataset.sub)));
@@ -167,7 +167,7 @@ function setAnalysisSub(id) {
 // ---------------------------------------------------------------------------------------------------- small helpers
 
 function resEsc(s) {
-  return String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  return escapeHtml(s);
 }
 
 /** "m2" as "m²" in text that came from the analyses. */
@@ -240,7 +240,7 @@ function resBar(label, value, max, opts) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   const refPct = o.ref != null && max > 0 ? Math.max(0, Math.min(100, (o.ref / max) * 100)) : null;
   return `<div class="res-bar"><div class="res-bar-label">${label}</div>
-    <div class="res-bar-track"><div class="res-bar-fill tone-${o.tone || "neutral"}" style="width:${pct}%"></div>${refPct != null ? `<div class="res-bar-ref" style="left:${refPct}%"></div>` : ""}</div>
+    <div class="res-bar-track"><div class="res-bar-fill tone-${escapeHtml(o.tone || "neutral")}" style="width:${pct}%"></div>${refPct != null ? `<div class="res-bar-ref" style="left:${refPct}%"></div>` : ""}</div>
     <div class="res-bar-value">${o.text != null ? o.text : resNum(value)}</div></div>`;
 }
 

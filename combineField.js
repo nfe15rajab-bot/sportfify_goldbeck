@@ -275,7 +275,7 @@ function drawCombineCanvas() {
       if (w > 26 || selected) {
         el += `<text x="${x + w / 2}" y="${y + h + 9}" text-anchor="middle" font-size="8"
                      font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-                 ${item.label}
+                 ${escapeHtml(item.label)}
                </text>`;
       }
       return;
@@ -290,7 +290,7 @@ function drawCombineCanvas() {
       const detail = w < 110 ? "simple" : "full";
       el += `<g${spin}>
           ${volleyballCourtSvg(x, y, w, h, st, detail, isDarkMode())}
-          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+          <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
                 fill="transparent" stroke="${strokeColor}"
                 stroke-width="${selected ? 2.5 : 1.5}"
                 stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
@@ -298,7 +298,7 @@ function drawCombineCanvas() {
         </g>
         <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
               font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-          ${item.label}${cutOff ? " 🚫" : ""}
+          ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
         </text>`;
       return;
     }
@@ -314,7 +314,7 @@ function drawCombineCanvas() {
       const detail = w < 110 ? "simple" : "full";
       el += `<g${spin}>
           ${basketballCourtSvg(x, y, w, h, st, detail, isDarkMode())}
-          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+          <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
                 fill="transparent" stroke="${strokeColor}"
                 stroke-width="${selected ? 2.5 : 1.5}"
                 stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
@@ -322,7 +322,7 @@ function drawCombineCanvas() {
         </g>
         <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
               font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-          ${item.label}${cutOff ? " 🚫" : ""}
+          ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
         </text>`;
       return;
     }
@@ -336,7 +336,7 @@ function drawCombineCanvas() {
       const detail = w < 90 ? "simple" : "full";
       el += `<g${spin}>
           ${padelCourtSvg(x, y, w, h, st, detail, isDarkMode())}
-          <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+          <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
                 fill="transparent" stroke="${strokeColor}"
                 stroke-width="${selected ? 2.5 : 1.5}"
                 stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
@@ -344,14 +344,14 @@ function drawCombineCanvas() {
         </g>
         <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
               font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-          ${item.label}${cutOff ? " 🚫" : ""}
+          ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
         </text>`;
       return;
     }
 
     el += isCrown
       ? `
-      <circle data-id="${item.id}" cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.min(w, h) / 2}"
+      <circle data-id="${escapeHtml(item.id)}" cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.min(w, h) / 2}"
               fill="${colors.fill}" stroke="${strokeColor}"
               stroke-width="${selected ? 2.5 : 1.5}"
               stroke-dasharray="${warn || cutOff ? '4,2' : 'none'}"
@@ -360,18 +360,18 @@ function drawCombineCanvas() {
               fill="${strokeColor}" pointer-events="none"/>
       <text x="${x + w / 2}" y="${y + h / 2 + 14}" text-anchor="middle" font-size="9"
             font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-        ${item.label}${cutOff ? " 🚫" : ""}
+        ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
       </text>
     `
       : `
-      <rect data-id="${item.id}" x="${x}" y="${y}" width="${w}" height="${h}"
+      <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
             fill="${colors.fill}" stroke="${strokeColor}"
             stroke-width="${selected ? 2.5 : 1.5}"
             stroke-dasharray="${warn || cutOff ? '4,2' : 'none'}"
             style="cursor:${isPlanner ? 'grab' : 'pointer'}"/>
       <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="10"
             font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-        ${item.label}${item.rotation ? " (rotated)" : ""}${cutOff ? " 🚫" : ""}
+        ${escapeHtml(item.label)}${item.rotation ? " (rotated)" : ""}${cutOff ? " 🚫" : ""}
       </text>
     `;
   });
@@ -400,7 +400,7 @@ function drawCombineCanvas() {
     const tx = -ny, ty = nx;
     const selected = combineState.selectedKind === "entry" && combineState.selectedId === ep.id;
     el += `
-      <g class="entry-marker${selected ? ' selected' : ''}" data-entry-id="${ep.id}" style="cursor:${isPlanner ? 'grab' : 'pointer'}">
+      <g class="entry-marker${selected ? ' selected' : ''}" data-entry-id="${escapeHtml(ep.id)}" style="cursor:${isPlanner ? 'grab' : 'pointer'}">
         <circle cx="${x}" cy="${y}" r="7" />
         <path class="entry-arrow" d="M${x - 5 * tx},${y - 5 * ty} L${x + nx * 11},${y + ny * 11} L${x + 5 * tx},${y + 5 * ty} Z" />
         <text x="${x + nx * 20}" y="${y + ny * 20 + 4}" text-anchor="middle" font-size="10" font-weight="700">${i + 1}</text>
@@ -615,7 +615,7 @@ function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConfl
     <div class="rule-row ${r.passed ? "pass" : "fail"}">
       <span class="rule-icon">${r.passed ? "✓" : "!"}</span>
       <div class="rule-text">
-        <div class="rule-label">${r.label}</div>
+        <div class="rule-label">${escapeHtml(r.label)}</div>
         <div class="rule-detail">${r.detail}</div>
       </div>
     </div>
@@ -650,7 +650,7 @@ function renderSuggestions(item, candidates) {
   hintEl.style.display = "none";
   listEl.innerHTML = candidates.map((c, i) => `
     <button class="suggestion-row" data-suggestion-index="${i}">
-      <span class="suggestion-num">${i + 1}</span><span class="suggestion-text">${c.reason}</span><span class="suggestion-score">${c.score}</span>
+      <span class="suggestion-num">${i + 1}</span><span class="suggestion-text">${escapeHtml(c.reason)}</span><span class="suggestion-score">${c.score}</span>
     </button>`).join("");
   listEl.querySelectorAll(".suggestion-row").forEach(btn => {
     btn.addEventListener("click", () => { if (typeof applySuggestion === "function") applySuggestion(Number(btn.dataset.suggestionIndex)); });
@@ -733,10 +733,10 @@ function renderCombineTray() {
   wrap.innerHTML = tray.map(it => {
     const colors = KIND_COLORS[it.kind] || KIND_COLORS.field;
     return `
-      <div class="tray-thumb" data-tray-id="${it.id}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${it.label} — ${it.length_m}m × ${it.width_m}m">
-        <button class="tray-thumb-remove" data-tray-remove="${it.id}" title="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>
+      <div class="tray-thumb" data-tray-id="${escapeHtml(it.id)}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${escapeHtml(it.label)} — ${it.length_m}m × ${it.width_m}m">
+        <button class="tray-thumb-remove" data-tray-remove="${escapeHtml(it.id)}" title="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>
         <div class="tray-thumb-box">${trayThumbSvg(it, 64, 50)}</div>
-        <span class="tray-thumb-label">${it.label}</span>
+        <span class="tray-thumb-label">${escapeHtml(it.label)}</span>
       </div>`;
   }).join("");
 }
