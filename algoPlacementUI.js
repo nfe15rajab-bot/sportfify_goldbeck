@@ -52,6 +52,8 @@ const algoLabel = name => AlgoPlacement.labelOf(name);
 
 /** The rule: every court has a clear path of at least this many metres all around it (big courts included, so no two ever touch), and the main pathway never narrows below it. */
 const ALGO_MIN_PATH_M = 2.0;
+/** With zoning the primary paths (outside the zones, between them) are 2.0 to 2.5 m; inside a zone 1.5 to 1.8 m; around lifts, stairs and ramps 2.5 m. */
+const ALGO_PRIMARY_MAX_M = 2.5;
 
 /** What the list offers, under the headings a person reads. The 20 x 12 "Multi Sport Court" is in no list (it stays in the engine, whose Rhino-parity tests use its name). */
 const ALGO_LISTS = [
@@ -83,7 +85,7 @@ const algoState = {
   qty: {},                                // court name -> how many
   good: {},                               // the last quantities the packing accepted (a court that does not fit goes back to these)
   blocks: [],                             // lifts / ramps / stairs: { id, kind, x, y, w, h } (top-left, metres)
-  settings: { setback: null, pathW: 2.0, minPathW: 2.0, time: 8, seed: 1, edgeFirst: true, leftoverPath: false, ring: false, strictGap: true, keepClear: true, gardenZones: true, entryPoints: true },
+  settings: { setback: null, pathW: 2.5, minPathW: 2.0, time: 8, seed: 1, edgeFirst: true, leftoverPath: false, ring: false, strictGap: true, keepClear: true, gardenZones: true, entryPoints: true },
   plan: null, site: null, planKey: "",
   fit: null, fitKey: "",
   msg: "", status: "", progress: 0, busy: false,
@@ -93,15 +95,18 @@ const algoState = {
 };
 
 (function loadAlgoStorage() {
+  let oldDefaultPath = false;
   try {
     const saved = JSON.parse(localStorage.getItem(ALGO_STORAGE_KEY) || "null");
     if (saved) {
       if (saved.qty) algoState.qty = saved.qty;
       if (saved.settings) Object.assign(algoState.settings, saved.settings);
+      oldDefaultPath = !!saved.settings && saved.settings.pathW === 2 && saved.settings.minPathW === 2;
     }
   } catch (e) { /* storage blocked or corrupt: the defaults */ }
   // settings saved before the 2 m rule may hold a narrower pathway or the old "big courts touch" exception: the rule wins
   algoState.settings.strictGap = true;
+  if (oldDefaultPath) algoState.settings.pathW = 2.5;                         // settings saved before zoning held the old 2.0 m default: the primary path may now be 2.5 m
   algoState.settings.pathW = Math.max(ALGO_MIN_PATH_M, Number(algoState.settings.pathW) || ALGO_MIN_PATH_M);
   algoState.settings.minPathW = Math.max(ALGO_MIN_PATH_M, Number(algoState.settings.minPathW) || ALGO_MIN_PATH_M);
   AlgoPlacement.SPORTS.forEach(s => { if (!Number.isFinite(algoState.qty[s.name])) algoState.qty[s.name] = 0; });
@@ -166,9 +171,14 @@ function algoGridLines() {
   return st && Array.isArray(st.gridLines) ? st.gridLines.map(g => ({ x1: g.x1, y1: g.y1, x2: g.x2, y2: g.y2 })) : [];
 }
 
+/** Zoning (zones, in-zone and primary paths, indoor items ignoring the setback) applies once the roof has a type. Without one the plain 2 m rule stays, as it was. */
+function algoZoningOn() {
+  return typeof getRoofProgram === "function" && !!getRoofProgram();
+}
+
 function algoSiteKey() {
   const s = algoState.settings;
-  return JSON.stringify([algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.kind, b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), algoGridLines()]);
+  return JSON.stringify([algoZoningOn(), algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.kind, b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), algoGridLines()]);
 }
 
 function algoInputKey() {
@@ -179,6 +189,7 @@ function algoInputKey() {
 /** The Site for the packing engine, or throws with what is wrong in words. */
 function algoBuildSite() {
   return AlgoPlacement.makeSite({
+    zoning: algoZoningOn(),
     foot: algoFootprint(), setback: algoSetback(),
     entries: algoState.blocks.map(b => [b.x, b.y, b.x + b.w, b.y + b.h]),
     anchors: algoState.blocks.filter(b => b.kind !== "ramp").map(b => [b.x, b.y, b.x + b.w, b.y + b.h]),      // the service modules go to the roof corner nearest a lift or stair
@@ -247,6 +258,12 @@ function algoFilterSports(text) {
   document.querySelectorAll("#algo-sports .algo-group").forEach(g => { g.hidden = !g.querySelector(".algo-sport:not([hidden])"); });
 }
 
+/** The path rule in words: the zoning rules once the roof has a type, the plain 2 m rule before. */
+function algoRuleHintHtml() {
+  if (!algoZoningOn()) return `<strong>The rule: every court has a clear path of at least ${ALGO_MIN_PATH_M.toFixed(1)} m all around it, big courts included, so no two courts ever touch.</strong> Lifts, ramps and stairs get the same ${ALGO_MIN_PATH_M.toFixed(1)} m on their inside sides, and the main pathway never narrows below ${ALGO_MIN_PATH_M.toFixed(1)} m. A side that sits on the setback line borders the garden band instead of a path.`;
+  return `<strong>Zones:</strong> items of one zone (outdoor, indoor, garden) are placed close together, identical ones side by side and lined up. <strong>Paths, the widest that fits:</strong> 1.8 then 1.5 m inside a zone; 2.5 then 2.0 m for the primary paths outside the zones and between them (the two fields above); 2.5 m around lifts, stairs and ramps. <strong>Indoor items</strong> ignore the setback and may stand in the garden band; the indoor zone grows from the Locker corner. Outdoor and garden items keep to the setback line.`;
+}
+
 /** The list of items for the current roof type, grouped under the headings of ALGO_LISTS. */
 function algoSportRowsHtml() {
   return algoListsForRoof().map(l => {
@@ -266,6 +283,8 @@ function algoApplyRoofType() {
   if (list) list.innerHTML = algoSportRowsHtml();
   const find = document.getElementById("algo-find");
   if (find && find.value) algoFilterSports(find.value);
+  const hint = document.getElementById("algo-rule-hint");
+  if (hint) hint.innerHTML = algoRuleHintHtml();
   if (dropped) algoChanged(); else algoRefreshSummary();
 }
 
@@ -296,8 +315,8 @@ function algoBuildPanel() {
         <section class="algo-card"><h3>2 · Settings</h3>
           <div class="algo-grid">
             <label>Garden band / setback (m)<input type="number" id="algo-setback" min="0" max="20" step="0.25" value="${algoSetback()}"></label>
-            <label>Main pathway width (m)<input type="number" id="algo-pathw" min="${ALGO_MIN_PATH_M}" max="6" step="0.25" value="${s.pathW}"></label>
-            <label>Narrowest pathway if needed (m)<input type="number" id="algo-minpath" min="${ALGO_MIN_PATH_M}" max="6" step="0.25" value="${s.minPathW}"></label>
+            <label>Primary path, widest (m)<input type="number" id="algo-pathw" min="${ALGO_MIN_PATH_M}" max="6" step="0.25" value="${s.pathW}"></label>
+            <label>Primary path, narrowest if needed (m)<input type="number" id="algo-minpath" min="${ALGO_MIN_PATH_M}" max="6" step="0.25" value="${s.minPathW}"></label>
             <label>Search time (s)<input type="number" id="algo-time" min="2" max="60" step="1" value="${s.time}"></label>
             <label>Variation seed<input type="number" id="algo-seed" min="1" max="999" step="1" value="${s.seed}"></label>
           </div>
@@ -306,7 +325,7 @@ function algoBuildPanel() {
           <label class="algo-check"><input type="radio" name="algo-opt" value="2" ${s.leftoverPath ? "" : "checked"}> Option 2: garden in the setback band and in the leftover pockets</label>
           <label class="algo-check"><input type="checkbox" id="algo-ring" ${s.ring ? "checked" : ""}> Landing on ALL sides of lifts / ramps</label>
           <label class="algo-check" id="algo-keepclear-row"><input type="checkbox" id="algo-keepclear" ${s.keepClear ? "checked" : ""}> Keep clear of the openings and equipment from Revit <small id="algo-keepclear-n"></small></label>
-          <p class="hint"><strong>The rule: every court has a clear path of at least ${ALGO_MIN_PATH_M.toFixed(1)} m all around it, big courts included, so no two courts ever touch.</strong> Lifts, ramps and stairs get the same ${ALGO_MIN_PATH_M.toFixed(1)} m on their inside sides, and the main pathway never narrows below ${ALGO_MIN_PATH_M.toFixed(1)} m. A side that sits on the setback line borders the garden band instead of a path.</p>
+          <p class="hint" id="algo-rule-hint">${algoRuleHintHtml()}</p>
           <p class="hint"><strong>Services:</strong> the locker and bathroom modules go, together, in the roof corner nearest a lift or stair (a ramp does not count). <strong>Heavy items:</strong> anything with a dead load above ${AlgoPlacement.HEAVY_DEAD_LOAD_KN_M2.toFixed(1)} kN/m² is placed along the structural grid Revit gave for the roof, where it can be; otherwise it is placed anyway and the report says so. A court is only accepted if the live check can place it.</p>
         </section>
         <section class="algo-card"><h3>3 · How many of each court? <small>only courts that fit are accepted</small></h3>
@@ -554,7 +573,9 @@ function algoRevert(msg) {
 
 function algoPlanSettings() {
   const s = algoState.settings;
-  return { pathW: Math.max(ALGO_MIN_PATH_M, s.pathW), minPathW: Math.max(ALGO_MIN_PATH_M, s.minPathW), ring: s.ring, seed: s.seed, edgeFirst: s.edgeFirst, leftoverPath: s.leftoverPath, strictGap: true, courtGap: ALGO_MIN_PATH_M, rules: { serviceCorners: true, gridLines: algoGridLines() } };
+  const zoning = algoZoningOn();
+  const clamp = v => Math.min(ALGO_PRIMARY_MAX_M, Math.max(ALGO_MIN_PATH_M, v));        // zoning: the primary path is 2.0 to 2.5 m, the widest that fits
+  return { pathW: zoning ? clamp(s.pathW) : Math.max(ALGO_MIN_PATH_M, s.pathW), minPathW: zoning ? clamp(s.minPathW) : Math.max(ALGO_MIN_PATH_M, s.minPathW), ring: s.ring, seed: s.seed, edgeFirst: s.edgeFirst, leftoverPath: s.leftoverPath, strictGap: true, courtGap: ALGO_MIN_PATH_M, zoning, rules: { serviceCorners: true, gridLines: algoGridLines() } };
 }
 
 function algoFit(site) {
@@ -688,10 +709,21 @@ function algoDrawPreview() {
   let g = "";
   g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="${algoRgb(C.COLOR_GARDEN)}"/>`;        // the garden band
   site.usableRects.forEach(r => { g += rect(r, "#fcfcfc"); });                                                        // the usable zone
-  if (site.bandRects.length && site.entries.length) site.bandRects.forEach(r => { g += rect(r, algoRgb(C.COLOR_GARDEN)); });
+  const band = (plan && plan.bandRects) || site.bandRects;                                                           // with zoning, less the indoor items standing in it
+  if (band.length && site.entries.length) band.forEach(r => { g += rect(r, algoRgb(C.COLOR_GARDEN)); });
   if (plan) {
     plan.pockets.forEach(r => { g += rect(r, algoRgb(C.COLOR_GARDEN)); });
     plan.pathRects.forEach(r => { g += rect(r, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges"'); });
+  }
+  if (plan && plan.indoorZone) {                                                                                       // the indoor zone: walls round it, so no garden inside
+    const z = plan.indoorZone;
+    // the roof outline is painted garden underneath everything, so the setback strip inside the zone is painted over as plain floor
+    site.bandRects.forEach(r => {
+      const ix = [Math.max(r[0], z[0]), Math.max(r[1], z[1]), Math.min(r[2], z[2]), Math.min(r[3], z[3])];
+      if (ix[2] > ix[0] && ix[3] > ix[1]) g += rect(ix, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges"');
+    });
+    g += `<g pointer-events="none"><rect x="${algoRound(z[0])}" y="${algoRound(z[1])}" width="${algoRound(z[2] - z[0])}" height="${algoRound(z[3] - z[1])}" fill="none" stroke="#1e3a8a" stroke-width="0.22" stroke-dasharray="0.9 0.6"/>
+      <text x="${algoRound(z[0] + 0.5)}" y="${algoRound(z[1] - 0.4)}" font-size="${fs * 0.75}" font-weight="700" fill="#1e3a8a">Indoor zone</text></g>`;
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
   algoState.blocks.forEach(blk => {
@@ -807,7 +839,7 @@ function algoApply() {
   if (algoState.settings.gardenZones && typeof ensureZoneState === "function") {
     ensureZoneState();
     const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
-    const rects = algoState.site.bandRects.concat(plan.pockets).filter(r => r[2] - r[0] >= 0.3 && r[3] - r[1] >= 0.3);
+    const rects = (plan.bandRects || algoState.site.bandRects).concat(plan.pockets).filter(r => r[2] - r[0] >= 0.3 && r[3] - r[1] >= 0.3);
     rects.forEach((r, i) => {
       combineState.zones.push({ id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, x_m: algoRound(r[0]), y_m: algoRound(r[1]), length_m: algoRound(r[2] - r[0]), width_m: algoRound(r[3] - r[1]), algorithmic: true });
       zoneCount++;
