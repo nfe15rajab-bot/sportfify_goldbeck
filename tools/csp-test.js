@@ -32,9 +32,24 @@ const external = [...html.matchAll(/<(?:script|link|img|iframe|source|video|audi
 check("index.html loads nothing from another site (no CDN, no font service)", external.length === 0, external.join(", "));
 check("...and does not connect ahead to one either (no preconnect)", !/rel="preconnect"/i.test(html));
 
+// A file exists only if every part of its path is spelled exactly as it is on disk: Windows and macOS find "activitiesData.js" for a file called "Activitiesdata.js", Linux (and so
+// any web host, GitHub Pages included) does not, and fs.existsSync alone would not tell.
+function existsExactly(file) {
+  const parts = path.relative(web, file).split(path.sep);
+  let dir = web;
+  for (const part of parts) {
+    if (part === "..") return fs.existsSync(file);        // outside the repository: not this check's business
+    let names;
+    try { names = fs.readdirSync(dir); } catch (e) { return false; }
+    if (!names.includes(part)) return false;
+    dir = path.join(dir, part);
+  }
+  return true;
+}
+
 const refs = [...html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)\s*=\s*["']([^"':?#]+)(?:\?[^"']*)?["']/gi)].map(m => m[1]).filter(r => !/^(https?:|data:|#)/.test(r));
-const missing = refs.filter(r => !fs.existsSync(path.join(web, r)));
-check("every script and stylesheet index.html names exists in the repository", missing.length === 0, missing.join(", "));
+const missing = refs.filter(r => !existsExactly(path.join(web, r)));
+check("every script and stylesheet index.html names exists in the repository, spelled exactly as the file is (Linux and web hosts care)", missing.length === 0, missing.join(", "));
 check("...including the vendored ones", ["vendor/leaflet/leaflet.js", "vendor/leaflet/leaflet.css", "vendor/suncalc/suncalc.js", "vendor/tabler-icons/tabler-icons.css", "vendor/fonts/titillium-web/fonts.css"].every(r => refs.includes(r)));
 const cssFiles = refs.filter(r => r.endsWith(".css"));
 const brokenUrls = [];
@@ -43,7 +58,7 @@ for (const css of cssFiles) {
   for (const m of text.matchAll(/url\(\s*["']?([^"')]+?)["']?\s*\)/g)) {
     const u = m[1].split(/[?#]/)[0];
     if (/^(data:|https?:|#)/.test(u)) { if (/^https?:/.test(u)) brokenUrls.push(css + ": " + u); continue; }
-    if (!fs.existsSync(path.join(web, path.dirname(css), u))) brokenUrls.push(css + ": " + u);
+    if (!existsExactly(path.join(web, path.dirname(css), u))) brokenUrls.push(css + ": " + u);
   }
 }
 check("the stylesheets' fonts and images exist, and none is loaded from another site", brokenUrls.length === 0, brokenUrls.slice(0, 5).join(" | "));
