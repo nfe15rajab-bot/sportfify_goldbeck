@@ -33,7 +33,7 @@ const ASSUMPTION_USED_BY = {
 };
 
 function siteTabsEscape(s) {
-  return String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  return escapeHtml(s);
 }
 
 /** One input as a tile: its value (entered, or the built-in one), and whether the designer has decided it. */
@@ -192,7 +192,7 @@ function renderConditionsResults() {
     body: `<table class="res-table"><thead><tr><th>Analysis</th><th>Uses</th><th>What it found</th><th></th></tr></thead><tbody>${rows.map(r => {
       const head = conditionsResultHeadline(r.name);
       return `<tr><td>${siteTabsEscape(r.title)}</td><td>${siteTabsEscape(r.uses)}</td><td>${head ? siteTabsEscape(head) : '<span class="res-muted">not received yet</span>'}</td>
-        <td><button type="button" class="btn-export" data-analysis-sub="${r.group}">${siteTabsEscape(r.where)}</button></td></tr>`;
+        <td><button type="button" class="btn-export" data-analysis-sub="${escapeHtml(r.group)}">${siteTabsEscape(r.where)}</button></td></tr>`;
     }).join("")}</tbody></table>`
   });
   return conditionsCardsHtml(true) + drives;

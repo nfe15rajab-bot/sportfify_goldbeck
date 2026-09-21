@@ -16,7 +16,6 @@
  * Nothing is computed here. Not connected is a normal state (the app works alone); every action says so plainly instead of failing quietly.
  */
 
-const SPORTIFY_LOCAL_URL = "http://localhost:5679";
 const WORKSPACE_POLL_MS = 4000;
 const DRAFT_SYNC_MS = 3000;
 
@@ -32,21 +31,22 @@ const workspaceState = {
   chartsLoading: false,
   chartsFor: null,            // the draft the charts were made from
   draftSent: null,            // the last draft the add-in has (its JSON text)
+  layoutId: null,             // the id the add-in gave that draft (POST /combined-layout answers it)
+  layoutIdNow: null,          // the id of the layout on screen, computed here the same way (null: nothing placed)
   lastRun: null,              // what POST /run-analysis answered
   stamp: 0                    // bumped on every change that views should redraw for
 };
 
 // ------------------------------------------------------------------------------------------------ talking to the add-in
 
-/** One call to the add-in's local server. Never throws: { ok, status, json, error }; status 0 = the add-in is not reachable. */
+/** One call to the add-in's local server (localSession.js: with the session token). Never throws: { ok, status, json, error }; status 0 = the add-in is not reachable. */
 async function localApi(path, opts) {
   const o = opts || {};
   try {
-    const res = await fetch(SPORTIFY_LOCAL_URL + path, {
+    const res = await localFetch(path, {
       method: o.method || "GET",
       headers: o.contentType ? { "Content-Type": o.contentType } : undefined,
-      body: o.body,
-      cache: "no-store"
+      body: o.body
     });
     let json = null;
     if ((res.headers.get("Content-Type") || "").includes("json")) {
@@ -54,7 +54,7 @@ async function localApi(path, opts) {
     }
     return { ok: res.ok, status: res.status, json, error: json && json.error ? json.error : res.ok ? "" : "The add-in answered " + res.status + "." };
   } catch (e) {
-    return { ok: false, status: 0, json: null, error: "Revit is not reachable: open a project in Revit with the Sportify add-in loaded." };
+    return { ok: false, status: 0, json: null, error: localSession.problem || "Revit is not reachable: open a project in Revit with the Sportify add-in loaded." };
   }
 }
 
@@ -80,7 +80,7 @@ async function workspaceRefresh() {
   if (ws.ok) pullRevitConfig();
   const changed = was !== ws.ok || JSON.stringify(nextFiles) !== JSON.stringify(workspaceState.files) || JSON.stringify(ws.json && ws.json.kinds) !== JSON.stringify(workspaceState.kinds);
   workspaceState.files = nextFiles;
-  if (was !== true && ws.ok) workspaceState.draftSent = null;      // Revit was (re)started: it has lost the draft, send it again
+  if (was !== true && ws.ok) { workspaceState.draftSent = null; workspaceState.layoutId = null; }      // Revit was (re)started: it has lost the draft, send it again
   if (changed) workspaceChanged();
   if (was !== ws.ok && ws.ok) syncDraftLayout(true);
 }
@@ -122,17 +122,49 @@ async function pullRevitConfig() {
 
 let draftSyncing = false;
 
+/**
+ * A layout's identity: the first 16 hex characters of the SHA-256 of the JSON text that is sent to the add-in. The add-in computes the same from the
+ * bytes it receives (LayoutIdentity.cs) and stamps every analysis result with it, so a result can be told to belong to this layout or to an earlier one.
+ * null where the browser has no crypto.subtle (it is there on localhost and https).
+ */
+async function layoutIdOf(text) {
+  if (typeof crypto === "undefined" || !crypto.subtle || typeof TextEncoder === "undefined") return null;
+  const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+  return Array.from(hash.slice(0, 8), b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** The JSON text of the layout on screen, as it is sent to the add-in; null when nothing is placed. */
+function currentDraftBody() {
+  if (typeof buildCombinedPayload !== "function" || typeof combineState === "undefined" || !combineState.items.length) return null;
+  try { return JSON.stringify(buildCombinedPayload()); } catch (e) { return null; }
+}
+
+let lastIdentifiedBody;      // undefined until the first look
+
+/** Keeps workspaceState.layoutIdNow the id of what is on screen, so the results that are about something else can be badged. Cheap when nothing changed. */
+async function refreshLayoutIdNow() {
+  const body = currentDraftBody();
+  if (body === lastIdentifiedBody) return;
+  lastIdentifiedBody = body;
+  const id = body ? await layoutIdOf(body) : null;
+  if (lastIdentifiedBody !== body || id === workspaceState.layoutIdNow) return;      // it changed again while hashing, or nothing new
+  workspaceState.layoutIdNow = id;
+  workspaceChanged();
+}
+
 /** Sends the layout to the add-in when it changed since the last time (or always when `force`). Silent when not connected or nothing is placed yet. */
 async function syncDraftLayout(force) {
   if (draftSyncing || workspaceState.connected !== true) return false;
-  if (typeof buildCombinedPayload !== "function" || typeof combineState === "undefined" || !combineState.items.length) return false;
-  let body;
-  try { body = JSON.stringify(buildCombinedPayload()); } catch (e) { return false; }
+  const body = currentDraftBody();
+  if (body === null) return false;
   if (!force && body === workspaceState.draftSent) return false;
   draftSyncing = true;
   try {
     const r = await localApi("/combined-layout?draft=1", { method: "POST", body, contentType: "application/json" });
-    if (r.ok) workspaceState.draftSent = body;
+    if (r.ok) {
+      workspaceState.draftSent = body;
+      workspaceState.layoutId = r.json && r.json.layout_id ? r.json.layout_id : await layoutIdOf(body);
+    }
     return r.ok;
   } finally {
     draftSyncing = false;
@@ -273,7 +305,7 @@ async function workspaceAction(name, btn) {
   }
   workspaceState.busy[name] = false;
   if (!action.quiet || !out.ok) {
-    const link = out.file && out.file.url ? ` <a href="${wsEsc(SPORTIFY_LOCAL_URL + out.file.url)}" target="_blank" rel="noopener">${wsEsc(out.file.name)}</a>` : "";
+    const link = out.file && out.file.url ? ` <a href="${wsEsc(localUrl(out.file.url))}" target="_blank" rel="noopener">${wsEsc(out.file.name)}</a>` : "";
     workspaceState.message = { tone: out.ok ? "ok" : "bad", html: `<strong>${wsEsc(action.label)}:</strong> ${wsEsc(out.text)}${link}` };
     if (typeof showToast === "function") showToast(out.ok ? (action.done || action.label) : action.label + " did not finish", out.text);
   }
@@ -323,8 +355,10 @@ function wsChartsHtml(keys) {
       <div class="ws-chart-grid">${s.charts.map(c => `<figure class="ws-chart"><div class="ws-chart-svg" style="aspect-ratio:${c.aspect > 0 ? c.aspect : 2.5}">${c.svg}</div><figcaption>${wsEsc(c.caption)}</figcaption></figure>`).join("")}</div>
     </section>`).join("");
   const notes = skipped.map(s => `<p class="hint">${wsEsc(s.title)}: no charts, ${wsEsc(s.reason)}</p>`).join("");
-  const stale = workspaceState.chartsLoading ? `<p class="hint res-status"><span class="res-dot"></span> Redrawing the charts for your latest changes...</p>` : "";
-  return stale + cards + notes;
+  const redrawing = workspaceState.chartsLoading ? `<p class="hint res-status"><span class="res-dot"></span> Redrawing the charts for your latest changes...</p>` : "";
+  const outOfDate = !workspaceState.chartsLoading && charts.layout_id && workspaceState.layoutIdNow && charts.layout_id !== workspaceState.layoutIdNow
+    ? `<p class="hint res-status"><span class="res-dot stale"></span> These charts were drawn for an earlier layout than the one on screen; they are being redrawn.</p>` : "";
+  return redrawing + outOfDate + cards + notes;
 }
 
 const WS_TITLES = { structural_loads: "Structural loads", dynamic_analysis: "Dynamic analysis", wind_erosion: "Wind and erosion", soil_percolation: "Rain and soil percolation", sun_and_shading: "Sun and shade" };
@@ -340,13 +374,13 @@ function wsRunPanelHtml() {
   return `<label>Run</label>
     <button class="btn-export primary ws-run-btn" data-ws-action="run" ${!on || noLayout || running ? "disabled" : ""}><i class="ti ${running ? "ti-loader-2 ws-spin" : "ti-player-play"}" aria-hidden="true"></i>${running ? "Running..." : "Run analysis"}</button>
     <p class="hint">${wsEsc(note)}</p>
-    ${workspaceState.message ? `<p class="ws-message tone-${workspaceState.message.tone}">${workspaceState.message.html}</p>` : ""}`;
+    ${workspaceState.message ? `<p class="ws-message tone-${escapeHtml(workspaceState.message.tone)}">${workspaceState.message.html}</p>` : ""}`;
 }
 
 // ------------------------------------------------------------------------------------------------ the Deliverables tab
 
 function wsEsc(s) {
-  return String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  return escapeHtml(s);
 }
 
 function wsSize(bytes) {
@@ -388,7 +422,7 @@ function renderDeliverables() {
       + wsActionButton("diagrams", "ti-route", "Functional diagrams", "Circulation and axonometric, from Revit's views", false);
   }
   const message = document.getElementById("dl-message");
-  if (message) message.innerHTML = workspaceState.message ? `<p class="ws-message tone-${workspaceState.message.tone}">${workspaceState.message.html}</p>` : "";
+  if (message) message.innerHTML = workspaceState.message ? `<p class="ws-message tone-${escapeHtml(workspaceState.message.tone)}">${workspaceState.message.html}</p>` : "";
 
   const folders = document.getElementById("dl-folders");
   if (!folders) return;
@@ -401,7 +435,7 @@ function renderDeliverables() {
     return `<section class="dl-folder">
       <header><div><h3>${wsEsc(k.title)}</h3><div class="hint">${wsEsc(k.hint)}</div></div>
         <button class="btn-export ws-inline-btn" data-ws-action="openFolder" data-kind="${wsEsc(k.key)}" title="Open ${wsEsc(k.folder)} in Explorer"><i class="ti ti-folder" aria-hidden="true"></i></button></header>
-      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(SPORTIFY_LOCAL_URL + f.url)}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsSize(f.size))} · ${wsEsc(wsTime(f.modified_utc))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
+      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(localUrl(f.url))}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsSize(f.size))} · ${wsEsc(wsTime(f.modified_utc))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
     </section>`;
   }).join("");
 }
@@ -410,4 +444,5 @@ function renderDeliverables() {
 
 workspaceRefresh();
 setInterval(workspaceRefresh, WORKSPACE_POLL_MS);
-setInterval(() => { syncDraftLayout(false); }, DRAFT_SYNC_MS);
+refreshLayoutIdNow();
+setInterval(() => { refreshLayoutIdNow(); syncDraftLayout(false); }, DRAFT_SYNC_MS);

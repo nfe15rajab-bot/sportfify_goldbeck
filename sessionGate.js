@@ -118,13 +118,13 @@ function presetStatsLine(payload) {
 function presetCardHtml(preset) {
   const payload = ensureGoldbeckGenerated(preset.id);
   return `
-    <button class="preset-card" data-preset-id="${preset.id}">
+    <button class="preset-card" data-preset-id="${escapeHtml(preset.id)}">
       <div class="preset-card-title">
-        <i class="ti ti-layout-grid" aria-hidden="true"></i>${preset.title}
-        <span class="preset-card-shuffle" data-shuffle-id="${preset.id}" title="Shuffle this variant"><i class="ti ti-dice-5" aria-hidden="true"></i></span>
+        <i class="ti ti-layout-grid" aria-hidden="true"></i>${escapeHtml(preset.title)}
+        <span class="preset-card-shuffle" data-shuffle-id="${escapeHtml(preset.id)}" title="Shuffle this variant"><i class="ti ti-dice-5" aria-hidden="true"></i></span>
       </div>
       <div class="preset-card-tagline">${preset.tagline}</div>
-      <div class="preset-card-stats" id="preset-stats-${preset.id}">${presetStatsLine(payload)}</div>
+      <div class="preset-card-stats" id="preset-stats-${escapeHtml(preset.id)}">${presetStatsLine(payload)}</div>
     </button>`;
 }
 

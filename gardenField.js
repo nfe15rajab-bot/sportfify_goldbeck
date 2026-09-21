@@ -45,7 +45,7 @@ function drawGardenField(itemId, length, width, isDark) {
     </defs>
     <rect x="${ox}" y="${oy}" width="${fw}" height="${fh}" fill="url(#gardenPattern)" stroke="${perimeter}" stroke-width="2" rx="4"/>
     <text x="${ox + fw / 2}" y="${oy + fh / 2}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="${txtColor}" font-family="'Titillium Web', Arial, sans-serif">
-      ${item.label}
+      ${escapeHtml(item.label)}
     </text>
     <text x="${ox + fw / 2}" y="${oy - 14}" text-anchor="middle" font-size="12" font-weight="600" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif">
       ${length.toFixed(1)} m

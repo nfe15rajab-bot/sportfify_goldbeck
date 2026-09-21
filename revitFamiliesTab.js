@@ -16,7 +16,7 @@
  * placeable pieces is the next step, not this one.
  */
 
-const REVIT_FAMILIES_URL = "http://localhost:5679/families";
+const REVIT_FAMILIES_URL = "http://localhost:5679/families";      // shown in the messages; the request goes through localFetch (localSession.js)
 
 const familiesState = {
   status: "idle",   // idle | loading | ok | empty | offline
@@ -47,7 +47,7 @@ async function fetchRevitFamilies() {
   renderFamiliesContent();
 
   try {
-    const res = await fetch(REVIT_FAMILIES_URL, { cache: "no-store" });
+    const res = await localFetch("/families");
     if (res.status === 404) {
       // The bridge is up but nobody has run Load Families yet — a different
       // situation from Revit not running, and worth saying so precisely.
@@ -127,9 +127,9 @@ function familyTypeHtml(fam, type) {
         const val = familyParamValue(fam.family_name, type.type_name, d.name, d.value_m);
         return `
           <div class="dim-card">
-            <span class="lbl">${d.name}</span>
+            <span class="lbl">${escapeHtml(d.name)}</span>
             <input type="number" step="0.1" min="0"
-                   id="fam-${cssSafeId(key)}-${cssSafeId(d.name)}"
+                   id="fam-${cssSafeId(key)}-${escapeHtml(cssSafeId(d.name))}"
                    data-fam="${escapeAttr(fam.family_name)}"
                    data-type="${escapeAttr(type.type_name)}"
                    data-param="${escapeAttr(d.name)}"
@@ -150,7 +150,7 @@ function familyTypeHtml(fam, type) {
         : materialOptionsHtml(palette, current);
       return `
         <div class="dim-card">
-          <span class="lbl">${m.name}</span>
+          <span class="lbl">${escapeHtml(m.name)}</span>
           <select class="family-material-select"
                   data-fam="${escapeAttr(fam.family_name)}"
                   data-type="${escapeAttr(type.type_name)}"
@@ -162,7 +162,7 @@ function familyTypeHtml(fam, type) {
 
   return `
     <div class="section">
-      <label>${type.type_name}</label>
+      <label>${escapeHtml(type.type_name)}</label>
       <div class="dims">${dimHtml}</div>
       ${matHtml}
       <p class="hint" style="margin-top:10px">${(type.parameters || []).length} parameters in total · ${dims.length} drivable · ${mats.length} material slots · ${type.is_resizable ? "resizable" : "fixed size"}</p>
@@ -241,8 +241,8 @@ function fixedSizeHtml(fam, type, fp) {
 function familyCardHtml(fam) {
   return `
     <div class="section span-2">
-      <label>${fam.family_name}</label>
-      <p class="hint">Category: <span class="val">${fam.category || "—"}</span></p>
+      <label>${escapeHtml(fam.family_name)}</label>
+      <p class="hint">Category: <span class="val">${escapeHtml(fam.category || "—")}</span></p>
       <p class="hint">From: <code>${fam.source_file || "—"}</code></p>
     </div>
     ${(fam.types || []).map(t => familyTypeHtml(fam, t)).join("")}`;
@@ -331,7 +331,7 @@ function materialCostHint(palette, materialId) {
 
 /** Parameter and family names are free text from someone else's Revit file — they can hold quotes, spaces, anything. */
 function escapeAttr(s) {
-  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return escapeHtml(s);
 }
 function cssSafeId(s) {
   return String(s == null ? "" : s).replace(/[^A-Za-z0-9_-]/g, "_");

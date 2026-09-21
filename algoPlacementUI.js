@@ -47,6 +47,26 @@ const ALGO_CATALOGUE = {
   "Rest / Hydration Area": { kind: "activity", id: "rest_area" }
 };
 
+/**
+ * Basketball and volleyball are specified by their own modules (basketballCourt.js, volleyballCourt.js), not sized: what a court takes on the roof is what its
+ * specification says (a volleyball court is the regulation court plus its free zone whatever the size variant; a basketball court with one basket is half a court),
+ * and a placed court carries its own choices (surface, mounting, colours) so it does not follow the Sport panel afterwards. A court the algorithm places is treated
+ * as one pushed from the Sport panel: the packing engine reserves the specified footprint, and Apply gives the piece the module's own payload.
+ * The tool's table in algoPlacementCore.js (and its test against the Rhino original) are not touched: the sizes are adopted here.
+ */
+const ALGO_SPECIFIED = {
+  "Basketball Court": {
+    field: "basketball",
+    ready: () => typeof basketballState !== "undefined" && typeof basketballFootprint === "function" && typeof basketballPlacementPayload === "function",
+    state: () => basketballState, footprint: s => basketballFootprint(s), payload: s => basketballPlacementPayload(s)
+  },
+  "Volleyball": {
+    field: "volleyball",
+    ready: () => typeof volleyballState !== "undefined" && typeof volleyballFootprint === "function" && typeof volleyballPlacementPayload === "function",
+    state: () => volleyballState, footprint: s => volleyballFootprint(s), payload: s => volleyballPlacementPayload(s)
+  }
+};
+
 /** What a person reads for a court: its label, while everything else (the solver, saved quantities) keeps the stable name. */
 const algoLabel = name => AlgoPlacement.labelOf(name);
 
@@ -117,9 +137,33 @@ function algoSave() {
   try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings })); } catch (e) { /* not kept */ }
 }
 
-const algoEsc = s => String(s == null ? "" : s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const algoEsc = s => escapeHtml(s);
 const algoRound = v => Math.round(v * 1000) / 1000;
 const algoRgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+
+/** The specifying module's state as the Sport panel has it now, with the size variant the packing tool uses; null for a sport that is not specified (or its module is not loaded). */
+function algoSpecifiedState(name) {
+  const spec = ALGO_SPECIFIED[name];
+  return spec && spec.ready() ? Object.assign({}, spec.state(), { variant: ALGO_CATALOGUE[name].variant }) : null;
+}
+
+/**
+ * The packing engine's table gets the specified footprint of every specified sport (long side, short side). True when a size changed, so that a plan made with the old
+ * one is thrown away. `swap` remembers that the specification's own length runs along the short side (a half court is 11 m long and 13 m wide): the piece is then
+ * created in the specification's orientation and turned to whichever way the packer laid it.
+ */
+function algoAdoptSpecifiedSizes() {
+  let changed = false;
+  for (const name of Object.keys(ALGO_SPECIFIED)) {
+    const st = algoSpecifiedState(name), sp = AlgoPlacement.SPORTS.find(s => s.name === name);
+    if (!st || !sp) continue;
+    const fp = ALGO_SPECIFIED[name].footprint(st);
+    const long = algoRound(Math.max(fp.length_m, fp.width_m)), short = algoRound(Math.min(fp.length_m, fp.width_m));
+    const swap = fp.length_m < fp.width_m;
+    if (sp.long !== long || sp.short !== short || sp.swap !== swap) { sp.long = long; sp.short = short; sp.swap = swap; changed = true; }
+  }
+  return changed;
+}
 
 // ------------------------------------------------------------------------------------------------ what the roof gives
 
@@ -178,7 +222,7 @@ function algoZoningOn() {
 
 function algoSiteKey() {
   const s = algoState.settings;
-  return JSON.stringify([algoZoningOn(), algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.kind, b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), algoGridLines()]);
+  return JSON.stringify([algoZoningOn(), algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.kind, b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), algoGridLines(), AlgoPlacement.SPORTS.map(sp => [sp.long, sp.short])]);
 }
 
 function algoInputKey() {
@@ -243,9 +287,9 @@ function algoSportMeta(sp) {
 
 function algoSportRow(sp, i) {
   return `<div class="algo-sport" data-sport="${i}" data-find="${algoEsc((sp.label + " " + sp.name + " " + sp.group).toLowerCase())}">
-      <span class="algo-swatch" style="background:${algoRgb(sp.color)}"></span>
+      <span class="algo-swatch" style="background:${escapeHtml(algoRgb(sp.color))}"></span>
       <span class="algo-sport-name">${algoEsc(sp.label)}</span>
-      <span class="algo-qty"><button data-act="qty-" data-i="${i}" aria-label="One fewer ${algoEsc(sp.label)}">−</button><input type="number" min="0" max="30" step="1" data-qty="${i}" value="${algoState.qty[sp.name] || 0}" aria-label="How many ${algoEsc(sp.label)}"><button data-act="qty+" data-i="${i}" aria-label="One more ${algoEsc(sp.label)}">+</button></span>
+      <span class="algo-qty"><button data-act="qty-" data-i="${i}" aria-label="One fewer ${algoEsc(sp.label)}">−</button><input type="number" min="0" max="30" step="1" data-qty="${i}" value="${escapeHtml(algoState.qty[sp.name] || 0)}" aria-label="How many ${algoEsc(sp.label)}"><button data-act="qty+" data-i="${i}" aria-label="One more ${algoEsc(sp.label)}">+</button></span>
       <span class="algo-fit" data-fit="${i}"></span>
       <span class="algo-sport-meta">${algoSportMeta(sp)}</span>
     </div>`;
@@ -291,6 +335,7 @@ function algoApplyRoofType() {
 function algoBuildPanel() {
   const panel = document.getElementById("algo-placement");
   if (!panel) return;
+  algoAdoptSpecifiedSizes();
   const s = algoState.settings;
   const sportRows = algoSportRowsHtml();
 
@@ -472,14 +517,14 @@ function algoBounds() {
 function algoRefreshBlocks() {
   const box = document.getElementById("algo-blocks");
   if (!box) return;
-  box.innerHTML = algoState.blocks.length ? algoState.blocks.map(b => `<div class="algo-block" data-row="${b.id}">
-      <select data-block="${b.id}" data-f="kind" aria-label="Kind">${Object.keys(ALGO_BLOCK_LABELS).map(k => `<option value="${k}" ${k === b.kind ? "selected" : ""}>${ALGO_BLOCK_LABELS[k]}</option>`).join("")}</select>
-      <label>x<input type="number" step="0.5" data-block="${b.id}" data-f="x" value="${b.x}"></label>
-      <label>y<input type="number" step="0.5" data-block="${b.id}" data-f="y" value="${b.y}"></label>
-      <label>w<input type="number" step="0.5" min="0.5" data-block="${b.id}" data-f="w" value="${b.w}"></label>
-      <label>h<input type="number" step="0.5" min="0.5" data-block="${b.id}" data-f="h" value="${b.h}"></label>
-      <button data-act="rotate-block" data-id="${b.id}" aria-label="Rotate ${ALGO_BLOCK_LABELS[b.kind].toLowerCase()} 90 degrees" title="Rotate 90°: swaps width and height around the centre"><i class="ti ti-rotate-clockwise-2" aria-hidden="true"></i></button>
-      <button data-act="del-block" data-id="${b.id}" aria-label="Remove" title="Remove">×</button></div>`).join("")
+  box.innerHTML = algoState.blocks.length ? algoState.blocks.map(b => `<div class="algo-block" data-row="${escapeHtml(b.id)}">
+      <select data-block="${escapeHtml(b.id)}" data-f="kind" aria-label="Kind">${Object.keys(ALGO_BLOCK_LABELS).map(k => `<option value="${k}" ${k === b.kind ? "selected" : ""}>${ALGO_BLOCK_LABELS[k]}</option>`).join("")}</select>
+      <label>x<input type="number" step="0.5" data-block="${escapeHtml(b.id)}" data-f="x" value="${b.x}"></label>
+      <label>y<input type="number" step="0.5" data-block="${escapeHtml(b.id)}" data-f="y" value="${b.y}"></label>
+      <label>w<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="w" value="${b.w}"></label>
+      <label>h<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="h" value="${b.h}"></label>
+      <button data-act="rotate-block" data-id="${escapeHtml(b.id)}" aria-label="Rotate ${escapeHtml(ALGO_BLOCK_LABELS[b.kind].toLowerCase())} 90 degrees" title="Rotate 90°: swaps width and height around the centre"><i class="ti ti-rotate-clockwise-2" aria-hidden="true"></i></button>
+      <button data-act="del-block" data-id="${escapeHtml(b.id)}" aria-label="Remove" title="Remove">×</button></div>`).join("")
     : `<p class="algo-empty">No lift, ramp or stair yet. Add at least one: the pathways start from them.</p>`;
   const fromRevit = document.getElementById("algo-from-revit");
   if (fromRevit) { const n = algoRevitBlocks().length; fromRevit.disabled = n === 0; fromRevit.title = n ? `${n} from the Revit model` : "Nothing pushed from Revit yet"; }
@@ -491,6 +536,7 @@ function algoRefreshBlocks() {
 
 async function algoPreview(msg) {
   if (algoState.mode !== "algo") return;
+  if (algoAdoptSpecifiedSizes() && algoState.built) { algoState.plan = null; algoState.planKey = ""; algoState.fit = null; algoState.fitKey = ""; algoBuildPanel(); }   // the Sport panel changed a court's specification
   const token = ++algoState.token;
   algoState.msg = msg || "";
   const ready = algoState.blocks.length > 0;
@@ -727,16 +773,16 @@ function algoDrawPreview() {
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
   algoState.blocks.forEach(blk => {
-    g += `<g class="algo-block-svg" data-drag="${blk.id}" style="cursor:grab"><rect x="${algoRound(blk.x)}" y="${algoRound(blk.y)}" width="${blk.w}" height="${blk.h}" fill="${algoRgb(C.COLOR_VC)}" stroke="#7f1d1d" stroke-width="0.12"/>
-      <text x="${algoRound(blk.x + blk.w / 2)}" y="${algoRound(blk.y + blk.h / 2 + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#fff" pointer-events="none">${ALGO_BLOCK_LABELS[blk.kind][0]}</text><title>${ALGO_BLOCK_LABELS[blk.kind]}: drag to move</title></g>`;
+    g += `<g class="algo-block-svg" data-drag="${escapeHtml(blk.id)}" style="cursor:grab"><rect x="${algoRound(blk.x)}" y="${algoRound(blk.y)}" width="${blk.w}" height="${blk.h}" fill="${algoRgb(C.COLOR_VC)}" stroke="#7f1d1d" stroke-width="0.12"/>
+      <text x="${algoRound(blk.x + blk.w / 2)}" y="${algoRound(blk.y + blk.h / 2 + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#fff" pointer-events="none">${escapeHtml(ALGO_BLOCK_LABELS[blk.kind][0])}</text><title>${escapeHtml(ALGO_BLOCK_LABELS[blk.kind])}: drag to move</title></g>`;
   });
   if (plan) plan.courts.forEach(c => {
     const sp = C.SPORTS.find(s => s.name === c.name), r = c.rect;
     const cx = (r[0] + r[2]) / 2, cy = (r[1] + r[3]) / 2, word = c.name.split(" ")[0];
     const small = r[2] - r[0] < fs * (word.length * 0.62 + 1) && r[3] - r[1] < fs * (word.length * 0.62 + 1);
-    g += `<g pointer-events="none"><rect x="${algoRound(r[0])}" y="${algoRound(r[1])}" width="${algoRound(r[2] - r[0])}" height="${algoRound(r[3] - r[1])}" fill="${algoRgb(sp.color)}" stroke="#282828" stroke-width="0.14"/>
+    g += `<g pointer-events="none"><rect x="${algoRound(r[0])}" y="${algoRound(r[1])}" width="${algoRound(r[2] - r[0])}" height="${algoRound(r[3] - r[1])}" fill="${escapeHtml(algoRgb(sp.color))}" stroke="#282828" stroke-width="0.14"/>
       <text x="${algoRound(cx)}" y="${algoRound(cy + fs * 0.35)}" text-anchor="middle" font-size="${small ? fs * 0.7 : fs}" font-weight="600" fill="#141414">${algoEsc(word)}</text>
-      <title>${algoEsc(sp.label)} ${c.long} × ${c.short} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
+      <title>${algoEsc(sp.label)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
   });
   g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="none" stroke="#3c3c3c" stroke-width="0.18" pointer-events="none"/>`;
   host.innerHTML = `<svg id="algo-svg" viewBox="${algoRound(vx)} ${algoRound(vy)} ${algoRound(vw)} ${algoRound(vh)}" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:${algoRound(vw / vh)}" role="img" aria-label="Preview of the packed roof">${g}</svg>`;
@@ -768,7 +814,7 @@ function algoBindDrag(host) {
     const rect = drag.el.querySelector("rect"), text = drag.el.querySelector("text");
     rect.setAttribute("x", drag.blk.x); rect.setAttribute("y", drag.blk.y);
     text.setAttribute("x", algoRound(drag.blk.x + drag.blk.w / 2)); text.setAttribute("y", algoRound(drag.blk.y + drag.blk.h / 2 + parseFloat(text.getAttribute("font-size")) * 0.35));
-    const row = document.querySelector(`[data-row="${drag.blk.id}"]`);
+    const row = document.querySelector(`[data-row="${escapeHtml(drag.blk.id)}"]`);
     if (row) { row.querySelector('[data-f="x"]').value = drag.blk.x; row.querySelector('[data-f="y"]').value = drag.blk.y; }
   });
   const end = () => { if (!drag) return; drag.el.style.cursor = "grab"; drag = null; algoChanged(); };
@@ -778,20 +824,31 @@ function algoBindDrag(host) {
 
 // ------------------------------------------------------------------------------------------------ apply to Combine
 
+/** The piece's own (unrotated) length and width: the packer's long and short side, in the specification's orientation for a specified sport (see algoAdoptSpecifiedSizes). */
+function algoItemFrame(sp) {
+  return sp.swap ? { length_m: sp.short, width_m: sp.long } : { length_m: sp.long, width_m: sp.short };
+}
+
 function algoCatalogueSource(name, sp) {
   const cat = ALGO_CATALOGUE[name];
   const quality = "medium";
   if (cat.kind === "field" && typeof FIELDS !== "undefined" && FIELDS[cat.sport]) {
     const d = FIELDS[cat.sport][cat.variant] || Object.values(FIELDS[cat.sport])[0];
     const mat = typeof MATERIALS !== "undefined" ? MATERIALS[quality] : { floor: "", marking: "", gradin: "" };
-    return {
+    const frame = algoItemFrame(sp);
+    const src = {
       version: "1.0", generator: "Sportify-Algorithmic-Placement",
       quality_key: typeof getQualityKey === "function" ? getQualityKey(cat.sport, cat.variant, quality) : "",
       // the packing tool's sizes are FINAL envelopes (run-off included), so the run-off is not added again
-      field: { sport: cat.sport, variant: cat.variant, norm: d.norm, dimensions: { length_m: sp.long, width_m: sp.short, runoff_m: 0, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
+      field: { sport: cat.sport, variant: cat.variant, norm: d.norm, dimensions: { length_m: frame.length_m, width_m: frame.width_m, runoff_m: 0, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
       materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: quality, reference_material: null, reference_provider: null },
       layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"]
     };
+    // A specified sport carries its own choices, as when it is pushed from the Sport panel: the court keeps the surface and mounting it was placed with
+    // instead of following whatever the panel shows later, and Revit builds it from these numbers (basketballCourt.js, volleyballCourt.js).
+    const spec = ALGO_SPECIFIED[name], st = spec ? algoSpecifiedState(name) : null;
+    if (st) src[spec.field] = spec.payload(st);
+    return src;
   }
   const a = typeof ACTIVITIES !== "undefined" ? ACTIVITIES[cat.id] : null;
   const mat = typeof ACTIVITY_MATERIALS !== "undefined" ? ACTIVITY_MATERIALS[quality] : { surface: "", structure: "" };
@@ -801,6 +858,15 @@ function algoCatalogueSource(name, sp) {
     activity: { type_id: cat.id, category: a ? a.category : "court", norm: a ? a.norm : "", dimensions: { length_m: sp.long, width_m: sp.short } },
     materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null }
   };
+}
+
+/** Garden zones went on the board with no build-up: say why in words, instead of leaving zones that look finished and are skipped by Revit. */
+function algoWarnNoBuildUp() {
+  if (typeof showToast !== "function") return;
+  const loaded = typeof assembliesLoaded !== "undefined" && assembliesLoaded;
+  showToast(loaded ? "No build-up for the garden" : "Garden zones have no build-up yet",
+    (loaded ? "The catalogue has no green roof build-up." : "The build-up catalogue could not be loaded (is the Sportify API running?).") +
+    " The zones are on the board, but Revit will not build them until a build-up is chosen in the Zones panel.");
 }
 
 /** Takes away everything a previous Apply put on the board (courts, garden zones, entry points), and nothing else. */
@@ -816,32 +882,59 @@ function algoClearApplied(announce) {
   return removed;
 }
 
-function algoApply() {
+async function algoApply() {
+  if (algoAdoptSpecifiedSizes()) {      // a court's specification was changed in the Sport panel since this layout was checked: check it again before it goes on the board
+    algoState.plan = null; algoState.planKey = ""; algoState.fit = null; algoState.fitKey = "";
+    if (algoState.built) algoBuildPanel();
+    algoSchedulePreview(0);
+    if (typeof showToast === "function") showToast("Court sizes changed", "A court's specification changed in the Sport panel, so the layout is being checked again. Apply once it is done.");
+    return;
+  }
   const plan = algoState.plan;
   if (!plan || !plan.courts.length || algoState.busy) return;
   const handPlaced = combineState.items.filter(i => !i.algorithmic).length + (combineState.zones || []).filter(z => !z.algorithmic).length;
   if (handPlaced > 0 && !window.confirm(`The Combine board has ${handPlaced} piece${handPlaced === 1 ? "" : "s"} you placed by hand. Applying replaces the board with this layout. Continue?`)) return;
+  // The build-up catalogue comes from the API and is fetched lazily (assemblies.js). Fetch it first, so the garden zones are made with their build-up in one step (one
+  // Undo takes the whole Apply back) instead of being given one afterwards: a zone without one is reported by Revit as a floor type that was never described.
+  if (algoState.settings.gardenZones && typeof loadAssemblies === "function" && typeof assembliesLoaded !== "undefined" && !assembliesLoaded) {
+    try { await loadAssemblies(); } catch (e) { /* algoWarnNoBuildUp says so once the zones are made */ }
+    if (algoState.plan !== plan || algoState.busy) return;       // the layout changed while the catalogue was coming: nothing has been applied yet
+  }
+  // A specified court's weight (what the structural analysis puts on the deck) comes from the court options in the API, which the volleyball and basketball panels fetch
+  // when they are first opened. Applied before they ever were, the courts were exported with weight_kg 0: a court that weighs nothing (found by the live Revit import).
+  const wantsCourt = key => plan.courts.some(c => new RegExp(key, "i").test(c.name));
+  const optionLoads = [];
+  if (wantsCourt("volleyball") && typeof loadVolleyballOptions === "function" && typeof volleyballOptionsLoaded !== "undefined" && !volleyballOptionsLoaded) optionLoads.push(loadVolleyballOptions());
+  if (wantsCourt("basketball") && typeof loadBasketballOptions === "function" && typeof basketballOptionsLoaded !== "undefined" && !basketballOptionsLoaded) optionLoads.push(loadBasketballOptions());
+  if (optionLoads.length) {
+    await Promise.all(optionLoads.map(p => p.catch(() => { /* the courts are placed; their weight is then unknown, as it always was offline */ })));
+    if (algoState.plan !== plan || algoState.busy) return;
+  }
   combineState.items = []; combineState.zones = []; combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
   combineState.tray = combineState.tray || [];
 
   const stamp = Date.now();
   plan.courts.forEach((c, i) => {
     const sp = AlgoPlacement.SPORTS.find(s => s.name === c.name);
+    const frame = algoItemFrame(sp);
     combineState.items.push({
       id: `algo_${stamp}_${i}`, kind: ALGO_CATALOGUE[c.name].kind, label: sp.label,
-      length_m: sp.long, width_m: sp.short, rotation: c.rotated ? 90 : 0,
+      length_m: frame.length_m, width_m: frame.width_m, rotation: c.rotated !== !!sp.swap ? 90 : 0,
       x_m: algoRound(c.rect[0]), y_m: algoRound(c.rect[1]),
       sourceJson: algoCatalogueSource(c.name, sp), algorithmic: true
     });
   });
 
-  let zoneCount = 0;
-  if (algoState.settings.gardenZones && typeof ensureZoneState === "function") {
+  let zoneCount = 0, withoutBuildUp = false;
+  if (algoState.settings.gardenZones && typeof ensureZoneState === "function" && typeof rectPoints === "function") {
     ensureZoneState();
     const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
+    withoutBuildUp = !assembly;
     const rects = (plan.bandRects || algoState.site.bandRects).concat(plan.pockets).filter(r => r[2] - r[0] >= 0.3 && r[3] - r[1] >= 0.3);
     rects.forEach((r, i) => {
-      combineState.zones.push({ id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, x_m: algoRound(r[0]), y_m: algoRound(r[1]), length_m: algoRound(r[2] - r[0]), width_m: algoRound(r[3] - r[1]), algorithmic: true });
+      // A zone is a polygon (zones.js): `points` is the truth and the box is derived from it, so the pocket is made as the rectangle it is.
+      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
+      combineState.zones.push(syncZoneBounds(zone));
       zoneCount++;
     });
   }
@@ -861,6 +954,7 @@ function algoApply() {
   if (typeof resetCombineView === "function") resetCombineView();
   if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
   if (typeof showToast === "function") showToast("Placed on the board", `${plan.courts.length} court${plan.courts.length === 1 ? "" : "s"}${zoneCount ? `, ${zoneCount} garden zone${zoneCount === 1 ? "" : "s"}` : ""}${entryCount ? `, ${entryCount} entry point${entryCount === 1 ? "" : "s"}` : ""}. Move any piece by hand; the pathways are the space between them.`);
+  if (zoneCount && withoutBuildUp) algoWarnNoBuildUp();            // last, so it is the toast that stays on screen
 }
 
 // ------------------------------------------------------------------------------------------------ start

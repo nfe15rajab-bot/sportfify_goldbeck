@@ -14,7 +14,7 @@ const DATA_API_BASE = "http://localhost:5107/api";
 const dataState = {
   domain: "sports",       // "sports" | "vegetation" | "facilities"
   search: "",
-  cache: {},               // { sports: Sport[], palettes: PlantPalette[], facilities: FacilityGuideline[] }
+  cache: {},               // { sports: Sport[], species: Plant[], buildups: RoofAssembly[], facilities: FacilityGuideline[] }
   backendOnline: null,     // null = not checked yet, true/false once known
 };
 
@@ -29,39 +29,53 @@ async function fetchDataEntity(key, path) {
 }
 
 function domainFetchPlan() {
-  if (dataState.domain === "sports") return { key: "sports", path: "sports" };
-  // Individual species, as opposed to the "vegetation" domain below, which
-  // shows palettes — groupings OF species. The trees were in the database all
-  // along and simply had nothing displaying them.
-  if (dataState.domain === "species") return { key: "species", path: "Plants" };
   if (dataState.domain === "buildups") return { key: "buildups", path: "RoofAssemblies" };
   if (dataState.domain === "facilities") return { key: "facilities", path: "facilities" };
   if (dataState.domain === "analysisParams") return { key: "analysisParameters", path: "AnalysisParameters" };
-  return { key: "palettes", path: "plants/palettes" };
+  if (dataState.domain === "courtOptions") return { key: "courtOptions", path: "SportOptions" };
+  if (dataState.domain === "species") return { key: "species", path: "Plants" };
+  return { key: "sports", path: "sports" };
 }
 
+/**
+ * What each tab actually holds, said once at the top of it.
+ *
+ * Every one of these was a guess until you opened it and read the cards —
+ * "Palettes" in particular meant nothing to anybody, which is part of why it
+ * is gone. A reference catalog that cannot say what it is for is not much of
+ * a reference.
+ */
+const DOMAIN_INTRO = {
+  sports: "The sports this app can lay out, with the norm each follows, the surfaces it can be built in, and every official field size. Read-only: these come from DIN, FIBA, IHF and the rest, and are not ours to invent.",
+  species: "Individual plants you can place on the roof. Each carries its mature height, crown width and the substrate depth its roots need — the Plants panel offers the ones with all three filled in.",
+  buildups: "Manufacturer roof build-up systems — ZinCo, Bauder, Optigrün — layer by layer. A drawn zone references one of these, and it becomes a Revit floor type on import.",
+  facilities: "Reference requirements from the German sports-hall norms. Nothing in the app reads these; they are here to look up.",
+  courtOptions: "The choices each sport offers — a padel wall system, a court surface, a basket. The geometry of a court is fixed by its governing body and lives in code; which product it is built from is a decision, and lives here.",
+  analysisParams: "The figures the Analysis checks run on, so a threshold can be corrected without a code change.",
+};
+
 // Each domain's search box filters against a different field on its items —
-// sports/palettes are named, facility guidelines and analysis parameters are grouped by Title/Label instead.
-const DOMAIN_SEARCH_FIELD = { sports: "name", vegetation: "name", facilities: "title", analysisParams: "label", species: "scientificName", buildups: "systemName" };
+// sports are named, species by botanical name, guidelines and parameters by Title/Label instead.
+const DOMAIN_SEARCH_FIELD = { courtOptions: "label", sports: "name", facilities: "title", analysisParams: "label", species: "scientificName", buildups: "systemName" };
 
 function variantsTableHtml(variants) {
   if (!variants || variants.length === 0) return "";
   const rows = variants.map(v => `
     <div class="dim-card">
       <div class="val">${v.lengthM}×${v.widthM} m</div>
-      <div class="lbl">${v.variant} — run-off ${v.runoffM}m, h≥${v.heightMinM}m</div>
+      <div class="lbl">${escapeHtml(v.variant)} — run-off ${v.runoffM}m, h≥${v.heightMinM}m</div>
     </div>`).join("");
   return `<div class="dims" style="grid-template-columns:1fr;">${rows}</div>`;
 }
 
 function sportCardHtml(sport) {
-  const norms = (sport.norms || []).map(n => n.code).join(", ") || "—";
-  const materials = (sport.materials || []).map(m => m.performanceClass ? `${m.name} (${m.normCode} ${m.performanceClass}, force reduction ${m.forceReduction || "—"})` : m.name).join("; ") || "—";
-  const providers = (sport.providers || []).map(p => p.name).join(", ") || "—";
+  const norms = (sport.norms || []).map(n => escapeHtml(n.code)).join(", ") || "—";
+  const materials = (sport.materials || []).map(m => m.performanceClass ? `${escapeHtml(m.name)} (${escapeHtml(m.normCode)} ${escapeHtml(m.performanceClass)}, force reduction ${escapeHtml(m.forceReduction || "—")})` : escapeHtml(m.name)).join("; ") || "—";
+  const providers = (sport.providers || []).map(p => escapeHtml(p.name)).join(", ") || "—";
   return `
     <div class="section span-2">
-      <label>${sport.name}</label>
-      <p class="hint">${sport.category}</p>
+      <label>${escapeHtml(sport.name)}</label>
+      <p class="hint">${escapeHtml(sport.category)}</p>
       <p class="hint"><strong>Norms:</strong> ${norms}</p>
       <p class="hint"><strong>Materials:</strong> ${materials}</p>
       <p class="hint"><strong>Providers:</strong> ${providers}</p>
@@ -71,14 +85,14 @@ function sportCardHtml(sport) {
 }
 
 function paletteCardHtml(palette) {
-  const plants = (palette.plants || []).map(p => `${p.commonName} (${p.scientificName})`).join(", ") || "—";
-  const norms = (palette.norms || []).map(n => n.code).join(", ") || "—";
-  const materials = (palette.materials || []).map(m => m.name).join(", ") || "—";
-  const providers = (palette.providers || []).map(p => p.name).join(", ") || "—";
+  const plants = (palette.plants || []).map(p => `${escapeHtml(p.commonName)} (${escapeHtml(p.scientificName)})`).join(", ") || "—";
+  const norms = (palette.norms || []).map(n => escapeHtml(n.code)).join(", ") || "—";
+  const materials = (palette.materials || []).map(m => escapeHtml(m.name)).join(", ") || "—";
+  const providers = (palette.providers || []).map(p => escapeHtml(p.name)).join(", ") || "—";
   return `
     <div class="section span-2">
-      <label>${palette.name} — ${palette.type}</label>
-      <p class="hint">${palette.description}</p>
+      <label>${escapeHtml(palette.name)} — ${escapeHtml(palette.type)}</label>
+      <p class="hint">${escapeHtml(palette.description)}</p>
       <p class="hint"><strong>Plants:</strong> ${plants}</p>
       <p class="hint"><strong>Norms:</strong> ${norms}</p>
       <p class="hint"><strong>Materials:</strong> ${materials}</p>
@@ -89,21 +103,21 @@ function paletteCardHtml(palette) {
 function facilityCardHtml(item) {
   return `
     <div class="section">
-      <label>${item.title}</label>
-      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${item.category}</p>
-      <p class="hint">${item.requirement}</p>
-      <p class="hint"><strong>Source:</strong> ${item.authority} — ${item.normCode}</p>
+      <label>${escapeHtml(item.title)}</label>
+      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${escapeHtml(item.category)}</p>
+      <p class="hint">${escapeHtml(item.requirement)}</p>
+      <p class="hint"><strong>Source:</strong> ${escapeHtml(item.authority)} — ${escapeHtml(item.normCode)}</p>
     </div>`;
 }
 
 function analysisParamCardHtml(item) {
   return `
     <div class="section">
-      <label>${item.label}</label>
-      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${item.category}</p>
-      <p class="hint"><strong>Value:</strong> ${item.value} ${item.unit}</p>
-      ${item.description ? `<p class="hint">${item.description}</p>` : ""}
-      <p class="hint"><strong>Source:</strong> ${item.authority} — ${item.normCode}</p>
+      <label>${escapeHtml(item.label)}</label>
+      <p class="hint" style="text-transform:none; font-weight:600; color:var(--text-accent);">${escapeHtml(item.category)}</p>
+      <p class="hint"><strong>Value:</strong> ${escapeHtml(item.value)} ${escapeHtml(item.unit)}</p>
+      ${item.description ? `<p class="hint">${escapeHtml(item.description)}</p>` : ""}
+      <p class="hint"><strong>Source:</strong> ${escapeHtml(item.authority)} — ${escapeHtml(item.normCode)}</p>
     </div>`;
 }
 
@@ -112,22 +126,35 @@ function analysisParamCardHtml(item) {
  * and substrate depth are what decide whether a plant can go on a roof at all,
  * and a species without them can't be placed.
  */
+/**
+ * A price, with how sure of it we are. Every catalog figure carries a
+ * quoted/estimated flag, and showing the number without the flag would be
+ * worse than showing nothing — the same rule the thicknesses follow.
+ */
+function priceHint(value, unit, quoted, source) {
+  if (value == null) return `<p class="hint">No price yet.</p>`;
+  const u = (unit || "").replace("EUR/", "").replace("m2", "m²").replace("m3", "m³");
+  return `<p class="hint"><strong>€ ${escapeHtml(value)}${u ? " / " + escapeHtml(u) : ""}</strong> — ` +
+    `${quoted ? "supplier quote" : "estimated"}${source ? `<br><span class="hint">${escapeHtml(source)}</span>` : ""}</p>`;
+}
+
 function speciesCardHtml(p) {
   const hasDims = p.matureHeightM > 0 && p.crownM > 0;
   return `
     <div class="section span-2">
-      <label>${p.scientificName || "(unnamed)"}</label>
-      <p class="hint"><em>${p.commonName || ""}</em>${p.form ? ` · ${p.form}` : ""}${p.category ? ` · ${p.category}` : ""}</p>
+      <label>${escapeHtml(p.scientificName || "(unnamed)")}</label>
+      <p class="hint"><em>${escapeHtml(p.commonName || "")}</em>${p.form ? ` · ${escapeHtml(p.form)}` : ""}${p.category ? ` · ${escapeHtml(p.category)}` : ""}</p>
       ${hasDims ? `
         <div class="dims">
-          <div class="dim-card"><div class="val">${p.heightRange || (p.matureHeightM + " m")}</div><div class="lbl">Mature height</div></div>
+          <div class="dim-card"><div class="val">${escapeHtml(p.heightRange || (p.matureHeightM + " m"))}</div><div class="lbl">Mature height</div></div>
           <div class="dim-card"><div class="val">${p.crownM} m</div><div class="lbl">Crown${p.crownMinM ? ` (${p.crownMinM}–${p.crownMaxM} m)` : ""}</div></div>
           <div class="dim-card"><div class="val">${p.minSubstrateMm || "—"} mm</div><div class="lbl">Min. substrate</div></div>
         </div>`
         : `<p class="hint">⚠ No roof dimensions — can't be placed until height, crown and substrate are filled in.</p>`}
-      ${p.notes ? `<p class="hint">${p.notes}</p>` : ""}
-      ${p.sunRequirement ? `<p class="hint">Sun: ${p.sunRequirement} · Drought: ${p.droughtTolerance || "—"}</p>` : ""}
-      ${p.source ? `<p class="hint">Source: ${p.sourceUrl ? `<a href="${p.sourceUrl}" target="_blank" rel="noopener">${p.source}</a>` : p.source}${p.dimensionsPublished ? " — published figures" : ""}</p>` : ""}
+      ${escapeHtml(priceHint(p.priceValue, p.priceUnit, p.priceIsQuoted, p.priceSource))}
+      ${p.notes ? `<p class="hint">${escapeHtml(p.notes)}</p>` : ""}
+      ${p.sunRequirement ? `<p class="hint">Sun: ${escapeHtml(p.sunRequirement)} · Drought: ${escapeHtml(p.droughtTolerance || "—")}</p>` : ""}
+      ${p.source ? `<p class="hint">Source: ${p.sourceUrl ? `<a href="${safeUrl(p.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(p.source)}</a>` : escapeHtml(p.source)}${p.dimensionsPublished ? " — published figures" : ""}</p>` : ""}
     </div>`;
 }
 
@@ -139,26 +166,73 @@ function buildupCardHtml(a) {
   const total = layers.reduce((s, l) => s + (l.thicknessMm || 0), 0);
   return `
     <div class="section span-2">
-      <label>${a.provider} — ${a.systemName}</label>
-      <p class="hint">${a.category}${a.providerCountry ? ` · ${a.providerCountry}` : ""}</p>
-      ${a.description ? `<p class="hint">${a.description}</p>` : ""}
+      <label>${escapeHtml(a.provider)} — ${escapeHtml(a.systemName)}</label>
+      <p class="hint">${escapeHtml(a.category)}${a.providerCountry ? ` · ${escapeHtml(a.providerCountry)}` : ""}</p>
+      ${a.description ? `<p class="hint">${escapeHtml(a.description)}</p>` : ""}
       <div class="dims">
         <div class="dim-card"><div class="val">${total}</div><div class="lbl">Build-up mm (from layers)</div></div>
         ${a.buildUpMm ? `<div class="dim-card"><div class="val" style="${Math.abs(total - a.buildUpMm) > 5 ? "color:#f59e0b" : ""}">${a.buildUpMm}</div><div class="lbl">Published${Math.abs(total - a.buildUpMm) > 5 ? " ⚠ differs" : ""}</div></div>` : ""}
         <div class="dim-card"><div class="val">${a.saturatedKgM2 ?? "—"}</div><div class="lbl">Saturated kg/m²</div></div>
         <div class="dim-card"><div class="val">${a.waterStorageLM2 ?? "—"}</div><div class="lbl">Water storage L/m²</div></div>
+        <div class="dim-card"><div class="val">${(() => {
+          // Per m2 of zone: volume layers priced through their own thickness,
+          // sheet goods straight per m2. The same arithmetic the cost panel
+          // does, so the catalog and the receipt cannot disagree.
+          const per = layers.reduce((sum, l) => {
+            if (l.priceValue == null) return sum;
+            return sum + (l.priceUnit === "EUR/m3" ? l.priceValue * ((l.thicknessMm || 0) / 1000) : l.priceValue);
+          }, 0);
+          return per ? "€ " + Math.round(per) : "—";
+        })()}</div><div class="lbl">Per m² (estimated)</div></div>
       </div>
       <p class="hint" style="margin-top:8px"><strong>${layers.length} layers</strong></p>
-      ${layers.map(l => `<p class="hint">${l.layerOrder + 1}. ${l.name} — <strong>${l.thicknessMm} mm</strong> (${l.function}, ${l.thicknessSource})</p>`).join("")}
-      ${a.sourceUrl ? `<p class="hint"><a href="${a.sourceUrl}" target="_blank" rel="noopener">Manufacturer source</a></p>` : ""}
+      ${layers.map(l => `<p class="hint">${l.layerOrder + 1}. ${escapeHtml(l.name)} — <strong>${l.thicknessMm} mm</strong> (${escapeHtml(l.function)}, ${escapeHtml(l.thicknessSource)})</p>`).join("")}
+      ${a.sourceUrl ? `<p class="hint"><a href="${safeUrl(a.sourceUrl)}" target="_blank" rel="noopener">Manufacturer source</a></p>` : ""}
       <div style="margin-top:8px">
-        <button class="btn-export" data-buildup-edit="${a.id}">Edit</button>
-        <button class="btn-export" data-buildup-delete="${a.id}" data-buildup-label="${a.provider} ${a.systemName}">Delete</button>
+        <button class="btn-export" data-buildup-edit="${escapeHtml(a.id)}">Edit</button>
+        <button class="btn-export" data-buildup-delete="${escapeHtml(a.id)}" data-buildup-label="${escapeHtml(a.provider)} ${escapeHtml(a.systemName)}">Delete</button>
       </div>
     </div>`;
 }
 
-const DOMAIN_CARD_HTML = { sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml, analysisParams: analysisParamCardHtml, species: speciesCardHtml, buildups: buildupCardHtml };
+/**
+ * One court option.
+ *
+ * Sport and group lead, because a row means nothing without them — "acrylic"
+ * is a padel surface or a basketball surface and they are priced differently.
+ * Only the figures that apply are shown: a colour has no weight, a basket has
+ * no area, and printing an empty one as zero would be a claim rather than a
+ * blank.
+ */
+function courtOptionCardHtml(o) {
+  const facts = [];
+  if (o.weightKgM2 != null) facts.push([`${o.weightKgM2}`, "kg/m²"]);
+  if (o.weightKgEach != null) facts.push([`${o.weightKgEach}`, "kg each"]);
+  if (o.thicknessMm != null) facts.push([`${o.thicknessMm}`, "mm thick"]);
+  if (o.priceValue != null) {
+    const unit = (o.priceUnit || "").replace("EUR/", "").replace("m2", "m²").replace("each", "each");
+    facts.push([`€ ${o.priceValue}`, unit ? `per ${unit}` : "price"]);
+  }
+  if (o.costGroupDin276) facts.push([`KG ${o.costGroupDin276}`, "DIN 276"]);
+
+  return `
+    <div class="section span-2">
+      <label>${escapeHtml(o.label || "(unnamed)")}</label>
+      <p class="hint">
+        <strong>${escapeHtml(o.sport)}</strong> · ${escapeHtml(o.optionGroup)} · <code>${escapeHtml(o.key)}</code>
+        ${o.colourHex ? ` · <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${escapeHtml(o.colourHex)};vertical-align:middle"></span> ${escapeHtml(o.colourHex)}` : ""}
+        ${o.textureHint ? ` · ${escapeHtml(o.textureHint)}` : ""}
+      </p>
+      ${o.note ? `<p class="hint">${escapeHtml(o.note)}</p>` : ""}
+      ${facts.length ? `<div class="dims">${facts.map(([v, l]) =>
+        `<div class="dim-card"><div class="val">${escapeHtml(v)}</div><div class="lbl">${escapeHtml(l)}</div></div>`).join("")}</div>` : ""}
+      ${o.priceValue != null
+        ? `<p class="hint">${o.priceIsQuoted ? "Supplier quote" : "Estimated"}${o.priceSource ? ` — ${escapeHtml(o.priceSource)}` : ""}</p>`
+        : ""}
+    </div>`;
+}
+
+const DOMAIN_CARD_HTML = { courtOptions: courtOptionCardHtml, sports: sportCardHtml, vegetation: paletteCardHtml, facilities: facilityCardHtml, analysisParams: analysisParamCardHtml, species: speciesCardHtml, buildups: buildupCardHtml };
 
 function offlineCardHtml() {
   return `
@@ -177,10 +251,44 @@ function offlineCardHtml() {
  * active. Being asked to choose "Material / Provider / Sport / Plant" while
  * standing in Build-ups is nonsense — the answer is obviously a build-up.
  */
+/**
+ * Which record types make sense to create or edit from the tab you are
+ * standing in. Offering all nine everywhere is what made "Create new"
+ * meaningless — create new WHAT, while looking at a list of sports?
+ *
+ * Sport itself is not creatable. The sports of the world are not something
+ * this app invents; adding a field size to one of them is.
+ */
+const DOMAIN_ENTITIES = {
+  sports: ["FieldVariant", "Material", "Provider", "Norm"],
+  species: ["Plant"],
+  courtOptions: ["SportOption"],
+  facilities: ["FacilityGuideline"],
+  analysisParams: ["AnalysisParameter"],
+};
+
+function syncEntityChoices() {
+  const sel = document.getElementById("adminEntityType");
+  if (!sel) return;
+  const allowed = DOMAIN_ENTITIES[dataState.domain] || [];
+  let first = null;
+  [...sel.options].forEach(o => {
+    const ok = allowed.includes(o.value);
+    o.hidden = !ok;
+    o.disabled = !ok;
+    if (ok && !first) first = o.value;
+  });
+  if (first && !allowed.includes(sel.value)) {
+    sel.value = first;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}
+
 function syncDomainEditor() {
   const generic = document.getElementById("admin-edit-panel") || document.getElementById("data-admin");
   const isBuildups = dataState.domain === "buildups";
   if (generic) generic.hidden = isBuildups;
+  if (!isBuildups) syncEntityChoices();
 
   let createBtn = document.getElementById("btn-new-buildup");
   const host = document.getElementById("buildup-create-host");
@@ -218,6 +326,8 @@ function renderDataContent(items) {
   }
 
   syncDomainEditor();
+  const intro = document.getElementById("data-domain-intro");
+  if (intro) intro.textContent = DOMAIN_INTRO[dataState.domain] || "";
   const searchField = DOMAIN_SEARCH_FIELD[dataState.domain] || "name";
   const term = dataState.search.trim().toLowerCase();
   const filtered = term ? items.filter(it => (it[searchField] || "").toLowerCase().includes(term)) : items;
@@ -231,7 +341,7 @@ function renderDataContent(items) {
   }
 
   if (statusEl) {
-    const noun = { sports: "sport", vegetation: "palette", facilities: "guideline", analysisParams: "parameter", species: "species", buildups: "build-up" }[dataState.domain] || "item";
+    const noun = { courtOptions: "court option", sports: "sport", facilities: "guideline", analysisParams: "parameter", species: "plant", buildups: "build-up" }[dataState.domain] || "item";
     statusEl.textContent = `${filtered.length} ${noun}${filtered.length === 1 ? "" : "s"}${term ? " matching your search" : ""}.`;
   }
 }
@@ -315,7 +425,7 @@ function wireReferenceDropdown(selectEl, manualEl, items, offline) {
     manualEl.style.display = "block";
   } else {
     selectEl.innerHTML = `<option value="">Select…</option>` +
-      items.map(it => `<option value="${it.id}">${it.name}</option>`).join("") +
+      items.map(it => `<option value="${escapeHtml(it.id)}">${escapeHtml(it.name)}</option>`).join("") +
       `<option value="__manual__">Manual entry…</option>`;
     manualEl.style.display = "none";
   }
@@ -376,10 +486,64 @@ const ADMIN_ENTITY_FIELDS = {
     { key: "name", label: "Name", type: "text", required: true },
     { key: "category", label: "Category", type: "text", required: true },
   ],
-  PlantPalette: [
-    { key: "name", label: "Name", type: "text", required: true },
-    { key: "type", label: "Type", type: "text", placeholder: "extensive | intensive" },
-    { key: "description", label: "Description", type: "textarea" },
+  SportOption: [
+    // sport + group + key are what the configurator looks a row up by, so all
+    // three are required and a duplicate is refused by the API.
+    { key: "sport", label: "Sport", type: "text", required: true, placeholder: "padel, basketball" },
+    { key: "optionGroup", label: "Option group", type: "text", required: true, placeholder: "surface, wall_system, court_colour, basket" },
+    { key: "key", label: "Key", type: "text", required: true, placeholder: "acrylic — the stable name exports reference" },
+    { key: "label", label: "Label", type: "text", required: true, placeholder: "What the picker shows" },
+    { key: "note", label: "Note", type: "text", placeholder: "The sentence under the picker — what choosing this means" },
+    { key: "sortOrder", label: "Sort order", type: "number" },
+    // Only fill the ones that apply. A colour has no weight; a basket has no
+    // area. An empty field stays empty rather than becoming zero, which is a
+    // different claim.
+    { key: "weightKgM2", label: "Weight kg/m² (surfaces)", type: "number" },
+    { key: "weightKgEach", label: "Weight kg each (baskets, posts)", type: "number" },
+    { key: "thicknessMm", label: "Thickness mm (glass)", type: "number" },
+    { key: "colourHex", label: "Colour hex", type: "text", placeholder: "#2f6fb5" },
+    { key: "textureHint", label: "Texture", type: "text", placeholder: "pile, speckle, sheen, tiles, flat" },
+    { key: "priceValue", label: "Price", type: "number" },
+    { key: "priceUnit", label: "Price unit", type: "text", placeholder: "EUR/m2 or EUR/each" },
+    { key: "priceSource", label: "Price source", type: "text" },
+    { key: "costGroupDin276", label: "DIN 276 cost group", type: "text", placeholder: "530, 560…" },
+  ],
+  FurnitureItem: [
+    // Key is what the export and the Revit family name reference, so it is
+    // required and a duplicate is refused by the API.
+    { key: "key", label: "Key", type: "text", required: true, placeholder: "abes_parkbank_1114 — the stable name exports reference" },
+    { key: "manufacturer", label: "Manufacturer", type: "text", required: true, placeholder: "ABES Public Design" },
+    { key: "manufacturerCountry", label: "Manufacturer country", type: "text", placeholder: "Germany" },
+    { key: "productName", label: "Product name", type: "text", required: true, placeholder: "As the manufacturer writes it" },
+    { key: "category", label: "Category", type: "text", required: true, placeholder: "bench, table, bin, bollard, light — decides how it draws" },
+    { key: "description", label: "Description", type: "textarea", placeholder: "Say if it has armrests — the drawing reads this and draws them" },
+    { key: "material", label: "Material", type: "text", placeholder: "Hot-dip galvanised steel, timber slats…" },
+
+    // ── The picture ──
+    // Empty means the configurator draws the piece to scale from the sizes
+    // below. Fill it only with a photograph someone has cleared for use: the
+    // manufacturers own theirs, and this catalogue gets shown to clients.
+    { key: "imageUrl", label: "Photo URL (optional)", type: "text", placeholder: "Leave empty and the piece is drawn from its dimensions instead" },
+    { key: "imageCredit", label: "Photo credit", type: "text", placeholder: "Who the photograph belongs to — shown under it" },
+
+    // ── Size ──
+    { key: "lengthM", label: "Length m", type: "number", placeholder: "1.8" },
+    { key: "widthM", label: "Width m (depth on plan)", type: "number", placeholder: "0.7" },
+    { key: "heightM", label: "Height m", type: "number", placeholder: "0.8 — a bench over 0.62 is drawn with a backrest" },
+    { key: "dimensionsPublished", label: "Dimensions published? (1 = from the datasheet, 0 = typical)", type: "number", placeholder: "1 or 0" },
+
+    // ── What it does and what it weighs ──
+    { key: "seats", label: "Seats", type: "number", placeholder: "0 for a bin or a bollard" },
+    { key: "weightKg", label: "Weight kg", type: "number" },
+    { key: "weightPublished", label: "Weight published? (1 or 0)", type: "number" },
+    { key: "capacityLitres", label: "Capacity litres (bins)", type: "number" },
+
+    { key: "priceValue", label: "Price", type: "number" },
+    { key: "priceUnit", label: "Price unit", type: "text", placeholder: "EUR/each" },
+    { key: "priceSource", label: "Price source", type: "text" },
+    { key: "priceIsQuoted", label: "Quoted rather than estimated? (1 or 0)", type: "number" },
+    { key: "costGroupDin276", label: "DIN 276 cost group", type: "text", placeholder: "560 for furniture, 550 for a light" },
+    { key: "sourceUrl", label: "Source URL", type: "text", placeholder: "The product page the figures came from" },
   ],
   Plant: [
     { key: "commonName", label: "Common name", type: "text", required: true },
@@ -425,7 +589,8 @@ const ADMIN_ENTITY_LIST = {
   Provider: { path: "sports/providers", labelField: "name" },
   Norm: { path: "norms", labelField: "code" },
   Sport: { path: "sports", labelField: "name" },
-  PlantPalette: { path: "plants/palettes", labelField: "name" },
+  SportOption: { path: "SportOptions", labelField: "label" },
+  FurnitureItem: { path: "Furniture", labelField: "productName" },
   Plant: { path: "plants", labelField: "commonName" },
   FacilityGuideline: { path: "facilities", labelField: "title" },
   AnalysisParameter: { path: "AnalysisParameters", labelField: "label" },
@@ -445,10 +610,10 @@ function renderAdminForm(entityType, prefill) {
     const value = current === null || current === undefined ? "" : current;
     return `
     <div>
-      <span>${f.label}${f.required ? " *" : ""}</span>
+      <span>${escapeHtml(f.label)}${f.required ? " *" : ""}</span>
       ${f.type === "textarea"
-        ? `<textarea data-field="${f.key}" rows="2" placeholder="${f.placeholder || ""}">${value}</textarea>`
-        : `<input type="${f.type === "number" ? "number" : "text"}" data-field="${f.key}" placeholder="${f.placeholder || ""}" value="${value}" ${f.type === "number" ? 'step="any"' : ""} />`}
+        ? `<textarea data-field="${escapeHtml(f.key)}" rows="2" placeholder="${escapeHtml(f.placeholder || "")}">${escapeHtml(value)}</textarea>`
+        : `<input type="${f.type === "number" ? "number" : "text"}" data-field="${escapeHtml(f.key)}" placeholder="${escapeHtml(f.placeholder || "")}" value="${escapeHtml(value)}" ${f.type === "number" ? 'step="any"' : ""} />`}
     </div>`;
   }).join("");
 }
@@ -485,7 +650,7 @@ async function loadAdminRecordPicker(entityType) {
     const items = await fetchDataEntity(`admin_${entityType}`, listMeta.path);
     adminEditRecords = items;
     picker.innerHTML = `<option value="">Select a record…</option>` +
-      items.map(it => `<option value="${it.id}">#${it.id} — ${it[listMeta.labelField]}</option>`).join("");
+      items.map(it => `<option value="${escapeHtml(it.id)}">#${escapeHtml(it.id)} — ${escapeHtml(it[listMeta.labelField])}</option>`).join("");
     document.getElementById("adminFormFields").innerHTML = "";
   } catch (err) {
     picker.innerHTML = `<option value="">Backend unreachable</option>`;
@@ -530,7 +695,7 @@ document.getElementById("btn-admin-create").addEventListener("click", async () =
 
   const data = {};
   for (const f of fields) {
-    const el = document.querySelector(`#adminFormFields [data-field="${f.key}"]`);
+    const el = document.querySelector(`#adminFormFields [data-field="${escapeHtml(f.key)}"]`);
     const raw = el ? el.value.trim() : "";
     if (adminMode === "create" && f.required && raw === "") { setAdminStatus(statusId, `${f.label} is required.`, false); return; }
     if (raw === "") continue; // never sent — leaves the field unset (create) or unchanged (edit), rather than blanking it out
@@ -540,10 +705,10 @@ document.getElementById("btn-admin-create").addEventListener("click", async () =
   setAdminStatus(statusId, "Saving…", null);
   try {
     const res = adminMode === "edit"
-      ? await fetch(`${DATA_API_BASE}/admin/records/${entityType}/${adminEditSelected.id}`, {
+      ? await apiWrite(`${DATA_API_BASE}/admin/records/${entityType}/${adminEditSelected.id}`, {
           method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
         })
-      : await fetch(`${DATA_API_BASE}/admin/records`, {
+      : await apiWrite(`${DATA_API_BASE}/admin/records`, {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entityType, data }),
         });
     const body = await res.json().catch(() => null);
@@ -555,9 +720,18 @@ document.getElementById("btn-admin-create").addEventListener("click", async () =
     else renderAdminForm(entityType);
     if (typeof updateDataUI === "function") updateDataUI();
     if (typeof initAnalysisReferenceData === "function") initAnalysisReferenceData(); // LCA/analysis caches pick up the edit immediately
+    if (typeof loadFieldVariantsFromApi === "function") loadFieldVariantsFromApi();      // ...and so do the sports' dimensions (data.js)
   } catch (err) {
     setAdminStatus(statusId, `Failed: ${err.message}`, false);
   }
+});
+
+// The SQL import runs whatever SQL it is given, so the API has it only in Development (or when it is switched on): where it is off the button says so instead of failing.
+apiCapabilities().then(cap => {
+  if (cap.sqlImport !== false) return;
+  const button = document.getElementById("btn-admin-import-sql");
+  if (button) button.disabled = true;
+  setAdminStatus("admin-import-status", "SQL import is turned off in this API (it runs only in Development, or when Admin:AllowSqlImport is true).", null);
 });
 
 document.getElementById("btn-admin-import-sql").addEventListener("click", async () => {
@@ -568,7 +742,7 @@ document.getElementById("btn-admin-import-sql").addEventListener("click", async 
   setAdminStatus("admin-import-status", "Importing…", null);
   try {
     const sql = await file.text();
-    const res = await fetch(`${DATA_API_BASE}/admin/import-sql`, {
+    const res = await apiWrite(`${DATA_API_BASE}/admin/import-sql`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sql }),
     });

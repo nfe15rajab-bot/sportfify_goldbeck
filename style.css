@@ -298,13 +298,19 @@ html[data-role="client"] .planner-only { display: none !important; }
 .combine-tray-count { background: var(--bg-accent); color: var(--text-accent); border-radius: 10px; padding: 1px 7px; font-size: 10px; }
 .combine-tray-items { flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 10px; overflow-x: auto; overflow-y: hidden; }
 .combine-tray-empty { margin: 0; white-space: nowrap; }
-.tray-thumb { position: relative; flex-shrink: 0; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: grab; touch-action: none; }
-.tray-thumb-box { width: 44px; height: 44px; border-radius: 6px; background: var(--thumb-fill); border: 1.5px solid var(--thumb-stroke); }
-.tray-thumb-label { font-size: 9px; text-align: center; color: var(--text-secondary); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tray-thumb { position: relative; flex-shrink: 0; width: 78px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: grab; touch-action: none; }
+/* The thumbnail now holds a drawing of the actual piece, so the box is the
+   frame around it rather than the picture itself — its fill would otherwise
+   sit behind a court’s markings and fight them. Wider than tall because most
+   of what goes in it is: a court, a bench, a picnic table. */
+.tray-thumb-box { width: 64px; height: 50px; border-radius: 6px; background: var(--surface-1); border: 1px solid var(--thumb-stroke); overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
+/* The drawing is decoration; the box is what gets dragged. */
+.tray-thumb-box svg { pointer-events: none; display: block; }
+.tray-thumb-label { font-size: 9px; text-align: center; color: var(--text-secondary); max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tray-thumb-remove { position: absolute; top: -5px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface-1); border: 0.5px solid var(--border-strong); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; padding: 0; }
 .tray-thumb-remove:hover { background: var(--text-fail); color: #fff; border-color: var(--text-fail); }
 .tray-thumb.tray-thumb-dragging { opacity: 0.35; }
-.tray-thumb-ghost { position: fixed; width: 64px; z-index: 100; opacity: 0.9; transform: scale(1.05); pointer-events: none; }
+.tray-thumb-ghost { position: fixed; width: 78px; z-index: 100; opacity: 0.9; transform: scale(1.05); pointer-events: none; }
 
 /* ── Combine wizard: step-by-step flow ──
  * This pane's ~17 sections used to render as one long flat scroll in a
@@ -599,11 +605,21 @@ html[data-role="client"] .planner-only { display: none !important; }
   max-height: calc(100% - 24px);
   overflow-y: auto;
   padding: 12px 14px;
-  border: 1px solid var(--line, #2a353b);
-  border-radius: 8px;
-  background: var(--panel-bg, rgba(20, 26, 32, 0.97));
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  /* The app's own panel surface, not a dark slab of its own: these float over
+     the roof, and a panel that ignores the theme reads as a different app. */
+  background: var(--surface-2);
+  color: var(--text-primary);
+  box-shadow: 0 8px 28px rgba(31, 34, 74, 0.14);
   z-index: 5;
+
+  /* Open state. Only opacity and transform are animated — transitioning
+     `visibility` as well left an open panel stuck hidden, and it buys nothing
+     because opacity already carries the fade. */
+  transition: opacity .18s ease, transform .2s cubic-bezier(.22,.61,.36,1);
+  transform: translateX(0);
+  opacity: 1;
 }
 
 .zone-flyout-header {
@@ -698,6 +714,12 @@ html[data-mode="dark"] .assump-badge.state-unconfirmed { color: #fbbf24; }
 .res-card.tone-bad { border-left-color: #ef4444; }
 .res-card.tone-prelim { border-left-color: #f59e0b; border-left-style: dashed; }
 .res-card.res-empty { opacity: 0.75; border-left-style: dashed; }
+.res-card.res-stale > :not(.res-head):not(.res-stale-note) { opacity: 0.55; }
+.res-stale-note { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.45; padding: 8px 10px; border-radius: var(--radius); background: rgba(245,158,11,0.12); border: 0.5px solid rgba(245,158,11,0.5); color: var(--text-primary); }
+.res-stale-note i { font-size: 16px; color: #b45309; margin-top: 1px; }
+.res-stale-note.unknown { background: var(--surface-1); border-color: var(--border-strong); }
+.res-stale-note.unknown i { color: var(--text-muted); }
+html[data-mode="dark"] .res-stale-note i { color: #fbbf24; }
 .res-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .res-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0; }
 .res-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
@@ -758,6 +780,10 @@ html[data-mode="dark"] .res-pill.state-unconfirmed { color: #fbbf24; }
 .res-run-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; color: var(--text-secondary); }
 .res-run-list li i { font-size: 16px; margin-top: 1px; color: var(--text-muted); }
 .res-run-list li.done i { color: var(--text-success); }
+.res-run-list li.stale i { color: #b45309; }
+html[data-mode="dark"] .res-run-list li.stale i { color: #fbbf24; }
+.revit-layers-stale { color: #b45309; font-weight: 600; }
+html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 
 /* ── Workspace, deliverables and Revit layers (workspaceBridge.js, revitLayers.js) ── */
 .ws-status { margin-top: 8px; }
@@ -900,3 +926,197 @@ html[data-mode="dark"] .res-pill.state-unconfirmed { color: #fbbf24; }
 @media (max-width: 1000px) { .algo-right { order: -1; } }
 .algo-right > *, .algo-left > * { flex-shrink: 0; }
 .algo-preview { overflow: hidden; }
+
+/* ── Live design panel (Combine right pane) ──────────────────────────────
+   Replaced the Rules/Arrange/Review wizard. Only things that change as you
+   design live here; setup and per-selection tools moved to flyouts and the
+   selection itself. */
+.design-panel { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.design-panel-head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px; border-bottom: 0.5px solid var(--border);
+  position: sticky; top: 0; background: var(--surface-1); z-index: 2;
+}
+.design-panel-title { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--text-primary); margin-right: auto; }
+.design-panel-act {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; padding: 4px 8px; border-radius: var(--radius);
+  border: 0.5px solid var(--border-strong); background: var(--surface-2);
+  color: var(--text-secondary); cursor: pointer;
+}
+.design-panel-act:hover { border-color: var(--border-accent); color: var(--text-accent); }
+
+.design-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(66px, 1fr));
+  gap: 6px; padding: 10px 14px;
+}
+.design-tile {
+  position: relative; text-align: left; cursor: pointer;
+  background: var(--surface-2); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 7px 9px;
+}
+.design-tile:hover { border-color: var(--border-accent); }
+.design-tile.open { border-color: var(--border-accent); background: var(--bg-accent); }
+/* An empty slot is deliberately visible: a missing figure is information, and
+   hiding it would read as a zero. */
+.design-tile.empty .design-tile-val { color: var(--text-muted); }
+.design-tile-val { display: block; font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+.design-tile-lbl { display: block; font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.design-delta { position: absolute; top: 6px; right: 8px; font-size: 9px; font-weight: 600; }
+.design-delta.up { color: var(--text-fail); }
+.design-delta.down { color: var(--text-success); }
+
+.design-detail {
+  margin: 0 14px 10px; padding: 10px 12px;
+  background: var(--surface-2); border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+.design-detail-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+.design-detail-close { border: 0; background: none; color: var(--text-muted); font-size: 16px; line-height: 1; cursor: pointer; }
+.design-detail-close:hover { color: var(--text-primary); }
+.design-detail-sub { display: block; font-size: 10px; color: var(--text-muted); margin: 10px 0 2px; text-transform: uppercase; letter-spacing: .04em; }
+.design-detail-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.design-detail-table td { padding: 3px 0; border-bottom: 0.5px solid var(--border); color: var(--text-secondary); }
+.design-detail-table td.num { text-align: right; font-weight: 600; color: var(--text-primary); white-space: nowrap; padding-left: 8px; }
+.design-detail-table td.note { text-align: right; font-size: 10px; color: var(--text-muted); white-space: nowrap; padding-left: 8px; }
+.design-detail-table tr:last-child td { border-bottom: 0; }
+
+/* The two flyouts reuse the Zones/Plants pattern, but hold setup rather than
+   drawing tools, so they get more room for the rule fields. */
+.rules-flyout, .tools-flyout { width: min(340px, 90%); max-height: 78%; overflow-y: auto; }
+/* `.dims { display: grid }` beats the hidden attribute, so state it. The
+   summary still renders every redraw — the panel reads it, it is not shown. */
+.dims[hidden] { display: none; }
+
+/* ── Panel tabs: Design / Rules / Tools ─────────────────────────────────── */
+.design-tabs {
+  display: flex; gap: 2px; padding: 8px 12px 0;
+  border-bottom: 0.5px solid var(--border);
+  position: sticky; top: 0; background: var(--surface-1); z-index: 2;
+}
+.design-tab {
+  position: relative; flex: 1; padding: 7px 8px 8px;
+  font-size: 12px; font-weight: 600; letter-spacing: .01em;
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  color: var(--text-muted); cursor: pointer;
+}
+.design-tab:hover { color: var(--text-secondary); }
+.design-tab.active { color: var(--text-primary); border-bottom-color: var(--fill-accent); }
+/* A broken rule has to be noticeable from the other two tabs — this is what
+   the checklist used to give you by sitting in permanent view. */
+.rules-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 15px; height: 15px; margin-left: 5px; padding: 0 4px;
+  border-radius: 8px; background: var(--text-fail); color: #fff;
+  font-size: 9px; font-weight: 700; line-height: 1;
+}
+.design-tab-body { padding-bottom: 4px; }
+
+.rules-tab-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px 6px;
+}
+.rules-tab-title { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-right: auto; }
+.design-panel-act.on { border-color: var(--border-accent); color: var(--text-accent); background: var(--bg-accent); }
+.rules-panel { padding: 0 14px; }
+.rules-config { border-top: 0.5px solid var(--border); margin-top: 10px; }
+
+/* ── Cost receipt ────────────────────────────────────────────────────────
+   Reads like a till receipt: what you chose, how many, what it came to.
+   Build-up systems are the one line with a level underneath — you chose the
+   system, its layers came with it. */
+.receipt td { vertical-align: top; }
+.receipt-head td {
+  padding-top: 10px; font-size: 9px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--text-muted); border-bottom: 0.5px solid var(--border-strong);
+}
+.receipt-head:first-child td { padding-top: 0; }
+.receipt-count { font-weight: 700; color: var(--text-accent); }
+.receipt-expandable { cursor: pointer; }
+.receipt-expandable:hover td { color: var(--text-primary); }
+.receipt-caret { display: inline-block; width: 12px; color: var(--text-muted); }
+.receipt-layer td { color: var(--text-muted); border-bottom: 0; padding-top: 1px; padding-bottom: 1px; }
+.receipt-sub { padding-left: 14px; display: inline-block; }
+/* The detail sits under its label rather than in a third column: at this pane
+   width a product name and a quantity cannot share a row without one of them
+   wrapping into slivers. */
+.receipt-sub-line { display: block; font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.receipt-layer .receipt-sub-line { padding-left: 14px; }
+.receipt-total td {
+  padding-top: 8px; border-top: 1px solid var(--border-strong); border-bottom: 0;
+  font-weight: 700; color: var(--text-primary); font-size: 12px;
+}
+
+/* ── Selection inspector (outermost pane) ────────────────────────────────── */
+.selection-inspector { font-size: 11px; }
+.inspector-head { margin-bottom: 8px; }
+.inspector-head strong { display: block; font-size: 12px; color: var(--text-primary); line-height: 1.25; }
+.inspector-head .hint { display: block; margin-top: 2px; }
+.selection-inspector .design-detail-table { width: 100%; }
+
+/* ── Furniture category tabs ─────────────────────────────────────────────── */
+.furniture-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.furniture-tab {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; padding: 4px 8px; border-radius: var(--radius);
+  border: 0.5px solid var(--border-strong); background: var(--surface-2);
+  color: var(--text-secondary); cursor: pointer;
+}
+.furniture-tab:hover { border-color: var(--border-accent); color: var(--text-accent); }
+.furniture-tab.active { border-color: var(--border-accent); background: var(--bg-accent); color: var(--text-accent); font-weight: 600; }
+/* The count says whether a tab is worth opening before you open it. */
+.furniture-tab-count {
+  font-size: 9px; opacity: 0.7; background: var(--surface-1);
+  border-radius: 6px; padding: 0 4px; min-width: 12px; text-align: center;
+}
+
+/* ── Canvas flyouts: slide in from the left, one at a time ───────────────── */
+/* `hidden` stays the source of truth — a dozen places read it — so instead of
+   display:none it becomes a state the transition can animate out of. */
+.zone-flyout[hidden] {
+  /* Not display:none, or there is nothing for the transition to move between.
+     pointer-events keeps a faded-out panel from swallowing clicks on the roof. */
+  display: block;
+  opacity: 0;
+  /* Far enough to read as coming from the rail, not so far it feels slow. */
+  transform: translateX(-24px);
+  pointer-events: none;
+}
+/* The rail button shows which panel is up, since only one can be. */
+.activity-icon.active { color: var(--text-accent); background: var(--bg-accent); }
+
+/* The drawing leads the panel, where an intro paragraph used to sit saying what
+   the last section of the same panel already said. You pick a product below it
+   and see what you picked above. */
+.furniture-hero { padding-top: 12px; }
+.furniture-hero-name { font-weight: 600; font-size: 13px; margin-top: 8px; }
+.furniture-hero .hint { margin-top: 2px; }
+.furniture-hero .furniture-figure { margin-bottom: 0; }
+
+/* ── The picture of a piece of furniture ─────────────────────────────────── */
+/* Sits above the numbers it is drawn from. Bordered like a drawing on a sheet
+   rather than floated loose, so it reads as part of the product entry. */
+.furniture-figure {
+  margin: 0 0 10px 0;
+  padding: 6px 8px 4px;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-1);
+}
+.furniture-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.furniture-figure figcaption {
+  margin: 2px 0 0;
+  font-size: 10px;
+  text-align: center;
+}
+/* The drawing inherits the panel's text colour, which is how the ground line,
+   the dimensions and the scale figure follow light and dark mode without the
+   drawing code knowing which one is on. */
+.furniture-elevation { display: block; color: inherit; }

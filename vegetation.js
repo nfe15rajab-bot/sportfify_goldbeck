@@ -83,6 +83,11 @@ function speciesFromApi(record) {
     source: record.source || "",
     source_url: record.sourceUrl || null,
     dimensions_published: !!record.dimensionsPublished,
+    price: record.priceValue ?? null,
+    price_unit: record.priceUnit || null,
+    price_source: record.priceSource || null,
+    price_quoted: !!record.priceIsQuoted,
+    cost_group: record.costGroupDin276 || null,
   };
 }
 
@@ -154,6 +159,11 @@ function pushVegetationToCombine() {
         source: type.source,
         source_url: type.source_url || null,
         dimensions_published: !!type.dimensions_published,
+        // Travels with the placement so a saved layout still costs the same
+        // later, even if the catalog price moves afterwards.
+        price_eur: type.price ?? null,
+        price_quoted: !!type.price_quoted,
+        cost_group: type.cost_group || null,
       },
     },
   });
@@ -232,7 +242,7 @@ function renderVegetationPanel() {
         el.innerHTML = `
           <div class="section">
             <label>Reference database unavailable</label>
-            <p class="hint">Species live in the Sportify API, and it isn't answering (${err.message}).</p>
+            <p class="hint">Species live in the Sportify API, and it isn't answering (${escapeHtml(err.message)}).</p>
             <p class="hint">Start it with <code>dotnet run --launch-profile http</code> in <code>Sportify.Api</code>.</p>
             <button class="btn-export accent" id="btn-veg-retry">Retry</button>
           </div>`;
@@ -252,7 +262,7 @@ function renderVegetationPanel() {
     const inForm = Object.entries(VEGETATION_TYPES).filter(([, v]) => v.form === form);
     if (!inForm.length) return "";
     return `<optgroup label="${heading}">` + inForm.map(([k, v]) =>
-      `<option value="${k}"${k === vegetationState.typeKey ? " selected" : ""}>${v.label} — ${v.common}</option>`).join("") + `</optgroup>`;
+      `<option value="${k}"${k === vegetationState.typeKey ? " selected" : ""}>${escapeHtml(v.label)} — ${escapeHtml(v.common)}</option>`).join("") + `</optgroup>`;
   }).join("");
 
   const problems = findVegetationRootProblems();
@@ -262,7 +272,7 @@ function renderVegetationPanel() {
     <div class="section">
       <label>What are you planting?</label>
       <select id="veg-type-select">${options}</select>
-      <p class="hint"><em>${type.common}</em> — ${type.note}</p>
+      <p class="hint"><em>${escapeHtml(type.common)}</em> — ${escapeHtml(type.note)}</p>
     </div>
 
     <div class="section">
@@ -275,11 +285,16 @@ function renderVegetationPanel() {
         the species' own range, since a nursery supplies it at different sizes.
       </p>
       <p class="hint">
-        Mature height <strong>${type.height_range}</strong> ·
+        Mature height <strong>${escapeHtml(type.height_range)}</strong> ·
         needs <strong>${type.min_substrate_mm} mm</strong> of substrate ·
         ${type.dimensions_published
-            ? `<a href="${type.source_url}" target="_blank" rel="noopener">${type.source}</a> figures`
-            : `${type.source}`}
+            ? `<a href="${safeUrl(type.source_url)}" target="_blank" rel="noopener">${escapeHtml(type.source)}</a> figures`
+            : `${escapeHtml(type.source)}`}
+      </p>
+      <p class="hint">
+        ${type.price == null
+          ? `No price in the catalog for this species yet.`
+          : `<strong>€ ${type.price}</strong> per plant — ${type.price_quoted ? "supplier quote" : "estimated"}`}
       </p>
     </div>
 
@@ -295,7 +310,7 @@ function renderVegetationPanel() {
     ${problems.length ? `
       <div class="section">
         <label style="color:#ef4444">Roots have nowhere to go</label>
-        ${problems.map(p => `<p class="hint">⚠ ${p.label} needs ${p.need} mm — ${p.reason}.</p>`).join("")}
+        ${problems.map(p => `<p class="hint">⚠ ${escapeHtml(p.label)} needs ${p.need} mm — ${escapeHtml(p.reason)}.</p>`).join("")}
         <p class="hint">Draw a green roof zone beneath it, or choose a deeper build-up.</p>
       </div>` : ""}
   `;
@@ -317,18 +332,6 @@ function renderVegetationPanel() {
   });
 }
 
-function toggleVegetationFlyout(force) {
-  if ((force === undefined || force) && typeof setMode === "function" && activeMode !== "combine") setMode("combine");
-  const fly = document.getElementById("vegetation-flyout");
-  const btn = document.getElementById("btn-vegetation-toggle");
-  if (!fly) return;
-  const open = force !== undefined ? force : fly.hidden;
-  fly.hidden = !open;
-  if (btn) btn.classList.toggle("active", open);
-  if (open) renderVegetationPanel();
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btn-vegetation-toggle")?.addEventListener("click", () => toggleVegetationFlyout());
-  document.getElementById("btn-vegetation-close")?.addEventListener("click", () => toggleVegetationFlyout(false));
 });

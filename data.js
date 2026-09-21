@@ -7,7 +7,7 @@
  * script the page loads so every later file can rely on it — and so a stale
  * cached page is visible at a glance instead of being inferred from JSON
  * fields that mysteriously fail to appear. */
-const SPORTIFY_BUILD = "2026-09-21-stageB-bouldering-face";
+const SPORTIFY_BUILD = "2026-09-21-merge-master";
 console.log("Sportify build:", SPORTIFY_BUILD);
 
 const FIELDS = {
@@ -43,10 +43,73 @@ const FIELDS = {
   },
 };
 
+/**
+ * Sport dimensions: one source.
+ *
+ * The database (Sportify.Api's FieldVariants, edited in the Data tab and read by the Revit add-in through the layouts the app sends) is the source of the playing-field
+ * sizes. The table above is what is used until the API answers, and when it cannot be reached (the app works alone); Tools/SourceParity (in the Revit/API repository) fails when
+ * the two disagree in what the API seeds, so a fresh install and this file say the same. Once the API answers, its variants replace the table's entries in place, so a change
+ * made in the Data tab is what the Sport tab draws and what a layout exports; nothing here has to be edited by hand.
+ */
+const FIELD_VARIANTS_API = "http://localhost:5107/api/Sports";
+
+/** "Polyvalent (multi-sport)" -> "polyvalent", "Football (indoor)" -> "football": the table's key for an API sport. */
+function fieldKeyOfSportName(name) {
+  return String(name == null ? "" : name).trim().toLowerCase().split(/[\s(]/)[0];
+}
+
+/** Puts the API's variants into FIELDS. Returns how many entries were set; a variant with a size that is not a positive number, or a sport the table has no key for, is left alone. */
+function applyFieldVariants(sports) {
+  let applied = 0;
+  (Array.isArray(sports) ? sports : []).forEach(sport => {
+    const key = fieldKeyOfSportName(sport && sport.name);
+    if (!FIELDS[key]) return;
+    (sport.variants || []).forEach(v => {
+      const ok = [v.lengthM, v.widthM, v.heightMinM].every(n => Number.isFinite(n) && n > 0) && Number.isFinite(v.runoffM) && v.runoffM >= 0;
+      if (!ok || !v.variant) return;
+      FIELDS[key][v.variant] = { l: v.lengthM, w: v.widthM, runoff: v.runoffM, h: v.heightMinM, norm: v.norm || (FIELDS[key][v.variant] || {}).norm || "" };
+      applied++;
+    });
+  });
+  return applied;
+}
+
+let fieldVariantsFromApi = 0;
+async function loadFieldVariantsFromApi() {
+  try {
+    const res = await fetch(FIELD_VARIANTS_API, { cache: "no-store" });
+    if (!res.ok) return 0;
+    fieldVariantsFromApi = applyFieldVariants(await res.json());
+    // main.js and sportController.js load after this file: an API that answers before they have run has nothing to redraw yet
+    if (fieldVariantsFromApi && typeof updateUI === "function" && typeof state !== "undefined") updateUI();
+    return fieldVariantsFromApi;
+  } catch (e) {
+    return 0;      // the API is not running: the table above stands
+  }
+}
+loadFieldVariantsFromApi();
+
 const MATERIALS = {
   low:    { floor: "PVC sheet",          marking: "Painted",        gradin: "Steel basic" },
   medium: { floor: "Sports vinyl (2-layer)", marking: "Adhesive tape", gradin: "Steel coated" },
   high:   { floor: "Hardwood parquet",   marking: "Inlay wood",     gradin: "Aluminum seating" },
+};
+
+/**
+ * Which catalog material each quality tier means.
+ *
+ * The tier names a surface in plain words; the catalog row is what carries the
+ * price, the norm and the carbon figure. Without this link a pushed court had
+ * no material picked, so it had no price — the reference dropdown was optional
+ * and nobody filled it in.
+ *
+ * Picking one in the Sport tab still overrides this; it is the starting point,
+ * not a lock.
+ */
+const QUALITY_REFERENCE_MATERIAL = {
+  low:    "PVC sheet, single-layer (economy)",
+  medium: "Sports vinyl / PVC flooring",
+  high:   "Wood sprung floor / parquet",
 };
 
 /**

@@ -148,15 +148,15 @@ function miniIterationSvg(payload) {
 
 function iterationCardHtml(entry) {
   return `
-    <button class="iteration-card" data-iteration-id="${entry.id}">
+    <button class="iteration-card" data-iteration-id="${escapeHtml(entry.id)}">
       <div class="iteration-card-thumb">${miniIterationSvg(entry.payload)}</div>
-      <div class="iteration-card-label">${entry.name}</div>
+      <div class="iteration-card-label">${escapeHtml(entry.name)}</div>
     </button>`;
 }
 
 function renderIterationsPanels() {
   const html = savedCompareConfigs.length === 0
-    ? `<p class="hint">No saved iterations yet — use "Save for Compare" in Combine's Review step.</p>`
+    ? `<p class="hint">No saved iterations yet — use "Save for Compare" in Combine.</p>`
     : savedCompareConfigs.map(iterationCardHtml).join("");
   ["iterationsListCombine", "iterationsListAnalysis"].forEach(id => {
     const el = document.getElementById(id);
@@ -173,7 +173,7 @@ document.addEventListener("click", e => {
     applySessionSnapshot(entry.payload);
     if (activeMode === "combine") {
       if (typeof setWizardStep === "function") setWizardStep(2);
-      showToast(entry.name, "Loaded into Combine — Arrange step.");
+      showToast(entry.name, "Loaded into Combine — Tools tab.");
     } else if (activeMode === "analysis" && typeof updateAnalysisUI === "function") {
       updateAnalysisUI();
       showToast(entry.name, "Loaded — Analysis results updated.");
@@ -369,7 +369,7 @@ function layoutAndScoreConfig(def) {
     id: def.id, name: def.name, tagline: def.tagline,
     goldbeckPresetId: def.goldbeckPresetId || null,
     scores,
-    checklistHtml: checklist.map(c => `<div class="compare-rule-row ${c.pass ? "pass" : "fail"}"><i class="ti ${c.pass ? "ti-check" : "ti-x"}" aria-hidden="true"></i>${c.label}</div>`).join(""),
+    checklistHtml: checklist.map(c => `<div class="compare-rule-row ${c.pass ? "pass" : "fail"}"><i class="ti ${c.pass ? "ti-check" : "ti-x"}" aria-hidden="true"></i>${escapeHtml(c.label)}</div>`).join(""),
     statsLine: `${Math.round(totalItemAreaM2)} m² programmed · ${water.totalAreaM2 ? Math.round(water.totalAreaM2) + " m² garden (" + water.retentionPercent + "% retention)" : "no garden coverage"} · ${maxDist.toFixed(1)} m longest route to an entrance`,
     roofSvg: miniRoofSvg(state),
     rawSnapshot: stateToSnapshot(state),
@@ -465,11 +465,11 @@ let compareCardsBuilt = false;
 
 function cardShellHtml(r) {
   return `
-    <div class="compare-card" data-config-id="${r.id}">
+    <div class="compare-card" data-config-id="${escapeHtml(r.id)}">
       <div class="compare-card-head">
-        <span class="compare-rank" id="rank-${r.id}">—</span>
+        <span class="compare-rank" id="rank-${escapeHtml(r.id)}">—</span>
         <div>
-          <div class="compare-card-title">${r.name}</div>
+          <div class="compare-card-title">${escapeHtml(r.name)}</div>
           <p class="hint">${r.tagline}</p>
         </div>
       </div>
@@ -480,15 +480,15 @@ function cardShellHtml(r) {
         ${COMPARE_AXES.map(([label, key]) => `
           <div class="compare-bar-row">
             <span class="compare-bar-label">${label}</span>
-            <div class="compare-bar-track"><div class="compare-bar-fill" id="bar-${r.id}-${key}" style="width:0%"></div></div>
-            <span class="compare-bar-val" id="val-${r.id}-${key}">0</span>
+            <div class="compare-bar-track"><div class="compare-bar-fill" id="bar-${escapeHtml(r.id)}-${key}" style="width:0%"></div></div>
+            <span class="compare-bar-val" id="val-${escapeHtml(r.id)}-${key}">0</span>
           </div>`).join("")}
       </div>
       <div class="compare-overall">
         <span>Overall match to your priorities</span>
-        <span class="compare-overall-num" id="overall-${r.id}" data-val="0">0</span>
+        <span class="compare-overall-num" id="overall-${escapeHtml(r.id)}" data-val="0">0</span>
       </div>
-      <p class="hint compare-load-hint"><i class="ti ti-arrow-right" aria-hidden="true"></i>Click to load into Combine's Arrange step</p>
+      <p class="hint compare-load-hint"><i class="ti ti-arrow-right" aria-hidden="true"></i>Click to load into Combine</p>
     </div>`;
 }
 
@@ -510,7 +510,7 @@ document.addEventListener("click", e => {
     applySessionSnapshot(result.rawSnapshot, { goldbeckPresetId: result.goldbeckPresetId });
     setMode("combine");
     if (typeof setWizardStep === "function") setWizardStep(2);
-    showToast(result.name, "Loaded into Combine — Arrange step.");
+    showToast(result.name, "Loaded into Combine — Tools tab.");
   } catch (err) {
     showToast("Couldn't load that config", err.message);
   }
@@ -565,12 +565,12 @@ function renderCompareResults(results, weights) {
   container.querySelectorAll(".compare-card").forEach(el => firstRects.set(el.dataset.configId, el.getBoundingClientRect()));
 
   scored.forEach(r => {
-    const el = container.querySelector(`.compare-card[data-config-id="${r.id}"]`);
+    const el = container.querySelector(`.compare-card[data-config-id="${escapeHtml(r.id)}"]`);
     if (el) container.appendChild(el);
   });
 
   scored.forEach(r => {
-    const el = container.querySelector(`.compare-card[data-config-id="${r.id}"]`);
+    const el = container.querySelector(`.compare-card[data-config-id="${escapeHtml(r.id)}"]`);
     const first = firstRects.get(r.id);
     if (!el || !first) return;
     const last = el.getBoundingClientRect();
@@ -626,7 +626,7 @@ const COMPARE_EMPTY_HTML = `
   <div class="compare-empty">
     <i class="ti ti-stack-2" aria-hidden="true"></i>
     <h3>No saved iterations yet</h3>
-    <p class="hint">Compare only shows your own work — build a layout in Combine, then use <strong>"Save for Compare"</strong> in its Review step to bring it here. Save up to 3 at once.</p>
+    <p class="hint">Compare only shows your own work — build a layout in Combine, then use <strong>"Save for Compare"</strong> to bring it here. Save up to 3 at once.</p>
     <p class="hint">New to Compare? <button class="btn-link" id="btn-compare-guide-empty">Open the Compare Guide</button> to see a worked example first.</p>
   </div>`;
 
@@ -708,7 +708,7 @@ function compareInputsCardHtml() {
     `<td class="compare-input-${c.state}">${esc(c.text)}<span class="res-muted">${COMPARE_INPUT_STATE_TEXT[c.state]}</span></td>`).join("")}</tr>`;
 
   const verdict = entries.length < 2
-    ? "Save a second iteration from Combine's Review step to see how their structure and conditions differ."
+    ? "Save a second iteration from Combine to see how their structure and conditions differ."
     : differing.length === 0
       ? "The iterations rest on the same structure and the same site conditions: what differs between them is the layout."
       : `${differing.length} of ${rows.length} inputs differ between the iterations: a result that differs may be down to these and not to the layout.`;
@@ -772,7 +772,7 @@ function updateCompareUI() {
   document.getElementById("norm-badge").textContent = `${savedCompareConfigs.length} of 3 saved`;
 
   if (savedCompareConfigs.length === 0) {
-    document.getElementById("compare-intro").textContent = "Save layouts from Combine's Review step to compare them here — side by side, scored against your own priorities.";
+    document.getElementById("compare-intro").textContent = "Save layouts from Combine to compare them here — side by side, scored against your own priorities.";
     document.getElementById("compare-roof-dims").textContent = "—";
     document.getElementById("compare-roof-area").textContent = "—";
     document.getElementById("compare-roof-hint").textContent = "No saved layouts yet.";
@@ -783,7 +783,7 @@ function updateCompareUI() {
     return;
   }
 
-  document.getElementById("compare-intro").textContent = `Your own saved layout${savedCompareConfigs.length === 1 ? "" : "s"} (from Combine's "Save for Compare") — click a card to load it back into Combine's Arrange step.`;
+  document.getElementById("compare-intro").textContent = `Your own saved layout${savedCompareConfigs.length === 1 ? "" : "s"} (from Combine's "Save for Compare") — click a card to load it back into Combine.`;
 
   const slotDefs = buildCompareSlotDefs();
   const { dimsText, areaText } = compareRoofSummary(slotDefs);
