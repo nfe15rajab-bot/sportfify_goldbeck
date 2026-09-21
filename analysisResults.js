@@ -23,21 +23,22 @@
 const RESULTS_CACHE_KEY = "sportify-analysis-results";
 const RESULTS_POLL_MS = 3000;
 
-const RUN_PATH_UNITY = "Sportify ribbon → Physical Analysis (Unity based) → ";
-const RUN_PATH_PLAIN = "Sportify ribbon → Analysis → ";
+// Where each analysis is in Revit's Sportify tab. The physical (Unity based) ones are in Simulation & Analytics, in drop-downs by kind; the rule-based ones have a panel of their own.
+const RUN_PATH_PHYSICAL = "Sportify ribbon → Simulation & Analytics → ";
+const RUN_PATH_ALGORITHMIC = "Sportify ribbon → Algorithmic Analysis → ";
 
 /** What each published section is called, and which button in Revit produces it. */
 const RESULT_SECTIONS = {
-  soil_percolation: { title: "Rain and soil percolation", run: RUN_PATH_UNITY + "Soil Percolation Simulation" },
-  wind_erosion: { title: "Wind and erosion", run: RUN_PATH_UNITY + "Wind & Erosion Analysis" },
-  structural_loads: { title: "Structural loads", run: RUN_PATH_UNITY + "Structural Loads" },
-  dynamic_analysis: { title: "Dynamic analysis", run: RUN_PATH_UNITY + "Dynamic Analysis" },
-  ball_trajectory: { title: "Ball trajectories", run: RUN_PATH_UNITY + "Ball Trajectory Simulation" },
-  fire_safety: { title: "Fire safety", run: RUN_PATH_PLAIN + "Fire Safety Analysis" },
-  accessibility: { title: "Accessibility", run: RUN_PATH_PLAIN + "Accessibility Analysis" },
-  lca: { title: "LCA", run: RUN_PATH_PLAIN + "LCA Analysis" },
-  carbon_impact: { title: "Carbon impact", run: RUN_PATH_PLAIN + "Carbon Impact Analysis" },
-  sun_and_shading: { title: "Sun and shade", run: RUN_PATH_UNITY + "Sun & Shade Analysis" }
+  soil_percolation: { title: "Rain and soil percolation", run: RUN_PATH_PHYSICAL + "Environmental → Soil Percolation (Rain)" },
+  wind_erosion: { title: "Wind and erosion", run: RUN_PATH_PHYSICAL + "Environmental → Wind Uplift & Erosion" },
+  structural_loads: { title: "Structural loads", run: RUN_PATH_PHYSICAL + "Structural → Run Bay Utilization Check" },
+  dynamic_analysis: { title: "Dynamic analysis", run: RUN_PATH_PHYSICAL + "Structural → Dynamic Frequency & Vibration" },
+  ball_trajectory: { title: "Ball trajectories", run: RUN_PATH_PHYSICAL + "Ball Trajectory Simulation" },
+  fire_safety: { title: "Fire safety", run: RUN_PATH_ALGORITHMIC + "Fire Safety Analysis" },
+  accessibility: { title: "Accessibility", run: RUN_PATH_ALGORITHMIC + "Accessibility Analysis" },
+  lca: { title: "LCA", run: RUN_PATH_ALGORITHMIC + "LCA Analysis" },
+  carbon_impact: { title: "Carbon impact", run: RUN_PATH_ALGORITHMIC + "Carbon Impact Analysis" },
+  sun_and_shading: { title: "Sun and shade", run: RUN_PATH_PHYSICAL + "Environmental → Sun & Shade Analysis" }
 };
 
 /** The rail: id, caption, icon, heading and what the group shows. */
@@ -603,7 +604,7 @@ function resultsStatusHtml() {
     return `<span class="res-dot live"></span> Live from Revit${t ? `, received ${t}` : ""}.`;
   if (resultsState.connected === true) return `<span class="res-dot live"></span> Connected to Revit. Nothing has been analysed yet in this session.`;
   if (resultsState.payload) return `<span class="res-dot stale"></span> Revit is not connected. Showing the last results received${t ? ` (${t}${resultsState.cached ? ", earlier session" : ""})` : ""}.`;
-  if (resultsState.connected === false) return `<span class="res-dot off"></span> Revit is not connected. Open this project in Revit and click Send All to Web App (Sportify ribbon, Physical Analysis panel): the results appear here.`;
+  if (resultsState.connected === false) return `<span class="res-dot off"></span> Revit is not connected. Open this project in Revit and click Send All to Web App (Sportify ribbon, Simulation & Analytics panel): the results appear here.`;
   return `<span class="res-dot"></span> Looking for Revit...`;
 }
 
@@ -629,7 +630,7 @@ function renderAnalysisResultsView() {
         return `<li class="${got && !stale ? "done" : stale ? "stale" : ""}"><i class="ti ${stale ? "ti-history" : got ? "ti-circle-check" : "ti-circle-dashed"}" aria-hidden="true"></i>
         <span><strong>${resEsc(RESULT_SECTIONS[n].title)}</strong><br><span class="hint">${stale ? "out of date: the layout has changed since" : got ? "received" : resEsc(RESULT_SECTIONS[n].run)}</span></span></li>`;
       }).join("")}</ul>
-      <p class="hint">Run analysis (above) runs them in the Revit add-in on your current layout, with nothing to export or import; in Revit, <strong>Send All to Web App</strong> (Physical Analysis panel) does the same and each analysis button sends its own. What a result rests on (its inputs and assumptions) is under each card; anything unconfirmed is marked PRELIMINARY.</p>`;
+      <p class="hint">Run analysis (above) runs them in the Revit add-in on your current layout, with nothing to export or import; in Revit, <strong>Send All to Web App</strong> (Simulation & Analytics panel) does the same and each analysis button sends its own. What a result rests on (its inputs and assumptions) is under each card; anything unconfirmed is marked PRELIMINARY.</p>`;
   }
 
   const body = analysisSub === "garden" ? renderGardenResults()
