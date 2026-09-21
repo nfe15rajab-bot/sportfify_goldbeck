@@ -53,7 +53,29 @@ const algoLabel = name => AlgoPlacement.labelOf(name);
 /** The rule: every court has a clear path of at least this many metres all around it (big courts included, so no two ever touch), and the main pathway never narrows below it. */
 const ALGO_MIN_PATH_M = 2.0;
 
-const ALGO_BLOCK_SIZES = { lift: [2.5, 2.5], ramp: [6.0, 1.5], stair: [4.0, 2.0] };
+/** What the list offers, under the headings a person reads. The 20 x 12 "Multi Sport Court" is in no list (it stays in the engine, whose Rhino-parity tests use its name). */
+const ALGO_LISTS = [
+  { heading: "Outdoor sports", names: ["3x3 Streetbasketball", "Basketball Court", "Handball", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Multipurpose Sport Area", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
+  { heading: "Indoor sports", names: ["Ping Pong", "Bouldering Wall", "Badminton"] },
+  { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module", "Rest / Hydration Area"] },
+  { heading: "Garden activities", names: ["Yoga", "Calisthenics"] }
+];
+/** Which headings each roof type shows. Garden Core keeps only the garden activities; Mixed and a roof with no type yet show everything. */
+const ALGO_ROOF_HEADINGS = { sports: ["Outdoor sports", "Indoor sports", "Indoor services"], garden: ["Garden activities"] };
+
+/** The lists the current roof type offers: [{ heading, names }]. */
+function algoListsForRoof() {
+  const program = typeof getRoofProgram === "function" ? getRoofProgram() : null;
+  const shown = program && ALGO_ROOF_HEADINGS[program.key];
+  return ALGO_LISTS.filter(l => !shown || shown.includes(l.heading));
+}
+
+/** The names the current roof type offers; anything else counts as zero. */
+function algoVisibleNames() {
+  return new Set(algoListsForRoof().flatMap(l => l.names));
+}
+
+const ALGO_BLOCK_SIZES ={ lift: [2.5, 2.5], ramp: [6.0, 1.5], stair: [4.0, 2.0] };
 const ALGO_BLOCK_LABELS = { lift: "Lift", ramp: "Ramp", stair: "Stair" };
 
 const algoState = {
@@ -134,7 +156,8 @@ function algoSetback() {
 }
 
 function algoRequests() {
-  return AlgoPlacement.SPORTS.flatMap(s => Array.from({ length: algoState.qty[s.name] || 0 }, () => ({ name: s.name, w: s.long, h: s.short })));
+  const visible = algoVisibleNames();
+  return AlgoPlacement.SPORTS.filter(s => visible.has(s.name)).flatMap(s => Array.from({ length: algoState.qty[s.name] || 0 }, () => ({ name: s.name, w: s.long, h: s.short })));
 }
 
 /** The structural grid Revit pushed with the roof, as plain lines in the roof's plan (metres): the rule that heavy items sit along it reads these. Empty when no grid came. */
@@ -224,14 +247,33 @@ function algoFilterSports(text) {
   document.querySelectorAll("#algo-sports .algo-group").forEach(g => { g.hidden = !g.querySelector(".algo-sport:not([hidden])"); });
 }
 
+/** The list of items for the current roof type, grouped under the headings of ALGO_LISTS. */
+function algoSportRowsHtml() {
+  return algoListsForRoof().map(l => {
+    const rows = l.names.map(n => { const i = AlgoPlacement.SPORTS.findIndex(sp => sp.name === n); return i < 0 ? "" : algoSportRow(AlgoPlacement.SPORTS[i], i); }).join("");
+    return rows ? `<div class="algo-group"><h4>${algoEsc(l.heading)}</h4>${rows}</div>` : "";
+  }).join("");
+}
+
+/** The roof type was set or changed: the list follows it, and what the new type does not offer goes back to zero. */
+function algoApplyRoofType() {
+  const visible = algoVisibleNames();
+  let dropped = false;
+  AlgoPlacement.SPORTS.forEach(s => { if (!visible.has(s.name) && algoState.qty[s.name]) { algoState.qty[s.name] = 0; dropped = true; } });
+  if (dropped) { algoState.good = Object.assign({}, algoState.qty); algoSave(); }
+  if (!algoState.built) return;
+  const list = document.getElementById("algo-sports");
+  if (list) list.innerHTML = algoSportRowsHtml();
+  const find = document.getElementById("algo-find");
+  if (find && find.value) algoFilterSports(find.value);
+  if (dropped) algoChanged(); else algoRefreshSummary();
+}
+
 function algoBuildPanel() {
   const panel = document.getElementById("algo-placement");
   if (!panel) return;
   const s = algoState.settings;
-  const sportRows = AlgoPlacement.GROUPS.map(g => {
-    const rows = AlgoPlacement.SPORTS.map((sp, i) => ({ sp, i })).filter(x => x.sp.group === g).map(x => algoSportRow(x.sp, x.i)).join("");
-    return rows ? `<div class="algo-group"><h4>${algoEsc(g)}</h4>${rows}</div>` : "";
-  }).join("");
+  const sportRows = algoSportRowsHtml();
 
   panel.innerHTML = `
     <header class="algo-head">

@@ -122,6 +122,8 @@ function setMode(mode) {
   // neutral default accent unchanged.
   document.documentElement.dataset.appMode = mode;
 
+  if (isCombine && typeof roofProgramOnCombineOpen === "function") roofProgramOnCombineOpen();
+
   // Combine, Data, Compare, Site, and Guide have no per-sport icon
   // rail; Combine also has no use for the sidebar (its panel content lives
   // beside the roof in .canvas-area instead), so collapse it there and give
