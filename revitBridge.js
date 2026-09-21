@@ -63,12 +63,14 @@ async function pollRevitBoundary() {
 
     if (statusEl) statusEl.textContent = `🔄 Live from Revit: ${detail}.`;
     showToast("Roof boundary pushed from Revit", detail + (activeMode !== "combine" ? " — switch to Combine to view." : ""));
+    // a footprint has arrived: remember it came from Revit and, if the roof has no type yet, ask for one (Sports Core / Garden Core / Mixed)
+    if (typeof roofProgramOnFootprint === "function") roofProgramOnFootprint("revit", detail);
 
     if (activeMode === "combine") {
       if (typeof refreshSuggestions === "function") refreshSuggestions();
       else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
     }
   } catch (err) {
-    if(statusEl) statusEl.textContent = "Not connected to Revit — use manual import below.";
+    if(statusEl) statusEl.textContent = "Not connected to Revit. Import an exported file, or enter the size by hand.";
   }
 }

@@ -61,6 +61,7 @@ function independentProblems(s, plan, opts) {
   const o = opts || {};
   const bad = [];
   const big = new Set(o.strictGap ? [] : A.BIG_COURTS);
+  const gap = o.gap == null ? A.COURT_GAP_M : o.gap;          // the clear path asked for around every court (the Rhino tool's 1.5 m unless a test asks for more)
   const courts = plan.courts;
   courts.forEach(c => {
     // inside the footprint, and at least the setback from its edge (all four corners and the middle of every side)
@@ -82,7 +83,7 @@ function independentProblems(s, plan, opts) {
   for (let i = 0; i < courts.length; i++) for (let j = i + 1; j < courts.length; j++) {
     const a = courts[i], b = courts[j];
     if (inter(a.rect, b.rect)) bad.push(a.name + " overlaps " + b.name);
-    else if (!(big.has(a.name) && big.has(b.name)) && inter(grown(a.rect, A.COURT_GAP_M - EPS), b.rect)) bad.push(a.name + " is closer than " + A.COURT_GAP_M + " m to " + b.name);
+    else if (!(big.has(a.name) && big.has(b.name)) && inter(grown(a.rect, gap - EPS), b.rect)) bad.push(a.name + " is closer than " + gap + " m to " + b.name);
   }
   // the primary pathways are ONE network, and reach every lift / ramp
   const pr = plan.primaryRects;
@@ -169,6 +170,61 @@ const run = async (s, settings, siteExtra) => {
   let cancelled = false;
   try { await A.planLayout(site, requests({ "Yoga": 2 }), { timeLimit: 5 }, { cancelled: () => true }); } catch (e) { cancelled = !!e.cancelled; }
   check("a cancelled search throws Cancelled", cancelled);
+
+  // the court library: the 24 reference-sheet items plus the four courts that are not in the sheet, each with the figures a person picks by
+  const lib = A.SPORTS;
+  check("the library has 28 entries with unique names", lib.length === 28 && new Set(lib.map(s => s.name)).size === 28, lib.length + " entries");
+  check("every entry has a label, a known group and a colour", lib.every(s => s.label && A.GROUPS.includes(s.group) && Array.isArray(s.color) && s.color.length === 3));
+  check("only the four courts outside the reference sheet have no dead load", lib.filter(s => s.deadLoad == null).map(s => s.name).sort().join("|") === "Basketball Court|Handball|Multi Sport Court|Volleyball");
+  const sheet = { "Sprint Lane": [63.77, 1.22, 77.8, 1, 0.20], "Padel Tennis Court": [20, 10, 200, 4, 0.80], "Bocce Court": [18, 3, 54, 4, 2.50], "Multipurpose Sport Area": [22, 12, 264, 12, 0.35], "Sandpit": [4, 4, 16, null, 1.50] };
+  for (const [n, [l, s, area, people, gk]] of Object.entries(sheet)) {
+    const e = sport(n);
+    check("library: " + n + " matches the reference sheet", e.long === l && e.short === s && Math.abs(e.long * e.short - area) < 0.1 && (e.headcount ?? null) === people && e.deadLoad === gk, e.long + " x " + e.short + ", " + e.headcount + " people, Gk " + e.deadLoad);
+  }
+  check("dead loads the sheet marks (Assumed) are flagged, the others are not", ["Sandpit", "Trampoline", "Rest / Hydration Area"].every(n => sport(n).assumed) && ["Yoga", "Padel Tennis Court", "Sprint Lane"].every(n => !sport(n).assumed));
+  check("the new big courts get the one-sided path", ["3x3 Streetbasketball", "Padel Tennis Court", "Multipurpose Sport Area"].every(n => A.BIG_COURTS.includes(n)));
+
+  // a size that is not a multiple of the 0.1 m grid (the 63.77 x 1.22 m sprint lane) is rounded to the grid, and must still be reported as turned when it lies across
+  const tall = A.makeSite({ foot: rect(22, 70), setback: 1.5, entries: [[2, 2, 4.5, 4.5]] });
+  const lane = await A.planLayout(tall, requests({ "Sprint Lane": 1 }), { timeLimit: 2, seed: 1 });
+  const lc = lane.courts[0];
+  // the 2 m rule the screen applies: a clear path of at least 2.0 m around EVERY court (big ones included, so none touch) and a main pathway that never narrows below it
+  const rule = { strictGap: true, courtGap: 2.0, minPathW: 2.0 };
+  const twoM = { foot: rect(67.6, 21), setback: 1.5, entries: [[3, 8, 5.5, 10.5], [60, 8, 62.5, 10.5]], qty: { "Badminton": 1, "Bouldering Wall": 1, "Volleyball": 1, "Padel Tennis Court": 1, "Ping Pong": 2, "Trampoline": 1, "Teqball Table": 1, "Yoga": 1, "CrossFit Training Rig": 1, "Bocce Court": 1 } };
+  const strict2 = await run(twoM, rule);
+  const closest = plan => { let m = Infinity; const c = plan.courts; for (let i = 0; i < c.length; i++) for (let j = i + 1; j < c.length; j++) { const a = c[i].rect, b = c[j].rect; m = Math.min(m, Math.max(Math.max(0, Math.max(a[0], b[0]) - Math.min(a[2], b[2])), Math.max(0, Math.max(a[1], b[1]) - Math.min(a[3], b[3])))); } return m; };
+  check("2 m rule: every court is at least 2.0 m from every other, big courts included", strict2.plan.issues.length === 0 && independentProblems(twoM, strict2.plan, { strictGap: true, gap: 2.0 }).length === 0 && closest(strict2.plan) >= 2.0 - EPS && strict2.plan.courts.length >= 8, "closest " + closest(strict2.plan).toFixed(2) + " m, " + strict2.plan.courts.length + " placed");
+  check("2 m rule: the main pathway never narrows below 2.0 m", strict2.plan.stats.pathW >= 2.0 && !strict2.plan.narrowed);
+  check("2 m rule: the report states the rule", /2\.0 m path around every court and lift\/ramp side, no two courts touch/.test(A.buildReport(strict2.plan, strict2.site)));
+
+  // placement rules: the service modules go in the roof corner nearest a lift / stair (together), items heavier than 1.4 kN/m² go along the structural grid where they can
+  const rl = { foot: rect(67.6, 21), setback: 1.5 };
+  const liftA = [1.5, 10, 4, 12.5], stairA = [62.5, 8.5, 64.5, 12.5];
+  const gridLines = [];
+  for (let i = 0; i <= 8; i++) gridLines.push({ x1: 8.4 * i, y1: 0, x2: 8.4 * i, y2: 21 });
+  [0, 8.4, 16.8].forEach(y => gridLines.push({ x1: 0, y1: y, x2: 67.6, y2: y }));
+  const rSite = A.makeSite({ foot: rl.foot, setback: rl.setback, entries: [liftA, stairA], anchors: [liftA, stairA] });
+  const rQty = { "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Bocce Court": 1, "Sandpit": 1, "Yoga": 1, "Padel Tennis Court": 1 };
+  const rPlan = await A.planLayout(rSite, requests(rQty), { timeLimit: 1, seed: 1, strictGap: true, courtGap: 2.0, minPathW: 2.0, rules: { serviceCorners: true, gridLines } });
+  const usableBox = [rl.setback, rl.setback, 67.6 - rl.setback, 21 - rl.setback], anchorsM = [liftA, stairA];
+  const corners = [[usableBox[0], usableBox[1]], [usableBox[2], usableBox[1]], [usableBox[0], usableBox[3]], [usableBox[2], usableBox[3]]];
+  const toPoint = (r, p) => Math.hypot(Math.max(r[0] - p[0], 0, p[0] - r[2]), Math.max(r[1] - p[1], 0, p[1] - r[3]));
+  const rectGap = (a, b) => Math.hypot(Math.max(a[0] - b[2], b[0] - a[2], 0), Math.max(a[1] - b[3], b[1] - a[3], 0));
+  const nearestCornerToAnchors = corners.map(p => [Math.min(...anchorsM.map(a => toPoint(a, p))), p]).sort((a, b) => a[0] - b[0])[0][1];
+  const svc = rPlan.courts.filter(c => /Locker|Bathroom/.test(c.name));
+  const alongGrid = r => { const w = r[2] - r[0], h = r[3] - r[1]; const near = (v, a, b) => Math.abs(v - (a + b) / 2) <= 0.15 || Math.abs(v - a) <= 0.15 || Math.abs(v - b) <= 0.15; return (w >= h && [0, 8.4, 16.8].some(v => near(v, r[1], r[3]))) || (h >= w && Array.from({ length: 9 }, (_, i) => 8.4 * i).some(v => near(v, r[0], r[2]))); };
+  check("rules: every court is placed and the layout passes the checks", rPlan.courts.length === 6 && rPlan.issues.length === 0 && independentProblems({ foot: rl.foot, setback: rl.setback, entries: [liftA, stairA] }, rPlan, { strictGap: true, gap: 2.0 }).length === 0, rPlan.courts.length + " placed");
+  check("rules: one service module sits in the roof corner nearest a lift / stair", svc.length === 2 && svc.some(c => toPoint(c.rect, nearestCornerToAnchors) < 0.15), svc.map(c => c.name.split(" ")[0] + " " + toPoint(c.rect, nearestCornerToAnchors).toFixed(2) + " m").join(", "));
+  check("rules: the other is beside it, in the same corner, 2 m clear", svc.length === 2 && rectGap(svc[0].rect, svc[1].rect) >= 2.0 - EPS && rectGap(svc[0].rect, svc[1].rect) < 3.1, svc.length === 2 ? rectGap(svc[0].rect, svc[1].rect).toFixed(2) + " m" : "");
+  check("rules: the heavy items that can be are along the structural grid (Bocce and Sand Pit)", ["Bocce Court", "Sandpit"].every(n => alongGrid(rPlan.courts.find(c => c.name === n).rect)));
+  check("rules: the report says where the services went and what the grid did", /Services: .*corner nearest a lift\/stair/.test(A.buildReport(rPlan, rSite)) && /Heavy items along the structural grid \(12 lines from Revit\)/.test(A.buildReport(rPlan, rSite)));
+  const rampSite = A.makeSite({ foot: rect(50, 25), setback: 1.5, entries: [[10, 8, 16, 9.5]], anchors: [] });
+  const rampPlan = await A.planLayout(rampSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1 }), { timeLimit: 1, seed: 1, strictGap: true, courtGap: 2.0, minPathW: 2.0, rules: { serviceCorners: true, gridLines: [] } });
+  check("rules: a ramp is not a lift or stair: with no anchor the services are placed normally and the report says why", rampPlan.courts.length === 2 && /no lift or stair on the site/.test(A.buildReport(rampPlan, rampSite)));
+  const noRules = await A.planLayout(rSite, requests(rQty), { timeLimit: 1, seed: 1, strictGap: true, courtGap: 2.0, minPathW: 2.0 });
+  check("rules: switched off, nothing changes (no rules report)", noRules.rulesReport === null);
+
+  check("a sprint lane on a tall roof is placed and reported as turned 90 degrees", lane.courts.length === 1 && lc.rotated === true && lane.issues.length === 0, lc ? (lc.rect[2] - lc.rect[0]).toFixed(1) + " x " + (lc.rect[3] - lc.rect[1]).toFixed(1) + " m" : "not placed");
 
   console.log(fails === 0 ? "\nALL ALGORITHMIC PLACEMENT CHECKS PASSED (" + Object.keys(SCENARIOS).length + " roofs, " + ((Date.now() - t0) / 1000).toFixed(1) + " s)" : "\n" + fails + " CHECK(S) FAILED");
   process.exit(fails ? 1 : 0);

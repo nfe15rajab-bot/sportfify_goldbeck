@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" />
-  <link rel="stylesheet" href="style.css?v=2026-09-20-workspace" />
+  <link rel="stylesheet" href="style.css?v=2026-09-21-placement-rules-6" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -109,21 +109,40 @@
           <h2>Site</h2>
           <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine/Analysis for shading decisions. The roof's structure and the site's conditions (wind, snow, use over the day) have their own tabs.</p>
         </div>
-        <div class="section planner-only">
-          <label>Roof boundary</label>
-          <button class="btn-export accent" id="btn-import-revit">
-            <i class="ti ti-upload" aria-hidden="true"></i>Import from Revit
-          </button>
-          <input type="file" id="import-revit-file" accept=".json" style="display:none" />
-          <p class="hint" id="import-revit-status">No import yet — using manual values below.</p>
-        </div>
-        <div class="section planner-only">
-          <label>Roof size (m)</label>
-          <div class="input-row">
-            <input type="number" id="roofLength" value="15" min="1" step="0.5" title="Length (m)" />
-            <input type="number" id="roofWidth" value="10" min="1" step="0.5" title="Width (m)" />
+        <div class="section planner-only" id="roof-setup">
+          <label>1 · How do you define the roof?</label>
+          <div class="roof-source" id="roof-source-switch" role="group" aria-label="How the roof is defined">
+            <button type="button" class="roof-source-btn" data-roof-source="revit"><i class="ti ti-building" aria-hidden="true"></i><span>Bring the footprint from Revit</span></button>
+            <button type="button" class="roof-source-btn" data-roof-source="manual"><i class="ti ti-ruler-2" aria-hidden="true"></i><span>Enter length × breadth</span></button>
           </div>
-          <p class="hint">Length × width.</p>
+        </div>
+        <div id="roof-src-revit">
+          <div class="section planner-only">
+            <label>Roof footprint from Revit</label>
+            <button class="btn-export accent" id="btn-import-revit">
+              <i class="ti ti-upload" aria-hidden="true"></i>Import from Revit
+            </button>
+            <input type="file" id="import-revit-file" accept=".json" style="display:none" />
+            <p class="hint" id="import-revit-status">Nothing received yet. In Revit use Sportify → Push Roof to Sportify (it arrives here live), or import an exported file.</p>
+          </div>
+        </div>
+        <div id="roof-src-manual">
+          <div class="section planner-only">
+            <label>Roof size: length × breadth (m)</label>
+            <div class="input-row">
+              <input type="number" id="roofLength" value="15" min="1" step="0.5" title="Length (m)" />
+              <input type="number" id="roofWidth" value="10" min="1" step="0.5" title="Breadth (m)" />
+            </div>
+            <button class="btn-export accent" id="btn-roof-manual-confirm" style="margin-top:8px">
+              <i class="ti ti-check" aria-hidden="true"></i>Use this size
+            </button>
+            <p class="hint">A plain rectangle, length × breadth.</p>
+          </div>
+        </div>
+        <div class="section" id="roof-program-section">
+          <label>2 · What is this roof?</label>
+          <div class="roof-program-cards" id="roof-program-cards"></div>
+          <p class="hint" id="roof-program-status"></p>
         </div>
         <div class="section planner-only">
           <label>Site location</label>
@@ -949,42 +968,43 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/suncalc@2.0.2/suncalc.cjs"></script>
-  <script src="data.js?v=2026-09-20-workspace"></script>
-  <script src="activitiesData.js?v=2026-09-20-workspace"></script>
-  <script src="vegetation.js?v=2026-09-20-workspace"></script>
-  <script src="zones.js?v=2026-09-20-workspace"></script>
-  <script src="assumptions.js?v=2026-09-20-workspace"></script>
-  <script src="roofFeatures.js?v=2026-09-20-workspace"></script>
-  <script src="structure.js?v=2026-09-20-workspace"></script>
-  <script src="assemblies.js?v=2026-09-20-workspace"></script>
-  <script src="gardenData.js?v=2026-09-20-workspace"></script>
-  <script src="prebuiltSessions.js?v=2026-09-20-workspace"></script>
-  <script src="rules.js?v=2026-09-20-workspace"></script>
-  <script src="sunPosition.js?v=2026-09-20-workspace"></script>
-  <script src="balls.js?v=2026-09-20-workspace"></script>
-  <script src="field.js?v=2026-09-20-workspace"></script>
-  <script src="activityField.js?v=2026-09-20-workspace"></script>
-  <script src="gardenField.js?v=2026-09-20-workspace"></script>
-  <script src="combineField.js?v=2026-09-20-workspace"></script>
-  <script src="siteField.js?v=2026-09-20-workspace"></script>
-  <script src="buildupEditor.js?v=2026-09-20-workspace"></script>
-  <script src="dataTab.js?v=2026-09-20-workspace"></script>
-  <script src="revitBridge.js?v=2026-09-20-workspace"></script>
-  <script src="sportController.js?v=2026-09-20-workspace"></script>
-  <script src="gardenController.js?v=2026-09-20-workspace"></script>
-  <script src="windZones.js?v=2026-09-20-workspace"></script>
-  <script src="siteController.js?v=2026-09-20-workspace"></script>
-  <script src="combineController.js?v=2026-09-20-workspace"></script>
-  <script src="analysisController.js?v=2026-09-20-workspace"></script>
-  <script src="analysisResults.js?v=2026-09-20-workspace"></script>
-  <script src="siteTabs.js?v=2026-09-20-workspace"></script>
-  <script src="workspaceBridge.js?v=2026-09-20-workspace"></script>
-  <script src="algoPlacementCore.js?v=2026-09-20-workspace"></script>
-  <script src="algoPlacementUI.js?v=2026-09-20-workspace"></script>
-  <script src="revitLayers.js?v=2026-09-20-workspace"></script>
-  <script src="compareController.js?v=2026-09-20-workspace"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-20-workspace"></script>
-  <script src="sessionGate.js?v=2026-09-20-workspace"></script>
-  <script src="main.js?v=2026-09-20-workspace"></script>
+  <script src="data.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="activitiesData.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="vegetation.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="zones.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="assumptions.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="roofFeatures.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="structure.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="assemblies.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="gardenData.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="prebuiltSessions.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="rules.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="sunPosition.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="balls.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="field.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="activityField.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="gardenField.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="combineField.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="siteField.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="buildupEditor.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="dataTab.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="revitBridge.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="sportController.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="gardenController.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="windZones.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="siteController.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="combineController.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="analysisController.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="analysisResults.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="siteTabs.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="roofProgram.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="workspaceBridge.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="algoPlacementCore.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="algoPlacementUI.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="revitLayers.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="compareController.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="sessionGate.js?v=2026-09-21-placement-rules-6"></script>
+  <script src="main.js?v=2026-09-21-placement-rules-6"></script>
 </body>
 </html>

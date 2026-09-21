@@ -9,7 +9,8 @@
 const combineState = {
   // rotationDeg: how far the plan is turned from the Revit model's X axis (counter-clockwise), for a roof that is turned against the model:
   // the Revit add-in turns the plan to follow the roof, and the import turns it back. 0 for a roof typed in by hand.
-  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, rotationDeg: 0, pushedScope: null, originZm: 0, heightAboveGroundM: 0, heightSource: "" },
+  // program: what the roof is for, "sports" | "garden" | "mixed" (null until chosen; see roofProgram.js). source: how the footprint was defined, "manual" | "revit".
+  roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, rotationDeg: 0, pushedScope: null, originZm: 0, heightAboveGroundM: 0, heightSource: "", program: null, source: "manual" },
   items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
   suggestions: [],
   // The roof's structural grid and columns (from a Revit push or a loaded session; see structure.js), and the deck
@@ -244,6 +245,7 @@ document.getElementById("import-revit-file").addEventListener("change", e => {
 
       if(statusEl) statusEl.textContent = `Imported ${roof.length_m}m × ${roof.width_m}m from Revit.`;
       if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas();
+      if (typeof roofProgramOnFootprint === "function") roofProgramOnFootprint("revit", `${roof.length_m} × ${roof.width_m} m from the imported file`);
     } catch (err) {
       if(statusEl) statusEl.textContent = `Import failed: ${err.message}`;
     }
@@ -446,6 +448,9 @@ function buildCombinedPayload() {
     roof_context: {
       length_m: combineState.roof.length,
       width_m: combineState.roof.width,
+      // What the roof is for ("sports" | "garden" | "mixed", null = not chosen) and how its footprint was defined ("revit" | "manual").
+      program: combineState.roof.program || null,
+      source: combineState.roof.source || "manual",
       source_boundary_polygon: combineState.roof.boundary || null,
       // World-space position (meters) of this roof's real origin in the
       // Revit project — lets an import command translate placements onto
@@ -642,6 +647,8 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.originXm = rc.world_origin_x_m || 0;
   combineState.roof.originYm = rc.world_origin_y_m || 0;
   combineState.roof.rotationDeg = rc.rotation_deg || 0;
+  combineState.roof.program = typeof ROOF_PROGRAMS === "object" && ROOF_PROGRAMS[rc.program] ? rc.program : null;
+  combineState.roof.source = rc.source === "revit" || (rc.source == null && rc.source_boundary_polygon) ? "revit" : "manual";
   combineState.roofFeatures = typeof roofFeaturesFromPayload === "function" ? roofFeaturesFromPayload(rc.features) : null;
 
   if (payload.design_rules) {
@@ -715,6 +722,7 @@ function applySessionSnapshot(payload, opts = {}) {
 
   document.getElementById("roofLength").value = combineState.roof.length;
   document.getElementById("roofWidth").value = combineState.roof.width;
+  if (typeof roofProgramLoaded === "function") roofProgramLoaded();
   document.getElementById("ruleClearance").value = DESIGN_RULES.clearance_m;
   document.getElementById("ruleSetback").value = DESIGN_RULES.boundarySetback_m;
   document.getElementById("ruleCirculationWidth").value = DESIGN_RULES.circulationWidth_m;

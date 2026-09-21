@@ -546,6 +546,29 @@ html[data-role="client"] .planner-only { display: none !important; }
 .session-gate-actions { display: flex; flex-direction: column; gap: 8px; }
 .session-gate-link { display: block; margin: 12px auto 0; background: none; border: none; color: var(--text-accent); font-size: 11px; cursor: pointer; text-decoration: underline; font-family: var(--font-sans); }
 .session-gate-link:hover { color: var(--text-primary); }
+
+/* ── Site: how the roof is defined, and what it is (roofProgram.js) ── */
+.roof-source { display: flex; flex-direction: column; gap: 6px; }
+.roof-source-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 10px; font-size: 12px; font-weight: 600; text-align: left; font-family: var(--font-sans); color: var(--text-secondary); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+.roof-source-btn i { font-size: 16px; flex-shrink: 0; }
+.roof-source-btn:hover { background: var(--surface-1); }
+.roof-source-btn.active { background: var(--bg-accent); border-color: var(--border-accent); color: var(--text-accent); }
+.roof-program-cards { display: flex; flex-direction: column; gap: 7px; }
+.roof-program-card { display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: 8px; row-gap: 2px; align-items: center; width: 100%; text-align: left; padding: 9px 10px; font-family: var(--font-sans); color: var(--text-primary); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.roof-program-card i { grid-row: 1 / span 2; font-size: 18px; color: var(--text-muted); }
+.roof-program-name { font-size: 12.5px; font-weight: 700; }
+.roof-program-blurb { font-size: 10.5px; line-height: 1.35; color: var(--text-muted); }
+.roof-program-card:hover { border-color: var(--border-accent); background: var(--surface-1); }
+.roof-program-card.active { background: var(--bg-accent); border-color: var(--border-accent); }
+.roof-program-card.active i, .roof-program-card.active .roof-program-name { color: var(--text-accent); }
+.roof-program-pending { color: var(--text-accent); font-weight: 600; }
+.roof-prompt-card { width: min(680px, 94vw); }
+.roof-prompt .roof-program-cards { flex-direction: row; align-items: stretch; text-align: left; }
+.roof-prompt .roof-program-card { grid-template-columns: 1fr; flex: 1 1 0; padding: 14px 13px; row-gap: 4px; }
+.roof-prompt .roof-program-card i { grid-row: auto; font-size: 24px; margin-bottom: 2px; }
+.roof-prompt .roof-program-name { font-size: 14px; }
+.roof-prompt .roof-program-blurb { font-size: 11.5px; }
+@media (max-width: 640px) { .roof-prompt .roof-program-cards { flex-direction: column; } }
 #sessionGateStatus:not(:empty) { margin-top: 10px; color: var(--text-fail); }
 
 .session-gate-presets[hidden] { display: none; }
@@ -830,19 +853,28 @@ html[data-mode="dark"] .res-pill.state-unconfirmed { color: #fbbf24; }
 .algo-row-buttons .btn-export { width: auto; padding: 5px 10px; font-size: 11px; }
 .algo-row-buttons .btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
 .algo-blocks { display: flex; flex-direction: column; gap: 6px; }
-.algo-block { display: grid; grid-template-columns: 86px repeat(4, minmax(0, 1fr)) 24px; gap: 5px; align-items: center; }
+.algo-block { display: grid; grid-template-columns: 86px repeat(4, minmax(0, 1fr)) 24px 24px; gap: 5px; align-items: center; }
 .algo-block label { display: flex; align-items: center; gap: 3px; font-size: 10.5px; color: var(--text-muted); }
 .algo-block input, .algo-block select { padding: 4px 5px !important; font-size: 11px; min-width: 0; }
 .algo-block select { background: var(--surface-1); color: var(--text-primary); border: 0.5px solid var(--border); border-radius: var(--radius); }
 .algo-block button { border: none; background: transparent; color: var(--text-muted); font-size: 16px; cursor: pointer; border-radius: 4px; }
 .algo-block button:hover { color: var(--text-fail); background: var(--bg-fail); }
+.algo-block button[data-act="rotate-block"] { font-size: 14px; }
+.algo-block button[data-act="rotate-block"]:hover { color: var(--text-accent); background: var(--bg-accent); }
 .algo-empty { margin: 0; font-size: 11px; color: var(--text-muted); }
-.algo-sports { display: flex; flex-direction: column; gap: 5px; }
+.algo-sports { display: flex; flex-direction: column; gap: 12px; }
+.algo-group { display: flex; flex-direction: column; gap: 8px; }
+.algo-group h4 { margin: 0; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+.algo-find { width: 100%; margin: 2px 0 4px; padding: 6px 9px; font-size: 11.5px; font-family: var(--font-sans); color: var(--text-primary); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); outline: none; }
+.algo-find:focus { border-color: var(--border-accent); }
+.algo-sport[hidden], .algo-group[hidden] { display: none; }
 .algo-sports.disabled { opacity: 0.45; }
-.algo-sport { display: grid; grid-template-columns: 14px minmax(0, 1fr) 76px 48px 104px 78px; gap: 8px; align-items: center; font-size: 11.5px; }
+.algo-sport { display: grid; grid-template-columns: 14px minmax(0, 1fr) 104px 78px; gap: 3px 8px; align-items: center; font-size: 11.5px; }
 .algo-swatch { width: 14px; height: 14px; border-radius: 3px; border: 0.5px solid rgba(0,0,0,0.3); }
 .algo-sport-name i { color: var(--text-muted); font-size: 11px; }
-.algo-sport-size, .algo-sport-area { color: var(--text-muted); font-size: 10.5px; }
+.algo-sport-meta { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 1px 12px; color: var(--text-muted); font-size: 10.5px; }
+.algo-sport-none { font-style: italic; }
+.algo-assumed { font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; padding: 0 5px; margin-left: 3px; border-radius: 99px; border: 0.5px solid var(--border-strong); color: var(--text-secondary); }
 .algo-qty { display: inline-flex; align-items: center; gap: 3px; }
 .algo-qty button { width: 24px; height: 24px; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-primary); border-radius: 5px; cursor: pointer; font-size: 14px; line-height: 1; }
 .algo-qty button:hover { border-color: var(--border-accent); color: var(--text-accent); }

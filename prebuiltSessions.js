@@ -106,7 +106,8 @@ function goldbeckToPayload(items) {
   }));
   return {
     version: "1.3", generator: "Sportify-Combine",
-    roof_context: { length_m: GOLDBECK_ROOF.length, width_m: GOLDBECK_ROOF.width, source_boundary_polygon: null, world_origin_x_m: 0, world_origin_y_m: 0 },
+    // the Goldbeck roof carries both a sports area and a garden: a mixed roof
+    roof_context: { length_m: GOLDBECK_ROOF.length, width_m: GOLDBECK_ROOF.width, program: "mixed", source_boundary_polygon: null, world_origin_x_m: 0, world_origin_y_m: 0 },
     design_rules: { ...GOLDBECK_RULES },
     entry_points: GOLDBECK_ENTRY_POINTS.map(ep => ({ ...ep })),
     circulation_paths: [],
