@@ -542,7 +542,7 @@ function downloadCombinedSession() {
   // fire-and-forget style as the rest of the Revit bridge in this file.
   // Revit not running (or the add-in not loaded) just means this silently
   // fails; the file above was kept or downloaded either way.
-  fetch(REVIT_COMBINED_LAYOUT_URL, {
+  localFetch("/combined-layout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

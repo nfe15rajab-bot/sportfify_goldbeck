@@ -4,8 +4,6 @@
  * Split out of main.js since it's an independent, self-contained concern.
  */
 
-const REVIT_BOUNDARY_URL = "http://localhost:5679/roof-boundary";
-const REVIT_COMBINED_LAYOUT_URL = "http://localhost:5679/combined-layout";
 const REVIT_POLL_MS = 2000;
 let revitPollHandle = null;
 let lastRevitPayloadStr = null;
@@ -19,7 +17,7 @@ function startRevitPolling() {
 async function pollRevitBoundary() {
   const statusEl = document.getElementById("import-revit-status");
   try {
-    const res = await fetch(REVIT_BOUNDARY_URL, { cache: "no-store" });
+    const res = await localFetch("/roof-boundary");      // localSession.js: the add-in's address and its session token
     if (!res.ok) {
       if(statusEl) statusEl.textContent = "Connected to Revit — waiting for a push.";
       return;

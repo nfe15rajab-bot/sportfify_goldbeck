@@ -26,7 +26,7 @@ const sandbox = {
   document: { getElementById: () => nothing(), querySelector: () => nothing(), querySelectorAll: () => [], addEventListener() {}, createElement: () => nothing(), body: nothing(), readyState: "complete" },
   localStorage: { getItem: () => null, setItem() {} },
   setTimeout, clearTimeout, setInterval: () => 0, clearInterval() {},
-  crypto: nodeCrypto.webcrypto, TextEncoder,
+  crypto: nodeCrypto.webcrypto, TextEncoder, Headers, location: { origin: "http://localhost:8123" }, encodeURIComponent,
   fetch: async () => { throw new Error("no network in this test"); }
 };
 sandbox.window = sandbox;
@@ -34,6 +34,7 @@ const ctx = vm.createContext(sandbox);
 const load = f => vm.runInContext(fs.readFileSync(path.join(web, f), "utf8"), ctx, { filename: f });
 const get = expr => vm.runInContext(expr, ctx);
 
+load("localSession.js");
 load("analysisResults.js");
 load("workspaceBridge.js");
 
@@ -103,10 +104,12 @@ load("workspaceBridge.js");
   // ── what the add-in answers when the draft is sent ──
   sandbox.combineState = { items: [{ id: 1 }] };
   bridge.connected = true; bridge.draftSent = null; bridge.layoutId = null;
-  sandbox.fetch = async () => ({ ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ layout_id: "0123456789abcdef", draft: true }) });
+  // the add-in: gives its session, then answers the layout
+  const addin = answer => async url => url.endsWith("/session") ? { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ token: "t" }) } : answer;
+  sandbox.fetch = addin({ ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => ({ layout_id: "0123456789abcdef", draft: true }) });
   const ok = await get("syncDraftLayout")(true);
   check("sending the layout keeps the id the add-in answered", ok === true && bridge.layoutId === "0123456789abcdef");
-  sandbox.fetch = async () => ({ ok: true, status: 200, headers: { get: () => "text/plain" }, json: async () => { throw new Error("no json"); } });
+  sandbox.fetch = addin({ ok: true, status: 200, headers: { get: () => "text/plain" }, json: async () => { throw new Error("no json"); } });
   bridge.layoutId = null;
   await get("syncDraftLayout")(true);
   check("an older add-in that answers nothing: the id is worked out here", /^[0-9a-f]{16}$/.test(bridge.layoutId || ""));

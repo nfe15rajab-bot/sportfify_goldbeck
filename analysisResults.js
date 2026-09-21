@@ -20,8 +20,6 @@
  * The last results received are kept in localStorage so the tabs still show them when Revit is closed (the recordings then are not playable).
  */
 
-const REVIT_RESULTS_URL = "http://localhost:5679/analysis-results";
-const REVIT_RECORDING_URL = "http://localhost:5679/recording?path=";
 const RESULTS_CACHE_KEY = "sportify-analysis-results";
 const RESULTS_POLL_MS = 3000;
 
@@ -102,7 +100,7 @@ let resultsPollHandle = null;
 async function pollAnalysisResults() {
   let changed = false;
   try {
-    const res = await fetch(REVIT_RESULTS_URL, { cache: "no-store" });
+    const res = await localFetch("/analysis-results");
     if (resultsState.connected !== true) changed = true;
     resultsState.connected = true;
     if (res.ok) {
@@ -229,7 +227,7 @@ function resFreshnessNote(f) {
 }
 
 function resVideoUrl(path) {
-  return path ? REVIT_RECORDING_URL + encodeURIComponent(path) : null;
+  return path ? localUrl("/recording?path=" + encodeURIComponent(path)) : null;
 }
 
 function resTile(label, value, sub, tone) {

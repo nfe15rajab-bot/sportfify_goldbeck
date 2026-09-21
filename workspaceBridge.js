@@ -16,7 +16,6 @@
  * Nothing is computed here. Not connected is a normal state (the app works alone); every action says so plainly instead of failing quietly.
  */
 
-const SPORTIFY_LOCAL_URL = "http://localhost:5679";
 const WORKSPACE_POLL_MS = 4000;
 const DRAFT_SYNC_MS = 3000;
 
@@ -40,15 +39,14 @@ const workspaceState = {
 
 // ------------------------------------------------------------------------------------------------ talking to the add-in
 
-/** One call to the add-in's local server. Never throws: { ok, status, json, error }; status 0 = the add-in is not reachable. */
+/** One call to the add-in's local server (localSession.js: with the session token). Never throws: { ok, status, json, error }; status 0 = the add-in is not reachable. */
 async function localApi(path, opts) {
   const o = opts || {};
   try {
-    const res = await fetch(SPORTIFY_LOCAL_URL + path, {
+    const res = await localFetch(path, {
       method: o.method || "GET",
       headers: o.contentType ? { "Content-Type": o.contentType } : undefined,
-      body: o.body,
-      cache: "no-store"
+      body: o.body
     });
     let json = null;
     if ((res.headers.get("Content-Type") || "").includes("json")) {
@@ -56,7 +54,7 @@ async function localApi(path, opts) {
     }
     return { ok: res.ok, status: res.status, json, error: json && json.error ? json.error : res.ok ? "" : "The add-in answered " + res.status + "." };
   } catch (e) {
-    return { ok: false, status: 0, json: null, error: "Revit is not reachable: open a project in Revit with the Sportify add-in loaded." };
+    return { ok: false, status: 0, json: null, error: localSession.problem || "Revit is not reachable: open a project in Revit with the Sportify add-in loaded." };
   }
 }
 
@@ -307,7 +305,7 @@ async function workspaceAction(name, btn) {
   }
   workspaceState.busy[name] = false;
   if (!action.quiet || !out.ok) {
-    const link = out.file && out.file.url ? ` <a href="${wsEsc(SPORTIFY_LOCAL_URL + out.file.url)}" target="_blank" rel="noopener">${wsEsc(out.file.name)}</a>` : "";
+    const link = out.file && out.file.url ? ` <a href="${wsEsc(localUrl(out.file.url))}" target="_blank" rel="noopener">${wsEsc(out.file.name)}</a>` : "";
     workspaceState.message = { tone: out.ok ? "ok" : "bad", html: `<strong>${wsEsc(action.label)}:</strong> ${wsEsc(out.text)}${link}` };
     if (typeof showToast === "function") showToast(out.ok ? (action.done || action.label) : action.label + " did not finish", out.text);
   }
@@ -437,7 +435,7 @@ function renderDeliverables() {
     return `<section class="dl-folder">
       <header><div><h3>${wsEsc(k.title)}</h3><div class="hint">${wsEsc(k.hint)}</div></div>
         <button class="btn-export ws-inline-btn" data-ws-action="openFolder" data-kind="${wsEsc(k.key)}" title="Open ${wsEsc(k.folder)} in Explorer"><i class="ti ti-folder" aria-hidden="true"></i></button></header>
-      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(SPORTIFY_LOCAL_URL + f.url)}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsSize(f.size))} · ${wsEsc(wsTime(f.modified_utc))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
+      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(localUrl(f.url))}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsSize(f.size))} · ${wsEsc(wsTime(f.modified_utc))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
     </section>`;
   }).join("");
 }

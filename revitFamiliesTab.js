@@ -16,7 +16,7 @@
  * placeable pieces is the next step, not this one.
  */
 
-const REVIT_FAMILIES_URL = "http://localhost:5679/families";
+const REVIT_FAMILIES_URL = "http://localhost:5679/families";      // shown in the messages; the request goes through localFetch (localSession.js)
 
 const familiesState = {
   status: "idle",   // idle | loading | ok | empty | offline
@@ -47,7 +47,7 @@ async function fetchRevitFamilies() {
   renderFamiliesContent();
 
   try {
-    const res = await fetch(REVIT_FAMILIES_URL, { cache: "no-store" });
+    const res = await localFetch("/families");
     if (res.status === 404) {
       // The bridge is up but nobody has run Load Families yet — a different
       // situation from Revit not running, and worth saying so precisely.
