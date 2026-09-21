@@ -90,8 +90,10 @@ function updateRevitLayersUI() {
       <span class="revit-layer-chip" style="background:${l.color}"></span><span class="revit-layer-name">${l.label}</span><span class="revit-layer-count">${n || "–"}</span></label>`;
   }).join("");
 
-  const received = typeof resultsState !== "undefined" && resultsState.payload && typeof RESULT_SECTIONS !== "undefined"
-    ? Object.keys(RESULT_SECTIONS).filter(k => resultsState.payload[k]).length : 0;
+  const haveResults = typeof resultsState !== "undefined" && resultsState.payload && typeof RESULT_SECTIONS !== "undefined";
+  const sent = haveResults ? Object.keys(RESULT_SECTIONS).filter(k => resultsState.payload[k]) : [];
+  const outOfDate = typeof resFreshness === "function" ? sent.filter(k => resFreshness(k).state === "stale").length : 0;
+  const received = sent.length - outOfDate;
   const total = typeof RESULT_SECTIONS !== "undefined" ? Object.keys(RESULT_SECTIONS).length : 0;
   const running = typeof workspaceState !== "undefined" && !!workspaceState.busy.run;
   const canRun = connected && combineState.items.length > 0 && !running;
@@ -103,7 +105,7 @@ function updateRevitLayersUI() {
         : "Open a project in Revit with the Sportify add-in to bring its layers in."}</div>
       <div class="revit-layer-list">${rows}</div>
       <div class="revit-layers-flow">
-        <div class="revit-layers-line"><i class="ti ti-chart-bar" aria-hidden="true"></i> Results from Revit: <b>${received}</b> of ${total} analyses</div>
+        <div class="revit-layers-line"><i class="ti ti-chart-bar" aria-hidden="true"></i> Results from Revit: <b>${received}</b> of ${total} analyses${outOfDate ? ` <span class="revit-layers-stale">(${outOfDate} out of date)</span>` : ""}</div>
         <div class="revit-layers-actions">
           <button class="btn-export ws-inline-btn" data-ws-action="run" ${canRun ? "" : "disabled"} title="${connected ? (combineState.items.length ? "Run the physical analyses on this layout" : "Place something on the roof first") : "Needs Revit"}"><i class="ti ${running ? "ti-loader-2 ws-spin" : "ti-player-play"}" aria-hidden="true"></i>${running ? "Running..." : "Run analysis"}</button>
           <button class="btn-export ws-inline-btn" data-goto-mode="analysis"><i class="ti ti-chart-dots" aria-hidden="true"></i>Results</button>

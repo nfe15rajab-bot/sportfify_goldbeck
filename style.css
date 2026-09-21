@@ -691,6 +691,12 @@ html[data-mode="dark"] .assump-badge.state-unconfirmed { color: #fbbf24; }
 .res-card.tone-bad { border-left-color: #ef4444; }
 .res-card.tone-prelim { border-left-color: #f59e0b; border-left-style: dashed; }
 .res-card.res-empty { opacity: 0.75; border-left-style: dashed; }
+.res-card.res-stale > :not(.res-head):not(.res-stale-note) { opacity: 0.55; }
+.res-stale-note { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.45; padding: 8px 10px; border-radius: var(--radius); background: rgba(245,158,11,0.12); border: 0.5px solid rgba(245,158,11,0.5); color: var(--text-primary); }
+.res-stale-note i { font-size: 16px; color: #b45309; margin-top: 1px; }
+.res-stale-note.unknown { background: var(--surface-1); border-color: var(--border-strong); }
+.res-stale-note.unknown i { color: var(--text-muted); }
+html[data-mode="dark"] .res-stale-note i { color: #fbbf24; }
 .res-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .res-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0; }
 .res-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
@@ -751,6 +757,10 @@ html[data-mode="dark"] .res-pill.state-unconfirmed { color: #fbbf24; }
 .res-run-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; color: var(--text-secondary); }
 .res-run-list li i { font-size: 16px; margin-top: 1px; color: var(--text-muted); }
 .res-run-list li.done i { color: var(--text-success); }
+.res-run-list li.stale i { color: #b45309; }
+html[data-mode="dark"] .res-run-list li.stale i { color: #fbbf24; }
+.revit-layers-stale { color: #b45309; font-weight: 600; }
+html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 
 /* ── Workspace, deliverables and Revit layers (workspaceBridge.js, revitLayers.js) ── */
 .ws-status { margin-top: 8px; }

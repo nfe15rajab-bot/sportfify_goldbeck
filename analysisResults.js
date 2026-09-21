@@ -187,6 +187,47 @@ function resSection(name) {
   return resultsState.payload ? resultsState.payload[name] || null : null;
 }
 
+/**
+ * Which layout a received section was computed for, against the layout on screen. The add-in stamps every section it publishes with
+ * { layout_id, computed_at } (the results document's "sections") and drops the sections of other layouts when it publishes, so what arrives here is
+ * about one layout, but that layout is not necessarily the one on screen now: the designer moves a court and the result is out of date until it is run again.
+ * The layout's id is the first 16 hex characters of the SHA-256 of the layout JSON the app sends (workspaceBridge.js computes it, the add-in too).
+ *   current    the section is about the layout on screen
+ *   stale      it is about another one
+ *   unknown    it carries no stamp (from an older add-in, or kept in this browser from before results were stamped)
+ *   unchecked  nothing is on screen to compare with
+ */
+function sectionFreshness(payload, name, currentId) {
+  const info = payload && payload.sections ? payload.sections[name] : null;
+  if (!info || !info.layout_id) return { state: "unknown" };
+  if (!currentId) return { state: "unchecked", computedAt: info.computed_at || null, layoutId: info.layout_id };
+  return { state: info.layout_id === currentId ? "current" : "stale", computedAt: info.computed_at || null, layoutId: info.layout_id };
+}
+
+function resFreshness(name) {
+  return sectionFreshness(resultsState.payload, name, typeof workspaceState !== "undefined" ? workspaceState.layoutIdNow : null);
+}
+
+/** "12:41" for a time from today, "20 Sep, 12:41" otherwise; "" when there is none. */
+function resWhen(iso) {
+  const d = iso ? new Date(iso) : null;
+  if (!d || Number.isNaN(d.getTime())) return "";
+  const t = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { day: "numeric", month: "short" }) + ", " + t;
+}
+
+/** The note on a card whose section is not about the layout on screen; "" for a current one. */
+function resFreshnessNote(f) {
+  if (f.state === "stale") {
+    const when = resWhen(f.computedAt);
+    return `<div class="res-stale-note"><i class="ti ti-history" aria-hidden="true"></i><div><strong>Out of date.</strong> This was computed for an earlier layout${when ? ` (${resEsc(when)})` : ""}, not the one on screen. Run the analysis again to get the numbers for this layout.</div></div>`;
+  }
+  if (f.state === "unknown") {
+    return `<div class="res-stale-note unknown"><i class="ti ti-help-circle" aria-hidden="true"></i><div>This result does not say which layout it was computed for. Run the analysis again to be sure it is about the layout on screen.</div></div>`;
+  }
+  return "";
+}
+
 function resVideoUrl(path) {
   return path ? REVIT_RECORDING_URL + encodeURIComponent(path) : null;
 }
@@ -240,9 +281,13 @@ function resVideo(path) {
 
 function resCard(opts) {
   const tone = opts.tone || "neutral";
-  return `<section class="res-card tone-${tone}">
+  // a card that stands for something the add-in sent says whether it is about the layout on screen; the app's own estimates have no section
+  const f = opts.section && resSection(opts.section) ? resFreshness(opts.section) : { state: "current" };
+  const stale = f.state === "stale";
+  return `<section class="res-card tone-${stale ? "warn" : tone}${stale ? " res-stale" : ""}">
     <header class="res-head"><div><h3 class="res-title">${resEsc(opts.title)}</h3>${opts.sub ? `<div class="res-sub">${resText(opts.sub)}</div>` : ""}</div>
-      <span class="res-chip tone-${tone}">${resEsc(opts.chip || "")}</span></header>
+      <span class="res-chip tone-${stale ? "warn" : tone}">${resEsc(stale ? "out of date" : opts.chip || "")}</span></header>
+    ${resFreshnessNote(f)}
     ${opts.prelim ? resPrelim(opts.prelim) : ""}
     ${opts.body || ""}
   </section>`;
@@ -250,7 +295,7 @@ function resCard(opts) {
 
 function resNotRun(name) {
   const s = RESULT_SECTIONS[name];
-  return `<section class="res-card tone-neutral res-empty"><header class="res-head"><div><h3 class="res-title">${resEsc(s.title)}</h3><div class="res-sub">Not run yet in this Revit session</div></div><span class="res-chip tone-neutral">no result</span></header>
+  return `<section class="res-card tone-neutral res-empty"><header class="res-head"><div><h3 class="res-title">${resEsc(s.title)}</h3><div class="res-sub">Not run for the layout on screen</div></div><span class="res-chip tone-neutral">no result</span></header>
     <p class="hint">${resEsc(s.run)}</p></section>`;
 }
 
@@ -270,7 +315,7 @@ function soilCard(r) {
     ${r.zones.map(z => `<tr><td>${resText(z.label)}</td><td>${resText(z.system)}</td><td>${resNum(z.substrate_mm, 0)} mm</td>
       <td>${resNum(z.retained_steady_percent, 0)}%</td><td>${resNum(z.retained_heavy_shower_percent, 0)}%</td><td>${resNum(z.retained_cloudburst_percent, 0)}%</td></tr>`).join("")}</tbody></table>` : "";
   return resCard({
-    title: RESULT_SECTIONS.soil_percolation.title, sub: r.case_study, tone,
+    section: "soil_percolation", title: RESULT_SECTIONS.soil_percolation.title, sub: r.case_study, tone,
     chip: r.zones_saturated_in_cloudburst > 0 ? `${r.zones_saturated_in_cloudburst} fill up` : r.zones_below_target > 0 ? `${r.zones_below_target} under target` : "within target",
     body: tiles + zones + resFindings(r.findings) + resVideo(r.video_path) + resAssumptions(r.assumptions)
   });
@@ -286,7 +331,7 @@ function windCard(r) {
     ${resTile("Erosion risk", resNum(r.percent_planted_area_erosion_flagged, 0) + "%", "of the planted area; bare medium moves from " + resNum(r.lowest_bare_onset_ms, 1) + " m/s")}
   </div>`;
   return resCard({
-    title: RESULT_SECTIONS.wind_erosion.title, sub: r.case_study, tone,
+    section: "wind_erosion", title: RESULT_SECTIONS.wind_erosion.title, sub: r.case_study, tone,
     chip: r.trees_failing || r.zones_uplift_flagged ? "action needed" : r.trees_marginal ? "marginal" : "holds",
     body: tiles + resFindings(r.findings) + resVideo(r.video_path) + resAssumptions(r.assumptions)
   });
@@ -357,7 +402,7 @@ function structuralCard(r) {
   const bayTable = Array.isArray(r.bays) && r.bays.length ? `<details class="res-details"><summary>All bays (${r.bays.length})</summary><table class="res-table"><thead><tr><th>Bay</th><th>Grid</th><th>kN/m²</th><th>% of capacity</th><th>People</th></tr></thead><tbody>
     ${r.bays.map(b => `<tr><td>${resEsc(b.label)}</td><td>${resEsc(b.grid_names || "")}</td><td>${resNum(b.load_kn_m2, 1)}</td><td>${resNum(b.utilisation_percent, 0)}%</td><td>${resNum(b.persons, 0)}</td></tr>`).join("")}</tbody></table></details>` : "";
   return resCard({
-    title: RESULT_SECTIONS.structural_loads.title, sub: r.case_study, tone, chip,
+    section: "structural_loads", title: RESULT_SECTIONS.structural_loads.title, sub: r.case_study, tone, chip,
     prelim: r.preliminary ? r.preliminary_note : "",
     body: tiles + plan + resFindings((r.findings || []).filter(f => f.kind !== "grid")) + bayTable + resVideo(r.video_path) + resInputs(r.inputs) + resAssumptions(r.assumptions)
   });
@@ -381,7 +426,7 @@ function dynamicCard(r) {
   </div>`;
   const chip = r.preliminary ? "PRELIMINARY" : r.bays_exceeding_comfort > 0 ? `${r.bays_exceeding_comfort} bays vibrate` : "within limits";
   return resCard({
-    title: RESULT_SECTIONS.dynamic_analysis.title, sub: r.case_study, tone, chip,
+    section: "dynamic_analysis", title: RESULT_SECTIONS.dynamic_analysis.title, sub: r.case_study, tone, chip,
     prelim: r.preliminary ? r.preliminary_note : "",
     body: tiles + cases + resFindings(r.findings) + resVideo(r.video_path) + resInputs(r.inputs) + resAssumptions(r.assumptions)
   });
@@ -404,7 +449,7 @@ function sunStatusPill(status) {
 function sunCard(r) {
   // A result from before the sun analysis existed only said the sun had been configured: nothing to show but a nudge.
   if (!Array.isArray(r.days)) {
-    return resCard({ title: RESULT_SECTIONS.sun_and_shading.title, sub: "A result from an earlier version of the add-in", tone: "neutral", chip: "old result",
+    return resCard({ section: "sun_and_shading", title: RESULT_SECTIONS.sun_and_shading.title, sub: "A result from an earlier version of the add-in", tone: "neutral", chip: "old result",
       body: `<p class="hint">It carries no sun hours or shading advice. ${resEsc(RESULT_SECTIONS.sun_and_shading.run)} produces the current one.</p>` });
   }
   const zones = r.zones || [], equipment = r.equipment || [];
@@ -454,7 +499,7 @@ function sunCard(r) {
       <td>${resNum(p.shade_before_percent, 0)}% → ${resNum(p.shade_after_percent, 0)}%</td><td>${resNum(p.added_load_kn, 1)} kN</td><td>${p.wind_uplift_kn > 0.05 ? resNum(p.wind_uplift_kn, 1) + " kN" : "—"}</td></tr>`).join("")}</tbody></table>` : "";
 
   return resCard({
-    title: RESULT_SECTIONS.sun_and_shading.title, sub: r.case_study, tone, chip,
+    section: "sun_and_shading", title: RESULT_SECTIONS.sun_and_shading.title, sub: r.case_study, tone, chip,
     prelim: r.preliminary ? r.preliminary_note : "",
     body: tiles + shadeBars + days + equipmentTable + resFindings(r.findings) + zoneTable + resVideo(r.video_path) + resInputs(r.inputs) + resAssumptions(r.assumptions)
   });
@@ -478,7 +523,7 @@ function ballCard(r) {
     ${r.swept_shots > 0 ? resTile("With the fences", resNum(r.percent_leaving_after_fences, 0) + "%", "still leave the roof", r.percent_leaving_after_fences > 0 ? "warn" : "ok") : ""}
   </div>`;
   return resCard({
-    title: RESULT_SECTIONS.ball_trajectory.title, sub: r.case_study, tone,
+    section: "ball_trajectory", title: RESULT_SECTIONS.ball_trajectory.title, sub: r.case_study, tone,
     chip: r.percent_leaving_roof > 0 ? `${resNum(r.percent_leaving_roof, 0)}% leave the roof` : r.crossing_count > 0 ? `${r.crossing_count} crossings` : "contained",
     body: tiles + (fences ? `<div class="res-bars-title">Where fences would stop them</div>` + fences : "") + resVideo(r.video_path)
   });
@@ -499,7 +544,7 @@ function renderSafetyResults() {
   if (fs) {
     const tone = fs.within_limit && fs.unreachable_count === 0 ? "ok" : "bad";
     out += resCard({
-      title: RESULT_SECTIONS.fire_safety.title, tone, chip: tone === "ok" ? "within the limit" : fs.unreachable_count ? `${fs.unreachable_count} unreachable` : "too far",
+      section: "fire_safety", title: RESULT_SECTIONS.fire_safety.title, tone, chip: tone === "ok" ? "within the limit" : fs.unreachable_count ? `${fs.unreachable_count} unreachable` : "too far",
       sub: "From Revit, on the layout it was run on",
       body: `<div class="res-bars">${resBar("Longest route to an entry", fs.max_dist_m, Math.max(fs.max_travel_distance_m * 1.3, fs.max_dist_m * 1.1), { ref: fs.max_travel_distance_m, tone: fs.within_limit ? "ok" : "bad", text: `${resNum(fs.max_dist_m, 1)} m <span class="res-muted">limit ${resNum(fs.max_travel_distance_m, 0)} m</span>` })}</div>
         <div class="res-tiles">${resTile("Unreachable pieces", String(fs.unreachable_count), "no walkable route to any entry", fs.unreachable_count > 0 ? "bad" : "ok")}</div>`
@@ -518,7 +563,7 @@ function renderSafetyResults() {
   if (ac) {
     const tone = ac.width_ok && ac.reach_ok ? "ok" : "bad";
     out += resCard({
-      title: RESULT_SECTIONS.accessibility.title, tone, chip: tone === "ok" ? "accessible" : !ac.width_ok ? "too narrow" : "not reachable", sub: "From Revit, on the layout it was run on",
+      section: "accessibility", title: RESULT_SECTIONS.accessibility.title, tone, chip: tone === "ok" ? "accessible" : !ac.width_ok ? "too narrow" : "not reachable", sub: "From Revit, on the layout it was run on",
       body: `<div class="res-bars">${resBar("Circulation width", ac.current_width_m, Math.max(ac.min_width_m * 1.6, ac.current_width_m * 1.1), { ref: ac.min_width_m, tone: ac.width_ok ? "ok" : "bad", text: `${resNum(ac.current_width_m, 1)} m <span class="res-muted">wheelchair two-way ${resNum(ac.min_width_m, 1)} m</span>` })}</div>
         <div class="res-tiles">${resTile("Every piece reachable from an entry", ac.reach_ok ? "yes" : "no", "", ac.reach_ok ? "ok" : "bad")}</div>`
     });
@@ -538,14 +583,14 @@ function renderOtherResults() {
   let out = "";
   const lca = resSection("lca");
   out += lca ? resCard({
-    title: RESULT_SECTIONS.lca.title, tone: lca.missing_count ? "warn" : "ok", chip: lca.missing_count ? `${lca.missing_count} pieces missing data` : "all pieces covered",
+    section: "lca", title: RESULT_SECTIONS.lca.title, tone: lca.missing_count ? "warn" : "ok", chip: lca.missing_count ? `${lca.missing_count} pieces missing data` : "all pieces covered",
     sub: "Embodied carbon of the picked reference materials (A1 to A3), illustrative",
     body: `<div class="res-tiles">${resTile("Embodied carbon", "~" + resNum(lca.total_kg, 0) + " kg CO₂e", "")}${resTile("Pieces with a material", String(lca.covered_count), "of " + lca.total_count, lca.missing_count ? "warn" : "ok")}</div>`
   }) : resNotRun("lca");
 
   const ci = resSection("carbon_impact");
   out += ci ? resCard({
-    title: RESULT_SECTIONS.carbon_impact.title, tone: "neutral", chip: "illustrative",
+    section: "carbon_impact", title: RESULT_SECTIONS.carbon_impact.title, tone: "neutral", chip: "illustrative",
     sub: "A ceiling for what piezoelectric flooring could harvest across the playing surface",
     body: `<div class="res-tiles">${resTile("Energy harvest", "~" + resNum(ci.estimated_daily_wh, 0) + " Wh/day", "over " + resNum(ci.active_surface_area_m2, 0) + " m² of active surface")}</div>`
   }) : resNotRun("carbon_impact");
@@ -568,7 +613,7 @@ function renderAnalysisResultsView() {
   const tab = ANALYSIS_SUBTABS.find(t => t.id === analysisSub);
   if (!tab || tab.id === "overview") return;
 
-  const key = JSON.stringify([analysisSub, resultsState.raw, resultsState.receivedAt, resultsState.connected, resultsState.cached, typeof workspaceState !== "undefined" ? workspaceState.stamp : 0]);
+  const key = JSON.stringify([analysisSub, resultsState.raw, resultsState.receivedAt, resultsState.connected, resultsState.cached, typeof workspaceState !== "undefined" ? [workspaceState.stamp, workspaceState.layoutIdNow] : 0]);
   if (key === resultsState.lastRenderKey) return;   // nothing changed: leave a playing video alone
   resultsState.lastRenderKey = key;
 
@@ -581,8 +626,11 @@ function renderAnalysisResultsView() {
   if (panel) {
     panel.style.display = "";
     panel.innerHTML = (typeof wsRunPanelHtml === "function" ? wsRunPanelHtml() : "") + `<label>Results</label><p class="hint res-status">${resultsStatusHtml()}</p>
-      <ul class="res-run-list">${tab.sections.map(n => `<li class="${resSection(n) ? "done" : ""}"><i class="ti ${resSection(n) ? "ti-circle-check" : "ti-circle-dashed"}" aria-hidden="true"></i>
-        <span><strong>${resEsc(RESULT_SECTIONS[n].title)}</strong><br><span class="hint">${resSection(n) ? "received" : resEsc(RESULT_SECTIONS[n].run)}</span></span></li>`).join("")}</ul>
+      <ul class="res-run-list">${tab.sections.map(n => {
+        const got = !!resSection(n), stale = got && resFreshness(n).state === "stale";
+        return `<li class="${got && !stale ? "done" : stale ? "stale" : ""}"><i class="ti ${stale ? "ti-history" : got ? "ti-circle-check" : "ti-circle-dashed"}" aria-hidden="true"></i>
+        <span><strong>${resEsc(RESULT_SECTIONS[n].title)}</strong><br><span class="hint">${stale ? "out of date: the layout has changed since" : got ? "received" : resEsc(RESULT_SECTIONS[n].run)}</span></span></li>`;
+      }).join("")}</ul>
       <p class="hint">Run analysis (above) runs them in the Revit add-in on your current layout, with nothing to export or import; in Revit, <strong>Send All to Web App</strong> (Physical Analysis panel) does the same and each analysis button sends its own. What a result rests on (its inputs and assumptions) is under each card; anything unconfirmed is marked PRELIMINARY.</p>`;
   }
 
