@@ -27,7 +27,24 @@ const ALGO_CATALOGUE = {
   "Calisthenics": { kind: "activity", id: "calisthenics" },
   "Ping Pong": { kind: "activity", id: "ping_pong" },
   "Mini Golf": { kind: "activity", id: "minigolf_lane" },
-  "Sandpit": { kind: "activity", id: "sand_pit" }
+  "Sandpit": { kind: "activity", id: "sand_pit" },
+  "3x3 Streetbasketball": { kind: "activity", id: "streetbasketball_3x3" },
+  "Sprint Lane": { kind: "activity", id: "sprint_lane" },
+  "Padel Tennis Court": { kind: "activity", id: "padel_court" },
+  "Teqball Table": { kind: "activity", id: "teqball_table" },
+  "Bouldering Wall": { kind: "activity", id: "bouldering_wall" },
+  "Pickleball Court": { kind: "activity", id: "pickleball_court" },
+  "CrossFit Training Rig": { kind: "activity", id: "crossfit_rig" },
+  "TRX Suspension Frame": { kind: "activity", id: "trx_frame" },
+  "HIIT Turf Grid": { kind: "activity", id: "hiit_turf_grid" },
+  "Multipurpose Sport Area": { kind: "activity", id: "multipurpose_court" },
+  "Trampoline": { kind: "activity", id: "trampoline" },
+  "Modular Tower Slide": { kind: "activity", id: "modular_tower_slide" },
+  "Climbing Tower": { kind: "activity", id: "climbing_tower" },
+  "Balance Logs": { kind: "activity", id: "balance_logs" },
+  "Locker & Dressing Room Module": { kind: "activity", id: "locker_module" },
+  "Bathroom & Shower Module": { kind: "activity", id: "bathroom_module" },
+  "Rest / Hydration Area": { kind: "activity", id: "rest_area" }
 };
 
 /**
@@ -50,6 +67,12 @@ const ALGO_SPECIFIED = {
   }
 };
 
+/** What a person reads for a court: its label, while everything else (the solver, saved quantities) keeps the stable name. */
+const algoLabel = name => AlgoPlacement.labelOf(name);
+
+/** The rule: every court has a clear path of at least this many metres all around it (big courts included, so no two ever touch), and the main pathway never narrows below it. */
+const ALGO_MIN_PATH_M = 2.0;
+
 const ALGO_BLOCK_SIZES = { lift: [2.5, 2.5], ramp: [6.0, 1.5], stair: [4.0, 2.0] };
 const ALGO_BLOCK_LABELS = { lift: "Lift", ramp: "Ramp", stair: "Stair" };
 
@@ -58,7 +81,7 @@ const algoState = {
   qty: {},                                // court name -> how many
   good: {},                               // the last quantities the packing accepted (a court that does not fit goes back to these)
   blocks: [],                             // lifts / ramps / stairs: { id, kind, x, y, w, h } (top-left, metres)
-  settings: { setback: null, pathW: 2.0, minPathW: 1.0, time: 8, seed: 1, edgeFirst: true, leftoverPath: false, ring: false, strictGap: false, keepClear: true, gardenZones: true, entryPoints: true },
+  settings: { setback: null, pathW: 2.0, minPathW: 2.0, time: 8, seed: 1, edgeFirst: true, leftoverPath: false, ring: false, strictGap: true, keepClear: true, gardenZones: true, entryPoints: true },
   plan: null, site: null, planKey: "",
   fit: null, fitKey: "",
   msg: "", status: "", progress: 0, busy: false,
@@ -75,6 +98,10 @@ const algoState = {
       if (saved.settings) Object.assign(algoState.settings, saved.settings);
     }
   } catch (e) { /* storage blocked or corrupt: the defaults */ }
+  // settings saved before the 2 m rule may hold a narrower pathway or the old "big courts touch" exception: the rule wins
+  algoState.settings.strictGap = true;
+  algoState.settings.pathW = Math.max(ALGO_MIN_PATH_M, Number(algoState.settings.pathW) || ALGO_MIN_PATH_M);
+  algoState.settings.minPathW = Math.max(ALGO_MIN_PATH_M, Number(algoState.settings.minPathW) || ALGO_MIN_PATH_M);
   AlgoPlacement.SPORTS.forEach(s => { if (!Number.isFinite(algoState.qty[s.name])) algoState.qty[s.name] = 0; });
   algoState.good = Object.assign({}, algoState.qty);
 })();
@@ -154,9 +181,15 @@ function algoRequests() {
   return AlgoPlacement.SPORTS.flatMap(s => Array.from({ length: algoState.qty[s.name] || 0 }, () => ({ name: s.name, w: s.long, h: s.short })));
 }
 
+/** The structural grid Revit pushed with the roof, as plain lines in the roof's plan (metres): the rule that heavy items sit along it reads these. Empty when no grid came. */
+function algoGridLines() {
+  const st = combineState.structure;
+  return st && Array.isArray(st.gridLines) ? st.gridLines.map(g => ({ x1: g.x1, y1: g.y1, x2: g.x2, y2: g.y2 })) : [];
+}
+
 function algoSiteKey() {
   const s = algoState.settings;
-  return JSON.stringify([algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), AlgoPlacement.SPORTS.map(sp => [sp.long, sp.short])]);
+  return JSON.stringify([algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.kind, b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), algoGridLines(), AlgoPlacement.SPORTS.map(sp => [sp.long, sp.short])]);
 }
 
 function algoInputKey() {
@@ -169,6 +202,7 @@ function algoBuildSite() {
   return AlgoPlacement.makeSite({
     foot: algoFootprint(), setback: algoSetback(),
     entries: algoState.blocks.map(b => [b.x, b.y, b.x + b.w, b.y + b.h]),
+    anchors: algoState.blocks.filter(b => b.kind !== "ramp").map(b => [b.x, b.y, b.x + b.w, b.y + b.h]),      // the service modules go to the roof corner nearest a lift or stair
     keepClear: algoKeepClearBoxes()
   });
 }
@@ -203,19 +237,46 @@ function algoSetMode(mode) {
 
 // ------------------------------------------------------------------------------------------------ the panel
 
+/** The reference-sheet figures under a court's name: footprint, area, active headcount and dead load Gk. The four courts that are not in the sheet say so instead of showing a made-up number. */
+function algoSportMeta(sp) {
+  const fmt = n => String(Math.round(n * 10) / 10);
+  const parts = [`<span title="Footprint">${fmt(sp.long)} × ${fmt(sp.short)} m</span>`, `<span title="Area">${fmt(sp.long * sp.short)} m²</span>`];
+  if (sp.headcount == null && !sp.headcountNote && sp.deadLoad == null) {
+    parts.push(`<span class="algo-sport-none" title="Headcount and dead load come from the reference sheet, which does not list this court">headcount and dead load: not in the reference sheet</span>`);
+  } else {
+    const people = sp.headcount != null ? `${sp.headcount} ${sp.headcount === 1 ? "person" : "people"}` : `headcount ${sp.headcountNote}`;
+    parts.push(`<span title="Active headcount: people using it at the same time">${algoEsc(people)}</span>`);
+    parts.push(`<span title="Characteristic dead load Gk${sp.assumed ? " (assumed value, not from a standard)" : ""}">Gk ${sp.deadLoad.toFixed(2)} kN/m²${sp.assumed ? ' <i class="algo-assumed">assumed</i>' : ""}</span>`);
+  }
+  return parts.join("");
+}
+
+function algoSportRow(sp, i) {
+  return `<div class="algo-sport" data-sport="${i}" data-find="${algoEsc((sp.label + " " + sp.name + " " + sp.group).toLowerCase())}">
+      <span class="algo-swatch" style="background:${escapeHtml(algoRgb(sp.color))}"></span>
+      <span class="algo-sport-name">${algoEsc(sp.label)}</span>
+      <span class="algo-qty"><button data-act="qty-" data-i="${i}" aria-label="One fewer ${algoEsc(sp.label)}">−</button><input type="number" min="0" max="30" step="1" data-qty="${i}" value="${escapeHtml(algoState.qty[sp.name] || 0)}" aria-label="How many ${algoEsc(sp.label)}"><button data-act="qty+" data-i="${i}" aria-label="One more ${algoEsc(sp.label)}">+</button></span>
+      <span class="algo-fit" data-fit="${i}"></span>
+      <span class="algo-sport-meta">${algoSportMeta(sp)}</span>
+    </div>`;
+}
+
+/** Narrows the list to the courts whose name or group contains what was typed; a group with nothing left disappears. */
+function algoFilterSports(text) {
+  const q = String(text || "").trim().toLowerCase();
+  document.querySelectorAll("#algo-sports .algo-sport").forEach(r => { r.hidden = !!q && !r.dataset.find.includes(q); });
+  document.querySelectorAll("#algo-sports .algo-group").forEach(g => { g.hidden = !g.querySelector(".algo-sport:not([hidden])"); });
+}
+
 function algoBuildPanel() {
   const panel = document.getElementById("algo-placement");
   if (!panel) return;
   algoAdoptSpecifiedSizes();
   const s = algoState.settings;
-  const sportRows = AlgoPlacement.SPORTS.map((sp, i) => `<div class="algo-sport" data-sport="${i}">
-      <span class="algo-swatch" style="background:${escapeHtml(algoRgb(sp.color))}"></span>
-      <span class="algo-sport-name">${algoEsc(sp.name)}${AlgoPlacement.BIG_COURTS.includes(sp.name) ? ' <i class="ti ti-arrows-maximize" title="A big court: needs a path on one side only" aria-hidden="true"></i>' : ""}</span>
-      <span class="algo-sport-size">${sp.long} × ${escapeHtml(sp.short)} m</span>
-      <span class="algo-sport-area">${Math.round(sp.long * sp.short)} m²</span>
-      <span class="algo-qty"><button data-act="qty-" data-i="${i}" aria-label="One fewer ${algoEsc(sp.name)}">−</button><input type="number" min="0" max="30" step="1" data-qty="${i}" value="${escapeHtml(algoState.qty[sp.name] || 0)}" aria-label="How many ${algoEsc(sp.name)}"><button data-act="qty+" data-i="${i}" aria-label="One more ${algoEsc(sp.name)}">+</button></span>
-      <span class="algo-fit" data-fit="${i}"></span>
-    </div>`).join("");
+  const sportRows = AlgoPlacement.GROUPS.map(g => {
+    const rows = AlgoPlacement.SPORTS.map((sp, i) => ({ sp, i })).filter(x => x.sp.group === g).map(x => algoSportRow(x.sp, x.i)).join("");
+    return rows ? `<div class="algo-group"><h4>${algoEsc(g)}</h4>${rows}</div>` : "";
+  }).join("");
 
   panel.innerHTML = `
     <header class="algo-head">
@@ -238,8 +299,8 @@ function algoBuildPanel() {
         <section class="algo-card"><h3>2 · Settings</h3>
           <div class="algo-grid">
             <label>Garden band / setback (m)<input type="number" id="algo-setback" min="0" max="20" step="0.25" value="${algoSetback()}"></label>
-            <label>Main pathway width (m)<input type="number" id="algo-pathw" min="1" max="6" step="0.25" value="${s.pathW}"></label>
-            <label>Narrowest pathway if needed (m)<input type="number" id="algo-minpath" min="0.8" max="3" step="0.25" value="${s.minPathW}"></label>
+            <label>Main pathway width (m)<input type="number" id="algo-pathw" min="${ALGO_MIN_PATH_M}" max="6" step="0.25" value="${s.pathW}"></label>
+            <label>Narrowest pathway if needed (m)<input type="number" id="algo-minpath" min="${ALGO_MIN_PATH_M}" max="6" step="0.25" value="${s.minPathW}"></label>
             <label>Search time (s)<input type="number" id="algo-time" min="2" max="60" step="1" value="${s.time}"></label>
             <label>Variation seed<input type="number" id="algo-seed" min="1" max="999" step="1" value="${s.seed}"></label>
           </div>
@@ -247,11 +308,12 @@ function algoBuildPanel() {
           <label class="algo-check"><input type="radio" name="algo-opt" value="1" ${s.leftoverPath ? "checked" : ""}> Option 1: garden only in the setback band; all leftover space is pathway</label>
           <label class="algo-check"><input type="radio" name="algo-opt" value="2" ${s.leftoverPath ? "" : "checked"}> Option 2: garden in the setback band and in the leftover pockets</label>
           <label class="algo-check"><input type="checkbox" id="algo-ring" ${s.ring ? "checked" : ""}> Landing on ALL sides of lifts / ramps</label>
-          <label class="algo-check"><input type="checkbox" id="algo-strict" ${s.strictGap ? "checked" : ""}> Big courts keep the clear gap too (Combine's clearance rule then holds between every pair)</label>
           <label class="algo-check" id="algo-keepclear-row"><input type="checkbox" id="algo-keepclear" ${s.keepClear ? "checked" : ""}> Keep clear of the openings and equipment from Revit <small id="algo-keepclear-n"></small></label>
-          <p class="hint">Normal courts get a ${AlgoPlacement.COURT_GAP_M.toFixed(1)} m path all around; big courts (multi sport, basketball, handball, volleyball) need a path on one side only, so two of them may touch. Lifts get ${AlgoPlacement.COURT_GAP_M.toFixed(1)} m paths on their inside sides. A court is only accepted if the live check can place it; the pathway narrows if needed.</p>
+          <p class="hint"><strong>The rule: every court has a clear path of at least ${ALGO_MIN_PATH_M.toFixed(1)} m all around it, big courts included, so no two courts ever touch.</strong> Lifts, ramps and stairs get the same ${ALGO_MIN_PATH_M.toFixed(1)} m on their inside sides, and the main pathway never narrows below ${ALGO_MIN_PATH_M.toFixed(1)} m. A side that sits on the setback line borders the garden band instead of a path.</p>
+          <p class="hint"><strong>Services:</strong> the locker and bathroom modules go, together, in the roof corner nearest a lift or stair (a ramp does not count). <strong>Heavy items:</strong> anything with a dead load above ${AlgoPlacement.HEAVY_DEAD_LOAD_KN_M2.toFixed(1)} kN/m² is placed along the structural grid Revit gave for the roof, where it can be; otherwise it is placed anyway and the report says so. A court is only accepted if the live check can place it.</p>
         </section>
         <section class="algo-card"><h3>3 · How many of each court? <small>only courts that fit are accepted</small></h3>
+          <input type="search" id="algo-find" class="algo-find" placeholder="Find a court or activity ..." aria-label="Find a court or activity" autocomplete="off">
           <div class="algo-sports" id="algo-sports">${sportRows}</div>
         </section>
       </div>
@@ -288,6 +350,7 @@ function algoBindPanel(panel) {
       algoState.qty[sp.name] = Math.max(0, Math.min(30, (algoState.qty[sp.name] || 0) + (act === "qty+" ? 1 : -1)));
       algoSyncQty(); algoChanged();
     } else if (act === "add-block") algoAddBlock(b.dataset.kind);
+    else if (act === "rotate-block") algoRotateBlock(b.dataset.id);
     else if (act === "del-block") { algoState.blocks = algoState.blocks.filter(x => x.id !== b.dataset.id); algoRefreshBlocks(); algoChanged(); }
     else if (act === "blocks-from-revit") algoTakeRevitBlocks();
     else if (act === "apply") algoApply();
@@ -297,6 +360,7 @@ function algoBindPanel(panel) {
   });
   panel.addEventListener("input", e => {
     const t = e.target;
+    if (t.id === "algo-find") { algoFilterSports(t.value); return; }
     if (t.dataset.qty != null) {
       const sp = AlgoPlacement.SPORTS[Number(t.dataset.qty)];
       algoState.qty[sp.name] = Math.max(0, Math.min(30, Math.round(Number(t.value) || 0)));
@@ -314,14 +378,13 @@ function algoBindPanel(panel) {
     const t = e.target;
     const num = (id, key, lo, hi) => { const v = Number(t.value); if (Number.isFinite(v) && v >= lo && v <= hi) algoState.settings[key] = v; else t.value = algoState.settings[key]; };
     if (t.id === "algo-setback") { const v = Number(t.value); if (Number.isFinite(v) && v >= 0 && v <= 20) algoState.settings.setback = v; else t.value = algoSetback(); }
-    else if (t.id === "algo-pathw") num(t.id, "pathW", 1, 6);
-    else if (t.id === "algo-minpath") num(t.id, "minPathW", 0.8, 3);
+    else if (t.id === "algo-pathw") num(t.id, "pathW", ALGO_MIN_PATH_M, 6);
+    else if (t.id === "algo-minpath") num(t.id, "minPathW", ALGO_MIN_PATH_M, 6);
     else if (t.id === "algo-time") num(t.id, "time", 2, 60);
     else if (t.id === "algo-seed") num(t.id, "seed", 1, 999);
     else if (t.id === "algo-edge") algoState.settings.edgeFirst = t.checked;
     else if (t.name === "algo-opt") algoState.settings.leftoverPath = t.value === "1";
     else if (t.id === "algo-ring") algoState.settings.ring = t.checked;
-    else if (t.id === "algo-strict") algoState.settings.strictGap = t.checked;
     else if (t.id === "algo-keepclear") algoState.settings.keepClear = t.checked;
     else if (t.id === "algo-garden") { algoState.settings.gardenZones = t.checked; algoSave(); return; }
     else if (t.id === "algo-entrypoints") { algoState.settings.entryPoints = t.checked; algoSave(); return; }
@@ -361,6 +424,20 @@ function algoAddBlock(kind) {
   algoChanged();
 }
 
+/** Turns a lift, ramp or stair 90° about its centre (width and height swap) and keeps it inside the roof's bounds. */
+function algoRotateBlock(id) {
+  const blk = algoState.blocks.find(x => x.id === id);
+  if (!blk) return;
+  const b = algoBounds();
+  const cx = blk.x + blk.w / 2, cy = blk.y + blk.h / 2;
+  const w = blk.h, h = blk.w;
+  blk.w = w; blk.h = h;
+  blk.x = algoRound(Math.max(b.x0, Math.min(b.x1 - w, cx - w / 2)));
+  blk.y = algoRound(Math.max(b.y0, Math.min(b.y1 - h, cy - h / 2)));
+  algoRefreshBlocks();
+  algoChanged();
+}
+
 function algoTakeRevitBlocks() {
   const found = algoRevitBlocks();
   if (!found.length) { if (typeof showToast === "function") showToast("Nothing from Revit", "The Revit model has pushed no stairs, lifts or ramps for this roof yet (Push to Sportify, entries)."); return; }
@@ -385,6 +462,7 @@ function algoRefreshBlocks() {
       <label>y<input type="number" step="0.5" data-block="${escapeHtml(b.id)}" data-f="y" value="${b.y}"></label>
       <label>w<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="w" value="${b.w}"></label>
       <label>h<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="h" value="${b.h}"></label>
+      <button data-act="rotate-block" data-id="${escapeHtml(b.id)}" aria-label="Rotate ${escapeHtml(ALGO_BLOCK_LABELS[b.kind].toLowerCase())} 90 degrees" title="Rotate 90°: swaps width and height around the centre"><i class="ti ti-rotate-clockwise-2" aria-hidden="true"></i></button>
       <button data-act="del-block" data-id="${escapeHtml(b.id)}" aria-label="Remove" title="Remove">×</button></div>`).join("")
     : `<p class="algo-empty">No lift, ramp or stair yet. Add at least one: the pathways start from them.</p>`;
   const fromRevit = document.getElementById("algo-from-revit");
@@ -419,7 +497,7 @@ async function algoPreview(msg) {
   const qty = algoState.qty, good = algoState.good;
   const added = AlgoPlacement.SPORTS.filter(s => (qty[s.name] || 0) > (good[s.name] || 0)).map(s => s.name);
   for (const n of added) {                                                    // 1) can never fit on this roof
-    if (fit.sports[n]) return algoRevert("Not added - " + n + ": " + fit.sports[n] + ".");
+    if (fit.sports[n]) return algoRevert("Not added - " + algoLabel(n) + ": " + fit.sports[n] + ".");
   }
   const total = AlgoPlacement.SPORTS.reduce((sum, s) => sum + (qty[s.name] || 0) * s.long * s.short, 0);
   if (added.length && total > AlgoPlacement.BUILT_LIMIT_PCT / 100 * site.usableArea) return algoRevert("Not added - the courts would cover more than " + AlgoPlacement.BUILT_LIMIT_PCT + "% of the sports area.");   // 2) too much area
@@ -454,11 +532,11 @@ async function algoPreview(msg) {
       if (grew && added.length > 1) {
         algoState.good = keep; algoState.qty = Object.assign({}, keep);
         algoSyncQty(); algoSave();
-        return algoPreview("Not added - " + un.name + ": " + un.reason + ". The other courts you added were kept.");
+        return algoPreview("Not added - " + algoLabel(un.name) + ": " + un.reason + ". The other courts you added were kept.");
       }
-      return algoRevert("Not added - " + un.name + ": " + un.reason + ". Previous selection restored.");
+      return algoRevert("Not added - " + algoLabel(un.name) + ": " + un.reason + ". Previous selection restored.");
     }                                                                         // the site changed: keep what fits
-    const removed = Object.keys(qty).filter(n => qty[n] > (counts[n] || 0)).map(n => n + " x" + (qty[n] - (counts[n] || 0)));
+    const removed = Object.keys(qty).filter(n => qty[n] > (counts[n] || 0)).map(n => algoLabel(n) + " x" + (qty[n] - (counts[n] || 0)));
     AlgoPlacement.SPORTS.forEach(s => { algoState.qty[s.name] = counts[s.name] || 0; });
     algoSyncQty();
     plan.unplaced = [];
@@ -480,14 +558,14 @@ function algoRevert(msg) {
 
 function algoPlanSettings() {
   const s = algoState.settings;
-  return { pathW: s.pathW, minPathW: s.minPathW, ring: s.ring, seed: s.seed, edgeFirst: s.edgeFirst, leftoverPath: s.leftoverPath, strictGap: s.strictGap };
+  return { pathW: Math.max(ALGO_MIN_PATH_M, s.pathW), minPathW: Math.max(ALGO_MIN_PATH_M, s.minPathW), ring: s.ring, seed: s.seed, edgeFirst: s.edgeFirst, leftoverPath: s.leftoverPath, strictGap: true, courtGap: ALGO_MIN_PATH_M, rules: { serviceCorners: true, gridLines: algoGridLines() } };
 }
 
 function algoFit(site) {
   const key = algoSiteKey();
   if (algoState.fit && algoState.fitKey === key) return algoState.fit;
   const s = algoState.settings;
-  algoState.fit = AlgoPlacement.fitCheck(site, Math.min(s.minPathW, s.pathW), s.ring, s.strictGap);
+  algoState.fit = AlgoPlacement.fitCheck(site, Math.max(ALGO_MIN_PATH_M, Math.min(s.minPathW, s.pathW)), s.ring, true, ALGO_MIN_PATH_M);
   algoState.fitKey = key;
   return algoState.fit;
 }
@@ -556,7 +634,7 @@ function algoRefreshFit() {
     const reason = fit ? fit.sports[sp.name] : "";
     const el = document.querySelector(`[data-fit="${i}"]`);
     if (el) el.textContent = reason ? "! won't fit" : "";
-    if (reason && (algoState.qty[sp.name] || 0) > 0) lines.push(sp.name + ": " + reason);
+    if (reason && (algoState.qty[sp.name] || 0) > 0) lines.push(sp.label + ": " + reason);
   });
   const warn = document.getElementById("algo-warn");
   if (warn) {
@@ -580,15 +658,21 @@ function algoRefreshAll() {
   if (shuffle) shuffle.disabled = !(algoState.plan && !algoState.busy);
   const sports = document.getElementById("algo-sports");
   if (sports) sports.classList.toggle("disabled", !algoState.blocks.length);
-  const note = document.getElementById("algo-site-note");
-  if (note) {
-    const roof = combineState.roof;
-    note.textContent = `roof ${roof.length} × ${roof.width} m${roof.boundary && roof.boundary.length >= 3 ? ", outline from Revit" : ""}`;
-  }
+  algoRefreshSiteNote();
   const inp = document.getElementById("algo-setback");
   if (inp && document.activeElement !== inp) inp.value = algoSetback();
   algoRefreshProgress();
   if (!algoState.busy) { const fill = document.getElementById("algo-bar-fill"); if (fill) fill.classList.remove("busy"); }
+}
+
+/** The roof under "1 · Site": its size, and what it is (Sports Core / Garden Core / Mixed, chosen in the Site tab) or a way to say so. */
+function algoRefreshSiteNote() {
+  const note = document.getElementById("algo-site-note");
+  if (!note) return;
+  const roof = combineState.roof;
+  const program = typeof getRoofProgram === "function" ? getRoofProgram() : null;
+  const size = `roof ${roof.length} × ${roof.width} m${roof.boundary && roof.boundary.length >= 3 ? ", outline from Revit" : ""}`;
+  note.innerHTML = `${algoEsc(size)} · ${program ? algoEsc(program.label) : '<button type="button" class="btn-link" data-roof-type-open>roof type not set</button>'}`;
 }
 
 /** The plan drawn as SVG in metres, in the roof's own orientation (the Rhino form's preview). */
@@ -624,7 +708,7 @@ function algoDrawPreview() {
     const small = r[2] - r[0] < fs * (word.length * 0.62 + 1) && r[3] - r[1] < fs * (word.length * 0.62 + 1);
     g += `<g pointer-events="none"><rect x="${algoRound(r[0])}" y="${algoRound(r[1])}" width="${algoRound(r[2] - r[0])}" height="${algoRound(r[3] - r[1])}" fill="${escapeHtml(algoRgb(sp.color))}" stroke="#282828" stroke-width="0.14"/>
       <text x="${algoRound(cx)}" y="${algoRound(cy + fs * 0.35)}" text-anchor="middle" font-size="${small ? fs * 0.7 : fs}" font-weight="600" fill="#141414">${algoEsc(word)}</text>
-      <title>${algoEsc(c.name)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
+      <title>${algoEsc(sp.label)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
   });
   g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="none" stroke="#3c3c3c" stroke-width="0.18" pointer-events="none"/>`;
   host.innerHTML = `<svg id="algo-svg" viewBox="${algoRound(vx)} ${algoRound(vy)} ${algoRound(vw)} ${algoRound(vh)}" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:${algoRound(vw / vh)}" role="img" aria-label="Preview of the packed roof">${g}</svg>`;
@@ -760,7 +844,7 @@ async function algoApply() {
     const sp = AlgoPlacement.SPORTS.find(s => s.name === c.name);
     const frame = algoItemFrame(sp);
     combineState.items.push({
-      id: `algo_${stamp}_${i}`, kind: ALGO_CATALOGUE[c.name].kind, label: c.name,
+      id: `algo_${stamp}_${i}`, kind: ALGO_CATALOGUE[c.name].kind, label: sp.label,
       length_m: frame.length_m, width_m: frame.width_m, rotation: c.rotated !== !!sp.swap ? 90 : 0,
       x_m: algoRound(c.rect[0]), y_m: algoRound(c.rect[1]),
       sourceJson: algoCatalogueSource(c.name, sp), algorithmic: true

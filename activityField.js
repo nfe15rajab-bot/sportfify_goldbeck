@@ -15,6 +15,7 @@ const ACTIVITY_CATEGORY_COLORS = {
   wellness:   { light: "#c9b8f5", dark: "#2a2049", grid: "#b39ceb" }, // zen — yoga
   leisure:    { light: "#a3e0e6", dark: "#123840", grid: "#7ad0d9" }, // zen — mini-golf
   playground: { light: "#fff08a", dark: "#4a4318", grid: "#ffe95c" }, // energetic — playful/active
+  service:    { light: "#cfd8dc", dark: "#22303a", grid: "#b0bec5" }, // neutral — lockers, bathrooms
 };
 
 function drawActivity(activityId, dims, isDark) {
