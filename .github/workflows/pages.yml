@@ -1,0 +1,79 @@
+name: pages
+
+# Continuous delivery of the web app: every push to master publishes the app to GitHub Pages, so anyone (an examiner, the team, a client) can open the current version
+# in a browser: https://nfe15rajab-bot.github.io/sportfify_goldbeck/
+#
+# What runs there is the app on its own. The Revit add-in and the API live on the user's machine, so on the published page the parts that talk to them stay quiet and the
+# app uses its built-in catalogue (that is what it does whenever the API is not running). The Revit bundle is unaffected: the add-in serves its own copy.
+#
+# One switch has to be made once, by someone who administers the repository: Settings > Pages > Build and deployment > Source: "GitHub Actions". Until then this workflow
+# checks the app and finishes green with a notice instead of failing.
+on:
+  push:
+    branches: [master, "cd/**"]      # a cd/ branch only gets the fitness check below, it is never published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Linux on purpose: it is what serves the page, and it is case-sensitive, so a script named differently from the way index.html asks for it fails here.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: The app is fit to publish (every script parses, the page names only files that exist, the policy holds)
+        run: |
+          for f in *.js; do node --check "$f" || exit 1; done
+          node tools/csp-test.js .
+
+      - name: Is GitHub Pages switched on for this repository?
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/master" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Checked, not published::Only master is published; this run checked the app."
+          elif gh api "repos/${{ github.repository }}/pages" --silent 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=GitHub Pages is not switched on::Nothing was published. Settings > Pages > Build and deployment > Source: GitHub Actions, then run this workflow again."
+          fi
+
+      - name: Assemble the site (the app, without the repository's tooling)
+        if: steps.pages.outputs.enabled == 'true'
+        run: |
+          mkdir _site
+          cp -r index.html style.css *.js vendor _site/
+          touch _site/.nojekyll
+          echo "site: $(find _site -type f | wc -l) files, $(du -sh _site | cut -f1)"
+
+      - uses: actions/configure-pages@v5
+        if: steps.pages.outputs.enabled == 'true'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.pages.outputs.enabled == 'true'
+        with:
+          path: _site
+
+      - name: Publish
+        id: deployment
+        if: steps.pages.outputs.enabled == 'true'
+        uses: actions/deploy-pages@v4
