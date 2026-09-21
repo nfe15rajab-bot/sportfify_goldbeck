@@ -714,6 +714,8 @@ function collectZoneAssemblies() {
     if (payload) seen.set(key, payload);
   };
   combineState.zones.forEach(z => add(z.assemblyKey));
+  // The finish's default is chosen the first time anything reads it; an export made before the Zones panel was ever opened would otherwise list a finish (roof_finish.assembly_key) whose build-up it does not describe (found by the live Revit import).
+  if (typeof ensureRoofFinishState === "function") ensureRoofFinishState();
   if (typeof roofFinishKey !== "undefined") add(roofFinishKey);
   return [...seen.values()];
 }
@@ -726,6 +728,7 @@ function collectZoneAssemblies() {
 function unresolvedAssemblyKeys() {
   ensureZoneState();
   const keys = new Set(combineState.zones.map(z => z.assemblyKey).filter(Boolean));
+  if (typeof ensureRoofFinishState === "function") ensureRoofFinishState();
   if (typeof roofFinishKey !== "undefined" && roofFinishKey) keys.add(roofFinishKey);
   return [...keys].filter(k => !(typeof getAssembly === "function" && getAssembly(k)));
 }

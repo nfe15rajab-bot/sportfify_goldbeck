@@ -57,13 +57,15 @@ sandbox.getFootprint = item => item.rotation === 90 ? { w: item.width_m, h: item
 sandbox.nearestBoundaryPoint = (roof, x, y) => ({ edge: "top", x, y: 0 });
 function freshBoard() {
   sandbox.combineState = { roof: { length: 60, width: 40, boundary: null }, items: [], zones: [], entryPoints: [], tray: [], selectedId: null, selectedKind: null, zoneKind: null, zoneAssembly: null };
-  get("assembliesLoaded = false; ASSEMBLIES = {};");
+  get("assembliesLoaded = false; ASSEMBLIES = {}; volleyballOptionsLoaded = false; basketballOptionsLoaded = false;");
+  fetched.length = 0;
   toasts.length = 0;
 }
 const A = get("AlgoPlacement");
 const S = get("algoState");
 const record = { key: "test_extensive", provider: "Test", providerCountry: "DE", systemName: "Extensive", category: "extensive", description: "", buildUpMm: 100, layers: [] };
-const catalogueUp = () => { sandbox.fetch = async () => ({ ok: true, json: async () => [record] }); };
+const fetched = [];
+const catalogueUp = () => { sandbox.fetch = async url => { fetched.push(String(url)); return { ok: true, json: async () => [record] }; }; };
 const catalogueDown = () => { sandbox.fetch = async () => { throw new Error("connection refused"); }; };
 const rect = (w, h) => [[0, 0], [w, 0], [w, h], [0, h]];
 const sport = n => A.SPORTS.find(s => s.name === n);
@@ -127,6 +129,8 @@ async function planFor(qty) {
     const payloads = zones.map(z => get("buildZonePayload")(z));
     check("they export with their outline, and a saved session brings the same polygon back",
       payloads.every(p => p.points.length >= 3 && p.area_m2 > 0) && payloads.every((p, i) => { const back = get("zoneFromPayload")(JSON.parse(JSON.stringify(p)), i); return back.points.length === zones[i].points.length && near(back.length_m, zones[i].length_m); }));
+    check("the court options were fetched before the courts were made (their weight comes from them: an Apply before the panels were ever opened exported courts that weigh 0 kg)",
+      fetched.some(u => /SportOptions\?sport=volleyball/i.test(u)) && fetched.some(u => /SportOptions\?sport=basketball/i.test(u)) && get("volleyballOptionsLoaded") === true && get("basketballOptionsLoaded") === true, fetched.join(" "));
     check("the catalogue was fetched before the zones were made, so they carry a build-up", get("assembliesLoaded") === true && zones.every(z => z.assemblyKey === "test_extensive"), zones.map(z => z.assemblyKey).join(","));
     check("nothing is warned about", !toasts.some(t => /build-up/i.test(t)), toasts.join(" // "));
   }

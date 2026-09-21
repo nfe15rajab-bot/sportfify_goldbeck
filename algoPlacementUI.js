@@ -742,6 +742,16 @@ async function algoApply() {
     try { await loadAssemblies(); } catch (e) { /* algoWarnNoBuildUp says so once the zones are made */ }
     if (algoState.plan !== plan || algoState.busy) return;       // the layout changed while the catalogue was coming: nothing has been applied yet
   }
+  // A specified court's weight (what the structural analysis puts on the deck) comes from the court options in the API, which the volleyball and basketball panels fetch
+  // when they are first opened. Applied before they ever were, the courts were exported with weight_kg 0: a court that weighs nothing (found by the live Revit import).
+  const wantsCourt = key => plan.courts.some(c => new RegExp(key, "i").test(c.name));
+  const optionLoads = [];
+  if (wantsCourt("volleyball") && typeof loadVolleyballOptions === "function" && typeof volleyballOptionsLoaded !== "undefined" && !volleyballOptionsLoaded) optionLoads.push(loadVolleyballOptions());
+  if (wantsCourt("basketball") && typeof loadBasketballOptions === "function" && typeof basketballOptionsLoaded !== "undefined" && !basketballOptionsLoaded) optionLoads.push(loadBasketballOptions());
+  if (optionLoads.length) {
+    await Promise.all(optionLoads.map(p => p.catch(() => { /* the courts are placed; their weight is then unknown, as it always was offline */ })));
+    if (algoState.plan !== plan || algoState.busy) return;
+  }
   combineState.items = []; combineState.zones = []; combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
   combineState.tray = combineState.tray || [];
 
