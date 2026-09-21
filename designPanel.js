@@ -140,21 +140,7 @@ function computeQuantityTakeoff() {
   };
 }
 
-/**
- * Which catalog material a placed piece is made of.
- *
- * A layout saved before the tier default existed — or any prebuilt session —
- * carries no reference material at all, which made it read as free and as
- * carbon-neutral. Falling back to what its quality tier means fixes both,
- * since cost and carbon look the piece up the same way.
- */
-function referenceMaterialName(item) {
-  const m = item.sourceJson?.materials || item.sourceJson?.garden?.materials || {};
-  return m.reference_material
-    || (typeof QUALITY_REFERENCE_MATERIAL !== "undefined"
-        ? QUALITY_REFERENCE_MATERIAL[m.quality_level] : null)
-    || null;
-}
+/* referenceMaterialName(item): which catalog material a piece is made of, is in carbon.js (with the carbon sum), shared with the Analysis tab and the add-in. */
 
 /**
  * Courts, activity pieces and equipment: area times the reference material's
@@ -355,17 +341,8 @@ function computeCarbonMetric() {
   if (!materials || typeof getFootprint !== "function") {
     return { totalKg: null, covered: 0, total: items.length, reason: "material carbon figures not loaded" };
   }
-  let totalKg = 0, covered = 0;
-  items.forEach(it => {
-    const name = referenceMaterialName(it);
-    const mat = name ? materials.find(m => m.name === name) : null;
-    if (mat && mat.embodiedCarbonValue != null) {
-      const fp = getFootprint(it);
-      totalKg += mat.embodiedCarbonValue * fp.w * fp.h;
-      covered += 1;
-    }
-  });
-  return { totalKg: covered ? totalKg : null, covered, total: items.length };
+  const { totalKg, coveredCount, totalCount } = embodiedCarbon(items, materials);      // carbon.js: the same sum as the Analysis tab's LCA
+  return { totalKg: coveredCount ? totalKg : null, covered: coveredCount, total: totalCount };
 }
 
 function computeDesignMetrics(circulation) {

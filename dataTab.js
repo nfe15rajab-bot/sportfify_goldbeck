@@ -720,6 +720,7 @@ document.getElementById("btn-admin-create").addEventListener("click", async () =
     else renderAdminForm(entityType);
     if (typeof updateDataUI === "function") updateDataUI();
     if (typeof initAnalysisReferenceData === "function") initAnalysisReferenceData(); // LCA/analysis caches pick up the edit immediately
+    if (typeof loadFieldVariantsFromApi === "function") loadFieldVariantsFromApi();      // ...and so do the sports' dimensions (data.js)
   } catch (err) {
     setAdminStatus(statusId, `Failed: ${err.message}`, false);
   }

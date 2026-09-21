@@ -19,6 +19,9 @@ const ANALYSIS_PARAM_DEFAULTS = {
   "Accessibility": { min_circulation_width_m: 1.5 },
   "Water Management": { retention_base_percent: 30, retention_depth_coefficient_percent_per_cm: 2, retention_max_percent: 90 },
   "Wind Exposure": { edge_exposure_zone_m: 2.0 },
+  // not read by the app itself, but the database seeds them and the add-in's structural and carbon analyses use them: the same list in all three places (Tools/SourceParity)
+  "Live Loads": { assumed_load_per_person_kg: 90, reference_capacity_kn_per_m2: 4.0 },
+  "Carbon Impact": { energy_density_wh_per_m2_per_hour: 0.5, assumed_daily_usage_hours: 4 },
 };
 let analysisParametersCache = [];
 let analysisMaterialsCache = [];
@@ -44,11 +47,9 @@ async function initAnalysisReferenceData() {
 }
 initAnalysisReferenceData();
 
-/** The reference material a piece was pushed with (Sport/Garden's "Reference material (database)" dropdown) — the LCA lookup key. Null if the piece was pushed before that field existed, or manual text was typed that isn't a real catalog name. */
+/** The reference material a piece is made of: the one picked in Sport/Garden, else the one its quality tier means. One rule, in carbon.js (referenceMaterialName). */
 function getReferenceMaterialName(item) {
-  if (item.kind === "field") return item.sourceJson?.materials?.reference_material || null;
-  if (item.kind === "garden") return item.sourceJson?.garden?.materials?.reference_material || null;
-  return null;
+  return referenceMaterialName(item);
 }
 
 function pathLengthM(points) {
@@ -129,20 +130,11 @@ function analyzeWindExposure() {
   return { status: "ok", exposedCount: exposed.length, totalCount: combineState.items.length, zoneM };
 }
 
-/** Sums embodied carbon (area × material's kg CO2e/m²) across every piece with both a picked reference material and that material's carbon figure filled in — pieces missing either are reported separately, never silently assumed zero. */
+/** Embodied carbon of the layout (carbon.js: the one implementation, shared with the Design panel and mirrored by the add-in's LCA): pieces missing a material or its carbon figure are reported separately, never silently assumed zero. */
 function analyzeLCA() {
   if (combineState.items.length === 0) return { status: "empty" };
-  let totalKg = 0, coveredCount = 0;
-  combineState.items.forEach(it => {
-    const matName = getReferenceMaterialName(it);
-    const material = matName ? analysisMaterialsCache.find(m => m.name === matName) : null;
-    if (material && material.embodiedCarbonValue != null) {
-      const fp = typeof getFootprint === "function" ? getFootprint(it) : { w: it.length_m, h: it.width_m };
-      totalKg += material.embodiedCarbonValue * fp.w * fp.h;
-      coveredCount++;
-    }
-  });
-  return { status: "ok", totalKg, coveredCount, missingCount: combineState.items.length - coveredCount, totalCount: combineState.items.length };
+  const { totalKg, coveredCount, missingCount, totalCount } = embodiedCarbon(combineState.items, analysisMaterialsCache);
+  return { status: "ok", totalKg, coveredCount, missingCount, totalCount };
 }
 
 function edgeDistanceM(item, roof) {
@@ -470,24 +462,20 @@ function windExposureDetailHtml(item) {
 }
 
 function lcaDetailHtml(item) {
-  const matName = getReferenceMaterialName(item);
-  if (!matName) {
+  const piece = pieceEmbodiedCarbon(item, analysisMaterialsCache);
+  if (!piece.material) {
     return `<p class="hint">No reference material selected for this piece — pick one from the "Reference material (database)" dropdown in Sport/Garden mode to enable this.</p>`;
   }
-  const material = analysisMaterialsCache.find(m => m.name === matName);
-  if (!material) {
-    return `<p class="hint"><strong>Reference material:</strong> ${matName}</p><p class="hint">Not found in the database (likely typed as manual text) — no embodied-carbon figure to look up.</p>`;
+  if (piece.why === "not in the catalogue") {
+    return `<p class="hint"><strong>Reference material:</strong> ${escapeHtml(piece.material)}</p><p class="hint">Not found in the database (likely typed as manual text) — no embodied-carbon figure to look up.</p>`;
   }
-  if (material.embodiedCarbonValue == null) {
-    return `<p class="hint"><strong>Reference material:</strong> ${matName}</p><p class="hint">⚠️ No embodied-carbon figure yet for this material — add one from the Data tab's Materials edit form.</p>`;
+  if (piece.kg == null) {
+    return `<p class="hint"><strong>Reference material:</strong> ${escapeHtml(piece.material)}</p><p class="hint">⚠️ No embodied-carbon figure yet for this material — add one from the Data tab's Materials edit form.</p>`;
   }
-  const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
-  const area = fp.w * fp.h;
-  const total = material.embodiedCarbonValue * area;
   return `
-    <p class="hint"><strong>Reference material:</strong> ${matName}</p>
-    <p class="hint">${area.toFixed(1)} m² × ${material.embodiedCarbonValue} ${material.embodiedCarbonUnit} = <strong>~${total.toFixed(0)} kg CO2e</strong> (A1-A3, illustrative).</p>
-    <p class="hint">${escapeHtml(material.embodiedCarbonSource || "")}</p>`;
+    <p class="hint"><strong>Reference material:</strong> ${escapeHtml(piece.material)}</p>
+    <p class="hint">${piece.areaM2.toFixed(1)} m² × ${escapeHtml(piece.kgPerM2)} ${escapeHtml(piece.unit || "kg CO2e/m2")} = <strong>~${piece.kg.toFixed(0)} kg CO2e</strong> (A1-A3, illustrative).</p>
+    <p class="hint">${escapeHtml(piece.source || "")}</p>`;
 }
 
 /** Which sections apply to which item kind — the "toggle" the user asked for: automatic per selected item, not a manual switch, since the item's own kind already determines what's relevant. */
