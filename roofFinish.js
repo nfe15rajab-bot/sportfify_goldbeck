@@ -78,6 +78,24 @@ function roofPolygonAreaM2() {
   return Math.abs(twice) / 2;
 }
 
+/**
+ * What the Revit model already cuts out of the roof: its openings (skylights, shafts, rooflights: roof_context.features.openings, in the app's plan coordinates). The finish
+ * has a hole there too, which is why the area of the finish is the roof less these, not only less what was placed.
+ */
+function revitOpeningsAreaM2() {
+  const openings = (typeof combineState !== "undefined" && combineState.roofFeatures && combineState.roofFeatures.openings) || [];
+  return openings.reduce((sum, o) => {
+    const pts = o && Array.isArray(o.polygon_m) ? o.polygon_m : [];
+    if (pts.length < 3) return sum + (o && o.area_m2 > 0 ? o.area_m2 : 0);
+    let twice = 0;
+    for (let i = 0, n = pts.length; i < n; i++) {
+      const a = pts[i], b = pts[(i + 1) % n];
+      twice += a.x_m * b.y_m - b.x_m * a.y_m;
+    }
+    return sum + Math.abs(twice) / 2;
+  }, 0);
+}
+
 /** What the placed things take out of it. */
 function occupiedAreaM2() {
   const zones = (typeof combineState !== "undefined" && combineState.zones) || [];
@@ -103,13 +121,14 @@ function roofFinishMetrics() {
   const occupied = occupiedAreaM2();
   // Clamped: a layout that overflows its roof is a rule violation reported
   // elsewhere, and a negative area here would be a second, confusing symptom.
-  const netArea = Math.max(0, roofArea - occupied.total);
+  const openingArea = revitOpeningsAreaM2();
+  const netArea = Math.max(0, roofArea - occupied.total - openingArea);
   const assembly = roofFinishKey && typeof getAssembly === "function" ? getAssembly(roofFinishKey) : null;
   const perM2 = assembly ? finishPricePerM2(assembly) : 0;
   return {
     key: roofFinishKey, assembly,
     roofArea, netArea,
-    zoneArea: occupied.zoneArea, pieceArea: occupied.pieceArea,
+    zoneArea: occupied.zoneArea, pieceArea: occupied.pieceArea, openingArea,
     perM2, cost: assembly ? netArea * perM2 : null,
   };
 }
@@ -147,6 +166,7 @@ function roofFinishSectionHtml() {
         <div class="dim-card"><div class="val">${Math.round(m.netArea)} m²</div><div class="lbl">Finish area</div></div>
         <div class="dim-card"><div class="val">${Math.round(m.roofArea)} m²</div><div class="lbl">Roof</div></div>
         <div class="dim-card"><div class="val">−${Math.round(m.zoneArea + m.pieceArea)} m²</div><div class="lbl">Zones &amp; courts</div></div>
+        ${m.openingArea > 0 ? `<div class="dim-card"><div class="val">−${Math.round(m.openingArea)} m²</div><div class="lbl">Openings (Revit)</div></div>` : ""}
       </div>
       <p class="hint">Trees are not subtracted — a trunk is not an area, and the deck runs on under the canopy.</p>
     </div>`;
@@ -175,9 +195,11 @@ function buildRoofFinishPayload() {
   const items = (typeof combineState !== "undefined" && combineState.items) || [];
   const openings = [];
 
+  // A zone is a polygon (its corners can be moved): the hole in the finish is that polygon, not the box it fits in. The box stays for a reader that predates the polygon.
   zones.forEach(z => openings.push({
     source: "zone", id: z.id,
     x_m: z.x_m, y_m: z.y_m, length_m: z.length_m, width_m: z.width_m,
+    ...(Array.isArray(z.points) && z.points.length >= 3 ? { points: z.points.map(p => ({ x_m: p.x_m, y_m: p.y_m })) } : {}),
   }));
   items.filter(it => it.kind !== "vegetation").forEach(it => {
     if (typeof getFootprint !== "function") return;
@@ -193,6 +215,8 @@ function buildRoofFinishPayload() {
     revit_type_name: `Sportify - ${m.assembly.provider} ${m.assembly.system_name}`,
     net_area_m2: Math.round(m.netArea * 100) / 100,
     roof_area_m2: Math.round(m.roofArea * 100) / 100,
+    // what the Revit model cuts out of the roof by itself (the add-in punches the same holes from roof_context.features.openings)
+    revit_openings_area_m2: Math.round(m.openingArea * 100) / 100,
     openings,
   };
 }
