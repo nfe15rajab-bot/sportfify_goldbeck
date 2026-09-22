@@ -87,6 +87,24 @@ const AlgoPlacement = (function () {
     { name: "Rest / Hydration Area", label: "Rest / Hydration Area", group: "Services", long: 6.0, short: 4.0, color: [200, 220, 160], headcount: 8, deadLoad: 0.50, assumed: true }
   ];
   const labelOf = name => { const s = SPORTS.find(x => x.name === name); return s ? s.label : name; };
+
+  // ── zones (used only when a plan is made with `zoning`) ──
+  // indoor (walls around, ignores the setback, grows from the Locker corner), garden (Yoga, Calisthenics: respects the setback like outdoor) and outdoor (everything else)
+  const INDOOR_NAMES = new Set(["Ping Pong", "Bouldering Wall", "Badminton", "Locker & Dressing Room Module", "Bathroom & Shower Module", "Rest / Hydration Area"]);
+  const GARDEN_NAMES = new Set(["Yoga", "Calisthenics"]);
+  const NO_CLUSTER = new Set(["Rest / Hydration Area"]);         // indoor, but not part of the cluster that grows from the Locker corner
+  const zoneOf = name => INDOOR_NAMES.has(name) ? "indoor" : GARDEN_NAMES.has(name) ? "garden" : "outdoor";
+  // only the service modules have walls around them, so only they ignore the setback: every sport (indoor ones included) respects it
+  const noSetback = name => { const s = SPORTS.find(x => x.name === name); return !!(s && s.service); };
+  const clusterZone = name => NO_CLUSTER.has(name) ? "rest" : zoneOf(name);
+  const ZONE_GAP_OPTIONS_M = [1.8, 1.5];      // the clear path between two items of the same zone, widest first
+  const PRIMARY_OPTIONS_M = [2.5, 2.0];       // primary circulation: between zones and along the main network, widest first
+  const ENTRY_GAP_M = 2.5;                    // around lifts, stairs and ramps
+  const EDGE_SCALE_CLUSTERED = 0.1;           // how much the setback line / wall counts for an item joining a zone that already has members
+  const CLUSTER_PULL = 0.5;                  // placement score lost per metre between an item and the centre of its zone
+  const ALIGN_TIGHT = 20.0, ALIGN_ANY = 10.0;   // score for sitting beside an identical item (same way round, edges aligned, one in-zone path apart) / for sharing an edge line with a nearby item
+  const SIBLING_ROOM = 12.0;                    // score for a spot with room beside it for the next identical item
+  const NEAR_M = 6.0;                           // "nearby" for alignment: no more than this many metres between two items
   const COLOR_VC = [200, 30, 30];           // lifts + ramps: same colour
   const COLOR_PATH = [190, 190, 190];       // ALL pathways (primary + secondary): same colour
   const COLOR_GARDEN = [150, 200, 120];     // setback band AND leftover pockets
@@ -298,6 +316,7 @@ const AlgoPlacement = (function () {
       this.ox = ox; this.oy = oy; this.nx = nx; this.ny = ny;
       if (nx < 2 || ny < 2) throw new Error("Usable area is empty. Reduce the setback.");
       this.satOut = makeSat(rows, nx);                        // the setback line only
+      this.footRows = rows.map(r => Uint8Array.from(r));      // the footprint alone (no lift, no mask): applyMask needs it
       // the roof's own corners (convex corners of the usable zone, found before any lift or keep-clear box is painted in): where a service module can be tucked
       this.corners = [];
       const open = (x, y) => x >= 0 && y >= 0 && x < nx && y < ny && rows[y][x] === 0;
@@ -348,9 +367,49 @@ const AlgoPlacement = (function () {
     }
 
     blockedRaw(x0, y0, x1, y1) { const S = this.sat; return S[y1][x1] - S[y0][x1] - S[y1][x0] + S[y0][x0]; }
+    /** Is the rectangle free for a pathway (and, on a plain grid, for a court)? With a mask, pathways stay out of the garden band. */
     isFree(r) {
       if (r[0] < 0 || r[1] < 0 || r[2] > this.nx || r[3] > this.ny) return false;
+      const S = this.pathSat || this.sat;
+      return S[r[3]][r[2]] - S[r[1]][r[2]] - S[r[3]][r[0]] + S[r[1]][r[0]] === 0;
+    }
+    /** Is the rectangle free for a court: on the footprint, off lifts / ramps / keep-clear boxes (the garden band is the mask's business, see outdoorOk). */
+    itemFree(r) {
+      if (r[0] < 0 || r[1] < 0 || r[2] > this.nx || r[3] > this.ny) return false;
       return this.blockedRaw(r[0], r[1], r[2], r[3]) === 0;
+    }
+    /**
+     * Zoning: `maskRows` (1 = the garden band, within the setback of the roof edge). Outdoor and garden items and every pathway stay out of it; indoor items ignore it and may
+     * use the whole footprint. The setback line becomes the edge of the mask; the roof's own walls are still there as satWall.
+     */
+    applyMask(maskRows) {
+      const nx = this.nx, ny = this.ny;
+      const orRows = base => base.map((r, j) => { const o = Uint8Array.from(r), m = maskRows[j]; for (let i = 0; i < nx; i++) if (m[i]) o[i] = 1; return o; });
+      this.satWall = this.satOut;
+      this.maskSat = makeSat(maskRows, nx);
+      this.satOut = makeSat(orRows(this.footRows), nx);
+      const pathRows = orRows(this.rows);
+      this.pathSat = makeSat(pathRows, nx);
+      this.rows = pathRows;
+      const axs = new Set(this.anchorXs), ays = new Set(this.anchorYs);
+      let sig = null;
+      pathRows.forEach((row, j) => {
+        const runs = zeroRuns(row), s = runs.map(q => q[0] + "-" + q[1]).join(",");
+        if (s !== sig) { sig = s; ays.add(j); for (const [a, b] of runs) { axs.add(a); axs.add(b); } }
+      });
+      this.anchorXs = Array.from(axs); this.anchorYs = Array.from(ays);
+      this.masked = true;
+    }
+    /** Is the rectangle clear of the garden band (always true on a grid without a mask)? */
+    outdoorOk(r) {
+      if (!this.maskSat) return true;
+      const S = this.maskSat;
+      return S[r[3]][r[2]] - S[r[1]][r[2]] - S[r[3]][r[0]] + S[r[1]][r[0]] === 0;
+    }
+    /** Length (cells) of the outline that lies on the roof's own walls (an indoor item's edge). */
+    wallContact(r) {
+      const [x0, y0, x1, y1] = r, S = this.satWall || this.satOut;
+      return this._strip(S, x0 - 1, y0, x0, y1) + this._strip(S, x1, y0, x1 + 1, y1) + this._strip(S, x0, y0 - 1, x1, y0) + this._strip(S, x0, y1, x1, y1 + 1);
     }
     /** Blocked cells in a thin strip; anything outside the grid counts as blocked. */
     _strip(S, a, b, c, d) {
@@ -397,7 +456,44 @@ const AlgoPlacement = (function () {
    *   anchors   the lifts and stairs (a subset of `entries`, ramps left out): the corner service modules go to is the one nearest to these
    * Returns { grid, foot, footArea, usableArea, usableRects, bandRects, bbox, entries }.
    */
-  function makeSite({ foot, setback, entries, keepClear, anchors }) {
+  /** Rows over a grid of nx x ny cells whose corner is (x0, y0): 1 where a cell lies within `sb` of the footprint's edge (the garden band), 0 elsewhere. */
+  function setbackMask(foot, sb, x0, y0, nx, ny) {
+    const edges = [];
+    for (let i = 0; i < foot.length; i++) edges.push([foot[i][0], foot[i][1], foot[(i + 1) % foot.length][0], foot[(i + 1) % foot.length][1]]);
+    const lattice = new Float32Array((nx + 1) * (ny + 1)).fill(-1);
+    const dist = (i, j) => {
+      const k = j * (nx + 1) + i;
+      if (lattice[k] < 0) {
+        let d = Infinity;
+        for (const [ax, ay, bx, by] of edges) d = Math.min(d, distToSegment(x0 + i * RES, y0 + j * RES, ax, ay, bx, by));
+        lattice[k] = d;
+      }
+      return lattice[k];
+    };
+    const rows = [];
+    for (let j = 0; j < ny; j++) {
+      const row = new Uint8Array(nx);
+      for (let i = 0; i < nx; i++) if (Math.min(dist(i, j), dist(i + 1, j), dist(i, j + 1), dist(i + 1, j + 1)) < sb - 1e-9) row[i] = 1;
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  /**
+   * The site. With `zoning`, the site also carries `full`: a grid of the WHOLE footprint (lifts and keep-clear boxes cut out) whose garden band is a mask, so indoor items
+   * can stand in the band while outdoor items and pathways cannot. Everything else about the site (usable zone, band, area) is the same as without zoning.
+   */
+  function makeSite(spec) {
+    const site = makeSiteBase(spec);
+    if (spec.zoning && site.setback > 0) {
+      const fs = makeSiteBase(Object.assign({}, spec, { setback: 0 }));
+      fs.grid.applyMask(setbackMask(spec.foot, site.setback, fs.grid.ox, fs.grid.oy, fs.grid.nx, fs.grid.ny));
+      site.full = fs.grid;
+    }
+    return site;
+  }
+
+  function makeSiteBase({ foot, setback, entries, keepClear, anchors }) {
     if (!foot || foot.length < 3) throw new Error("No footprint.");
     const sb = Math.max(0, setback || 0);
     const footArea = polyArea(foot);
@@ -463,12 +559,15 @@ const AlgoPlacement = (function () {
 
   // ── a layout under construction ─────────────────────────────────────────────────
   class Layout {
-    constructor(grid, W, bigSet, gapM) {
+    constructor(grid, W, bigSet, gapM, zoning) {
       this.grid = grid; this.W = W;
       this.big = bigSet || new Set(BIG_COURTS);
       this.minAcc = Math.min(toCells(MIN_ACCESS_M), W);
       this.gapM = gapM == null ? COURT_GAP_M : gapM;      // the clear path around every court and lift / ramp side; the caller may ask for more than the Rhino tool's 1.5 m
       this.gap = toCells(this.gapM);
+      // zoning: { zgap, xgap, egap } in cells = between items of one zone / between zones / around lifts, stairs and ramps; null = the plain, uniform gap
+      this.zoning = zoning || null;
+      if (this.zoning) this.gap = this.zoning.zgap;
       this.pickK = 1;
       this.edgeFirst = true;
       this.edgeW = EDGE_WEIGHT;
@@ -481,8 +580,92 @@ const AlgoPlacement = (function () {
       this.paths = [];
       this.basePaths = [];       // lift landings + the corridor linking them (before any court)
       // courts must stay clear of lifts / ramps: that band becomes their secondary path
-      this.entryZone = grid.entryCells.map(e => inflate(e, this.gap));
+      this.entryZone = grid.entryCells.map(e => inflate(e, this.zoning ? this.zoning.egap : this.gap));
     }
+  }
+
+  /** The clear gap (cells) between two named items: the plain gap, or with zoning the in-zone gap inside a zone and the primary-path gap between zones. */
+  function gapBetween(L, a, b) {
+    if (!L.zoning || !a || !b) return L.gap;
+    if (noSetback(a) && noSetback(b)) return 0;               // the locker and bathroom modules share a wall: no path between them, and only they
+    return zoneOf(a) === zoneOf(b) ? L.zoning.zgap : L.zoning.xgap;
+  }
+  /** May item `name` stand on rectangle r as far as the garden band goes (indoor items may stand in it)? */
+  function zoneAllows(L, name, r) {
+    return !L.zoning || !name || noSetback(name) || L.grid.outdoorOk(r);
+  }
+  /** Contact with the setback line for every sport, with the roof's walls for the service modules (which stand against them). */
+  function edgeOf(L, name, r) {
+    return L.zoning && name && noSetback(name) ? L.grid.wallContact(r) : L.grid.edgeContact(r);
+  }
+  /** The indoor zone: the box round the indoor items that gather round the Locker corner (Rest / Hydration is not one of them), in cells, or null while there are none. */
+  function indoorBoxOf(courts) {
+    let box = null;
+    for (const [n, r] of courts) {
+      if (zoneOf(n) !== "indoor" || NO_CLUSTER.has(n)) continue;
+      box = box ? [Math.min(box[0], r[0]), Math.min(box[1], r[1]), Math.max(box[2], r[2]), Math.max(box[3], r[3])] : r.slice();
+    }
+    return box;
+  }
+  const indoorBox = L => indoorBoxOf(L.courts);
+  /** Where the placed items of the same cluster zone are centred (cells), or null when there are none: the pull that keeps a zone together and grows the indoor zone from its corner. */
+  function zoneCentre(L, name) {
+    if (!L.zoning) return null;
+    const z = clusterZone(name);
+    let sx = 0, sy = 0, n = 0;
+    for (const [n2, r] of L.courts) if (clusterZone(n2) === z) { sx += (r[0] + r[2]) / 2; sy += (r[1] + r[3]) / 2; n++; }
+    return n ? { x: sx / n, y: sy / n, n } : null;
+  }
+  /** Score (higher = better) for standing beside an identical item, the same way round, with edges lined up: two Ping Pong tables side by side. */
+  function alignScore(L, name, r) {
+    if (!L.zoning) return 0;
+    const w = r[2] - r[0], h = r[3] - r[1], near = toCells(NEAR_M);
+    let best = 0;
+    for (const [n2, q] of L.courts) {
+      const gx = Math.max(r[0] - q[2], q[0] - r[2], 0), gy = Math.max(r[1] - q[3], q[1] - r[3], 0);
+      if (Math.hypot(gx, gy) > near) continue;
+      const shares = q[0] === r[0] || q[2] === r[2] || q[1] === r[1] || q[3] === r[3];        // a left, right, top or bottom edge on the same line
+      if (n2 === name && q[2] - q[0] === w && q[3] - q[1] === h) {
+        const g = L.zoning.zgap;
+        const beside = q[1] === r[1] && (Math.abs(r[0] - q[2] - g) <= 1 || Math.abs(q[0] - r[2] - g) <= 1);
+        const above = q[0] === r[0] && (Math.abs(r[1] - q[3] - g) <= 1 || Math.abs(q[1] - r[3] - g) <= 1);
+        if (beside || above) { best = Math.max(best, ALIGN_TIGHT); continue; }
+      }
+      if (shares) best = Math.max(best, ALIGN_ANY);
+    }
+    return best;
+  }
+  /** After placement: the items that have a neighbour within NEAR_M but share no edge line with any of them. */
+  function notAligned(L) {
+    const near = toCells(NEAR_M), out = [];
+    L.courts.forEach(([n, r], i) => {
+      let hasNear = false, shares = false;
+      L.courts.forEach(([, q], j) => {
+        if (i === j) return;
+        if (Math.hypot(Math.max(r[0] - q[2], q[0] - r[2], 0), Math.max(r[1] - q[3], q[1] - r[3], 0)) > near) return;
+        hasNear = true;
+        if (q[0] === r[0] || q[2] === r[2] || q[1] === r[1] || q[3] === r[3]) shares = true;
+      });
+      if (hasNear && !shares) out.push(n);
+    });
+    return out;
+  }
+  /** Can item `name` at r be reached: it touches a primary path, or (zoning) it sits across an in-zone path from an item that can be reached? */
+  function hasAccess(L, name, r) {
+    if (L.paths.some(p => contactLen(r, p) >= L.minAcc)) return true;
+    if (!L.zoning) return false;
+    for (const [n2, q] of L.courts) {
+      if (zoneOf(n2) !== zoneOf(name) || gapBetween(L, name, n2) === 0) continue;         // (across a shared wall there is no path to walk on)
+      if (facingLen(r, q, L.zoning.zgap) >= L.minAcc) return true;
+    }
+    return false;
+  }
+  /** Length (cells) over which two rectangles face each other across a gap of at most `g` cells (+1 cell of slack), 0 when they do not face. */
+  function facingLen(a, b, g) {
+    const dx = Math.max(a[0] - b[2], b[0] - a[2]), dy = Math.max(a[1] - b[3], b[1] - a[3]);
+    if (dx >= 0 && dx <= g + 1 && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > 0) return Math.min(a[3], b[3]) - Math.max(a[1], b[1]);
+    if (dy >= 0 && dy <= g + 1 && Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > 0) return Math.min(a[2], b[2]) - Math.max(a[0], b[0]);
+    return 0;
   }
 
   // ── placement rules: service modules in a corner, heavy items along the structural grid ──
@@ -494,12 +677,20 @@ const AlgoPlacement = (function () {
    */
   function prepareRules(grid, rules) {
     if (!rules) return null;
-    const out = { serviceNames: new Set(), corners: [], gridXs: [], gridYs: [], heavy: new Set(), hasGrid: false };
+    const out = { serviceNames: new Set(), corners: [], gridXs: [], gridYs: [], heavy: new Set(), hasGrid: false, cornerFallback: "" };
     if (rules.serviceCorners) {
-      const anchors = grid.anchorCells || [];
+      let anchors = grid.anchorCells || [];
+      const dist = (c, a) => Math.hypot(Math.max(a[0] - c.x, 0, c.x - a[2]), Math.max(a[1] - c.y, 0, c.y - a[3]));
       if (anchors.length && grid.corners.length) {
-        const dist = (c, a) => Math.hypot(Math.max(a[0] - c.x, 0, c.x - a[2]), Math.max(a[1] - c.y, 0, c.y - a[3]));
         out.corners = grid.corners.map(c => ({ x: c.x, y: c.y, d: Math.min(...anchors.map(a => dist(c, a))) })).sort((a, b) => a.d - b.d).slice(0, 12);
+        SPORTS.filter(s => s.service).forEach(s => out.serviceNames.add(s.name));
+      } else if (rules.cornerFallback && grid.corners.length) {
+        // zoning: the indoor zone still needs a corner to grow from. No lift or stair on the roof: the corner nearest a ramp, else the top-left corner
+        anchors = grid.entryCells || [];
+        out.corners = (anchors.length
+          ? grid.corners.map(c => ({ x: c.x, y: c.y, d: Math.min(...anchors.map(a => dist(c, a))) }))
+          : grid.corners.map(c => ({ x: c.x, y: c.y, d: c.y * 10000 + c.x }))).sort((a, b) => a.d - b.d).slice(0, 12);
+        out.cornerFallback = anchors.length ? "ramp" : "top-left";
         SPORTS.filter(s => s.service).forEach(s => out.serviceNames.add(s.name));
       }
     }
@@ -673,9 +864,18 @@ const AlgoPlacement = (function () {
    * Collision-free spots for a w x h court. Existing courts and lifts / ramps are inflated by the gap, so a new court is never closer than COURT_GAP_M to either -
    * EXCEPT two big courts, which only need a path on one side and may sit right next to each other.
    */
-  function genSpots(L, w, h, big, onGrid) {
+  function genSpots(L, w, h, big, onGrid, name) {
     const g = L.grid, G = L.gap;
+    const zoned = !!(L.zoning && name);
     const xs = [0, g.nx - w], ys = [0, g.ny - h];
+    if (zoned) {
+      // beside every placed item, at exactly the gap this item owes it (in-zone or between zones)
+      for (const [n2, c] of L.courts) { const q = gapBetween(L, name, n2); xs.push(c[2] + q, c[0] - q - w); ys.push(c[3] + q, c[1] - q - h); }
+      const wall = zoneOf(name) !== "indoor" ? indoorBox(L) : null;       // ...and right at the clear distance from the indoor zone's wall line
+      if (wall) { const q = L.zoning.xgap; xs.push(wall[2] + q, wall[0] - q - w); ys.push(wall[3] + q, wall[1] - q - h); }
+      const inner = zoneOf(name) === "indoor" ? indoorBox(L) : null;      // an indoor item is also tried flush with each face of the indoor zone's wall line
+      if (inner) { xs.push(inner[0], inner[2] - w); ys.push(inner[1], inner[3] - h); }
+    }
     for (const x of g.anchorXs) xs.push(x, x - w);
     for (const y of g.anchorYs) ys.push(y, y - h);
     // a heavy item is also tried centred on, and with either long edge on, every line of the structural grid
@@ -689,15 +889,21 @@ const AlgoPlacement = (function () {
     const XS = uniq(xs).filter(x => x >= 0 && x <= g.nx - w);
     const YS = uniq(ys).filter(y => y >= 0 && y <= g.ny - h);
     const obstacles = [];
-    for (const [n, c] of L.courts) obstacles.push(big && L.big.has(n) ? c : inflate(c, G));
+    for (const [n, c] of L.courts) obstacles.push(big && L.big.has(n) ? c : inflate(c, zoned ? gapBetween(L, name, n) : G));
     for (const r of L.entryZone) obstacles.push(r);
     for (const r of L.paths) obstacles.push(r);
     const S = g.sat, out = [];
+    const bandBlocks = zoned && !noSetback(name) && !!g.maskSat;
+    if (zoned && zoneOf(name) !== "indoor") {                            // the dotted rectangle is where the indoor zone's wall will go: every sport keeps the primary-path width clear of it (2.0 m at least)
+      const box = indoorBox(L);
+      if (box) obstacles.push(inflate(box, L.zoning.xgap));
+    }
     for (const y of YS) {
       const Sa = S[y], Sb = S[y + h];
       for (const x of XS) {
         if (Sb[x + w] - Sa[x + w] - Sb[x] + Sa[x] !== 0) continue;
         const r = [x, y, x + w, y + h];
+        if (bandBlocks && !g.outdoorOk(r)) continue;
         let hit = false;
         for (const q of obstacles) if (q[0] < r[2] && r[0] < q[2] && q[1] < r[3] && r[1] < q[3]) { hit = true; break; }
         if (!hit) out.push(r);
@@ -707,11 +913,11 @@ const AlgoPlacement = (function () {
   }
 
   /** How tightly a court sits against walls / boundary / other courts (tight = good). */
-  function contactCells(L, r, big) {
+  function contactCells(L, r, big, name) {
     const g = L.grid;
     const [x0, y0, x1, y1] = r;
     let c = g.stripBlocked(x0 - 1, y0, x0, y1) + g.stripBlocked(x1, y0, x1 + 1, y1) + g.stripBlocked(x0, y0 - 1, x1, y0) + g.stripBlocked(x0, y1, x1, y1 + 1);
-    for (const [n, q] of L.courts) c += big && L.big.has(n) ? contactLen(r, q) : contactLen(r, inflate(q, L.gap));
+    for (const [n, q] of L.courts) c += big && L.big.has(n) ? contactLen(r, q) : contactLen(r, inflate(q, L.zoning && name ? gapBetween(L, name, n) : L.gap));
     return c;
   }
 
@@ -806,9 +1012,30 @@ const AlgoPlacement = (function () {
     return false;
   }
 
+  /** With zoning, a function r -> score (higher = better): closeness to the rest of the item's zone, plus sitting tidily beside identical items. Without zoning it is always 0. */
+  function zoningBonus(L, name) {
+    if (!L.zoning || !name) return () => 0;
+    const c = zoneCentre(L, name);
+    return r => alignScore(L, name, r) - (c ? CLUSTER_PULL * RES * Math.hypot((r[0] + r[2]) / 2 - c.x, (r[1] + r[3]) / 2 - c.y) : 0) + (L.sameLeft > 0 && siblingRoom(L, name, r) ? SIBLING_ROOM : 0);
+  }
+
+  /** Is there a free spot right beside r (same size, same way round, edges aligned, one in-zone path apart) for the next identical item? */
+  function siblingRoom(L, name, r) {
+    const g = L.grid, w = r[2] - r[0], h = r[3] - r[1], q = gapBetween(L, name, name);
+    const spots = [[r[2] + q, r[1]], [r[0] - q - w, r[1]], [r[0], r[3] + q], [r[0], r[1] - q - h]];
+    const box = zoneOf(name) !== "indoor" ? indoorBox(L) : null;
+    return spots.some(([x, y]) => {
+      const s = [x, y, x + w, y + h];
+      if (!g.itemFree(s) || !zoneAllows(L, name, s)) return false;
+      if (L.paths.some(p => overlap(s, p)) || L.entryZone.some(e => overlap(s, e)) || (box && overlap(s, inflate(box, L.zoning.xgap)))) return false;
+      return !L.courts.some(([n2, c]) => overlap(inflate(c, gapBetween(L, name, n2)), s)) && !overlap(inflate(r, q), s);
+    });
+  }
+
   /** Best spot among those already touching a pathway. recs = [[edge, contact, rect]]. Setback-line contact is weighted (edgeW) so edge / corner spots win. */
-  function chooseDirect(L, recs, rng, noise, remaining) {
-    const keyed = recs.map(([ec, cc, r]) => [(L.edgeW * ec + cc) / 10 + noise * rng.random(), -r[1], -r[0], r]);
+  function chooseDirect(L, recs, rng, noise, remaining, name) {
+    const zb = zoningBonus(L, name);
+    const keyed = recs.map(([ec, cc, r]) => [(L.edgeW * ec + cc) / 10 + noise * rng.random() + zb(r), -r[1], -r[0], r]);
     keyed.sort((a, b) => cmp(b, a));
     const pk = Math.max(1, L.pickK);
     const chosen = [];
@@ -820,8 +1047,9 @@ const AlgoPlacement = (function () {
   }
 
   /** Best spot that needs an access lane: [court rect, lane rects] or null. */
-  function lanePick(L, recs, rng, noise, maxM2) {
-    const scored = recs.map(([ec, cc, r]) => [-((L.edgeW * ec + cc) / 10) + 0.003 * distToPaths(r, L.paths) - noise * rng.random(), ec, cc, r]);
+  function lanePick(L, recs, rng, noise, maxM2, name) {
+    const zb = zoningBonus(L, name);
+    const scored = recs.map(([ec, cc, r]) => [-((L.edgeW * ec + cc) / 10) + 0.003 * distToPaths(r, L.paths) - noise * rng.random() - zb(r), ec, cc, r]);
     scored.sort(cmp);
     let bestTotal = null, bestPick = null;
     for (const [, ec, cc, r] of scored.slice(0, LANE_CANDIDATES)) {
@@ -855,11 +1083,11 @@ const AlgoPlacement = (function () {
     const attempt = sameCorner => {
       let cands = [];
       for (const [w, h] of orients) {
-        for (const r of genSpots(L, w, h, false, heavy ? R : null)) {
+        for (const r of genSpots(L, w, h, false, heavy ? R : null, name)) {
           if (sameCorner) {
             // together in the same corner: tucked in against the first service module (its clear gap), on the roof's edge like it
             const d = distToCorner(r, R.corners[L.serviceCorner]);
-            cands.push([rectGapM(L.serviceFirst, r) + (L.grid.edgeContact(r) >= emin ? 0 : 6) + 0.05 * d, L.serviceCorner, r, d]);
+            cands.push([rectGapM(L.serviceFirst, r) + (edgeOf(L, name, r) >= emin ? 0 : 6) + 0.05 * d, L.serviceCorner, r, d]);
             continue;
           }
           let best = null;
@@ -870,14 +1098,14 @@ const AlgoPlacement = (function () {
       cands.sort((a, b) => a[0] - b[0]);
       if (heavy && cands.length) {
         const limit = cands[0][0] + (sameCorner ? 1.0 : 3.0);   // within 3 m of the best corner spot (1 m for one beside the first), one along the structural grid wins
-        const bestEdge = L.grid.edgeContact(cands[0][2]);       // ...but never one that leaves a sliver against the roof edge that the best spot lay flush against
-        const aligned = cands.filter(c => c[0] <= limit && gridAlong(R, c[2]) && L.grid.edgeContact(c[2]) >= bestEdge);
+        const bestEdge = edgeOf(L, name, cands[0][2]);          // ...but never one that leaves a sliver against the roof edge that the best spot lay flush against
+        const aligned = cands.filter(c => c[0] <= limit && gridAlong(R, c[2]) && edgeOf(L, name, c[2]) >= bestEdge);
         if (aligned.length) cands = aligned.concat(cands.filter(c => !aligned.includes(c)));
       }
       for (const [, k, r, d] of cands.slice(0, 80)) {
         if (d > SERVICE_MAX_FROM_CORNER_M) continue;
         let lane = null;
-        if (!L.paths.some(p => contactLen(r, p) >= L.minAcc)) {
+        if (!hasAccess(L, name, r)) {
           const opts = laneOptions(L, r);
           if (!opts.length) continue;
           lane = opts.reduce((a, b) => (b[0] < a[0] ? b : a))[1];
@@ -891,6 +1119,34 @@ const AlgoPlacement = (function () {
     return (L.serviceCorner != null && attempt(true)) || attempt(false);
   }
 
+  /**
+   * Zoning: a Bouldering Wall is a wall you climb, so it goes with its back on the indoor zone's wall line (its long side flush with a face of the dotted rectangle, inside it),
+   * not out in the middle of the zone. Placed after the rest of the zone, whose outline it then is. Returns [true, ""], or null when no such spot is free.
+   */
+  function placeOnWall(L, name, w0, h0, rng, noise, remaining) {
+    const box = indoorBox(L);
+    if (!box) return null;
+    // two ways to have its back on the wall line: inside the zone with its long side on a face of the rectangle, or just outside a face (one path away from the items there, along
+    // the face and no wider than it), where its own outer long side then becomes the wall line. The first is tried first: it does not grow the zone.
+    const inside = { directs: [], others: [] }, outside = { directs: [], others: [] };
+    for (const [w, h] of (w0 === h0 ? [[w0, h0]] : [[w0, h0], [h0, w0]])) {
+      for (const r of genSpots(L, w, h, false, null, name)) {
+        const isIn = r[0] >= box[0] && r[1] >= box[1] && r[2] <= box[2] && r[3] <= box[3];
+        let bucket = null;
+        if (isIn) { if (w >= h ? (r[1] === box[1] || r[3] === box[3]) : (r[0] === box[0] || r[2] === box[2])) bucket = inside; }
+        else if (w >= h) { if (r[0] >= box[0] && r[2] <= box[2] && (r[1] >= box[3] || r[3] <= box[1])) bucket = outside; }          // wide: on the top or bottom face
+        else if (r[1] >= box[1] && r[3] <= box[3] && (r[0] >= box[2] || r[2] <= box[0])) bucket = outside;                              // tall: on the left or right face
+        if (bucket) (hasAccess(L, name, r) ? bucket.directs : bucket.others).push([0, contactCells(L, r, false, name), r]);
+      }
+    }
+    for (const b of [inside, outside]) {
+      if (b.directs.length) { commit(L, name, chooseDirect(L, b.directs, rng, noise, remaining, name)); return [true, ""]; }
+      const pick = lanePick(L, b.others, rng, noise, null, name);
+      if (pick) { commit(L, name, pick[0], pick[1]); return [true, ""]; }
+    }
+    return null;
+  }
+
   /** Priority 1: a spot on the setback line. Priority 2: anywhere in the middle. Returns [ok, reason]. */
   function placeCourt(L, name, w0, h0, rng, noise, remaining) {
     const g = L.grid;
@@ -901,17 +1157,24 @@ const AlgoPlacement = (function () {
       if (atCorner) return atCorner;
       L.notes.push(labelOf(name) + ": no free corner near a lift or stair, so it was placed elsewhere.");
     }
+    if (L.zoning && name === "Bouldering Wall") {
+      const onWall = placeOnWall(L, name, w0, h0, rng, noise, remaining);
+      if (onWall) return onWall;
+      L.notes.push(labelOf(name) + ": no free spot with its back on the indoor zone's wall line, so it was placed elsewhere.");
+    }
     const heavyOnGrid = !!(R && R.hasGrid && R.heavy.has(name));
     const orients = w0 === h0 ? [[w0, h0]] : [[w0, h0], [h0, w0]];
     const emin = toCells(EDGE_MIN_M);
     let directs = [], others = [];
     let anySpot = false;
+    const clustered = !!(L.zoning && zoneCentre(L, name));         // zoning: an item joining its zone cares far less about the wall than about the zone
+    const edgeScale = clustered ? EDGE_SCALE_CLUSTERED : 1;
     for (const [w, h] of orients) {
-      const spots = genSpots(L, w, h, big, heavyOnGrid ? R : null);
+      const spots = genSpots(L, w, h, big, heavyOnGrid ? R : null, name);
       if (spots.length) anySpot = true;
       for (const r of spots) {
-        const rec = [L.edgeFirst ? g.edgeContact(r) : 0, contactCells(L, r, big), r];
-        (L.paths.some(p => contactLen(r, p) >= L.minAcc) ? directs : others).push(rec);
+        const rec = [L.edgeFirst ? edgeOf(L, name, r) * edgeScale : 0, contactCells(L, r, big, name), r];
+        (hasAccess(L, name, r) ? directs : others).push(rec);
       }
     }
     if (!anySpot) return [false, "no space"];
@@ -921,24 +1184,25 @@ const AlgoPlacement = (function () {
       if (d2.length || o2.length) { directs = d2; others = o2; }
       else L.notes.push(labelOf(name) + ": no free spot along the structural grid (dead load above " + HEAVY_DEAD_LOAD_KN_M2.toFixed(1) + " kN/m²), so it was placed elsewhere.");
     }
-    if (L.edgeFirst) {
+    // zoning: once a zone has its first item, staying together beats hugging the setback line (which is then only a tie-break inside the score)
+    if (L.edgeFirst && !(L.zoning && zoneCentre(L, name))) {
       const edgeD = directs.filter(x => x[0] >= emin);            // on the setback line, path already there
-      if (edgeD.length) { commit(L, name, chooseDirect(L, edgeD, rng, noise, remaining)); return [true, ""]; }
+      if (edgeD.length) { commit(L, name, chooseDirect(L, edgeD, rng, noise, remaining, name)); return [true, ""]; }
       const edgeO = others.filter(x => x[0] >= emin);             // on the setback line, needs a lane
       if (edgeO.length) {
-        const pick = lanePick(L, edgeO, rng, noise, PERIM_LANE_MAX_M2);
+        const pick = lanePick(L, edgeO, rng, noise, PERIM_LANE_MAX_M2, name);
         if (pick) { commit(L, name, pick[0], pick[1]); return [true, ""]; }
       }
     }
-    if (directs.length) { commit(L, name, chooseDirect(L, directs, rng, noise, remaining)); return [true, ""]; }   // the middle
-    const pick = lanePick(L, others, rng, noise, null);
+    if (directs.length) { commit(L, name, chooseDirect(L, directs, rng, noise, remaining, name)); return [true, ""]; }   // the middle
+    const pick = lanePick(L, others, rng, noise, null, name);
     if (!pick) return [false, "no access route"];
     commit(L, name, pick[0], pick[1]);
     return [true, ""];
   }
 
-  function runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared) {
-    const L = new Layout(grid, W, bigSet, gapM);
+  function runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z) {
+    const L = new Layout(grid, W, bigSet, gapM, Z);
     L.rules = prepared || null;
     L.pickK = pickK;
     L.edgeFirst = edgeFirst;
@@ -951,6 +1215,7 @@ const AlgoPlacement = (function () {
     const placed = [], unplaced = [];
     items.forEach(([n, w, h], k) => {
       if (now() > deadline) { unplaced.push([n, w, h, "time limit"]); return; }
+      L.sameLeft = items.slice(k + 1).filter(it => it[0] === n).length;                 // identical items still to come (zoning keeps room beside the one being placed)
       const [ok, why] = placeCourt(L, n, w, h, rng, noise, items.length - k - 1);
       if (ok) placed.push([n, w, h]); else unplaced.push([n, w, h, why]);
     });
@@ -980,6 +1245,26 @@ const AlgoPlacement = (function () {
     return secondaryPaths(grid, rings, G).concat(secondaryPaths(grid, grid.entryCells, G));
   }
 
+  /**
+   * Zoning: the paths around the items. A ring of the in-zone width around every item, the wider ring around lifts / stairs / ramps, and, where two items face each
+   * other across the gap they owe each other (in-zone, or the wider one between zones), all the space between them.
+   */
+  function zoningSecondary(grid, courts, Z) {
+    const out = [];
+    for (const [, c] of courts) out.push(...secondaryPaths(grid, [c], Z.zgap));
+    out.push(...secondaryPaths(grid, grid.entryCells, Z.egap));
+    for (let i = 0; i < courts.length; i++) for (let j = i + 1; j < courts.length; j++) {
+      const [na, a] = courts[i], [nb, b] = courts[j];
+      const g = zoneOf(na) === zoneOf(nb) ? Z.zgap : Z.xgap;
+      const dx = Math.max(a[0] - b[2], b[0] - a[2]), dy = Math.max(a[1] - b[3], b[1] - a[3]);
+      const oy0 = Math.max(a[1], b[1]), oy1 = Math.min(a[3], b[3]), ox0 = Math.max(a[0], b[0]), ox1 = Math.min(a[2], b[2]);
+      if (dx >= 0 && dx <= g + 1 && oy1 > oy0) out.push(...freeRectsIn(grid, a[2] <= b[0] ? [a[2], oy0, b[0], oy1] : [b[2], oy0, a[0], oy1]));
+      else if (dy >= 0 && dy <= g + 1 && ox1 > ox0) out.push(...freeRectsIn(grid, a[3] <= b[1] ? [ox0, a[3], ox1, b[1]] : [ox0, b[3], ox1, a[1]]));
+    }
+    // a ring is never laid over an item next to it (the locker and bathroom modules touch: no path between them)
+    return out.flatMap(r => courts.reduce((acc, [, c]) => acc.flatMap(x => subtractRect(x, c)), [r]));
+  }
+
   // ── leftover pockets (become garden) ────────────────────────────────────────────
   function paintRows(grid, rects) {
     const rows = grid.rows.map(r => Uint8Array.from(r));
@@ -991,8 +1276,8 @@ const AlgoPlacement = (function () {
     return rows;
   }
   const countFree = rows => rows.reduce((s, row) => s + row.reduce((t, v) => t + (v === 0 ? 1 : 0), 0), 0);
-  function unusedCells(grid, courts, paths, gap, bigSet) {
-    const sec = allSecondary(grid, courts, gap, bigSet);
+  function unusedCells(grid, courts, paths, gap, bigSet, Z) {
+    const sec = Z ? zoningSecondary(grid, courts, Z) : allSecondary(grid, courts, gap, bigSet);
     return countFree(paintRows(grid, courts.map(c => c[1]).concat(paths, sec)));
   }
   /** Every free cell that is not court / pathway, as rectangles: [garden-worthy pockets, small remainders, total unused cells]. */
@@ -1007,20 +1292,37 @@ const AlgoPlacement = (function () {
   }
 
   /** Independent re-check of a finished layout. Returns a list of problems (empty = fine). */
-  function validate(grid, W, minAcc, courts, paths, sec, bigSet, gapM) {
+  function validate(grid, W, minAcc, courts, paths, sec, bigSet, gapM, Z) {
     const issues = [];
     const gapMetres = gapM == null ? COURT_GAP_M : gapM;
     const gap = toCells(gapMetres);
     const cr = courts.map(c => c[1]);
-    courts.forEach(([n, r]) => { if (!grid.isFree(r)) issues.push(n + " is outside the usable zone or on a lift/ramp"); });
+    courts.forEach(([n, r]) => {
+      const ok = Z ? grid.itemFree(r) && (noSetback(n) || grid.outdoorOk(r)) : grid.isFree(r);
+      if (!ok) issues.push(n + (Z && grid.itemFree(r) ? " is inside the setback (only the locker and bathroom modules may stand there)" : " is outside the usable zone or on a lift/ramp"));
+    });
+    if (Z) {                                                            // nothing but indoor items inside the indoor zone's rectangle
+      const box = indoorBoxOf(courts);
+      if (box) courts.forEach(([n, r]) => { if (zoneOf(n) !== "indoor" && overlap(inflate(box, Z.xgap), r)) issues.push(n + " is closer than " + (Z.xgap * RES).toFixed(1) + " m to the indoor zone's wall line"); });
+    }
+    // zoning: an item is reached from a primary path, or across an in-zone path from an item that is
+    const reached = courts.map((c, i) => paths.some(p => contactLen(cr[i], p) >= minAcc));
+    if (Z) for (let moved = true; moved;) {
+      moved = false;
+      for (let i = 0; i < courts.length; i++) if (!reached[i] && courts.some((d, j) => reached[j] && zoneOf(d[0]) === zoneOf(courts[i][0]) && !(noSetback(d[0]) && noSetback(courts[i][0])) && facingLen(cr[i], cr[j], Z.zgap) >= minAcc)) { reached[i] = true; moved = true; }
+    }
     for (let i = 0; i < courts.length; i++) {
       for (let j = i + 1; j < courts.length; j++) {
-        if (bigSet.has(courts[i][0]) && bigSet.has(courts[j][0])) {
+        if (Z) {
+          const g = noSetback(courts[i][0]) && noSetback(courts[j][0]) ? 0 : zoneOf(courts[i][0]) === zoneOf(courts[j][0]) ? Z.zgap : Z.xgap;
+          if (overlap(inflate(cr[i], g), cr[j])) issues.push(courts[i][0] + " is closer than " + (g * RES).toFixed(1) + " m to " + courts[j][0]);
+        } else if (bigSet.has(courts[i][0]) && bigSet.has(courts[j][0])) {
           if (overlap(cr[i], cr[j])) issues.push(courts[i][0] + " overlaps " + courts[j][0]);
         } else if (overlap(inflate(cr[i], gap), cr[j])) issues.push(courts[i][0] + " is closer than " + gapMetres.toFixed(1) + " m to " + courts[j][0]);
       }
       if (paths.some(p => overlap(cr[i], p))) issues.push(courts[i][0] + " overlaps a pathway");
-      if (!paths.some(p => contactLen(cr[i], p) >= minAcc)) issues.push(courts[i][0] + " has no pathway access");
+      if (!reached[i]) issues.push(courts[i][0] + " has no pathway access");
+      if (Z && grid.entryCells.some(e => overlap(inflate(e, Z.egap), cr[i]))) issues.push(courts[i][0] + " is closer than " + (Z.egap * RES).toFixed(1) + " m to a lift / stair / ramp");
     }
     if (paths.length && components(paths, W).length > 1) issues.push("pathway network is not fully connected");
     if (sec.some(s => cr.some(r => overlap(s, r)))) issues.push("a secondary path overlaps a court");
@@ -1071,11 +1373,12 @@ const AlgoPlacement = (function () {
    * One full search at ONE pathway width. `opts`: { yieldFn, cancelled, onProgress }.
    * Everything in and out is in METRES; `requests` = [{ name, w, h }].
    */
-  async function planOnce(site, requests, pathWm, ring, timeLimit, seed, shuffle, variant, seen, edgeFirst, leftoverPath, bigSet, opts, gapM, rules) {
+  async function planOnce(site, requests, pathWm, ring, timeLimit, seed, shuffle, variant, seen, edgeFirst, leftoverPath, bigSet, opts, gapM, rules, zx) {
     const o = opts || {};
     const t0 = now();
-    const grid = site.grid;
-    const prepared = prepareRules(grid, rules);
+    const grid = zx && site.full ? site.full : site.grid;          // zoning: the whole footprint, with the garden band as a mask (indoor items may stand in it)
+    const Z = zx ? { zgap: toCells(zx.zgap), xgap: toCells(zx.xgap), egap: toCells(zx.egap) } : null;
+    const prepared = prepareRules(grid, zx ? Object.assign({ cornerFallback: true }, rules || { serviceCorners: true, gridLines: [] }) : rules);
     const W = toCells(pathWm);
     const emin = toCells(EDGE_MIN_M);
     const items = requests.map(r => [r.name, toCells(r.w), toCells(r.h)]);
@@ -1101,14 +1404,25 @@ const AlgoPlacement = (function () {
       }
       // the service modules first (they need a corner), then the heavy items held to the grid (they need it), then big courts (hardest to fit), then by area; past failures jump the queue
       const rank = n => (layoutRules && layoutRules.serviceNames.has(n) ? -2 : layoutRules && layoutRules.heavy.has(n) ? -1 : bigSet.has(n) ? 0 : 1);
-      const keyed = items.map(it => {
+      let keyed;
+      if (Z) {
+        // zoning: the corner services first, then the rest of the indoor zone, then outdoor, then garden; inside a zone the heavy items (held to the grid) and the big ones first,
+        // and identical items one after the other (one jitter per name), so they can sit together
+        const zr = n => (layoutRules && layoutRules.serviceNames.has(n) ? 0 : n === "Bouldering Wall" ? 1.5 : zoneOf(n) === "indoor" ? 1 : zoneOf(n) === "outdoor" ? 2 : 3);
+        const jitOf = {};
+        keyed = items.map(it => {
+          const n = it[0];
+          if (!(n in jitOf)) jitOf[n] = first ? 1.0 : rng.uniform(loJ, hiJ);
+          return [[zr(n), layoutRules && layoutRules.heavy.has(n) ? 0 : 1, -it[1] * it[2] * jitOf[n] * (1.0 + 0.5 * (boost[n] || 0)), n], it];
+        });
+      } else keyed = items.map(it => {
         const jit = first ? 1.0 : rng.uniform(loJ, hiJ);
         return [[rank(it[0]), -it[1] * it[2] * jit * (1.0 + 0.5 * (boost[it[0]] || 0))], it];
       });
       keyed.sort((a, b) => cmp(a[0], b[0]));
       const order = keyed.map(k => k[1]);
       const [noise, pickK] = shuffle ? [6.0, 5] : first ? [0.0, 1] : [1.5, 1];
-      const [L, placed, unplaced, warns] = runAttempt(grid, W, order, ring, rng, noise, hard, pickK, edgeFirst, bigSet, gapM, layoutRules);
+      const [L, placed, unplaced, warns] = runAttempt(grid, W, order, ring, rng, noise, hard, pickK, edgeFirst, bigSet, gapM, layoutRules, Z);
       for (const u of unplaced) boost[u[0]] = (boost[u[0]] || 0) + 1;
       const onEdge = L.courts.filter(([, r]) => grid.edgeContact(r) >= emin).length;
       // best = most court area, then the layout that keeps the placement rules best (0 for all when no rule is on), then most courts on the setback line, then least path
@@ -1135,7 +1449,7 @@ const AlgoPlacement = (function () {
       const topEdge = Math.max(...pool.map(r => r.score[2]));
       pool = pool.filter(r => r.score[2] >= topEdge - 1);
       pool.sort((a, b) => -a.score[3] - -b.score[3]);
-      const scored = pool.slice(0, 15).map(r => [unusedCells(grid, r.L.courts, r.L.paths, r.L.gap, bigSet), r]);
+      const scored = pool.slice(0, 15).map(r => [unusedCells(grid, r.L.courts, r.L.paths, r.L.gap, bigSet, Z), r]);
       const minU = Math.min(...scored.map(s => s[0]));
       const keep = scored.filter(([uc]) => uc <= minU * 1.08 + 300).map(s => s[1]);
       let fresh = keep.filter(r => !seen.has(r.sig));
@@ -1148,32 +1462,52 @@ const AlgoPlacement = (function () {
 
     const { L, placed, unplaced, warns, sig } = chosen;
     const unplacedOut = explainUnplaced(grid, L, unplaced);
-    const sec = allSecondary(grid, L.courts, L.gap, bigSet);
+    const sec = Z ? zoningSecondary(grid, L.courts, Z) : allSecondary(grid, L.courts, L.gap, bigSet);
     const allPaths = L.paths.concat(sec);
     const totalCells = rectUnionArea(allPaths);
     const primCells = rectUnionArea(L.paths);
     const [bigP, smallP, unusedC] = leftoverSplit(grid, L.courts.map(c => c[1]).concat(allPaths));
-    const pockets = leftoverPath ? [] : bigP;                     // Option 1: ALL leftover space becomes pathway; Option 2: real pockets = garden
-    const filler = leftoverPath ? bigP.concat(smallP) : smallP;
+    let pockets = leftoverPath ? [] : bigP;                       // Option 1: ALL leftover space becomes pathway; Option 2: real pockets = garden
+    const filler = leftoverPath ? bigP.concat(smallP) : smallP.slice();
+    // zoning: no garden inside the indoor zone (walls round it): what a pocket has inside its rectangle stays plain floor, drawn like the other leftover space
+    const zoneBox = Z ? indoorBoxOf(L.courts) : null;
+    if (zoneBox) {
+      pockets = pockets.flatMap(p => {
+        const ix = [Math.max(p[0], zoneBox[0]), Math.max(p[1], zoneBox[1]), Math.min(p[2], zoneBox[2]), Math.min(p[3], zoneBox[3])];
+        if (ix[2] <= ix[0] || ix[3] <= ix[1]) return [p];
+        filler.push(ix);
+        return subtractRect(p, zoneBox);
+      });
+    }
     const drawPaths = allPaths.concat(filler);                    // nothing is left empty
     const gardenCells = pockets.reduce((s, q) => s + area(q), 0);
     const fillerCells = filler.reduce((s, q) => s + area(q), 0);
-    const issues = validate(grid, W, L.minAcc, L.courts, L.paths, sec, bigSet, L.gapM);
+    const issues = validate(grid, W, L.minAcc, L.courts, L.paths, sec, bigSet, L.gapM, Z);
     const kept = ruleCompliance(L, prepared);
     const rulesReport = prepared ? {
       services: kept.services.map(s => ({ name: s.name, state: s.state, rank: s.rank })),
       heavy: kept.heavy.map(h => ({ name: h.name, along: h.along })),
       heavyPlaced: L.courts.map(c => c[0]).filter(n => SPORTS.some(s => s.name === n && s.deadLoad != null && s.deadLoad > HEAVY_DEAD_LOAD_KN_M2)),
       hasGrid: prepared.hasGrid, gridLines: prepared.gridXs.length + prepared.gridYs.length,
-      cornersKnown: prepared.corners.length > 0
+      cornersKnown: prepared.corners.length > 0, cornerFallback: prepared.cornerFallback
     } : null;
     const presets = new Map(SPORTS.map(s => [s.name, s]));
     const courtsOut = L.courts.map(([name, r]) => {
       const p = presets.get(name);
       // compared in grid cells: a size that is not a multiple of the 0.1 m step (the 63.77 x 1.22 m sprint lane) is rounded to the grid, so an exact metre comparison would never match
-      return { name, rect: grid.toM(r), long: p.long, short: p.short, rotated: toCells(p.long) !== toCells(p.short) && (r[2] - r[0]) === toCells(p.short), onEdge: grid.edgeContact(r) >= emin, big: bigSet.has(name) };
+      return { name, rect: grid.toM(r), long: p.long, short: p.short, rotated: toCells(p.long) !== toCells(p.short) && (r[2] - r[0]) === toCells(p.short), onEdge: grid.edgeContact(r) >= emin, big: bigSet.has(name), zone: Z ? zoneOf(name) : null };
     });
+    // zoning: the indoor zone's rectangle (drawn dotted), and the garden band less the stretch of it inside that rectangle (no garden where the walls are)
+    let bandOut = null, indoorZone = null;
+    if (Z) {
+      const cellBox = indoorBoxOf(L.courts);
+      indoorZone = cellBox ? grid.toM(cellBox) : null;
+      bandOut = indoorZone ? site.bandRects.flatMap(s => subtractRect(s, indoorZone)) : site.bandRects;
+    }
+    const misaligned = Z ? notAligned(L) : null;
     return {
+      bandRects: bandOut, indoorZone, notAligned: misaligned,
+      zoning: Z ? { zoneGapM: Z.zgap * RES, crossGapM: Z.xgap * RES, entryGapM: Z.egap * RES } : null,
       courts: courtsOut,
       pockets: pockets.map(p => grid.toM(p)),
       pathRects: drawPaths.map(r => grid.toM(r)),
@@ -1204,14 +1538,20 @@ const AlgoPlacement = (function () {
    *   rules    = { serviceCorners: bool, gridLines: [{ x1, y1, x2, y2 }] } (see prepareRules); none by default, which is the Rhino tool's plain behaviour
    */
   async function planLayout(site, requests, settings, opts) {
-    const s = Object.assign({ pathW: DEFAULT_PATH_W, minPathW: MIN_PATH_W_M, ring: false, timeLimit: DEFAULT_TIME, seed: 1, shuffle: false, variant: 0, seen: null, edgeFirst: true, leftoverPath: false, strictGap: false, courtGap: COURT_GAP_M, rules: null }, settings || {});
-    const bigSet = s.strictGap ? new Set() : new Set(BIG_COURTS);
+    const s = Object.assign({ pathW: DEFAULT_PATH_W, minPathW: MIN_PATH_W_M, ring: false, timeLimit: DEFAULT_TIME, seed: 1, shuffle: false, variant: 0, seen: null, edgeFirst: true, leftoverPath: false, strictGap: false, courtGap: COURT_GAP_M, rules: null, zoning: false }, settings || {});
+    // zoning: no item is "big" (every one keeps its gap on all sides), and the widths tried are the in-zone / primary pairs, widest first
+    const bigSet = s.strictGap || s.zoning ? new Set() : new Set(BIG_COURTS);
     let best = null;
-    const widths = widthOptions(s.pathW, s.minPathW);
-    for (let k = 0; k < widths.length; k++) {
+    const tries = [];
+    if (s.zoning) {
+      const primaries = PRIMARY_OPTIONS_M.filter(w => w <= s.pathW + 1e-9 && w >= s.minPathW - 1e-9);
+      for (const w of primaries.length ? primaries : [Math.max(s.minPathW, Math.min(s.pathW, PRIMARY_OPTIONS_M[0]))]) for (const zg of ZONE_GAP_OPTIONS_M) if (zg <= w + 1e-9) tries.push([w, { zgap: zg, xgap: w, egap: ENTRY_GAP_M }]);
+    } else for (const w of widthOptions(s.pathW, s.minPathW)) tries.push([w, null]);
+    for (let k = 0; k < tries.length; k++) {
+      const [w, zx] = tries[k];
       const tl = k === 0 ? s.timeLimit : Math.max(1.0, s.timeLimit * 0.6);
-      const plan = await planOnce(site, requests, widths[k], s.ring, tl, s.seed, s.shuffle, s.variant, s.seen, s.edgeFirst, s.leftoverPath, bigSet, opts, s.courtGap, s.rules);
-      const key = [-plan.unplaced.length, plan.stats.courtArea, widths[k]];
+      const plan = await planOnce(site, requests, w, s.ring, tl, s.seed, s.shuffle, s.variant, s.seen, s.edgeFirst, s.leftoverPath, bigSet, opts, s.courtGap, s.rules, zx);
+      const key = [-plan.unplaced.length, plan.stats.courtArea, w, zx ? zx.zgap : 0];
       if (best === null || cmp(key, best[0]) > 0) best = [key, plan];
       if (!plan.unplaced.length) break;
     }
@@ -1252,7 +1592,8 @@ const AlgoPlacement = (function () {
     const isService = n => SPORTS.some(s => s.name === n && s.service);
     const servicesPlaced = plan.courts.filter(c => isService(c.name));
     if (servicesPlaced.length) {
-      if (!r.cornersKnown) out.push("Services: no lift or stair on the site, so there is no corner to send " + servicesPlaced.map(c => labelOf(c.name)).join(" and ") + " to.");
+      if (r.cornerFallback) out.push("Services: no lift or stair on the roof, so the indoor zone grows from " + (r.cornerFallback === "ramp" ? "the roof corner nearest a ramp" : "the top-left roof corner") + ".");
+      else if (!r.cornersKnown) out.push("Services: no lift or stair on the site, so there is no corner to send " + servicesPlaced.map(c => labelOf(c.name)).join(" and ") + " to.");
       else out.push("Services: " + r.services.map(s => labelOf(s.name) + (s.state === "corner" ? (s.rank === 0 ? " in the corner nearest a lift/stair" : " in a roof corner near a lift/stair (#" + (s.rank + 1) + ", the nearer ones had no room)") : s.state === "beside" ? " beside the first one, in the same corner" : " NOT in a corner (no room)")).join("; "));
     }
     if (r.heavyPlaced.length) {
@@ -1260,6 +1601,14 @@ const AlgoPlacement = (function () {
       else out.push("Heavy items along the structural grid (" + r.gridLines + " lines from Revit): " + r.heavy.map(h => labelOf(h.name) + (h.along ? " yes" : isService(h.name) ? " NO (its corner spot is off the grid)" : " NO (no room for it along the grid without leaving a court out)")).join("; "));
     }
     return out;
+  }
+
+  /** Zoning: whether the locker and bathroom modules ended up sharing a wall (no path between them), in words. */
+  function sharedWallLines(plan) {
+    const s = plan.courts.filter(c => noSetback(c.name));
+    if (s.length < 2) return [];
+    const a = s[0].rect, b = s[1].rect, gap = Math.hypot(Math.max(a[0] - b[2], b[0] - a[2], 0), Math.max(a[1] - b[3], b[1] - a[3], 0));
+    return [gap < 0.05 ? "Services: the locker and bathroom modules share a wall (no path between them)." : "Services: the locker and bathroom modules could not be placed wall to wall, so they have a path between them."];
   }
 
   /** The text of the report under the preview (the Rhino tool's build_report). */
@@ -1277,14 +1626,18 @@ const AlgoPlacement = (function () {
       "Courts placed: " + s.placed + " of " + s.requested + " requested   (" + s.courtArea.toFixed(0) + " m² = " + built.toFixed(0) + "% of sports area, limit " + BUILT_LIMIT_PCT.toFixed(0) + "%)",
       "Courts touching the setback line: " + s.onEdge + " of " + s.placed + (plan.bigSet && !plan.bigSet.length ? "" : "   |   Big courts (one path side only): " + s.bigN),
       "Main pathway " + s.pathW.toFixed(1) + " m wide" + narrowed,
-      "Primary paths: " + s.pathArea.toFixed(0) + " m² (" + (100 * s.pathArea / u).toFixed(0) + "%)   Secondary " + gapTxt + " m paths: " + s.secArea.toFixed(0) + " m² (" + (100 * s.secArea / u).toFixed(0) + "%)",
+      "Primary paths: " + s.pathArea.toFixed(0) + " m² (" + (100 * s.pathArea / u).toFixed(0) + "%)   Secondary " + (plan.zoning ? plan.zoning.zoneGapM.toFixed(1) : gapTxt) + " m paths: " + s.secArea.toFixed(0) + " m² (" + (100 * s.secArea / u).toFixed(0) + "%)",
       garden,
       ...ruleLines(plan),
+      ...(plan.zoning ? sharedWallLines(plan) : []),
+      ...(plan.zoning ? [plan.notAligned && plan.notAligned.length ? "Alignment: no shared edge with a neighbour for " + plan.notAligned.map(labelOf).join(", ") + " (no aligned spot was free)." : "Alignment: every item that has a neighbour shares an edge line with one."] : []),
       "Sports area: " + u.toFixed(0) + " m² (bounding box " + bw + " x " + bh + " m)   |   " + s.attempts + " attempts in " + s.elapsed.toFixed(1) + " s"
     ];
     if (plan.unplaced.length) lines.push("NOT placed: " + plan.unplaced.map(x => labelOf(x.name) + " (" + x.reason + ")").join("; "));
     plan.warnings.forEach(w => lines.push("Warning: " + w));
+    const zn = plan.zoning;
     lines.push(plan.issues.length ? "CHECK FAILED: " + plan.issues.join("; ")
+      : zn ? "Checks passed: " + zn.zoneGapM.toFixed(1) + " m paths inside a zone, " + zn.crossGapM.toFixed(1) + " m between zones, " + zn.entryGapM.toFixed(1) + " m around lifts, stairs and ramps; every sport keeps the setback (only the locker and bathroom modules stand in it); pathways connected."
       : plan.bigSet && !plan.bigSet.length
         ? "Checks passed: " + gapTxt + " m path around every court and lift/ramp side, no two courts touch, pathways connected."
         : "Checks passed: " + gapTxt + " m path around normal courts and lift/ramp sides, big courts touch a path on one side, pathways connected.");
@@ -1295,6 +1648,7 @@ const AlgoPlacement = (function () {
     RES, SPORTS, GROUPS, labelOf, BIG_COURTS, HEAVY_DEAD_LOAD_KN_M2, COLOR_VC, COLOR_PATH, COLOR_GARDEN,
     DEFAULT_SETBACK, DEFAULT_PATH_W, MIN_PATH_W_M, DEFAULT_TIME, BUILT_LIMIT_PCT, COURT_GAP_M, MIN_ACCESS_M,
     makeSite, planLayout, fitCheck, buildReport, Cancelled,
+    zoneOf, ZONE_GAP_OPTIONS_M, PRIMARY_OPTIONS_M, ENTRY_GAP_M,
     // for the tests
     _internals: { Grid, Layout, makeRng, components, overlap, inflate, contactLen, toCells, validate, allSecondary, rectUnionArea, axisRect, polyArea }
   };

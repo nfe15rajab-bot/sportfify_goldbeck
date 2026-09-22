@@ -56,6 +56,12 @@ function updateRoofSetupUI() {
     status.textContent = p ? `${p.label}. You can change it at any time.` : "Not chosen yet. Pick one: it decides which rules apply to this roof.";
   }
   if (typeof algoRefreshSiteNote === "function") algoRefreshSiteNote();
+  if (typeof algoApplyRoofType === "function") algoApplyRoofType();
+}
+
+/** The roof type must be known once Combine opens: ask for it unless the session already has one. */
+function roofProgramOnCombineOpen() {
+  if (!combineState.roof.program && !document.getElementById("roof-program-prompt")) openRoofProgramPrompt("");
 }
 
 function setRoofProgram(key) {
@@ -99,7 +105,6 @@ function openRoofProgramPrompt(detail) {
       <h1 id="roof-prompt-title">What is this roof?</h1>
       <p class="hint">${detail ? roofEsc(detail) + ". " : ""}Tell Sportify what the roof is for: the rules that apply depend on it.</p>
       <div class="roof-program-cards">${roofProgramCardsHtml(combineState.roof.program)}</div>
-      <button type="button" class="session-gate-link" data-roof-later>Decide later</button>
     </div>`;
   document.body.appendChild(el);
   const first = el.querySelector("[data-roof-program]");
@@ -109,7 +114,6 @@ function openRoofProgramPrompt(detail) {
 document.addEventListener("click", e => {
   const pick = e.target.closest("[data-roof-program]");
   if (pick) { setRoofProgram(pick.dataset.roofProgram); return; }
-  if (e.target.closest("[data-roof-later]")) { closeRoofProgramPrompt(); return; }
   const src = e.target.closest("[data-roof-source]");
   if (src) { roofSetupView = src.dataset.roofSource; updateRoofSetupUI(); return; }
   if (e.target.closest("#btn-roof-manual-confirm")) {
@@ -121,8 +125,9 @@ document.addEventListener("click", e => {
   if (e.target.closest("[data-roof-type-open]")) openRoofProgramPrompt("");
 });
 
+// Escape closes the dialog only while changing an existing type: with no type yet, one must be chosen
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && document.getElementById("roof-program-prompt")) closeRoofProgramPrompt();
+  if (e.key === "Escape" && combineState.roof.program && document.getElementById("roof-program-prompt")) closeRoofProgramPrompt();
 });
 
 // typing a size is defining the roof by hand: the outline from Revit no longer applies
