@@ -608,6 +608,46 @@ const AlgoPlacement = (function () {
     return box;
   }
   const indoorBox = L => indoorBoxOf(L.courts);
+
+  const WALL_THICKNESS_M = 0.3;    // a real wall round the indoor zone, centred on its dotted line (already the 2 m clearance every sport keeps from it)
+  const DOOR_WIDTH_M = 1.0;
+
+  /**
+   * The indoor zone's wall (metres): a WALL_THICKNESS_M ring centred on `zoneM` (so it needs no space beyond what the wall-clearance rule already reserves), with a
+   * DOOR_WIDTH_M door cut into whichever of its four sides sits nearest the primary pathway network. `primaryRectsM` = the primary paths, in metres.
+   * Returns { thicknessM, rects: [[x0,y0,x1,y1], ...] (the wall, door opening already cut out), door: { x0,y0,x1,y1, side } } or null with no indoor zone.
+   */
+  function buildIndoorWall(zoneM, primaryRectsM, siteBbox) {
+    if (!zoneM) return null;
+    const t = WALL_THICKNESS_M / 2;
+    // the indoor zone may start flush at the roof's own edge (the Locker corner rule: indoor items may sit at the wall the roof itself has); a new wall centred on that
+    // edge would then hang half its thickness past the roof, so it is clamped to the site's own extent - the roof's real exterior wall is already there, off-model
+    const clamp = r => siteBbox ? [Math.max(r[0], siteBbox.x0), Math.max(r[1], siteBbox.y0), Math.min(r[2], siteBbox.x1), Math.min(r[3], siteBbox.y1)] : r;
+    const outer = clamp([zoneM[0] - t, zoneM[1] - t, zoneM[2] + t, zoneM[3] + t]);
+    const inner = [zoneM[0] + t, zoneM[1] + t, zoneM[2] - t, zoneM[3] - t];
+    // subtractRect(outer, inner) on a rectangle this much bigger than its inset always gives exactly these four, in this order: top (N), bottom (S), left (W), right (E) -
+    // top/bottom span the full outer width (they own the corners); left/right are just the middle strip between them.
+    const [wallN, wallS, wallW, wallE] = subtractRect(outer, inner);
+    const sides = [{ name: "N", rect: wallN, horizontal: true }, { name: "S", rect: wallS, horizontal: true }, { name: "W", rect: wallW, horizontal: false }, { name: "E", rect: wallE, horizontal: false }];
+    const gapToPaths = r => primaryRectsM.reduce((m, p) => Math.min(m, Math.max(r[0] - p[2], p[0] - r[2], 0) + Math.max(r[1] - p[3], p[1] - r[3], 0)), Infinity);
+    let best = sides[0], bestGap = Infinity;
+    for (const s of sides) { const g = primaryRectsM.length ? gapToPaths(s.rect) : 0; if (g < bestGap) { bestGap = g; best = s; } }
+    const walls = sides.map(s => s.rect);
+    const idx = walls.indexOf(best.rect);
+    let door;
+    if (best.horizontal) {
+      const clearX0 = zoneM[0] + t, clearX1 = zoneM[2] - t, cx = (clearX0 + clearX1) / 2;       // between the inner faces of the side posts - the door never opens onto a corner
+      const w = Math.min(DOOR_WIDTH_M, Math.max(0, clearX1 - clearX0)), dx0 = cx - w / 2, dx1 = cx + w / 2;
+      door = { x0: dx0, y0: best.rect[1], x1: dx1, y1: best.rect[3], side: best.name };
+      walls.splice(idx, 1, [best.rect[0], best.rect[1], dx0, best.rect[3]], [dx1, best.rect[1], best.rect[2], best.rect[3]]);
+    } else {
+      const clearY0 = zoneM[1] + t, clearY1 = zoneM[3] - t, cy = (clearY0 + clearY1) / 2;
+      const h = Math.min(DOOR_WIDTH_M, Math.max(0, clearY1 - clearY0)), dy0 = cy - h / 2, dy1 = cy + h / 2;
+      door = { x0: best.rect[0], y0: dy0, x1: best.rect[2], y1: dy1, side: best.name };
+      walls.splice(idx, 1, [best.rect[0], best.rect[1], best.rect[2], dy0], [best.rect[0], dy1, best.rect[2], best.rect[3]]);
+    }
+    return { thicknessM: WALL_THICKNESS_M, rects: walls.filter(w => w[2] - w[0] > 1e-6 && w[3] - w[1] > 1e-6), door };
+  }
   /** Where the placed items of the same cluster zone are centred (cells), or null when there are none: the pull that keeps a zone together and grows the indoor zone from its corner. */
   function zoneCentre(L, name) {
     if (!L.zoning) return null;
@@ -1505,8 +1545,9 @@ const AlgoPlacement = (function () {
       bandOut = indoorZone ? site.bandRects.flatMap(s => subtractRect(s, indoorZone)) : site.bandRects;
     }
     const misaligned = Z ? notAligned(L) : null;
+    const wall = Z ? buildIndoorWall(indoorZone, L.paths.map(r => grid.toM(r)), site.bbox) : null;
     return {
-      bandRects: bandOut, indoorZone, notAligned: misaligned,
+      bandRects: bandOut, indoorZone, notAligned: misaligned, wall,
       zoning: Z ? { zoneGapM: Z.zgap * RES, crossGapM: Z.xgap * RES, entryGapM: Z.egap * RES } : null,
       courts: courtsOut,
       pockets: pockets.map(p => grid.toM(p)),
@@ -1631,6 +1672,7 @@ const AlgoPlacement = (function () {
       ...ruleLines(plan),
       ...(plan.zoning ? sharedWallLines(plan) : []),
       ...(plan.zoning ? [plan.notAligned && plan.notAligned.length ? "Alignment: no shared edge with a neighbour for " + plan.notAligned.map(labelOf).join(", ") + " (no aligned spot was free)." : "Alignment: every item that has a neighbour shares an edge line with one."] : []),
+      ...(plan.wall ? ["Indoor zone: a " + (plan.wall.thicknessM * 1000).toFixed(0) + " mm wall, door (" + plan.wall.door.side + " side, " + ((plan.wall.door.side === "N" || plan.wall.door.side === "S" ? plan.wall.door.x1 - plan.wall.door.x0 : plan.wall.door.y1 - plan.wall.door.y0)).toFixed(1) + " m wide) nearest the primary pathway."] : []),
       "Sports area: " + u.toFixed(0) + " m² (bounding box " + bw + " x " + bh + " m)   |   " + s.attempts + " attempts in " + s.elapsed.toFixed(1) + " s"
     ];
     if (plan.unplaced.length) lines.push("NOT placed: " + plan.unplaced.map(x => labelOf(x.name) + " (" + x.reason + ")").join("; "));
@@ -1648,7 +1690,7 @@ const AlgoPlacement = (function () {
     RES, SPORTS, GROUPS, labelOf, BIG_COURTS, HEAVY_DEAD_LOAD_KN_M2, COLOR_VC, COLOR_PATH, COLOR_GARDEN,
     DEFAULT_SETBACK, DEFAULT_PATH_W, MIN_PATH_W_M, DEFAULT_TIME, BUILT_LIMIT_PCT, COURT_GAP_M, MIN_ACCESS_M,
     makeSite, planLayout, fitCheck, buildReport, Cancelled,
-    zoneOf, ZONE_GAP_OPTIONS_M, PRIMARY_OPTIONS_M, ENTRY_GAP_M,
+    zoneOf, ZONE_GAP_OPTIONS_M, PRIMARY_OPTIONS_M, ENTRY_GAP_M, WALL_THICKNESS_M, DOOR_WIDTH_M,
     // for the tests
     _internals: { Grid, Layout, makeRng, components, overlap, inflate, contactLen, toCells, validate, allSecondary, rectUnionArea, axisRect, polyArea }
   };

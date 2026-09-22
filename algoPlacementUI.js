@@ -768,8 +768,16 @@ function algoDrawPreview() {
       const ix = [Math.max(r[0], z[0]), Math.max(r[1], z[1]), Math.min(r[2], z[2]), Math.min(r[3], z[3])];
       if (ix[2] > ix[0] && ix[3] > ix[1]) g += rect(ix, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges"');
     });
-    g += `<g pointer-events="none"><rect x="${algoRound(z[0])}" y="${algoRound(z[1])}" width="${algoRound(z[2] - z[0])}" height="${algoRound(z[3] - z[1])}" fill="none" stroke="#1e3a8a" stroke-width="0.22" stroke-dasharray="0.9 0.6"/>
-      <text x="${algoRound(z[0] + 0.5)}" y="${algoRound(z[1] - 0.4)}" font-size="${fs * 0.75}" font-weight="700" fill="#1e3a8a">Indoor zone</text></g>`;
+    const wallColor = "#5b6b8c", lineColor = "#1e3a8a";
+    if (plan.wall) {
+      // a real wall (its thickness centred on the dotted line, so it needs no space beyond what every sport already keeps clear of it), the door left open
+      g += `<g pointer-events="none">` + plan.wall.rects.map(r => rect(r, wallColor, `stroke="${lineColor}" stroke-width="0.05"`)).join("") + `</g>`;
+      const d = plan.wall.door;
+      g += `<g pointer-events="none"><line x1="${algoRound(d.x0)}" y1="${algoRound(d.y0)}" x2="${algoRound(d.x1)}" y2="${algoRound(d.y1)}" stroke="${lineColor}" stroke-width="0.08" stroke-dasharray="0.15 0.15"/></g>`;
+    } else {
+      g += `<g pointer-events="none"><rect x="${algoRound(z[0])}" y="${algoRound(z[1])}" width="${algoRound(z[2] - z[0])}" height="${algoRound(z[3] - z[1])}" fill="none" stroke="${lineColor}" stroke-width="0.22" stroke-dasharray="0.9 0.6"/></g>`;
+    }
+    g += `<text x="${algoRound(z[0] + 0.5)}" y="${algoRound(z[1] - 0.4)}" font-size="${fs * 0.75}" font-weight="700" fill="${lineColor}">Indoor zone</text>`;
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
   algoState.blocks.forEach(blk => {
