@@ -722,6 +722,7 @@ html[data-mode="dark"] .assump-badge.state-unconfirmed { color: #fbbf24; }
 html[data-mode="dark"] .res-stale-note i { color: #fbbf24; }
 .res-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .res-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0; }
+.res-title-icon { margin-right: 6px; color: var(--text-muted); font-size: 13px; }
 .res-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
 .res-chip { flex-shrink: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; border: 0.5px solid var(--border-strong); color: var(--text-secondary); background: var(--surface-1); white-space: nowrap; }
 .res-chip.tone-ok { background: var(--bg-success); color: var(--text-success); border-color: var(--border-success); }

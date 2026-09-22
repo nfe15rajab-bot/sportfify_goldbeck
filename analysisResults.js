@@ -283,8 +283,9 @@ function resCard(opts) {
   // a card that stands for something the add-in sent says whether it is about the layout on screen; the app's own estimates have no section
   const f = opts.section && resSection(opts.section) ? resFreshness(opts.section) : { state: "current" };
   const stale = f.state === "stale";
+  const iconHtml = opts.icon ? `<i class="ti ${escapeHtml(opts.icon)} res-title-icon" aria-hidden="true"></i>` : "";
   return `<section class="res-card tone-${stale ? "warn" : tone}${stale ? " res-stale" : ""}">
-    <header class="res-head"><div><h3 class="res-title">${resEsc(opts.title)}</h3>${opts.sub ? `<div class="res-sub">${resText(opts.sub)}</div>` : ""}</div>
+    <header class="res-head"><div><h3 class="res-title">${iconHtml}${resEsc(opts.title)}</h3>${opts.sub ? `<div class="res-sub">${resText(opts.sub)}</div>` : ""}</div>
       <span class="res-chip tone-${stale ? "warn" : tone}">${resEsc(stale ? "out of date" : opts.chip || "")}</span></header>
     ${resFreshnessNote(f)}
     ${opts.prelim ? resPrelim(opts.prelim) : ""}
