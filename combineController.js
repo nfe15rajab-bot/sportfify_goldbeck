@@ -243,6 +243,11 @@ function deleteSelectedEntity() {
   if (!combineState.selectedId) return;
   if (combineState.selectedKind === "entry") {
     combineState.entryPoints = combineState.entryPoints.filter(e => e.id !== combineState.selectedId);
+  } else if (combineState.selectedKind === "zone") {
+    // removeZone (zones.js) clears the selection itself — a zone (a green roof, drawn as
+    // points, not in combineState.items) was falling through to the items filter below and
+    // never actually being removed.
+    if (typeof removeZone === "function") removeZone(combineState.selectedId);
   } else {
     combineState.items = combineState.items.filter(i => i.id !== combineState.selectedId);
   }
