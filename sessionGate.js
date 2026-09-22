@@ -46,6 +46,17 @@ function leaveSessionGate() {
   setMode("guide"); // Overview — same landing mode as a fresh page load
 }
 
+/**
+ * "New Session" in the top bar (next to Save Session): brings the same first-run picker back — Resume/Start New/Load a
+ * preset/Load a file — so leaving the current work is a choice made there, not something this button does by itself.
+ */
+function reopenSessionGate() {
+  sessionGateEl.style.display = "flex";
+  sessionGateEl.getBoundingClientRect(); // force layout so the class change below transitions in rather than snapping
+  sessionGateEl.classList.remove("session-gate-hidden");
+}
+document.getElementById("btn-new-session").addEventListener("click", reopenSessionGate);
+
 function loadGateFile(file) {
   const reader = new FileReader();
   reader.onload = evt => {
