@@ -162,7 +162,34 @@ function renderIterationsPanels() {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
   });
+  const sendBtn = document.getElementById("btn-send-iterations-revit");
+  if (sendBtn) sendBtn.disabled = savedCompareConfigs.length === 0;
 }
+
+/**
+ * Sends every saved iteration (the same objects the cards above are built from) to the add-in in one call — Revit has no API to create real Design
+ * Options (DesignOption only exposes a getter for the active one), so "Import Iterations as Design Options" there builds each into its own workset
+ * instead, switchable like options would be. Best-effort like the rest of the Revit bridge: Revit not running just means a toast, not an error.
+ */
+async function sendIterationsToRevit() {
+  const btn = document.getElementById("btn-send-iterations-revit");
+  if (savedCompareConfigs.length === 0) return;
+  if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+  try {
+    const res = await localFetch("/iterations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(savedCompareConfigs),
+    });
+    if (!res.ok) throw new Error("the add-in refused the request");
+    showToast("Sent to Revit", `${savedCompareConfigs.length} iteration${savedCompareConfigs.length === 1 ? "" : "s"} sent — run "Import Iterations as Design Options" (BIM & Documentation panel) in Revit to build them.`);
+  } catch (err) {
+    showToast("Not connected to Revit", "Open the project in Revit with Sportify running, then try again.");
+  } finally {
+    if (btn) { btn.disabled = savedCompareConfigs.length === 0; btn.innerHTML = `<i class="ti ti-stack-2" aria-hidden="true"></i>Send to Revit as Design Options`; }
+  }
+}
+document.getElementById("btn-send-iterations-revit")?.addEventListener("click", sendIterationsToRevit);
 
 document.addEventListener("click", e => {
   const card = e.target.closest(".iteration-card");
