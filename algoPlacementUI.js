@@ -893,6 +893,7 @@ function algoClearApplied(announce) {
   combineState.items = combineState.items.filter(i => !i.algorithmic);
   combineState.zones = (combineState.zones || []).filter(z => !z.algorithmic);
   combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
+  combineState.walls = (combineState.walls || []).filter(w => !w.algorithmic);
   combineState.selectedId = null; combineState.selectedKind = null;
   const removed = before - (combineState.items.length + combineState.zones.length + combineState.entryPoints.length);
   if (announce && typeof showToast === "function") showToast(removed ? "Cleared" : "Nothing to clear", removed ? `${removed} piece${removed === 1 ? "" : "s"} placed by the algorithm removed from the board.` : "The board has nothing the algorithm placed.");
@@ -929,6 +930,7 @@ async function algoApply() {
     if (algoState.plan !== plan || algoState.busy) return;
   }
   combineState.items = []; combineState.zones = []; combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
+  combineState.walls = [];
   combineState.tray = combineState.tray || [];
 
   const stamp = Date.now();
@@ -965,6 +967,13 @@ async function algoApply() {
       combineState.entryPoints.push({ id: `entry_algo_${stamp}_${i}`, edge: snap.edge, x_m: snap.x, y_m: snap.y, algorithmic: true });
       entryCount++;
     });
+  }
+
+  // The indoor zone's wall + door (algoPlacementCore.js: buildIndoorWall), so the Combine board shows the same real wall the algorithmic preview always
+  // has — only the preview had it until now. Purely visual on the board (see combineState.walls above), so it needs no id per rect, just one entry for
+  // the whole ring; regenerated from the plan on every Apply, same as items/zones/entryPoints just above.
+  if (plan.wall) {
+    combineState.walls.push({ id: `wall_algo_${stamp}`, thicknessM: plan.wall.thicknessM, rects: plan.wall.rects, door: plan.wall.door, algorithmic: true });
   }
 
   combineState.selectedId = null; combineState.selectedKind = null;

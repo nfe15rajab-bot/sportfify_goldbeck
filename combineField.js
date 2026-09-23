@@ -152,6 +152,130 @@ function findOverlappingIds(items, bufferM = 0) {
   return overlapping;
 }
 
+let _algoZoneLookup = null;
+
+/**
+ * Maps a sport/activity key (item.sourceJson.field.sport or
+ * .activity.type_id — the one identifier both catalogues agree on; item
+ * labels differ between them, e.g. "Ping Pong Station" vs "Ping Pong" for
+ * the same thing) to the algorithmic engine's zone classification. Built
+ * once from ALGO_CATALOGUE (algoPlacementUI.js) cross-referenced with
+ * AlgoPlacement.zoneOf/noSetback (algoPlacementCore.js) — lazily, since
+ * those scripts load after this one; by the time a redraw actually runs
+ * (after the page has fully loaded) both are available.
+ */
+function algoZoneLookup() {
+  if (_algoZoneLookup) return _algoZoneLookup;
+  if (typeof ALGO_CATALOGUE === "undefined" || typeof AlgoPlacement === "undefined") return {};
+  const map = {};
+  Object.keys(ALGO_CATALOGUE).forEach(engineName => {
+    const cat = ALGO_CATALOGUE[engineName];
+    const key = cat.kind === "field" ? cat.sport : cat.id;
+    map[key] = { zone: AlgoPlacement.zoneOf(engineName), noSetback: AlgoPlacement.noSetback(engineName) };
+  });
+  _algoZoneLookup = map;
+  return map;
+}
+
+/**
+ * A Combine item's zone ("indoor"/"garden"/"outdoor") and whether it is
+ * exempt from the boundary setback (only the two service modules, which
+ * stand against a real wall, are). Falls back to "outdoor"/not-exempt for
+ * anything the algorithmic catalogue doesn't cover.
+ */
+function itemZoneInfo(item) {
+  const key = item.kind === "field" ? item.sourceJson?.field?.sport
+    : item.kind === "activity" ? item.sourceJson?.activity?.type_id
+      : null;
+  return (key && algoZoneLookup()[key]) || { zone: "outdoor", noSetback: false };
+}
+
+/**
+ * Zone-aware replacement for a flat clearance rule: two pieces in the same
+ * zone need DESIGN_RULES.zoneClearance_m between them, two pieces in
+ * different zones need the wider crossZoneClearance_m, and a piece within
+ * entryClearance_m of an entry point also fails — mirroring the
+ * algorithmic engine's own in-zone/primary/entry gaps (algoPlacementCore.js:
+ * ZONE_GAP_OPTIONS_M / PRIMARY_OPTIONS_M / ENTRY_GAP_M) so a hand-placed
+ * board is held to the same rule an Applied one already is. A pair that
+ * are both setback-exempt (Locker + Bathroom) is skipped entirely — they
+ * share a real wall by design, 0 m apart.
+ */
+function findClearanceViolations(items, entries, rules) {
+  const violating = new Set();
+  for (let i = 0; i < items.length; i++) {
+    const a = items[i], za = itemZoneInfo(a);
+    for (let j = i + 1; j < items.length; j++) {
+      const b = items[j], zb = itemZoneInfo(b);
+      if (za.noSetback && zb.noSetback) continue;
+      const need = za.zone === zb.zone ? rules.zoneClearance_m : rules.crossZoneClearance_m;
+      if (zoneGapM(a, b) < need) { violating.add(a.id); violating.add(b.id); }
+    }
+  }
+  items.forEach(it => {
+    const fp = getFootprint(it);
+    entries.forEach(ep => {
+      const dx = Math.max(it.x_m - ep.x_m, 0, ep.x_m - (it.x_m + fp.w));
+      const dy = Math.max(it.y_m - ep.y_m, 0, ep.y_m - (it.y_m + fp.h));
+      if (Math.hypot(dx, dy) < rules.entryClearance_m) violating.add(it.id);
+    });
+  });
+  return violating;
+}
+
+/**
+ * Ids of every placed sport/service piece sitting inside the boundary-
+ * setback band — the same band setbackGuideSvg draws as a dashed guide,
+ * now actually enforced. Only the two service modules (Locker, Bathroom)
+ * are exempt; garden/furniture/vegetation pieces aren't checked at all,
+ * since the setback band is the garden band by design.
+ */
+function findSetbackViolations(items, roof, rules) {
+  const violating = new Set();
+  const sb = rules.boundarySetback_m;
+  items.forEach(it => {
+    if (it.kind !== "field" && it.kind !== "activity") return;
+    if (itemZoneInfo(it).noSetback) return;
+    const fp = getFootprint(it);
+    const inside = it.x_m >= sb - 1e-6 && it.y_m >= sb - 1e-6 &&
+      (it.x_m + fp.w) <= roof.length - sb + 1e-6 && (it.y_m + fp.h) <= roof.width - sb + 1e-6;
+    if (!inside) violating.add(it.id);
+  });
+  return violating;
+}
+
+/**
+ * The algorithmic engine's indoor-zone wall + door (combineState.walls,
+ * populated by algoApply — see algoPlacementUI.js), drawn the same way
+ * algoDrawPreview already draws it in the Algorithmic placement preview so
+ * the board doesn't make a different claim about the zone than the panel
+ * that produced it. Purely visual: pointer-events none, not part of
+ * combineState.items, so it is never selectable/draggable and never enters
+ * the clearance/setback/overlap checks.
+ */
+function combineWallSvg(walls, scale, roofOx, roofOy) {
+  if (!walls || !walls.length) return "";
+  // Solid white, like a real wall drawn in plan — with a dark outline for
+  // definition (a plain white fill would vanish against a light-theme
+  // canvas otherwise) and a thicker stroke so it reads at roof scale
+  // instead of disappearing next to the courts' own 1.5px item borders.
+  const wallColor = "#ffffff", lineColor = "#2b2f38";
+  let svg = "";
+  walls.forEach(w => {
+    svg += `<g pointer-events="none">` + w.rects.map(r => {
+      const x = roofOx + r[0] * scale, y = roofOy + r[1] * scale;
+      const rw = (r[2] - r[0]) * scale, rh = (r[3] - r[1]) * scale;
+      return `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="${wallColor}" stroke="${lineColor}" stroke-width="1.5"/>`;
+    }).join("") + `</g>`;
+    if (w.door) {
+      const d = w.door;
+      const x1 = roofOx + d.x0 * scale, y1 = roofOy + d.y0 * scale, x2 = roofOx + d.x1 * scale, y2 = roofOy + d.y1 * scale;
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lineColor}" stroke-width="2" stroke-dasharray="4,3" pointer-events="none"/>`;
+    }
+  });
+  return svg;
+}
+
 /** Dashed inset rectangle showing the boundary-setback margin from the rules panel. */
 function setbackGuideSvg(roof, scale, roofOx, roofOy) {
   const sb = Math.min(DESIGN_RULES.boundarySetback_m, roof.length / 2 - 0.05, roof.width / 2 - 0.05);
@@ -224,11 +348,12 @@ function drawCombineCanvas() {
   // These two are the expensive-ish operations (grid build + BFS), so run
   // them once per redraw and hand the results to both the SVG and the
   // rules checklist rather than recomputing per consumer.
-  const overlappingIds = findOverlappingIds(items, DESIGN_RULES.clearance_m);
+  const overlappingIds = findClearanceViolations(items, entries, DESIGN_RULES);
   const circulation = computeCirculation(combineState, DESIGN_RULES);
   const outOfBoundsIds = findOutOfBoundsIds(items, roof);
   const anyOutOfBounds = outOfBoundsIds.size > 0;
   const zoneConflicts = findZoneConflicts(items, DESIGN_RULES);
+  const setbackIds = findSetbackViolations(items, roof, DESIGN_RULES);
 
   // Circulation paths draw under the pieces so labels stay readable.
   circulation.paths.forEach(p => {
@@ -249,8 +374,9 @@ function drawCombineCanvas() {
 
     const selected = combineState.selectedKind === "item" && combineState.selectedId === item.id;
     const tooClose = overlappingIds.has(item.id);
+    const inSetback = setbackIds.has(item.id);
     const cutOff = circulation.unreachable.has(item.id);
-    const warn = tooClose || outOfBounds;
+    const warn = tooClose || outOfBounds || inSetback;
     const colors = KIND_COLORS[item.kind] || KIND_COLORS.field;
     const strokeColor = warn ? "#ef4444" : cutOff ? "#f59e0b" : colors.stroke;
 
@@ -376,6 +502,11 @@ function drawCombineCanvas() {
     `;
   });
 
+  // The indoor zone's wall, drawn over the pieces (a real wall reads as a
+  // boundary standing above the floor, not underneath it) but under the
+  // suggestion ghosts and entry markers so those stay the topmost, clickable layer.
+  el += combineWallSvg(combineState.walls, scale, roofOx, roofOy);
+
   // Suggested-spot ghosts for the selected item, drawn over pieces so they
   // read as an overlay, under entry markers so pins stay easy to grab.
   combineState.suggestions.forEach((cand, i) => {
@@ -419,9 +550,11 @@ function drawCombineCanvas() {
     } else if (items.length === 0) {
       statusEl.textContent = `${zoneCount} ground zone(s) drawn. Push a sport or activity to place pieces.`;
     } else if (overlappingIds.size > 0) {
-      statusEl.textContent = `⚠ ${overlappingIds.size} piece(s) closer than the ${DESIGN_RULES.clearance_m.toFixed(1)} m clearance rule.`;
+      statusEl.textContent = `⚠ ${overlappingIds.size} piece(s) too close to a neighbor or an entry point (${DESIGN_RULES.zoneClearance_m.toFixed(1)} m same-zone / ${DESIGN_RULES.crossZoneClearance_m.toFixed(1)} m cross-zone / ${DESIGN_RULES.entryClearance_m.toFixed(1)} m from an entrance).`;
     } else if (anyOutOfBounds) {
       statusEl.textContent = "⚠ One or more pieces extend outside the roof boundary.";
+    } else if (setbackIds.size > 0) {
+      statusEl.textContent = `⚠ ${setbackIds.size} piece(s) sit inside the ${DESIGN_RULES.boundarySetback_m.toFixed(1)} m setback band.`;
     } else if (entries.length === 0) {
       statusEl.textContent = `${items.length} piece(s) placed. Add an entry point to check circulation.`;
     } else if (circulation.unreachable.size > 0) {
@@ -436,7 +569,7 @@ function drawCombineCanvas() {
     }
   }
 
-  renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts);
+  renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts, setbackIds);
   renderCombineSummary(circulation);
   if (typeof renderDesignPanel === "function") renderDesignPanel(circulation);
   // What is selected, and a record of the change — both read the state the
@@ -566,7 +699,7 @@ function renderCombineSummary(circulation) {
  * Rebuilding innerHTML from state matches the pattern used everywhere
  * else in this app (e.g. updateGardenUI's layer cards).
  */
-function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts) {
+function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts, setbackIds) {
   const panel = document.getElementById("rules-panel");
   if (!panel) return;
   const items = combineState.items;
@@ -583,13 +716,20 @@ function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConfl
   } else {
     rows.push({
       passed: overlappingIds.size === 0,
-      label: `Clearance (min ${DESIGN_RULES.clearance_m.toFixed(1)} m)`,
-      detail: overlappingIds.size === 0 ? "All pieces respect the minimum gap." : `${overlappingIds.size} piece(s) too close to a neighbor.`,
+      label: `Clearance (${DESIGN_RULES.zoneClearance_m.toFixed(1)} m same-zone / ${DESIGN_RULES.crossZoneClearance_m.toFixed(1)} m cross-zone)`,
+      detail: overlappingIds.size === 0 ? "All pieces respect the zone-aware gap." : `${overlappingIds.size} piece(s) too close to a neighbor or an entry point.`,
     });
     rows.push({
       passed: !anyOutOfBounds,
       label: "Inside site boundary",
       detail: !anyOutOfBounds ? "Everything fits inside the roof footprint." : "One or more pieces extend past the edge.",
+    });
+    rows.push({
+      passed: !setbackIds || setbackIds.size === 0,
+      label: `Setback respected (${DESIGN_RULES.boundarySetback_m.toFixed(1)} m)`,
+      detail: !setbackIds || setbackIds.size === 0
+        ? "No sport sits inside the boundary setback."
+        : `${setbackIds.size} piece(s) inside the setback band (only the locker and bathroom modules may stand there).`,
     });
     rows.push({
       passed: entries.length > 0 && circulation.unreachable.size === 0,

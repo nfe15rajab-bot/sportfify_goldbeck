@@ -12,6 +12,14 @@ const combineState = {
   // program: what the roof is for, "sports" | "garden" | "mixed" (null until chosen; see roofProgram.js). source: how the footprint was defined, "manual" | "revit".
   roof: { length: 15, width: 10, boundary: null, originXm: 0, originYm: 0, rotationDeg: 0, pushedScope: null, originZm: 0, heightAboveGroundM: 0, heightSource: "", program: null, source: "manual" },
   items: [], entryPoints: [], selectedId: null, selectedKind: null, tool: null,
+  // The algorithmic engine's indoor-zone wall + door (algoPlacementCore.js:
+  // buildIndoorWall), carried onto the board by Apply. Purely a visual
+  // layer — never a selectable/draggable item, so it plays no part in the
+  // clearance/setback/overlap checks (which already assume the wall's own
+  // existence, e.g. the Locker/Bathroom setback exemption). One entry per
+  // Apply today (a single indoor zone), shape: { thicknessM, rects: [[x0,
+  // y0,x1,y1],...], door: {x0,y0,x1,y1,side}, algorithmic }.
+  walls: [],
   suggestions: [],
   // The roof's structural grid and columns (from a Revit push or a loaded session; see structure.js), and the deck
   // capacity the structural engineer gave, in kN/m². null = none / not entered.
@@ -522,6 +530,9 @@ function buildCombinedPayload() {
     // Applied to the board - without this, Save Session then Resume Last Session (or a plain refresh) lost them, and the chosen quantities along with
     // them (a plan search with no landing to build a network from finds nothing).
     algo_blocks: typeof algoState !== "undefined" ? algoState.blocks.map(b => ({ kind: b.kind, x_m: b.x, y_m: b.y, width_m: b.w, height_m: b.h })) : [],
+    // The indoor zone's wall + door (combineState.walls, from Apply's algoPlacementCore.js buildIndoorWall) — a Save/Resume otherwise loses it, same gap
+    // algo_blocks was added to close. Purely visual on the board, so this is the only place it travels besides the live canvas.
+    walls: (combineState.walls || []).map(w => ({ thickness_m: w.thicknessM, rects_m: w.rects, door: w.door })),
     // The structural grid and columns (in the roof's canvas coordinates, like the placements) and the deck capacity, for the
     // structural load analysis. Absent when there is neither.
     ...(typeof structurePayload === "function" && structurePayload() ? { structure: structurePayload() } : {}),
@@ -696,6 +707,13 @@ function applySessionSnapshot(payload, opts = {}) {
   });
   combineState.selectedId = null;
   combineState.selectedKind = null;
+
+  // The indoor zone's wall + door — see the matching comment in buildCombinedPayload. Not tied to any item id, so a plain shape check is enough.
+  combineState.walls = Array.isArray(payload.walls)
+    ? payload.walls
+        .filter(w => w && Array.isArray(w.rects_m) && w.door)
+        .map(w => ({ thicknessM: w.thickness_m, rects: w.rects_m, door: w.door, algorithmic: true }))
+    : [];
 
   // Algorithmic placement's own lifts / ramps / stairs - a plan-in-progress that never reached Apply is otherwise lost by a save/resume.
   if (typeof algoState !== "undefined" && typeof ALGO_BLOCK_SIZES !== "undefined" && Array.isArray(payload.algo_blocks)) {

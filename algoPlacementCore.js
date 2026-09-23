@@ -1742,7 +1742,7 @@ const AlgoPlacement = (function () {
     RES, SPORTS, GROUPS, labelOf, BIG_COURTS, HEAVY_DEAD_LOAD_KN_M2, COLOR_VC, COLOR_PATH, COLOR_GARDEN,
     DEFAULT_SETBACK, DEFAULT_PATH_W, MIN_PATH_W_M, DEFAULT_TIME, BUILT_LIMIT_PCT, COURT_GAP_M, MIN_ACCESS_M,
     makeSite, planLayout, fitCheck, buildReport, Cancelled,
-    zoneOf, ZONE_GAP_OPTIONS_M, PRIMARY_OPTIONS_M, ENTRY_GAP_M, WALL_THICKNESS_M, DOOR_WIDTH_M,
+    zoneOf, noSetback, ZONE_GAP_OPTIONS_M, PRIMARY_OPTIONS_M, ENTRY_GAP_M, WALL_THICKNESS_M, DOOR_WIDTH_M,
     // for the tests
     _internals: { Grid, Layout, makeRng, components, overlap, inflate, contactLen, toCells, validate, allSecondary, rectUnionArea, axisRect, polyArea }
   };
