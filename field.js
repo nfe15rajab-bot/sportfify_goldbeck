@@ -43,13 +43,25 @@ function drawField(sport, variant, capacity, isDark) {
     return;
   }
 
-  const aspect = d.l / d.w;
-  let fw, fh;
-  if (aspect > (VW - PAD * 2) / (VH - PAD * 2)) {
-    fw = VW - PAD * 2; fh = fw / aspect;
-  } else {
-    fh = VH - PAD * 2; fw = fh * aspect;
-  }
+  // Stands (fixed px width, independent of the court's own scale) get their own budget off
+  // the padded box before anything is fitted, so they never crowd the court out past it.
+  const standW = capacity > 0 ? (capacity >= 300 ? 20 : capacity >= 100 ? 12 : 7) : 0;
+  const standGap = capacity > 0 ? 4 : 0;
+
+  // Fit the court's OUTER extent — pitch plus its run-off margin on every side, not the pitch
+  // alone — into what's left of the padded box. Fitting the pitch alone and drawing run-off
+  // outside that budget let a court whose run-off is large next to its width (volleyball,
+  // handball, badminton) push its run-off line and dimension label past the viewBox edge,
+  // clipped clean off — same "meet" viewBox that fits everything perfectly also crops
+  // anything drawn beyond 0..VW / 0..VH without complaint.
+  const outerL = d.l + d.runoff * 2, outerW = d.w + d.runoff * 2;
+  const boxW = VW - PAD * 2 - (standW + standGap) * 2, boxH = VH - PAD * 2;
+  const outerAspect = outerL / outerW;
+  let ow, oh;
+  if (outerAspect > boxW / boxH) { ow = boxW; oh = ow / outerAspect; }
+  else { oh = boxH; ow = oh * outerAspect; }
+  const scale = ow / outerL;      // px per metre, uniform in both directions (aspect preserved)
+  const fw = scale * d.l, fh = scale * d.w;
   const ox = (VW - fw) / 2, oy = (VH - fh) / 2;
 
   // Warm, energetic court tones — these are all fast-paced team/court
@@ -67,18 +79,16 @@ function drawField(sport, variant, capacity, isDark) {
   // Stands
   let standsEl = "";
   if (capacity > 0) {
-    const sw = capacity >= 300 ? 20 : capacity >= 100 ? 12 : 7;
     standsEl = `
-      <rect x="${ox - sw - 4}" y="${oy}" width="${sw}" height="${fh}"
+      <rect x="${ox - standW - standGap}" y="${oy}" width="${standW}" height="${fh}"
             fill="${standFill}" stroke="${standStroke}" stroke-width="0.5" rx="2"/>
-      <rect x="${ox + fw + 4}" y="${oy}" width="${sw}" height="${fh}"
+      <rect x="${ox + fw + standGap}" y="${oy}" width="${standW}" height="${fh}"
             fill="${standFill}" stroke="${standStroke}" stroke-width="0.5" rx="2"/>
     `;
   }
 
   // Run-off zone
-  const roScale = fw / d.l;
-  const roW = d.runoff * roScale, roH = d.runoff * (fh / d.w);
+  const roW = d.runoff * scale, roH = d.runoff * scale;
   const runoffEl = `
     <rect x="${ox - roW}" y="${oy - roH}" width="${fw + roW * 2}" height="${fh + roH * 2}"
           fill="none" stroke="${runoffStroke}" stroke-width="0.7" stroke-dasharray="4,3" rx="2"/>
@@ -106,6 +116,11 @@ function drawField(sport, variant, capacity, isDark) {
     </text>
   `;
 
+  // A specified sport (basketball, volleyball, padel) draws itself into this same #field
+  // element at its own, smaller viewBox and never puts the shared one back — everything below
+  // is computed for VW x VH, so it must own that assumption explicitly rather than inherit
+  // whatever viewBox a previous court left behind (drawn hugely oversized/cropped otherwise).
+  svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
   svg.innerHTML = `
     <defs>
       <pattern id="floor" patternUnits="userSpaceOnUse" width="20" height="20">

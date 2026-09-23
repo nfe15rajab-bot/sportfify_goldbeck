@@ -171,6 +171,56 @@ const run = async (s, settings, siteExtra) => {
   try { await A.planLayout(site, requests({ "Yoga": 2 }), { timeLimit: 5 }, { cancelled: () => true }); } catch (e) { cancelled = !!e.cancelled; }
   check("a cancelled search throws Cancelled", cancelled);
 
+  // zoning: a lift sitting fully inside the garden band still gets a landing and joins the primary network - the band keeps outdoor items and ordinary pathway
+  // routing off it, but a lift/ramp/stair is allowed there (it always was, for the entry itself; only its landing/corridor were wrongly blocked by the same mask)
+  const bandLift = [0, 0, 2.5, 2.5];   // 2.5 x 2.5 m in the very corner of a 1.5 m setback: entirely inside the band on both axes
+  const bandSite = A.makeSite({ foot: rect(68, 21), setback: 1.5, entries: [bandLift], anchors: [bandLift], zoning: true });
+  const bandPlan = await A.planLayout(bandSite, requests({ "Padel Tennis Court": 1, "Ping Pong": 2, "Badminton": 1 }), { timeLimit: 3, seed: 1, zoning: true, pathW: 2.5, minPathW: 2.0, strictGap: true, rules: { serviceCorners: true, gridLines: [] } });
+  check("zoning: a lift entirely inside the garden band still gets a landing (no 'no free landing' warning)", !bandPlan.warnings.some(w => /no free landing/.test(w)), bandPlan.warnings.join("; "));
+  check("zoning: ...and at least some of what was asked for is placed (the corridor reaches it)", bandPlan.stats.placed > 0 && bandPlan.issues.length === 0, "placed " + bandPlan.stats.placed + " of " + bandPlan.stats.requested + "; " + bandPlan.issues.join("; "));
+
+  // zoning: garden items (Yoga, Calisthenics) are not placed dead last every attempt - a big outdoor cluster on a roof with room to spare must not starve them of a spot
+  const gRoof = A.makeSite({ foot: rect(67.6, 21), setback: 1.5, entries: [[1.5, 9, 4, 11.5]], anchors: [[1.5, 9, 4, 11.5]], zoning: true });
+  const gQty = { "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 2, "Bouldering Wall": 1, "Pickleball Court": 1, "Modular Tower Slide": 1, "Teqball Table": 1, "CrossFit Training Rig": 1, "Balance Logs": 1, "TRX Suspension Frame": 1, "HIIT Turf Grid": 1, "Sandpit": 1, "Yoga": 1, "Calisthenics": 1 };
+  for (const seed of [1, 2, 3]) {
+    const gPlan = await A.planLayout(gRoof, requests(gQty), { timeLimit: 8, seed, zoning: true, pathW: 2.5, minPathW: 2.0, strictGap: true, rules: { serviceCorners: true, gridLines: [] } });
+    check("zoning: seed " + seed + ": garden items are not starved by the outdoor cluster (everything placed)", gPlan.unplaced.length === 0 && gPlan.issues.length === 0, gPlan.unplaced.map(u => u.name + ": " + u.reason).join("; ") + " " + gPlan.issues.join("; "));
+  }
+
+  // zoning: the indoor zone's own arrangement adapts so its bounding box - and so the wall built whole around it - never crosses a lift or stair sitting near
+  // it; the wall itself is never cut to dodge one (always the full ring, split only by its one door: 5 rectangles, never more)
+  const wStair = [0, 9, 4, 13], wLift = [0, 13, 2.5, 15.5];
+  const wSite = A.makeSite({ foot: rect(67.6, 21), setback: 1.5, entries: [wStair, wLift], anchors: [wStair, wLift], zoning: true });
+  const wQty2 = { "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 2 };
+  for (const seed of [1, 2, 3]) {
+    const wPlan2 = await A.planLayout(wSite, requests(wQty2), { timeLimit: 5, seed, zoning: true, pathW: 2.5, minPathW: 2.0, strictGap: true, rules: { serviceCorners: true, gridLines: [] } });
+    const overlapsAnchor = wPlan2.wall ? wPlan2.wall.rects.some(r => [wStair, wLift].some(e => inter(r, e))) : false;
+    check("zoning: seed " + seed + ": the indoor zone's arrangement keeps its wall - a whole, uncut 5-rectangle ring - clear of a stair or lift near it", wPlan2.wall && wPlan2.wall.rects.length === 5 && !overlapsAnchor && wPlan2.issues.length === 0 && wPlan2.unplaced.length === 0, "rects=" + (wPlan2.wall && wPlan2.wall.rects.length) + " " + wPlan2.issues.join("; ") + " " + wPlan2.unplaced.map(u => u.name).join(","));
+  }
+
+  // the locker and bathroom modules need a 2 m lobby in front of them, not just the ordinary in-zone gap - a door does not open onto a corridor barely wider than it
+  const lRoof = A.makeSite({ foot: rect(67.6, 21), setback: 1.5, entries: [[1.5, 9, 4, 11.5]], anchors: [[1.5, 9, 4, 11.5]], zoning: true });
+  const lQty = { "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 2, "Badminton": 1 };
+  for (const seed of [1, 2, 3]) {
+    const lPlan = await A.planLayout(lRoof, requests(lQty), { timeLimit: 5, seed, zoning: true, pathW: 2.5, minPathW: 2.0, strictGap: true, rules: { serviceCorners: true, gridLines: [] } });
+    const services = lPlan.courts.filter(c => /Locker|Bathroom/.test(c.name));
+    const others = lPlan.courts.filter(c => !/Locker|Bathroom/.test(c.name));
+    const gapM2 = (a, b) => Math.hypot(Math.max(a[0] - b[2], b[0] - a[2], 0), Math.max(a[1] - b[3], b[1] - a[3], 0));
+    const tooClose = services.flatMap(s => others.filter(o => gapM2(s.rect, o.rect) < 2.0 - EPS).map(o => s.name + "-" + o.name + ":" + gapM2(s.rect, o.rect).toFixed(2)));
+    check("zoning: seed " + seed + ": every other item keeps at least 2.0 m from the locker/bathroom modules (a lobby to enter by)", lPlan.issues.length === 0 && tooClose.length === 0, tooClose.join("; ") + " " + lPlan.issues.join("; "));
+  }
+
+  // the lobby has to be real even when nothing else happens to be placed in front of the locker/bathroom - the WALL itself must stand 2 m off, not just
+  // whatever neighbour happens to be there. A room with only these three items in it has nothing else to hold the wall back
+  const lSite2 = A.makeSite({ foot: rect(67.6, 21), setback: 1.5, entries: [[1.5, 9, 4, 11.5]], anchors: [[1.5, 9, 4, 11.5]], zoning: true });
+  for (const seed of [1, 2, 3]) {
+    const lPlan2 = await A.planLayout(lSite2, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 2 }), { timeLimit: 5, seed, zoning: true, pathW: 2.5, minPathW: 2.0, strictGap: true, rules: { serviceCorners: true, gridLines: [] } });
+    const svc2 = lPlan2.courts.filter(c => /Locker|Bathroom/.test(c.name));
+    // one side is 0 (the wall it backs onto, flush by design) - every OTHER side must be at least 2 m from the wall
+    const openSideShort = svc2.flatMap(c => { const r = c.rect, z = lPlan2.indoorZone; const gaps = [r[1] - z[1], z[3] - r[3], r[0] - z[0], z[2] - r[2]].filter(g => g > EPS); return gaps.filter(g => g < 2.0 - EPS); });
+    check("zoning: seed " + seed + ": the indoor zone's wall stands at least 2 m off the locker/bathroom modules even with nothing else in front of them", lPlan2.issues.length === 0 && openSideShort.length === 0, "short gaps: " + openSideShort.map(g => g.toFixed(2)).join(", "));
+  }
+
   // the court library: the 24 reference-sheet items plus the four courts that are not in the sheet, each with the figures a person picks by
   const lib = A.SPORTS;
   check("the library has 28 entries with unique names", lib.length === 28 && new Set(lib.map(s => s.name)).size === 28, lib.length + " entries");
@@ -272,6 +322,18 @@ const run = async (s, settings, siteExtra) => {
     check("zoning: seed " + seed + ": the bouldering wall stands with its back on the indoor zone's wall line, not loose in the middle", !!flush, bw ? bw.rect.map(v => +v.toFixed(1)).join(",") + " zone " + (zb || []).map(v => +v.toFixed(1)).join(",") : "not placed");
     const near = wPlan.courts.filter(c => zone(c.name) !== "indoor" && wPlan.indoorZone && gapBetweenM(c.rect, wPlan.indoorZone) < 2.0 - EPS);
     check("zoning: seed " + seed + ": every sport is at least 2 m from the indoor zone's dotted line (Padel included), and the layout is otherwise clean", !!wPlan.indoorZone && near.length === 0 && wPlan.issues.length === 0 && wPlan.unplaced.length === 0, near.map(c => c.name + " " + gapBetweenM(c.rect, wPlan.indoorZone).toFixed(2) + " m").join(", ") + " " + wPlan.issues.join("; ") + " " + wPlan.unplaced.map(u => u.name).join(","));
+    // the indoor zone's own wall: 300 mm, centred on the dotted line, never hanging outside the roof, with a 1 m door on the side nearest the primary pathway network
+    const w = wPlan.wall;
+    const inRoof = r => r[0] >= -EPS && r[1] >= -EPS && r[2] <= 100 + EPS && r[3] <= 32 + EPS;
+    check("zoning: seed " + seed + ": the indoor zone has a wall, 300 mm thick, entirely within the roof", !!w && Math.abs(w.thicknessM - 0.3) < EPS && w.rects.length > 0 && w.rects.every(inRoof), w ? w.rects.filter(r => !inRoof(r)).map(r => r.join(",")).join(" | ") : "no wall");
+    const d = w && w.door;
+    const doorW = d && (d.side === "N" || d.side === "S" ? d.x1 - d.x0 : d.y1 - d.y0);
+    check("zoning: seed " + seed + ": the door is 1.0 m wide, on one of the zone's four sides, and the report mentions it", !!d && Math.abs(doorW - 1.0) < EPS && ["N", "S", "W", "E"].includes(d.side) && /Indoor zone: a 300 mm wall, door/.test(A.buildReport(wPlan, wRoof)), d ? JSON.stringify(d) : "no door");
+    // the door sits on the side actually nearest the primary paths - the same measure independentProblems and the engine both use
+    const wallSideRect = { N: [wPlan.indoorZone[0], wPlan.indoorZone[1], wPlan.indoorZone[2], wPlan.indoorZone[1]], S: [wPlan.indoorZone[0], wPlan.indoorZone[3], wPlan.indoorZone[2], wPlan.indoorZone[3]], W: [wPlan.indoorZone[0], wPlan.indoorZone[1], wPlan.indoorZone[0], wPlan.indoorZone[3]], E: [wPlan.indoorZone[2], wPlan.indoorZone[1], wPlan.indoorZone[2], wPlan.indoorZone[3]] };
+    const sideGap = side => wPlan.primaryRects.reduce((m, p) => Math.min(m, Math.max(wallSideRect[side][0] - p[2], p[0] - wallSideRect[side][2], 0) + Math.max(wallSideRect[side][1] - p[3], p[1] - wallSideRect[side][3], 0)), Infinity);
+    const bestSide = ["N", "S", "W", "E"].reduce((a, b) => sideGap(b) < sideGap(a) ? b : a);
+    check("zoning: seed " + seed + ": the door is on the side nearest the primary paths (" + bestSide + ")", !d || d.side === bestSide, "door on " + (d && d.side) + ", nearest is " + bestSide + " (" + ["N", "S", "W", "E"].map(s => s + ":" + sideGap(s).toFixed(2)).join(" ") + ")");
   }
   check("zoning: alignment is a strong preference: on a crowded roof at most 2 items have a neighbour within 6 m but no shared edge line, and the report names them", Array.isArray(zPlan.notAligned) && zPlan.notAligned.length <= 2 && (zPlan.notAligned.length === 0 ? /every item that has a neighbour shares an edge/ : /no shared edge with a neighbour/).test(A.buildReport(zPlan, zSite)), (zPlan.notAligned || []).join(", "));
   const sameRow = name => { const l = zPlan.courts.filter(c => c.name === name); return l.length === 2 && (Math.abs(l[0].rect[1] - l[1].rect[1]) < EPS || Math.abs(l[0].rect[0] - l[1].rect[0]) < EPS) && Math.abs((l[0].rect[2] - l[0].rect[0]) - (l[1].rect[2] - l[1].rect[0])) < EPS && Math.abs(gapBetweenM(l[0].rect, l[1].rect) - zg.zoneGapM) < EPS; };
@@ -292,6 +354,7 @@ const run = async (s, settings, siteExtra) => {
   const zLPlan = await A.planLayout(zLSite, requests({ "Locker & Dressing Room Module": 1, "Ping Pong": 2, "Padel Tennis Court": 1, "Yoga": 1 }), zSettings);
   const lBad = zLPlan.courts.filter(c => !/Locker|Bathroom/.test(c.name)).filter(c => [[c.rect[0], c.rect[1]], [c.rect[2], c.rect[3]], [c.rect[0], c.rect[3]], [c.rect[2], c.rect[1]]].some(([x, y]) => distToEdges(x, y, zL.foot) < zL.setback - EPS || !pointInPoly(x + (x === c.rect[0] ? 1e-6 : -1e-6), y + (y === c.rect[1] ? 1e-6 : -1e-6), zL.foot)));
   check("zoning: on an L-shaped roof every item is placed and outdoor / garden items keep the setback", zLPlan.unplaced.length === 0 && zLPlan.issues.length === 0 && lBad.length === 0, zLPlan.unplaced.map(u => u.name).join(",") + zLPlan.issues.join("; ") + lBad.map(c => c.name).join(","));
+  check("zoning: the indoor zone's wall stays inside the L-shaped roof's own bounding box", !zLPlan.wall || zLPlan.wall.rects.every(r => r[0] >= -EPS && r[1] >= -EPS && r[2] <= 60 + EPS && r[3] <= 30 + EPS), zLPlan.wall ? zLPlan.wall.rects.join(" | ") : "no wall");
   // your picture: two Volleyball courts with a Badminton and a Climbing Tower must line up (Volleyball pair side by side, one shared edge line at least for all)
   const vRoof = A.makeSite({ foot: rect(80, 25), setback: 1.5, entries: [[3, 10, 5.5, 12.5]], anchors: [[3, 10, 5.5, 12.5]], zoning: true });
   const vPlan = await A.planLayout(vRoof, requests({ "Volleyball": 2, "Badminton": 1, "Climbing Tower": 1, "Modular Tower Slide": 2, "3x3 Streetbasketball": 1, "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1 }), zSettings);
@@ -299,7 +362,9 @@ const run = async (s, settings, siteExtra) => {
   check("zoning: two Volleyball courts line up: same way round, an edge line in common, one in-zone path apart", vv.length === 2 && ((Math.abs(vv[0].rect[1] - vv[1].rect[1]) < EPS && Math.abs(vv[0].rect[3] - vv[1].rect[3]) < EPS) || (Math.abs(vv[0].rect[0] - vv[1].rect[0]) < EPS && Math.abs(vv[0].rect[2] - vv[1].rect[2]) < EPS)) && Math.abs(gapBetweenM(vv[0].rect, vv[1].rect) - vPlan.zoning.zoneGapM) < EPS, vv.map(c => c.rect.map(v => +v.toFixed(1)).join(",")).join(" | ") + " " + vPlan.unplaced.map(u => u.name).join(","));
   const gardenIn = pl => (pl.pockets.concat(pl.bandRects)).filter(r => pl.indoorZone && inter(r, pl.indoorZone));
   check("zoning: no garden at all inside an indoor zone: no band strip and no leftover pocket overlaps its rectangle (both roofs)", !!vPlan.indoorZone && gardenIn(vPlan).length === 0 && gardenIn(zPlan).length === 0 && gardenIn(zLPlan).length === 0, gardenIn(vPlan).concat(gardenIn(zPlan)).map(r => r.map(v => +v.toFixed(1)).join(",")).join(" | "));
-  check("zoning: on that roof every item is placed, nothing breaks a rule and nothing is out of line", vPlan.unplaced.length === 0 && vPlan.issues.length === 0 && vPlan.notAligned.length === 0, vPlan.issues.join("; ") + " misaligned: " + vPlan.notAligned.join(", "));
+  // alignment is a preference, not a hard rule - keeping the wall whole and clear of the lift near it (never cut to dodge it, the zone's own shape adapts
+  // instead) can legitimately cost one otherwise-aligned spot, so up to one item out of line here is fine, same tolerance the crowded-roof case already gets
+  check("zoning: on that roof every item is placed, nothing breaks a rule and at most one is out of line", vPlan.unplaced.length === 0 && vPlan.issues.length === 0 && vPlan.notAligned.length <= 1, vPlan.issues.join("; ") + " misaligned: " + vPlan.notAligned.join(", "));
   // zoning off: the plain result is untouched (no zoning fields at all)
   const zOff = await A.planLayout(A.makeSite({ foot: zRoof.foot, setback: zRoof.setback, entries: [zLift, zStair], anchors: [zLift, zStair] }), requests({ "Ping Pong": 2, "Yoga": 1 }), { timeLimit: 1, seed: 1, strictGap: true, courtGap: 2.0, minPathW: 2.0 });
   check("zoning off: nothing changes (no zoning in the plan, the band is the plain one)", zOff.zoning === null && zOff.bandRects === null);

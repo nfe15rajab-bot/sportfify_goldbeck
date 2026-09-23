@@ -13,7 +13,10 @@
 
 /** Planner-tunable thresholds. Mutated in place from the Design rules panel. */
 const DESIGN_RULES = {
-  clearance_m: 1.0,        // min gap kept between any two placed pieces
+  clearance_m: 1.0,        // flat gap used by auto-arrange/suggested-spots only; the Rules panel's own clearance check is zone-aware (see zoneClearance_m/crossZoneClearance_m)
+  zoneClearance_m: 1.5,    // min gap between two pieces in the same zone (indoor/outdoor/garden) — mirrors the algorithmic engine's in-zone path width
+  crossZoneClearance_m: 2.0, // min gap between two pieces in different zones — mirrors the engine's primary circulation width
+  entryClearance_m: 2.5,   // min gap kept between any piece and an entry point
   boundarySetback_m: 1.5,  // min gap kept between a piece and the site edge
   circulationWidth_m: 1.2, // min walkway width circulation paths must keep clear
   minEntryPoints: 1,       // how many entrances a valid layout needs

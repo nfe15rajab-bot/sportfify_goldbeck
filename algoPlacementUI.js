@@ -75,11 +75,11 @@ const ALGO_MIN_PATH_M = 2.0;
 /** With zoning the primary paths (outside the zones, between them) are 2.0 to 2.5 m; inside a zone 1.5 to 1.8 m; around lifts, stairs and ramps 2.5 m. */
 const ALGO_PRIMARY_MAX_M = 2.5;
 
-/** What the list offers, under the headings a person reads. The 20 x 12 "Multi Sport Court" is in no list (it stays in the engine, whose Rhino-parity tests use its name). */
+/** What the list offers, under the headings a person reads. The 20 x 12 "Multi Sport Court" and Rest / Hydration Area are in no list (they stay in the engine, whose Rhino-parity and zoning tests use their names). */
 const ALGO_LISTS = [
   { heading: "Outdoor sports", names: ["3x3 Streetbasketball", "Basketball Court", "Handball", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Multipurpose Sport Area", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor sports", names: ["Ping Pong", "Bouldering Wall", "Badminton"] },
-  { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module", "Rest / Hydration Area"] },
+  { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] }
 ];
 /** Which headings each roof type shows. Garden Core keeps only the garden activities; Mixed and a roof with no type yet show everything. */
@@ -122,6 +122,13 @@ const algoState = {
       if (saved.qty) algoState.qty = saved.qty;
       if (saved.settings) Object.assign(algoState.settings, saved.settings);
       oldDefaultPath = !!saved.settings && saved.settings.pathW === 2 && saved.settings.minPathW === 2;
+      // the lifts / ramps / stairs placed on the site: without this a refresh mid-Algorithmic-placement (before ever pressing Apply) lost them, and every
+      // chosen quantity along with them - a plan search with no landing to build a network from finds nothing, so the choices looked deleted too.
+      if (Array.isArray(saved.blocks)) {
+        algoState.blocks = saved.blocks
+          .filter(b => b && ALGO_BLOCK_SIZES[b.kind] && [b.x, b.y, b.w, b.h].every(Number.isFinite))
+          .map(b => ({ id: algoNewBlockId(), kind: b.kind, x: b.x, y: b.y, w: b.w, h: b.h }));
+      }
     }
   } catch (e) { /* storage blocked or corrupt: the defaults */ }
   // settings saved before the 2 m rule may hold a narrower pathway or the old "big courts touch" exception: the rule wins
@@ -134,7 +141,8 @@ const algoState = {
 })();
 
 function algoSave() {
-  try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings })); } catch (e) { /* not kept */ }
+  const blocks = algoState.blocks.map(b => ({ kind: b.kind, x: b.x, y: b.y, w: b.w, h: b.h }));
+  try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings, blocks })); } catch (e) { /* not kept */ }
 }
 
 const algoEsc = s => escapeHtml(s);
@@ -596,13 +604,15 @@ async function algoPreview(msg) {
         return algoPreview("Not added - " + algoLabel(un.name) + ": " + un.reason + ". The other courts you added were kept.");
       }
       return algoRevert("Not added - " + algoLabel(un.name) + ": " + un.reason + ". Previous selection restored.");
-    }                                                                         // the site changed: keep what fits
-    const removed = Object.keys(qty).filter(n => qty[n] > (counts[n] || 0)).map(n => algoLabel(n) + " x" + (qty[n] - (counts[n] || 0)));
-    AlgoPlacement.SPORTS.forEach(s => { algoState.qty[s.name] = counts[s.name] || 0; });
-    algoSyncQty();
-    plan.unplaced = [];
-    plan.stats.requested = plan.stats.placed;
-    algoState.msg = "Removed (no room with the current settings): " + removed.join(", ");
+    }
+    // the site changed (a block moved, a setting changed, ...) and not everything you chose fits any more. Say so and leave it at that - the choice stays exactly as
+    // typed, so moving the block back (or loosening a setting) brings the same numbers straight back, instead of you having to re-enter them from scratch.
+    const short = Object.keys(qty).filter(n => (qty[n] || 0) > (counts[n] || 0)).map(n => algoLabel(n) + " x" + ((qty[n] || 0) - (counts[n] || 0)));
+    algoState.msg = "Does not fit with the site as it is now (nothing was removed from your selection): " + short.join(", ") + ". See \"NOT placed\" in the report below.";
+    algoState.plan = plan; algoState.planKey = algoInputKey();
+    algoState.status = "PREVIEW - not on the board yet. Press Apply to Combine when you are happy.";
+    algoDrawPreview(); algoRefreshAll();
+    return;
   }
   algoState.good = Object.assign({}, algoState.qty);
   algoState.plan = plan; algoState.planKey = algoInputKey();
@@ -679,7 +689,7 @@ function algoRefreshSummary() {
   fill.classList.remove("busy");
   if (u) {
     const pct = 100 * total / u;
-    sum.textContent = `${count} courts = ${total.toFixed(0)} m² of ${u.toFixed(0)} m² sports area (${pct.toFixed(0)}%). Limit ${AlgoPlacement.BUILT_LIMIT_PCT}%.`;
+    sum.textContent = `${count} courts = ${total.toFixed(0)} m² of ${u.toFixed(0)} m² sports area (${pct.toFixed(0)}%).`;
     sum.className = "algo-summary " + (pct <= AlgoPlacement.BUILT_LIMIT_PCT ? "ok" : "bad");
     fill.style.width = Math.min(100, pct) + "%";
     fill.className = pct <= AlgoPlacement.BUILT_LIMIT_PCT ? "" : "bad";
@@ -768,8 +778,16 @@ function algoDrawPreview() {
       const ix = [Math.max(r[0], z[0]), Math.max(r[1], z[1]), Math.min(r[2], z[2]), Math.min(r[3], z[3])];
       if (ix[2] > ix[0] && ix[3] > ix[1]) g += rect(ix, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges"');
     });
-    g += `<g pointer-events="none"><rect x="${algoRound(z[0])}" y="${algoRound(z[1])}" width="${algoRound(z[2] - z[0])}" height="${algoRound(z[3] - z[1])}" fill="none" stroke="#1e3a8a" stroke-width="0.22" stroke-dasharray="0.9 0.6"/>
-      <text x="${algoRound(z[0] + 0.5)}" y="${algoRound(z[1] - 0.4)}" font-size="${fs * 0.75}" font-weight="700" fill="#1e3a8a">Indoor zone</text></g>`;
+    const wallColor = "#5b6b8c", lineColor = "#1e3a8a";
+    if (plan.wall) {
+      // a real wall (its thickness centred on the dotted line, so it needs no space beyond what every sport already keeps clear of it), the door left open
+      g += `<g pointer-events="none">` + plan.wall.rects.map(r => rect(r, wallColor, `stroke="${lineColor}" stroke-width="0.05"`)).join("") + `</g>`;
+      const d = plan.wall.door;
+      g += `<g pointer-events="none"><line x1="${algoRound(d.x0)}" y1="${algoRound(d.y0)}" x2="${algoRound(d.x1)}" y2="${algoRound(d.y1)}" stroke="${lineColor}" stroke-width="0.08" stroke-dasharray="0.15 0.15"/></g>`;
+    } else {
+      g += `<g pointer-events="none"><rect x="${algoRound(z[0])}" y="${algoRound(z[1])}" width="${algoRound(z[2] - z[0])}" height="${algoRound(z[3] - z[1])}" fill="none" stroke="${lineColor}" stroke-width="0.22" stroke-dasharray="0.9 0.6"/></g>`;
+    }
+    g += `<text x="${algoRound(z[0] + 0.5)}" y="${algoRound(z[1] - 0.4)}" font-size="${fs * 0.75}" font-weight="700" fill="${lineColor}">Indoor zone</text>`;
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
   algoState.blocks.forEach(blk => {
@@ -875,6 +893,7 @@ function algoClearApplied(announce) {
   combineState.items = combineState.items.filter(i => !i.algorithmic);
   combineState.zones = (combineState.zones || []).filter(z => !z.algorithmic);
   combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
+  combineState.walls = (combineState.walls || []).filter(w => !w.algorithmic);
   combineState.selectedId = null; combineState.selectedKind = null;
   const removed = before - (combineState.items.length + combineState.zones.length + combineState.entryPoints.length);
   if (announce && typeof showToast === "function") showToast(removed ? "Cleared" : "Nothing to clear", removed ? `${removed} piece${removed === 1 ? "" : "s"} placed by the algorithm removed from the board.` : "The board has nothing the algorithm placed.");
@@ -911,6 +930,7 @@ async function algoApply() {
     if (algoState.plan !== plan || algoState.busy) return;
   }
   combineState.items = []; combineState.zones = []; combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
+  combineState.walls = [];
   combineState.tray = combineState.tray || [];
 
   const stamp = Date.now();
@@ -947,6 +967,13 @@ async function algoApply() {
       combineState.entryPoints.push({ id: `entry_algo_${stamp}_${i}`, edge: snap.edge, x_m: snap.x, y_m: snap.y, algorithmic: true });
       entryCount++;
     });
+  }
+
+  // The indoor zone's wall + door (algoPlacementCore.js: buildIndoorWall), so the Combine board shows the same real wall the algorithmic preview always
+  // has — only the preview had it until now. Purely visual on the board (see combineState.walls above), so it needs no id per rect, just one entry for
+  // the whole ring; regenerated from the plan on every Apply, same as items/zones/entryPoints just above.
+  if (plan.wall) {
+    combineState.walls.push({ id: `wall_algo_${stamp}`, thicknessM: plan.wall.thicknessM, rects: plan.wall.rects, door: plan.wall.door, algorithmic: true });
   }
 
   combineState.selectedId = null; combineState.selectedKind = null;

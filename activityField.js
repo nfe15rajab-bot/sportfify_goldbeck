@@ -52,6 +52,10 @@ function drawActivity(activityId, dims, isDark) {
   const stroke = isDark ? "#aaa" : "#555";
   const dimColor = isDark ? "#aaa" : "#666";
 
+  // A specified sport (basketball, volleyball, padel) draws itself into this same #field
+  // element at its own, smaller viewBox and never puts the shared one back — this is computed
+  // for VW x VH, so it must own that assumption explicitly (see field.js's drawField).
+  svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
   svg.innerHTML = `
     <defs>
       <pattern id="activityFloor" patternUnits="userSpaceOnUse" width="20" height="20">
