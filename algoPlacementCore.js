@@ -584,11 +584,21 @@ const AlgoPlacement = (function () {
     }
   }
 
-  /** The clear gap (cells) between two named items: the plain gap, or with zoning the in-zone gap inside a zone and the primary-path gap between zones. */
+  /**
+   * The clear gap (cells) two named items must keep, under zoning Z = { zgap, xgap, egap }: the in-zone gap inside one zone, the primary-path gap between
+   * zones - except the locker and bathroom modules, which share a wall with each other (no path between them, and only them), and which need more than the
+   * ordinary in-zone gap from anything else: a lobby to actually enter by, not a corridor barely wider than their own door.
+   */
+  function requiredGapCells(a, b, Z) {
+    if (noSetback(a) && noSetback(b)) return 0;
+    const base = zoneOf(a) === zoneOf(b) ? Z.zgap : Z.xgap;
+    return (noSetback(a) || noSetback(b)) ? Math.max(base, Z.lobbyGap) : base;
+  }
+
+  /** The clear gap (cells) between two named items: the plain gap, or with zoning requiredGapCells above. */
   function gapBetween(L, a, b) {
     if (!L.zoning || !a || !b) return L.gap;
-    if (noSetback(a) && noSetback(b)) return 0;               // the locker and bathroom modules share a wall: no path between them, and only they
-    return zoneOf(a) === zoneOf(b) ? L.zoning.zgap : L.zoning.xgap;
+    return requiredGapCells(a, b, L.zoning);
   }
   /** May item `name` stand on rectangle r as far as the garden band goes (indoor items may stand in it)? */
   function zoneAllows(L, name, r) {
@@ -607,10 +617,31 @@ const AlgoPlacement = (function () {
     }
     return box;
   }
-  const indoorBox = L => indoorBoxOf(L.courts);
+  /**
+   * Widens the indoor zone's box so the wall gives a locker/bathroom module its SERVICE_LOBBY_M in front - the side away from the roof's own wall it backs
+   * onto - even when nothing else happens to reach that far. requiredGapCells already keeps every OTHER item that far from one; this is the case that rule
+   * cannot reach: nothing else is there at all, so without this the wall itself (just the ordinary 0.15 m half-thickness past the module) sits right against it.
+   */
+  function padForServiceLobby(box, courts, grid, lobbyCells) {
+    if (!box) return box;
+    let [x0, y0, x1, y1] = box;
+    for (const [n, r] of courts) {
+      if (!noSetback(n)) continue;
+      if (r[1] === 0) y1 = Math.max(y1, r[3] + lobbyCells);           // backs onto the top edge - the front is below it
+      if (r[3] === grid.ny) y0 = Math.min(y0, r[1] - lobbyCells);     // backs onto the bottom edge - the front is above it
+      if (r[0] === 0) x1 = Math.max(x1, r[2] + lobbyCells);           // backs onto the left edge - the front is to its right
+      if (r[2] === grid.nx) x0 = Math.min(x0, r[0] - lobbyCells);     // backs onto the right edge - the front is to its left
+    }
+    return [Math.max(0, x0), Math.max(0, y0), Math.min(grid.nx, x1), Math.min(grid.ny, y1)];
+  }
+  /** The indoor zone's box as everything during placement must see it: items' own extent, padded for a locker/bathroom module's lobby (so a sport keeps clear
+   * of the wall the lobby actually needs, not just the bare item footprint - and an indoor item flush-targeting the wall line lands on the same line the wall
+   * really gets built on). */
+  const indoorBox = L => padForServiceLobby(indoorBoxOf(L.courts), L.courts, L.grid, L.zoning ? L.zoning.lobbyGap : 0);
 
   const WALL_THICKNESS_M = 0.3;    // a real wall round the indoor zone, centred on its dotted line (already the 2 m clearance every sport keeps from it)
   const DOOR_WIDTH_M = 1.0;
+  const SERVICE_LOBBY_M = 2.0;     // the locker and bathroom modules need this much clear in front of them, not just the ordinary in-zone gap - a lobby to enter by
 
   /**
    * The indoor zone's wall (metres): a WALL_THICKNESS_M ring centred on `zoneM` (so it needs no space beyond what the wall-clearance rule already reserves), with a
@@ -646,6 +677,8 @@ const AlgoPlacement = (function () {
       door = { x0: best.rect[0], y0: dy0, x1: best.rect[2], y1: dy1, side: best.name };
       walls.splice(idx, 1, [best.rect[0], best.rect[1], best.rect[2], dy0], [best.rect[0], dy1, best.rect[2], best.rect[3]]);
     }
+    // the wall is whole - never cut to dodge a lift or stair. A lift/stair crossing it is prevented earlier, at the point an indoor item is placed (see
+    // wallStaysClearOfAnchors): the zone's own shape adapts so its bounding box, and so this wall, never has to reach one in the first place.
     return { thicknessM: WALL_THICKNESS_M, rects: walls.filter(w => w[2] - w[0] > 1e-6 && w[3] - w[1] > 1e-6), door };
   }
   /** Where the placed items of the same cluster zone are centred (cells), or null when there are none: the pull that keeps a zone together and grows the indoor zone from its corner. */
@@ -695,8 +728,9 @@ const AlgoPlacement = (function () {
     if (L.paths.some(p => contactLen(r, p) >= L.minAcc)) return true;
     if (!L.zoning) return false;
     for (const [n2, q] of L.courts) {
-      if (zoneOf(n2) !== zoneOf(name) || gapBetween(L, name, n2) === 0) continue;         // (across a shared wall there is no path to walk on)
-      if (facingLen(r, q, L.zoning.zgap) >= L.minAcc) return true;
+      const g = gapBetween(L, name, n2);
+      if (zoneOf(n2) !== zoneOf(name) || g === 0) continue;         // (across a shared wall there is no path to walk on)
+      if (facingLen(r, q, g) >= L.minAcc) return true;
     }
     return false;
   }
@@ -793,7 +827,9 @@ const AlgoPlacement = (function () {
           else if (side === "S") r = [ex0 - ext, ey0 - W, ex1 + ext, ey0];
           else if (side === "E") r = [ex1, ey0 - ext, ex1 + W, ey1 + ext];
           else r = [ex0 - W, ey0 - ext, ex0, ey1 + ext];
-          if (g.isFree(r)) { options.push([side, r]); break; }
+          // a landing is the entry's own doorstep: a lift/ramp/stair may sit in the garden band (the band only ever kept outdoor items and ordinary pathway routing
+          // off it), so its landing must be free to as well, on itemFree (footprint + lifts/keep-clear only) rather than isFree (which also blocks the whole band).
+          if (g.itemFree(r)) { options.push([side, r]); break; }
         }
       }
       if (!options.length) {
@@ -879,7 +915,9 @@ const AlgoPlacement = (function () {
     for (const x of g.anchorXs) xs.push(x, x - W);
     ys = uniq(ys).filter(y => y >= 0 && y <= g.ny - W);
     xs = uniq(xs).filter(x => x >= 0 && x <= g.nx - W);
-    const free = r => g.isFree(r);
+    // the corridor reaching an entry may cross the garden band right at that entry's own doorstep, same reasoning as buildSeeds' landing above (itemFree, not isFree):
+    // this only widens where the network is ALLOWED to run, it does not make the band cheaper to use - edgeContact below still pulls it toward the boundary line.
+    const free = r => g.itemFree(r);
     for (let round = 0; round < 20; round++) {
       const comps = components(L.paths, W);
       if (comps.length <= 1) return;
@@ -938,12 +976,25 @@ const AlgoPlacement = (function () {
       const box = indoorBox(L);
       if (box) obstacles.push(inflate(box, L.zoning.xgap));
     }
+    // zoning: an indoor item's own spot must never grow the indoor zone's bounding box - and so the wall built around it - across a lift or stair. The wall stays
+    // whole (never cut to dodge one); the zone's own shape adapts instead, by simply never being offered a spot that would reach that far in the first place.
+    let indoorAnchorClear = null;
+    if (zoned && zoneOf(name) === "indoor" && g.anchorCells && g.anchorCells.length) {
+      const wallHalf = toCells(WALL_THICKNESS_M / 2);
+      indoorAnchorClear = r => {
+        const hypo = L.courts.concat([[name, r]]);
+        const box = padForServiceLobby(indoorBoxOf(hypo), hypo, g, L.zoning.lobbyGap);   // the wall the anchor must stay clear of is this padded shape, not the bare item footprint
+        const infl = inflate(box, wallHalf);
+        return !g.anchorCells.some(a => infl[0] < a[2] && a[0] < infl[2] && infl[1] < a[3] && a[1] < infl[3]);
+      };
+    }
     for (const y of YS) {
       const Sa = S[y], Sb = S[y + h];
       for (const x of XS) {
         if (Sb[x + w] - Sa[x + w] - Sb[x] + Sa[x] !== 0) continue;
         const r = [x, y, x + w, y + h];
         if (bandBlocks && !g.outdoorOk(r)) continue;
+        if (indoorAnchorClear && !indoorAnchorClear(r)) continue;
         let hit = false;
         for (const q of obstacles) if (q[0] < r[2] && r[0] < q[2] && q[1] < r[3] && r[1] < q[3]) { hit = true; break; }
         if (!hit) out.push(r);
@@ -1349,12 +1400,12 @@ const AlgoPlacement = (function () {
     const reached = courts.map((c, i) => paths.some(p => contactLen(cr[i], p) >= minAcc));
     if (Z) for (let moved = true; moved;) {
       moved = false;
-      for (let i = 0; i < courts.length; i++) if (!reached[i] && courts.some((d, j) => reached[j] && zoneOf(d[0]) === zoneOf(courts[i][0]) && !(noSetback(d[0]) && noSetback(courts[i][0])) && facingLen(cr[i], cr[j], Z.zgap) >= minAcc)) { reached[i] = true; moved = true; }
+      for (let i = 0; i < courts.length; i++) if (!reached[i] && courts.some((d, j) => reached[j] && zoneOf(d[0]) === zoneOf(courts[i][0]) && !(noSetback(d[0]) && noSetback(courts[i][0])) && facingLen(cr[i], cr[j], requiredGapCells(courts[i][0], d[0], Z)) >= minAcc)) { reached[i] = true; moved = true; }
     }
     for (let i = 0; i < courts.length; i++) {
       for (let j = i + 1; j < courts.length; j++) {
         if (Z) {
-          const g = noSetback(courts[i][0]) && noSetback(courts[j][0]) ? 0 : zoneOf(courts[i][0]) === zoneOf(courts[j][0]) ? Z.zgap : Z.xgap;
+          const g = requiredGapCells(courts[i][0], courts[j][0], Z);
           if (overlap(inflate(cr[i], g), cr[j])) issues.push(courts[i][0] + " is closer than " + (g * RES).toFixed(1) + " m to " + courts[j][0]);
         } else if (bigSet.has(courts[i][0]) && bigSet.has(courts[j][0])) {
           if (overlap(cr[i], cr[j])) issues.push(courts[i][0] + " overlaps " + courts[j][0]);
@@ -1417,7 +1468,7 @@ const AlgoPlacement = (function () {
     const o = opts || {};
     const t0 = now();
     const grid = zx && site.full ? site.full : site.grid;          // zoning: the whole footprint, with the garden band as a mask (indoor items may stand in it)
-    const Z = zx ? { zgap: toCells(zx.zgap), xgap: toCells(zx.xgap), egap: toCells(zx.egap) } : null;
+    const Z = zx ? { zgap: toCells(zx.zgap), xgap: toCells(zx.xgap), egap: toCells(zx.egap), lobbyGap: toCells(SERVICE_LOBBY_M) } : null;
     const prepared = prepareRules(grid, zx ? Object.assign({ cornerFallback: true }, rules || { serviceCorners: true, gridLines: [] }) : rules);
     const W = toCells(pathWm);
     const emin = toCells(EDGE_MIN_M);
@@ -1446,9 +1497,10 @@ const AlgoPlacement = (function () {
       const rank = n => (layoutRules && layoutRules.serviceNames.has(n) ? -2 : layoutRules && layoutRules.heavy.has(n) ? -1 : bigSet.has(n) ? 0 : 1);
       let keyed;
       if (Z) {
-        // zoning: the corner services first, then the rest of the indoor zone, then outdoor, then garden; inside a zone the heavy items (held to the grid) and the big ones first,
-        // and identical items one after the other (one jitter per name), so they can sit together
-        const zr = n => (layoutRules && layoutRules.serviceNames.has(n) ? 0 : n === "Bouldering Wall" ? 1.5 : zoneOf(n) === "indoor" ? 1 : zoneOf(n) === "outdoor" ? 2 : 3);
+        // zoning: the corner services first, then the rest of the indoor zone, then outdoor and garden together (garden is not lower priority than outdoor - placed dead
+        // last every single attempt, it only ever got the outdoor cluster's leftover scraps, even on a roof with plenty of room to spare); inside a zone the heavy items
+        // (held to the grid) and the big ones first, and identical items one after the other (one jitter per name), so they can sit together
+        const zr = n => (layoutRules && layoutRules.serviceNames.has(n) ? 0 : n === "Bouldering Wall" ? 1.5 : zoneOf(n) === "indoor" ? 1 : 2);
         const jitOf = {};
         keyed = items.map(it => {
           const n = it[0];
@@ -1540,7 +1592,7 @@ const AlgoPlacement = (function () {
     // zoning: the indoor zone's rectangle (drawn dotted), and the garden band less the stretch of it inside that rectangle (no garden where the walls are)
     let bandOut = null, indoorZone = null;
     if (Z) {
-      const cellBox = indoorBoxOf(L.courts);
+      const cellBox = indoorBox(L);
       indoorZone = cellBox ? grid.toM(cellBox) : null;
       bandOut = indoorZone ? site.bandRects.flatMap(s => subtractRect(s, indoorZone)) : site.bandRects;
     }

@@ -518,6 +518,10 @@ function buildCombinedPayload() {
     zones: typeof buildZonePayload === "function"
       ? (combineState.zones || []).map(buildZonePayload)
       : [],
+    // The lifts / ramps / stairs placed in Algorithmic placement, so a saved/resumed session keeps them even before anything from that plan has been
+    // Applied to the board - without this, Save Session then Resume Last Session (or a plain refresh) lost them, and the chosen quantities along with
+    // them (a plan search with no landing to build a network from finds nothing).
+    algo_blocks: typeof algoState !== "undefined" ? algoState.blocks.map(b => ({ kind: b.kind, x_m: b.x, y_m: b.y, width_m: b.w, height_m: b.h })) : [],
     // The structural grid and columns (in the roof's canvas coordinates, like the placements) and the deck capacity, for the
     // structural load analysis. Absent when there is neither.
     ...(typeof structurePayload === "function" && structurePayload() ? { structure: structurePayload() } : {}),
@@ -692,6 +696,15 @@ function applySessionSnapshot(payload, opts = {}) {
   });
   combineState.selectedId = null;
   combineState.selectedKind = null;
+
+  // Algorithmic placement's own lifts / ramps / stairs - a plan-in-progress that never reached Apply is otherwise lost by a save/resume.
+  if (typeof algoState !== "undefined" && typeof ALGO_BLOCK_SIZES !== "undefined" && Array.isArray(payload.algo_blocks)) {
+    algoState.blocks = payload.algo_blocks
+      .filter(b => b && ALGO_BLOCK_SIZES[b.kind] && [b.x_m, b.y_m, b.width_m, b.height_m].every(Number.isFinite))
+      .map(b => ({ id: typeof algoNewBlockId === "function" ? algoNewBlockId() : `blk_${Date.now()}_${Math.random()}`, kind: b.kind, x: b.x_m, y: b.y_m, w: b.width_m, h: b.height_m }));
+    if (typeof algoRefreshBlocks === "function") algoRefreshBlocks();
+    if (typeof algoSave === "function") algoSave();
+  }
 
   const sc = payload.site_conditions;
   if (sc) {

@@ -75,11 +75,11 @@ const ALGO_MIN_PATH_M = 2.0;
 /** With zoning the primary paths (outside the zones, between them) are 2.0 to 2.5 m; inside a zone 1.5 to 1.8 m; around lifts, stairs and ramps 2.5 m. */
 const ALGO_PRIMARY_MAX_M = 2.5;
 
-/** What the list offers, under the headings a person reads. The 20 x 12 "Multi Sport Court" is in no list (it stays in the engine, whose Rhino-parity tests use its name). */
+/** What the list offers, under the headings a person reads. The 20 x 12 "Multi Sport Court" and Rest / Hydration Area are in no list (they stay in the engine, whose Rhino-parity and zoning tests use their names). */
 const ALGO_LISTS = [
   { heading: "Outdoor sports", names: ["3x3 Streetbasketball", "Basketball Court", "Handball", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Multipurpose Sport Area", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor sports", names: ["Ping Pong", "Bouldering Wall", "Badminton"] },
-  { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module", "Rest / Hydration Area"] },
+  { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] }
 ];
 /** Which headings each roof type shows. Garden Core keeps only the garden activities; Mixed and a roof with no type yet show everything. */
@@ -122,6 +122,13 @@ const algoState = {
       if (saved.qty) algoState.qty = saved.qty;
       if (saved.settings) Object.assign(algoState.settings, saved.settings);
       oldDefaultPath = !!saved.settings && saved.settings.pathW === 2 && saved.settings.minPathW === 2;
+      // the lifts / ramps / stairs placed on the site: without this a refresh mid-Algorithmic-placement (before ever pressing Apply) lost them, and every
+      // chosen quantity along with them - a plan search with no landing to build a network from finds nothing, so the choices looked deleted too.
+      if (Array.isArray(saved.blocks)) {
+        algoState.blocks = saved.blocks
+          .filter(b => b && ALGO_BLOCK_SIZES[b.kind] && [b.x, b.y, b.w, b.h].every(Number.isFinite))
+          .map(b => ({ id: algoNewBlockId(), kind: b.kind, x: b.x, y: b.y, w: b.w, h: b.h }));
+      }
     }
   } catch (e) { /* storage blocked or corrupt: the defaults */ }
   // settings saved before the 2 m rule may hold a narrower pathway or the old "big courts touch" exception: the rule wins
@@ -134,7 +141,8 @@ const algoState = {
 })();
 
 function algoSave() {
-  try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings })); } catch (e) { /* not kept */ }
+  const blocks = algoState.blocks.map(b => ({ kind: b.kind, x: b.x, y: b.y, w: b.w, h: b.h }));
+  try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings, blocks })); } catch (e) { /* not kept */ }
 }
 
 const algoEsc = s => escapeHtml(s);
@@ -596,13 +604,15 @@ async function algoPreview(msg) {
         return algoPreview("Not added - " + algoLabel(un.name) + ": " + un.reason + ". The other courts you added were kept.");
       }
       return algoRevert("Not added - " + algoLabel(un.name) + ": " + un.reason + ". Previous selection restored.");
-    }                                                                         // the site changed: keep what fits
-    const removed = Object.keys(qty).filter(n => qty[n] > (counts[n] || 0)).map(n => algoLabel(n) + " x" + (qty[n] - (counts[n] || 0)));
-    AlgoPlacement.SPORTS.forEach(s => { algoState.qty[s.name] = counts[s.name] || 0; });
-    algoSyncQty();
-    plan.unplaced = [];
-    plan.stats.requested = plan.stats.placed;
-    algoState.msg = "Removed (no room with the current settings): " + removed.join(", ");
+    }
+    // the site changed (a block moved, a setting changed, ...) and not everything you chose fits any more. Say so and leave it at that - the choice stays exactly as
+    // typed, so moving the block back (or loosening a setting) brings the same numbers straight back, instead of you having to re-enter them from scratch.
+    const short = Object.keys(qty).filter(n => (qty[n] || 0) > (counts[n] || 0)).map(n => algoLabel(n) + " x" + ((qty[n] || 0) - (counts[n] || 0)));
+    algoState.msg = "Does not fit with the site as it is now (nothing was removed from your selection): " + short.join(", ") + ". See \"NOT placed\" in the report below.";
+    algoState.plan = plan; algoState.planKey = algoInputKey();
+    algoState.status = "PREVIEW - not on the board yet. Press Apply to Combine when you are happy.";
+    algoDrawPreview(); algoRefreshAll();
+    return;
   }
   algoState.good = Object.assign({}, algoState.qty);
   algoState.plan = plan; algoState.planKey = algoInputKey();
@@ -679,7 +689,7 @@ function algoRefreshSummary() {
   fill.classList.remove("busy");
   if (u) {
     const pct = 100 * total / u;
-    sum.textContent = `${count} courts = ${total.toFixed(0)} m² of ${u.toFixed(0)} m² sports area (${pct.toFixed(0)}%). Limit ${AlgoPlacement.BUILT_LIMIT_PCT}%.`;
+    sum.textContent = `${count} courts = ${total.toFixed(0)} m² of ${u.toFixed(0)} m² sports area (${pct.toFixed(0)}%).`;
     sum.className = "algo-summary " + (pct <= AlgoPlacement.BUILT_LIMIT_PCT ? "ok" : "bad");
     fill.style.width = Math.min(100, pct) + "%";
     fill.className = pct <= AlgoPlacement.BUILT_LIMIT_PCT ? "" : "bad";
