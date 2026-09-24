@@ -69,6 +69,7 @@ document.getElementById("modeCombine").addEventListener("click", () => setMode("
 document.getElementById("modeData").addEventListener("click", () => setMode("data"));
 document.getElementById("modeAnalysis").addEventListener("click", () => setMode("analysis"));
 document.getElementById("modeCompare").addEventListener("click", () => setMode("compare"));
+document.getElementById("modePostAnalysis").addEventListener("click", () => setMode("postAnalysis"));
 document.getElementById("btn-guide-start").addEventListener("click", () => setMode("site"));
 
 /* ── Overview / Deliverables / Save Session tabs ──
@@ -98,6 +99,7 @@ function setMode(mode) {
   const isData = mode === "data";
   const isAnalysis = mode === "analysis";
   const isCompare = mode === "compare";
+  const isPostAnalysis = mode === "postAnalysis";
   const isGuide = mode === "guide";
   const isSite = mode === "site";
   const isStructure = mode === "structure";
@@ -109,10 +111,12 @@ function setMode(mode) {
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
   else if (isAnalysis && typeof buildAnalysisRail === "function") buildAnalysisRail();   // Analysis's own rail: Overview, Garden, Structure, Sun, Sport, Safety, Other
+  else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Post Analysis's own rail: Dynamic Families, Recommendations
 
-  // Revit's analysis results are only polled while an Analysis group that shows them is open.
+  // Revit's analysis results are only polled while an Analysis group that shows them (or Post Analysis, which always
+  // needs the live payload) is open.
   if (typeof startResultsPolling === "function") {
-    if (isAnalysis && typeof analysisSub !== "undefined" && analysisSub !== "overview") startResultsPolling();
+    if (isPostAnalysis || (isAnalysis && typeof analysisSub !== "undefined" && analysisSub !== "overview")) startResultsPolling();
     else stopResultsPolling();
   }
 
@@ -145,6 +149,7 @@ function setMode(mode) {
   document.getElementById("combineConfigurator").style.display = isCombine ? "flex" : "none";
   document.getElementById("dataConfigurator").style.display = isData ? "block" : "none";
   document.getElementById("analysisConfigurator").style.display = isAnalysis ? "block" : "none";
+  document.getElementById("postAnalysisConfigurator").style.display = isPostAnalysis ? "block" : "none";
   document.getElementById("compareConfigurator").style.display = isCompare ? "block" : "none";
 
   document.getElementById("field").style.display = isSport ? "block" : "none";
@@ -156,6 +161,7 @@ function setMode(mode) {
   document.getElementById("conditions-content").style.display = isConditions ? "block" : "none";
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
+  document.getElementById("postAnalysis-content").style.display = isPostAnalysis ? "block" : "none";
   document.getElementById("compare-content").style.display = isCompare ? "block" : "none";
   document.getElementById("families-content").style.display = isFamilies ? "block" : "none";
   document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
@@ -176,6 +182,7 @@ function setMode(mode) {
   document.getElementById("modeData").classList.toggle("active", isData);
   document.getElementById("modeAnalysis").classList.toggle("active", isAnalysis);
   document.getElementById("modeCompare").classList.toggle("active", isCompare);
+  document.getElementById("modePostAnalysis").classList.toggle("active", isPostAnalysis);
 
   // Explicit branch per mode — a bare `else` here previously meant "anything
   // that isn't garden/sport" silently ran updateCombineUI(), which broke the
@@ -188,6 +195,7 @@ function setMode(mode) {
   else if (isCombine) updateCombineUI();
   else if (isData && typeof updateDataUI === "function") updateDataUI();
   else if (isAnalysis && typeof updateAnalysisUI === "function") updateAnalysisUI();
+  else if (isPostAnalysis && typeof updatePostAnalysisUI === "function") updatePostAnalysisUI();
   else if (isCompare && typeof updateCompareUI === "function") updateCompareUI();
   else if (isFamilies && typeof updateFamiliesUI === "function") updateFamiliesUI();
   else if (isStructure && typeof updateStructureTabUI === "function") { updateStructureUI(); updateAssumptionsUI(); updateStructureTabUI(); }
