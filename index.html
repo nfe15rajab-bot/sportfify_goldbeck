@@ -86,6 +86,7 @@
       <div class="activity-bar-divider"></div>
       <button id="modeAnalysis" class="activity-icon" title="Analysis"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Analysis</span></button>
       <button id="modeCompare" class="activity-icon" title="Compare"><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="activity-icon-label">Compare</span></button>
+      <button id="modePostAnalysis" class="activity-icon" title="Post Analysis — dynamic families and where to improve the design next"><i class="ti ti-transform" aria-hidden="true"></i><span class="activity-icon-label">Post Analysis</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeData" class="activity-icon" title="Data"><i class="ti ti-database" aria-hidden="true"></i><span class="activity-icon-label">Data</span></button>
       <div class="activity-bar-divider"></div>
@@ -496,6 +497,22 @@
         </div>
       </div>
 
+      <div id="postAnalysisConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Post Analysis</h2>
+          <p>Where the analysis results turn into design: dynamic families driven by their own numbers, and what still needs attention, ranked by what matters most to you.</p>
+        </div>
+        <div class="section">
+          <label><i class="ti ti-adjustments" aria-hidden="true"></i> Priority</label>
+          <p class="hint">Which analysis the recommendations below are ranked against.</p>
+          <div class="quality-btns" id="postAnalysisPriorityBtns">
+            <div class="q-btn active" data-priority="sun">Sun</div>
+            <div class="q-btn" data-priority="wind_erosion">Wind &amp; Erosion</div>
+            <div class="q-btn" data-priority="structural">Structural</div>
+          </div>
+        </div>
+      </div>
+
       <div id="compareConfigurator" style="display:none">
         <div class="panel-header">
           <h2 id="compare-heading">Compare configurations</h2>
@@ -583,6 +600,8 @@
         <div id="data-content" style="display:none"></div>
 
         <div id="analysis-content" style="display:none"></div>
+
+        <div id="postAnalysis-content" style="display:none"></div>
 
         <div id="compare-content" style="display:none"></div>
         <div id="families-content" style="display:none"></div>
@@ -1033,6 +1052,7 @@
   <script src="combineController.js?v=2026-09-23-combine-wall-white"></script>
   <script src="analysisController.js?v=2026-09-23-combine-wall-white"></script>
   <script src="analysisResults.js?v=2026-09-23-combine-wall-white"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-23-combine-wall-white"></script>
   <script src="siteTabs.js?v=2026-09-23-combine-wall-white"></script>
   <script src="roofProgram.js?v=2026-09-23-combine-wall-white"></script>
   <script src="workspaceBridge.js?v=2026-09-23-combine-wall-white"></script>

@@ -38,7 +38,10 @@ const RESULT_SECTIONS = {
   accessibility: { title: "Accessibility", run: RUN_PATH_ALGORITHMIC + "Accessibility Analysis" },
   lca: { title: "LCA", run: RUN_PATH_ALGORITHMIC + "LCA Analysis" },
   carbon_impact: { title: "Carbon impact", run: RUN_PATH_ALGORITHMIC + "Carbon Impact Analysis" },
-  sun_and_shading: { title: "Sun and shade", run: RUN_PATH_PHYSICAL + "Environmental → Sun & Shade Analysis" }
+  sun_and_shading: { title: "Sun and shade", run: RUN_PATH_PHYSICAL + "Environmental → Sun & Shade Analysis" },
+  // Shown in the Post Analysis tab (kineticsPostAnalysis.js), not this rail — see ANALYSIS_SUBTABS's note above. Still
+  // listed here so results-keys-parity.js can confirm the add-in and the web app agree on what "kinetics" means.
+  kinetics: { title: "Kinetics", run: "Sportify ribbon → Kinetics" }
 };
 
 /** The rail: id, caption, icon, heading and what the group shows. */
@@ -141,6 +144,7 @@ function stopResultsPolling() {
 
 function renderAnalysisIfShowingResults() {
   if (typeof activeMode !== "undefined" && activeMode === "analysis" && analysisSub !== "overview") renderAnalysisResultsView();
+  if (typeof renderPostAnalysisIfShowing === "function") renderPostAnalysisIfShowing();
 }
 
 // ---------------------------------------------------------------------------------------------------- the rail
