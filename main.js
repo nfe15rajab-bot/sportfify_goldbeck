@@ -329,6 +329,7 @@ if(typeof initTrayDragInteractions === "function") initTrayDragInteractions();
 if(typeof updateSiteUI === "function") updateSiteUI();
 if (typeof profileInit === "function") profileInit();      // the PROFILE (profile.js): view, role and theme as the person left them
 if (typeof quizInit === "function") quizInit();            // the start-up quiz (quiz.js): wired now, opened by the welcome screen for a new person
+if (typeof tourInit === "function") tourInit();            // the rundgang (tour.js): offered after the quiz, from the Overview and from the Profile tab
 startRevitPolling();
 // restoreAutosaveIfAny() is no longer called automatically here — the
 // session gate (sessionGate.js, shown on top of whatever setMode("guide")

@@ -91,7 +91,7 @@ function quizMaybeOpen() {
 }
 
 /** Sets what the answers choose, saves it like any profile change, and goes where Sportify opens. */
-function quizApply() {
+function quizApply(options) {
   if (!quizComplete(quizState.answers)) return;
   const o = quizOutcome(quizState.answers);
   const quiz = Object.assign({}, quizNormalizeAnswers(quizState.answers), { taken: new Date().toISOString() });
@@ -100,6 +100,8 @@ function quizApply() {
   quizClose();
   if (typeof setMode === "function") setMode(profileLandingMode());
   if (typeof showToast === "function") showToast("Sportify is set up", o.summary[0] + " " + o.summary[1] + (sent.length ? " " + sent.join(" and ") + " sent to the Site tab." : ""));
+  // "Apply and show me around": the rundgang (tour.js) starts once the landing workspace is on screen
+  if (options && options.tour && typeof tourStart === "function") setTimeout(tourStart, 500);
 }
 
 // ------------------------------------------------------------------------------------------------ the site data the person types
@@ -227,7 +229,10 @@ function quizRenderResult() {
     <p class="hint quiz-foot">This only sets where you start and what is shown. You can change any of it in the Profile tab, and Advanced shows everything.</p>
     <div class="quiz-nav">
       <button type="button" class="btn-export" data-quiz-act="back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
-      <button type="button" class="btn-export accent" data-quiz-act="apply"><i class="ti ti-check" aria-hidden="true"></i>Apply and start</button>
+      <span class="quiz-nav-right">
+        <button type="button" class="btn-export" data-quiz-act="apply-tour"><i class="ti ti-compass" aria-hidden="true"></i>Apply and show me around</button>
+        <button type="button" class="btn-export accent" data-quiz-act="apply"><i class="ti ti-check" aria-hidden="true"></i>Apply and start</button>
+      </span>
     </div>`;
 }
 
@@ -306,6 +311,7 @@ function quizInit() {
       if (act.dataset.quizAct === "next") quizNext();
       else if (act.dataset.quizAct === "back") quizGo(quizState.step - 1);
       else if (act.dataset.quizAct === "apply") quizApply();
+      else if (act.dataset.quizAct === "apply-tour") quizApply({ tour: true });
       else if (act.dataset.quizAct === "skip") quizSkip();
       else if (act.dataset.quizAct === "site-search") quizSearchPlaces();
       else if (act.dataset.quizAct === "site-clear") { quizState.site.place = null; quizState.focus = "query"; quizRender(); }
