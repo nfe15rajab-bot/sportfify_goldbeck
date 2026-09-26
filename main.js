@@ -279,7 +279,7 @@ function showToast(title, message) {
  * shrinks it instead, e.g. Combine's step/iterations panes) — same
  * pointer-capture idiom the roof canvas's own drags already use.
  */
-function makeResizable(handleId, targetEl, { min, max, targetSide }) {
+function makeResizable(handleId, targetEl, { min, max, targetSide, onResize }) {
   const handle = document.getElementById(handleId);
   if (!handle || !targetEl) return;
   let startX = 0, startWidth = 0;
@@ -296,6 +296,7 @@ function makeResizable(handleId, targetEl, { min, max, targetSide }) {
     if (!handle.hasPointerCapture(e.pointerId)) return;
     const newWidth = Math.min(max, Math.max(min, startWidth + sign * (e.clientX - startX)));
     targetEl.style.width = `${newWidth}px`;
+    if (onResize) onResize(newWidth);
   });
   ["pointerup", "pointercancel"].forEach(evt => handle.addEventListener(evt, e => {
     handle.classList.remove("resizing");
@@ -305,6 +306,15 @@ function makeResizable(handleId, targetEl, { min, max, targetSide }) {
 makeResizable("panelResizer", document.querySelector(".panel"), { min: 180, max: 520, targetSide: "left" });
 makeResizable("stepPaneResizer", document.querySelector(".combine-step-pane"), { min: 300, max: 720, targetSide: "right" });
 makeResizable("iterationsPaneResizer", document.querySelector(".iterations-pane"), { min: 140, max: 400, targetSide: "right" });
+// Past ~90px the bar has room to show a piece's actual name instead of its
+// short caption (see style.css's .activity-bar.wide / sportController.js
+// and gardenController.js's short+full label spans) — below that, the
+// curated short caption still reads better than whatever of the full name
+// would fit.
+makeResizable("activityBarResizer", document.getElementById("activity-bar"), {
+  min: 48, max: 220, targetSide: "left",
+  onResize: w => document.getElementById("activity-bar").classList.toggle("wide", w > 90),
+});
 
 applyTheme(document.documentElement.dataset.mode);
 buildActivityBar();

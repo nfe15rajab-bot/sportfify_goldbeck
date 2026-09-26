@@ -34,13 +34,13 @@ function buildActivityBar() {
   let html = "";
   Object.entries(FIELD_SPORTS).forEach(([id, f]) => {
     html += `<button class="activity-icon${id === state.sport ? " active" : ""}" data-kind="field" data-id="${id}" title="${escapeHtml(f.label)}">
-               <i class="ti ${f.icon}"></i><span class="activity-icon-label">${escapeHtml(f.short)}</span>
+               <i class="ti ${f.icon}"></i><span class="activity-icon-label short">${escapeHtml(f.short)}</span><span class="activity-icon-label full">${escapeHtml(f.label)}</span>
              </button>`;
   });
   html += `<div class="activity-bar-divider"></div>`;
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
     html += `<button class="activity-icon${id === state.activityId ? " active" : ""}" data-kind="activity" data-id="${id}" title="${escapeHtml(a.label)}">
-               <i class="ti ${a.icon}"></i><span class="activity-icon-label">${escapeHtml(a.short)}</span>
+               <i class="ti ${a.icon}"></i><span class="activity-icon-label short">${escapeHtml(a.short)}</span><span class="activity-icon-label full">${escapeHtml(a.label)}</span>
              </button>`;
   });
   bar.innerHTML = html;
