@@ -14,6 +14,15 @@ function Try-Listen([int]$port) {
 $port = 8123
 $listener = Try-Listen $port
 if (-not $listener) {
+    # 8124 next, not a random port: Sportify.Api's CORS allowlist
+    # (ApiSecurity.DefaultOrigins) only ever permits 8123 and 8124 — "the
+    # plain dev server used when Revit has 8123" is 8124's documented job.
+    # A random port here would start the server fine but leave every
+    # fetch to the API blocked by CORS with no obvious cause.
+    $port = 8124
+    $listener = Try-Listen $port
+}
+if (-not $listener) {
     $port = Get-Random -Minimum 9000 -Maximum 9999
     $listener = Try-Listen $port
 }
