@@ -49,7 +49,10 @@ function revitLayerShown(key) {
   return def ? def.on : true;
 }
 
-/** The roof's outline as Revit gave it, over the plain dashed one: solid, with its corners and the length of each side. */
+/**
+ * The roof's outline as Revit gave it, over the plain dashed one: solid, with its corners. The length of each side is no longer written on the plan (it crowded
+ * the numbered pieces); it shows as a tooltip when the pointer rests on that side.
+ */
 function revitBoundarySvg(scale, roofOx, roofOy) {
   const roof = combineState.roof;
   if (!revitLayerShown("boundary") || !roof.boundary || roof.boundary.length < 3) return "";
@@ -57,10 +60,10 @@ function revitBoundarySvg(scale, roofOx, roofOy) {
   let out = `<polygon points="${P.map(p => `${p.x},${p.y}`).join(" ")}" fill="#2563eb" fill-opacity="0.05" stroke="#2563eb" stroke-width="2" pointer-events="none"><title>Roof boundary from Revit</title></polygon>`;
   P.forEach((p, i) => {
     const q = P[(i + 1) % P.length];
-    out += `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#fff" stroke="#2563eb" stroke-width="1.4" pointer-events="none"/>`;
     const len = Math.hypot(q.xm - p.xm, q.ym - p.ym);
-    if (len * scale < 34) return;
-    out += `<text x="${(p.x + q.x) / 2}" y="${(p.y + q.y) / 2 - 4}" text-anchor="middle" font-size="9" font-weight="600" font-family="'Titillium Web', Arial, sans-serif" fill="#1d4ed8" pointer-events="none">${len.toFixed(1)} m</text>`;
+    // An invisible wide stroke along the side, only to carry the tooltip.
+    out += `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="transparent" stroke-width="8" pointer-events="stroke"><title>${len.toFixed(2)} m</title></line>`;
+    out += `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#fff" stroke="#2563eb" stroke-width="1.4" pointer-events="none"/>`;
   });
   return out;
 }

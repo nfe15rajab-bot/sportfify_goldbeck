@@ -369,6 +369,96 @@ const run = async (s, settings, siteExtra) => {
   const zOff = await A.planLayout(A.makeSite({ foot: zRoof.foot, setback: zRoof.setback, entries: [zLift, zStair], anchors: [zLift, zStair] }), requests({ "Ping Pong": 2, "Yoga": 1 }), { timeLimit: 1, seed: 1, strictGap: true, courtGap: 2.0, minPathW: 2.0 });
   check("zoning off: nothing changes (no zoning in the plan, the band is the plain one)", zOff.zoning === null && zOff.bandRects === null);
 
+  // big courts on the setback line (2026-09-25): a notched roof pushed from Revit (67.5 x 16.28 m, usable depth ~13.3 m), entered through doors on its edge that
+  // used to be joined by one corridor straight across the middle - which left no strip deep enough for a Padel court. The big court now stands with a whole
+  // long side on the setback line and paths on its other three sides, the network joins round it, and every earlier rule still holds
+  const nFoot = [[64.8, 13.03], [67.5, 13.03], [67.5, 0], [0, 0], [0, 11.87], [5.4, 11.87], [5.4, 11.28], [13.5, 11.28], [13.5, 16.28], [56.7, 16.28], [56.7, 11.28], [64.8, 11.28]];
+  const nDoors = [[2.95, 9.97, 5.45, 11.87], [5.1, 9.78, 7.6, 11.28], [62.25, 9.78, 64.75, 11.28]];
+  const nSite = A.makeSite({ foot: nFoot, setback: 1.5, entries: nDoors, anchors: nDoors, zoning: true });
+  const nPlan = await A.planLayout(nSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Padel Tennis Court": 1, "Pickleball Court": 1, "HIIT Turf Grid": 1, "TRX Suspension Frame": 1 }), zSettings);
+  const nPadel = nPlan.courts.find(c => c.name === "Padel Tennis Court");
+  const nSvc = nPlan.courts.filter(c => /Locker|Bathroom/.test(c.name)), nz = nPlan.indoorZone;
+  const nLobbyShort = nz ? nSvc.flatMap(c => [c.rect[1] - nz[1], nz[3] - c.rect[3], c.rect[0] - nz[0], nz[2] - c.rect[2]].filter(g => g > EPS && g < 2.0 - EPS)) : ["no indoor zone"];
+  const onSetback = r => [[r[1], 1.5], [r[3], 16.28 - 1.5]].some(([y, line]) => Math.abs(y - line) < EPS) && (r[2] - r[0]) >= (r[3] - r[1]);
+  check("big courts on the setback line: on a notched Revit roof with doors at both ends a Padel court is placed, a whole long side on the setback line, and no rule breaks",
+    nPlan.unplaced.length === 0 && nPlan.issues.length === 0 && !!nPadel && onSetback(nPadel.rect),
+    (nPadel ? nPadel.rect.map(v => +v.toFixed(1)).join(",") : "no Padel") + " " + nPlan.unplaced.map(u => u.name).join(",") + nPlan.issues.join("; "));
+  check("big courts on the setback line: the locker and bathroom still share a wall in a corner and keep their 2 m lobby", nSvc.length === 2 && gapBetweenM(nSvc[0].rect, nSvc[1].rect) < EPS && nLobbyShort.length === 0,
+    nSvc.map(c => c.rect.join(",")).join(" | ") + " short: " + nLobbyShort.join(","));
+  // ...and that corner is a REAL roof corner (flush on two of the roof's outer edges), not a spot floating beside the corner the doors' landings fill, with the
+  // indoor zone reaching 2 m in front of the modules (the lobby inside the zone) and its door on that open side
+  const nRealCorner = r => (Math.abs(r[0]) < EPS || Math.abs(r[2] - 67.5) < EPS) && (Math.abs(r[1]) < EPS || Math.abs(r[3] - 16.28) < EPS);
+  const nFront = nz && nSvc.length ? Math.max(...nSvc.map(c => Math.max(c.rect[1] - nz[1], nz[3] - c.rect[3]))) : 0;
+  check("services in a real roof corner: one module flush in a corner of the roof's outer edges, the other beside it, and a 2 m lobby in front inside the indoor zone",
+    nSvc.some(c => nRealCorner(c.rect)) && nSvc.every(c => Math.abs(c.rect[1]) < EPS || Math.abs(c.rect[3] - 16.28) < EPS) && nFront >= 2.0 - EPS,
+    nSvc.map(c => c.rect.map(v => +v.toFixed(1)).join(",")).join(" | ") + " zone " + (nz ? nz.map(v => +v.toFixed(1)).join(",") : "none") + " front " + nFront.toFixed(2));
+  // garden never where people walk: in every shuffled variant the indoor zone's door opens onto path (no garden pocket in the 1.5 m in front of it), and
+  // nothing breaks a rule
+  const gRe = requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Teqball Table": 1, "TRX Suspension Frame": 1, "Pickleball Court": 1, "3x3 Streetbasketball": 1, "Trampoline": 1, "CrossFit Training Rig": 1, "Sandpit": 1 });
+  const gBad = [];
+  for (const [seed, variant] of [[1, 1], [1, 2], [2, 3], [3, 4]]) {
+    const gp = await A.planLayout(nSite, gRe, Object.assign({}, zSettings, { seed, shuffle: true, variant }));
+    const d = gp.wall && gp.wall.door;
+    const probe = !d ? null : d.side === "S" ? [d.x0, d.y1, d.x1, d.y1 + 1.5] : d.side === "N" ? [d.x0, d.y0 - 1.5, d.x1, d.y0] : d.side === "W" ? [d.x0 - 1.5, d.y0, d.x0, d.y1] : [d.x1, d.y0, d.x1 + 1.5, d.y1];
+    if (gp.issues.length) gBad.push("variant " + variant + ": " + gp.issues.join("; "));
+    if (probe && gp.pockets.some(q => inter(q, probe))) gBad.push("variant " + variant + ": garden in front of the door (" + d.side + ")");
+    // no garden island in the circulation: a pocket with walkable space on three or four sides
+    const onWalk = s => gp.pathRects.some(q => inter(q, s));
+    const e = 0.1;
+    gp.pockets.forEach(q => {
+      const n = [[q[0], q[1] - e, q[2], q[1]], [q[0], q[3], q[2], q[3] + e], [q[0] - e, q[1], q[0], q[3]], [q[2], q[1], q[2] + e, q[3]]].filter(onWalk).length;
+      if (n >= 3) gBad.push("variant " + variant + ": garden island " + q.map(v => +v.toFixed(1)).join(","));
+    });
+  }
+  check("garden never where people walk: shuffled layouts on the notched roof keep the indoor zone's door opening onto path, leave no garden island in the circulation, and break no rule", gBad.length === 0, gBad.join(" | "));
+  // an indoor sport keeps an in-zone path on all four sides inside the indoor zone: the wall is never pushed against a Ping Pong table or a Badminton court
+  // (the side facing the roof's own edge keeps the setback instead, which inside the zone is floor too)
+  const iBad = [];
+  for (const [seed, variant] of [[1, 0], [1, 1], [2, 2], [3, 3]]) {
+    const ip = await A.planLayout(nSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 2, "Badminton": 1, "Teqball Table": 1 }), Object.assign({}, zSettings, { seed, shuffle: variant > 0, variant }));
+    const z = ip.indoorZone, zg2 = ip.zoning.zoneGapM;
+    ip.courts.filter(c => /Ping Pong|Badminton/.test(c.name)).forEach(c => {
+      const r = c.rect;
+      [["N", r[1] - z[1], z[1]], ["S", z[3] - r[3], 16.28 - z[3]], ["W", r[0] - z[0], z[0]], ["E", z[2] - r[2], 67.5 - z[2]]].forEach(([side, gap, toEdge]) => {
+        const atRoofEdge = toEdge < EPS;
+        if (gap < (atRoofEdge ? 1.5 : zg2) - EPS) iBad.push("variant " + variant + " " + c.name + " " + side + " " + gap.toFixed(2));
+      });
+    });
+    if (ip.issues.length) iBad.push("variant " + variant + ": " + ip.issues.join("; "));
+  }
+  check("indoor sports keep an in-zone path on all four sides inside the indoor zone (no table or court against the zone's wall)", iBad.length === 0, iBad.join(" | "));
+  // a Bouldering Wall never stands across from the locker / bathroom (their lobby and the walk along it), and the indoor zone's door never opens onto an item
+  const bBad = [];
+  for (const [seed, variant] of [[1, 0], [1, 1], [2, 2], [3, 3]]) {
+    const bp = await A.planLayout(nSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 1, "Bouldering Wall": 1, "Teqball Table": 1, "Trampoline": 1, "Sandpit": 1 }), Object.assign({}, zSettings, { seed, shuffle: variant > 0, variant }));
+    const bw = bp.courts.find(c => c.name === "Bouldering Wall"), d = bp.wall && bp.wall.door;
+    bp.courts.filter(c => /Locker|Bathroom/.test(c.name)).forEach(s => {
+      const r = s.rect, front = Math.abs(r[1]) < EPS ? [r[0], r[3], r[2], 99] : Math.abs(r[3] - 16.28) < EPS ? [r[0], -99, r[2], r[1]] : Math.abs(r[0]) < EPS ? [r[2], r[1], 99, r[3]] : [-99, r[1], r[0], r[3]];
+      if (bw && inter(front, bw.rect)) bBad.push("variant " + variant + ": Bouldering Wall across from the " + s.name);
+    });
+    if (d) {
+      const probe = d.side === "N" || d.side === "S" ? [d.x0 - 0.5, d.y0 - 0.6, d.x1 + 0.5, d.y1 + 0.6] : [d.x0 - 0.6, d.y0 - 0.5, d.x1 + 0.6, d.y1 + 0.5];
+      bp.courts.filter(c => inter(c.rect, probe)).forEach(c => bBad.push("variant " + variant + ": the door opens onto the " + c.name));
+    }
+    if (bp.issues.length) bBad.push("variant " + variant + ": " + bp.issues.join("; "));
+  }
+  check("the Bouldering Wall never stands across from the locker / bathroom lobby, and the indoor zone's door never opens onto an item", bBad.length === 0, bBad.join(" | "));
+  // the doors on the roof's edge: the indoor zone's wall never stands on the primary-width landing just inside a door, and on a roof that is not a rectangle
+  // the band along the edges the doors stand on is paved walkway, not garden
+  const dBad = [];
+  for (const [seed, variant] of [[1, 0], [1, 1], [2, 2], [3, 3]]) {
+    const dp = await A.planLayout(nSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 1, "Bouldering Wall": 1, "Teqball Table": 1, "Modular Tower Slide": 1, "Balance Logs": 1, "Trampoline": 1, "3x3 Streetbasketball": 1 }), Object.assign({}, zSettings, { seed, shuffle: variant > 0, variant }));
+    const W2 = dp.stats.pathW;
+    nDoors.forEach(dr => {
+      const landing = [dr[0], dr[1] - W2 + 0.05, dr[2], dr[1] - 0.05];                    // the doors all open upwards into the roof here
+      if (dp.wall && dp.wall.rects.some(w => inter(w, landing))) dBad.push("variant " + variant + ": the indoor zone's wall stands on the landing of the door at x " + dr[0]);
+    });
+    const doorEdges = [[0.05, 11.87 - 1.45, 5.35, 11.87 - 0.05], [5.45, 11.28 - 1.45, 13.45, 11.28 - 0.05], [56.75, 11.28 - 1.45, 64.75, 11.28 - 0.05], [64.85, 13.03 - 1.45, 67.45, 13.03 - 0.05]];
+    (dp.bandRects || []).forEach(b => doorEdges.forEach(e => { if (inter(b, e)) dBad.push("variant " + variant + ": garden band along a door edge " + b.map(v => +v.toFixed(1)).join(",")); }));
+    if (dp.issues.length) dBad.push("variant " + variant + ": " + dp.issues.join("; "));
+  }
+  check("doors on the roof's edge: the indoor zone's wall never covers a door's landing, and the band along the door edges is paved, not garden", dBad.length === 0, dBad.slice(0, 4).join(" | "));
+
   console.log(fails === 0 ? "\nALL ALGORITHMIC PLACEMENT CHECKS PASSED (" + Object.keys(SCENARIOS).length + " roofs, " + ((Date.now() - t0) / 1000).toFixed(1) + " s)" : "\n" + fails + " CHECK(S) FAILED");
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });
