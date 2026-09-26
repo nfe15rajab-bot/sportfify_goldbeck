@@ -408,11 +408,7 @@ function drawBasketballPreview(svg, isDark) {
   svg.setAttribute("viewBox", `0 0 ${vw} ${vh}`);
   svg.innerHTML = `
     ${basketballCourtSvg(ox, oy, fw, fh, basketballState, "full", isDark)}
-    <text x="${ox + fw / 2}" y="${oy - 16}" text-anchor="middle" font-size="11" fill="${dim}"
-          font-family="'Titillium Web', Arial, sans-serif">${d.length_m} m</text>
-    <text x="${ox - 16}" y="${oy + fh / 2}" text-anchor="middle" font-size="11" fill="${dim}"
-          font-family="'Titillium Web', Arial, sans-serif"
-          transform="rotate(-90, ${ox - 16}, ${oy + fh / 2})">${d.width_m} m</text>
+    ${typeof archDimSvg === "function" ? archDimSvg("top", ox, ox + fw, oy, 12, `${d.length_m} m`, dim) + archDimSvg("left", oy, oy + fh, ox, 12, `${d.width_m} m`, dim) : ""}
     <text x="${ox + fw / 2}" y="${Math.min(vh - 6, oy + fh + 22)}" text-anchor="middle" font-size="10" fill="${dim}"
           font-family="'Titillium Web', Arial, sans-serif">
       ${Math.round(w.total_kg).toLocaleString("en-US")} kg on the deck · ${w.hoopCount} basket${w.hoopCount > 1 ? "s" : ""}

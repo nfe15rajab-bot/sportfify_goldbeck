@@ -50,7 +50,8 @@ const AlgoPlacement = (function () {
   const IN_CORNER_M = 0.35;               // a service module this close to a roof corner stands IN it (the same measure ruleCompliance uses)
 
   // Larger courts only need a pathway on ONE side (no 1.5 m ring on all four sides), so they may sit tight against the setback line and against each other.
-  const BIG_COURTS = ["Multi Sport Court", "Basketball Court", "Handball", "Volleyball", "3x3 Streetbasketball", "Padel Tennis Court", "Multipurpose Sport Area"];
+  // Pickleball (2026-09-26): with its run-off (18.3 x 9.1 m) it is a big court too, so it always takes the setback line, shuffled or not
+  const BIG_COURTS = ["Multi Sport Court", "Basketball Court", "Handball", "Volleyball", "3x3 Streetbasketball", "Padel Tennis Court", "Multipurpose Sport Area", "Football", "Pickleball Court"];
 
   const GROUPS = ["Courts", "Fitness & wellness", "Playground & leisure", "Services"];
 
@@ -58,7 +59,7 @@ const AlgoPlacement = (function () {
   // headcount = active people at once (null + headcountNote when the sheet gives no number), deadLoad = Gk in kN/m², assumed = the reference sheet marks that dead load "(Assumed)".
   // The four courts without a headcount / dead load are not in the reference sheet. Appended entries keep the original ones first, so the solver's request order is unchanged.
   const SPORTS = [
-    { name: "Multi Sport Court", label: "Multi Sport Court", group: "Courts", long: 20.0, short: 12.0, color: [31, 119, 180], headcount: null, deadLoad: null },
+    { name: "Multi Sport Court", label: "Polyvalent (multi-sport)", group: "Courts", long: 20.0, short: 12.0, color: [31, 119, 180], headcount: 12, deadLoad: 0.35 },
     { name: "Basketball Court", label: "Basketball Court", group: "Courts", long: 22.0, short: 13.0, color: [255, 127, 14], headcount: null, deadLoad: null },
     { name: "Badminton", label: "Badminton Court", group: "Courts", long: 13.4, short: 6.1, color: [44, 160, 44], headcount: 4, deadLoad: 0.15 },
     { name: "Yoga", label: "Yoga / Stretching Deck", group: "Fitness & wellness", long: 10.0, short: 5.0, color: [148, 103, 189], headcount: 15, deadLoad: 0.40 },
@@ -85,8 +86,16 @@ const AlgoPlacement = (function () {
     { name: "Balance Logs", label: "Balance Logs", group: "Playground & leisure", long: 6.0, short: 3.0, color: [170, 140, 100], headcount: 3, deadLoad: 0.40, assumed: true },
     { name: "Locker & Dressing Room Module", label: "Locker & Dressing Room Module", group: "Services", service: true, long: 10.0, short: 5.0, color: [60, 90, 120], headcount: null, headcountNote: "variable (algorithmic)", deadLoad: 1.50, assumed: true },
     { name: "Bathroom & Shower Module", label: "Bathroom & Shower Module", group: "Services", service: true, long: 10.0, short: 5.0, color: [90, 160, 190], headcount: null, headcountNote: "variable (algorithmic)", deadLoad: 2.00, assumed: true },
-    { name: "Rest / Hydration Area", label: "Rest / Hydration Area", group: "Services", long: 6.0, short: 4.0, color: [200, 220, 160], headcount: 8, deadLoad: 0.50, assumed: true }
+    { name: "Rest / Hydration Area", label: "Rest / Hydration Area", group: "Services", long: 6.0, short: 4.0, color: [200, 220, 160], headcount: 8, deadLoad: 0.50, assumed: true },
+    // the Sport tab's other two courts (2026-09-26), so every sport it offers can be placed here too
+    { name: "Football", label: "Football (indoor)", group: "Courts", long: 25.0, short: 16.0, color: [46, 139, 87], headcount: null, deadLoad: null },
+    { name: "Badminton Outdoor", label: "Badminton (outdoor)", group: "Courts", long: 13.0, short: 6.0, color: [96, 185, 96], headcount: 4, deadLoad: 0.15 },
+    // Sportify places its ping pong tables outside (user, 2026-09-26); "Ping Pong" above stays the indoor one the zoning tests are built on
+    { name: "Ping Pong Outdoor", label: "Ping Pong Station", group: "Courts", long: 5.7, short: 3.5, color: [255, 214, 0], headcount: 4, deadLoad: 0.30 },
+    // two outdoor tables planned as one item, long edge to long edge (planLayout); never offered on its own, its size follows the table's
+    { name: "Ping Pong Pair", label: "Ping Pong Station (2 side by side)", group: "Courts", long: 7.0, short: 5.7, color: [255, 214, 0], headcount: 8, deadLoad: 0.30 }
   ];
+  const PING_PONG_TABLE = "Ping Pong Outdoor", PING_PONG_PAIR = "Ping Pong Pair";
   const labelOf = name => { const s = SPORTS.find(x => x.name === name); return s ? s.label : name; };
 
   // ── zones (used only when a plan is made with `zoning`) ──
@@ -1424,7 +1433,7 @@ const AlgoPlacement = (function () {
     }
   }
 
-  function runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, plain, bigSkip, allowSplit) {
+  function runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, plain, bigSkip, allowSplit, noDefer) {
     const L = new Layout(grid, W, bigSet, gapM, Z);
     L.rules = prepared || null;
     L.pickK = pickK;
@@ -1453,10 +1462,14 @@ const AlgoPlacement = (function () {
       items.forEach(([n, w, h], k) => { if (BIG_COURTS.includes(n) && placeBigOnEdge(L, n, w, h, rng, noise, bigSkip)) pre.add(k); });
       ringBigCourts(L, L.courts.slice(before).map(([, r]) => r));
       // retrying other setback spots ran out of them: a network in pieces, each from its own door, rather than no big court at all
-      if (bigSkip && L.courts.length === before) return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, false, null, true);
+      if (bigSkip && L.courts.length === before) return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, false, null, true, noDefer);
     }
-    connectEntries(L, rng, noise, warnings);
-    if (bigFirst && components(L.paths, W).length > 1) {
+    // USER RULE (2026-09-25/26, said many times): no straight main path has to run between the doors. With zoning and more than one door the courts come
+    // first (big courts on the setback line, then the rest), each reached from a door's landing; the doors are joined afterwards, only through what is still
+    // free (below). A single door, or a plan without zoning, keeps the original order.
+    const deferJoin = !!(Z && !noDefer && grid.entryCells.length > 1);
+    if (!deferJoin) connectEntries(L, rng, noise, warnings);
+    if (!deferJoin && bigFirst && components(L.paths, W).length > 1) {
       const manyDoors = grid.entryCells.length > 1;
       // a network in pieces is fine when every piece starts at its own door (the main path need not run throughout: user, 2026-09-25/26)
       if (!(allowSplit && everyPartHasDoor(L.paths, W, grid.entryCells))) {
@@ -1465,9 +1478,9 @@ const AlgoPlacement = (function () {
         const placedBig = L.courts.filter(([n]) => BIG_COURTS.includes(n)).map(([, r]) => r);
         const skip = (bigSkip || []).concat(placedBig);
         const retry = !allowSplit && manyDoors && placedBig.length > 0 && skip.length <= 12 && now() < deadline;
-        if (retry) return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, false, skip, false);
-        if (!allowSplit && manyDoors) return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, false, null, true);
-        return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, true, null, false);
+        if (retry) return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, false, skip, false, noDefer);
+        if (!allowSplit && manyDoors) return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, false, null, true, noDefer);
+        return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, true, null, false, noDefer);
       }
       for (let i = warnings.length - 1; i >= 0; i--) if (/^Could not connect all/.test(warnings[i])) warnings.splice(i, 1);
     }
@@ -1477,9 +1490,31 @@ const AlgoPlacement = (function () {
       if (pre.has(k)) { placed.push([n, w, h]); return; }
       if (now() > deadline) { unplaced.push([n, w, h, "time limit"]); return; }
       L.sameLeft = items.slice(k + 1).filter(it => it[0] === n).length;                 // identical items still to come (zoning keeps room beside the one being placed)
+      // zoning with the doors joined last: a big court is placed only as the setback-line rule places it (a main path along its open long side - never from
+      // one setback to the other), not by the general search, which does not know that rule and, with no door-to-door path in the way, would allow it
+      // (Pickleball in every zoning attempt, the plain retry included - user, 2026-09-26: "this rule airtight": on the setback line or not placed, its ring then
+      // joined to the paths already there. The other big courts keep their earlier behaviour in the plain retry.)
+      if (Z && BIG_COURTS.includes(n) && (deferJoin || n === "Pickleball Court")) {
+        const before = L.courts.length;
+        if (placeBigOnEdge(L, n, w, h, rng, noise, null)) {
+          ringBigCourts(L, L.courts.slice(before).map(([, r]) => r));
+          if (!deferJoin) connectEntries(L, rng, noise, warnings);
+          placed.push([n, w, h]);
+        }
+        else unplaced.push([n, w, h, L.courts.length ? "no room left after the other courts" : "too deep for this roof: it must keep a main path along its long side"]);
+        return;
+      }
       const [ok, why] = placeCourt(L, n, w, h, rng, noise, items.length - k - 1);
       if (ok) placed.push([n, w, h]); else unplaced.push([n, w, h, why]);
     });
+    if (deferJoin) {
+      // the doors joined where the space left allows it; a network that stays in pieces is fine while every piece starts at a door
+      const before = warnings.length;
+      connectEntries(L, rng, noise, warnings);
+      if (everyPartHasDoor(L.paths, W, grid.entryCells)) warnings.splice(before);
+      // a court whose paths reach no door at all (a big court's ring left on its own): this attempt the earlier way instead
+      else return runAttempt(grid, W, items, ring, rng, noise, deadline, pickK, edgeFirst, bigSet, gapM, prepared, Z, plain, bigSkip, allowSplit, true);
+    }
     L.notes.forEach(n => warnings.push(n));
     return [L, placed, unplaced, warnings];
   }
@@ -1885,7 +1920,42 @@ const AlgoPlacement = (function () {
    *   courtGap = the clear path (m) around every court and lift / ramp side; the default is the Rhino tool's COURT_GAP_M
    *   rules    = { serviceCorners: bool, gridLines: [{ x1, y1, x2, y2 }] } (see prepareRules); none by default, which is the Rhino tool's plain behaviour
    */
+  /**
+   * USER RULE (2026-09-26): two outdoor Ping Pong tables always stand together, side by side along their LONG edges (like an open book), no path between
+   * them - in every arrangement, shuffled or not. Each two tables are planned as ONE item, the pair (table long x 2 x table short), so no search can ever pull
+   * them apart, and every other rule treats the pair as it would any item; the pair is split back into its two tables in the plan it returns. An odd table
+   * left over is planned on its own as before.
+   */
   async function planLayout(site, requests, settings, opts) {
+    const single = (requests || []).filter(r => r.name === PING_PONG_TABLE);
+    if (single.length < 2) return planLayoutOnce(site, requests, settings, opts);
+    const t = single[0], tl = Math.max(t.w, t.h), ts = Math.min(t.w, t.h);
+    const pairEntry = SPORTS.find(s => s.name === PING_PONG_PAIR);
+    pairEntry.long = Math.max(tl, 2 * ts); pairEntry.short = Math.min(tl, 2 * ts);
+    const pairs = Math.floor(single.length / 2);
+    const reqs = [];
+    let seen = 0;
+    for (const r of requests) {
+      if (r.name !== PING_PONG_TABLE) { reqs.push(r); continue; }
+      if (seen < pairs * 2) { if (seen % 2 === 0) reqs.push({ name: PING_PONG_PAIR, w: tl, h: 2 * ts }); }
+      else reqs.push(r);
+      seen++;
+    }
+    const plan = await planLayoutOnce(site, reqs, settings, opts);
+    const half = c => {
+      const [x0, y0, x1, y1] = c.rect, alongX = Math.abs((x1 - x0) - 2 * ts) < Math.abs((y1 - y0) - 2 * ts);
+      const parts = alongX ? [[x0, y0, x0 + ts, y1], [x0 + ts, y0, x1, y1]] : [[x0, y0, x1, y0 + ts], [x0, y0 + ts, x1, y1]];
+      return parts.map(rect => Object.assign({}, c, { name: PING_PONG_TABLE, rect, long: tl, short: ts, rotated: Math.abs((rect[2] - rect[0]) - ts) < 1e-6, big: false }));
+    };
+    plan.courts = plan.courts.flatMap(c => c.name === PING_PONG_PAIR ? half(c) : [c]);
+    plan.unplaced = plan.unplaced.flatMap(u => u.name === PING_PONG_PAIR ? [Object.assign({}, u, { name: PING_PONG_TABLE }), Object.assign({}, u, { name: PING_PONG_TABLE })] : [u]);
+    if (plan.notAligned) plan.notAligned = plan.notAligned.map(n => n === PING_PONG_PAIR ? PING_PONG_TABLE : n);
+    plan.stats.placed = plan.courts.length;                      // counted in tables again, not pairs
+    plan.stats.requested = plan.courts.length + plan.unplaced.length;
+    return plan;
+  }
+
+  async function planLayoutOnce(site, requests, settings, opts) {
     const s = Object.assign({ pathW: DEFAULT_PATH_W, minPathW: MIN_PATH_W_M, ring: false, timeLimit: DEFAULT_TIME, seed: 1, shuffle: false, variant: 0, seen: null, edgeFirst: true, leftoverPath: false, strictGap: false, courtGap: COURT_GAP_M, rules: null, zoning: false }, settings || {});
     // zoning: no item is "big" (every one keeps its gap on all sides), and the widths tried are the in-zone / primary pairs, widest first
     const bigSet = s.strictGap || s.zoning ? new Set() : new Set(BIG_COURTS);
@@ -1929,7 +1999,8 @@ const AlgoPlacement = (function () {
     for (const s of SPORTS) {
       const cw = toCells(s.long), ch = toCells(s.short);
       const big = bigSet.has(s.name);
-      const beside = bigOnEdge && BIG_COURTS.includes(s.name) ? Ls : L1;
+      // with zoning, a big court - and, with more than one door, any court (no door-to-door path comes first: runAttempt's deferJoin) - is checked beside the landings only
+      const beside = bigOnEdge && (BIG_COURTS.includes(s.name) || grid.entryCells.length > 1) ? Ls : L1;
       if (!(genSpots(L0, cw, ch, big).length || genSpots(L0, ch, cw, big).length)) sports[s.name] = "too big for the usable area (" + bboxText(grid) + ")";
       else if (!(genSpots(beside, cw, ch, big).length || genSpots(beside, ch, cw, big).length)) sports[s.name] = "does not fit beside the main pathway even at the narrowest setting (" + bboxText(grid) + ") - try a smaller setback";
       else sports[s.name] = "";

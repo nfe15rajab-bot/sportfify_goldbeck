@@ -221,11 +221,12 @@ const run = async (s, settings, siteExtra) => {
     check("zoning: seed " + seed + ": the indoor zone's wall stands at least 2 m off the locker/bathroom modules even with nothing else in front of them", lPlan2.issues.length === 0 && openSideShort.length === 0, "short gaps: " + openSideShort.map(g => g.toFixed(2)).join(", "));
   }
 
-  // the court library: the 24 reference-sheet items plus the four courts that are not in the sheet, each with the figures a person picks by
+  // the court library: the reference-sheet items, the courts that are not in the sheet, and (2026-09-26) the Sport tab's Football and outdoor Badminton and the outdoor Ping Pong table, so
+  // every sport the Sport tab offers can be placed; the Multi Sport Court is the Sport tab's Polyvalent court and takes the sheet's multipurpose figures
   const lib = A.SPORTS;
-  check("the library has 28 entries with unique names", lib.length === 28 && new Set(lib.map(s => s.name)).size === 28, lib.length + " entries");
+  check("the library has 32 entries with unique names", lib.length === 32 && new Set(lib.map(s => s.name)).size === 32, lib.length + " entries");
   check("every entry has a label, a known group and a colour", lib.every(s => s.label && A.GROUPS.includes(s.group) && Array.isArray(s.color) && s.color.length === 3));
-  check("only the four courts outside the reference sheet have no dead load", lib.filter(s => s.deadLoad == null).map(s => s.name).sort().join("|") === "Basketball Court|Handball|Multi Sport Court|Volleyball");
+  check("only the four courts outside the reference sheet have no dead load", lib.filter(s => s.deadLoad == null).map(s => s.name).sort().join("|") === "Basketball Court|Football|Handball|Volleyball");
   const sheet = { "Sprint Lane": [63.77, 1.22, 77.8, 1, 0.20], "Padel Tennis Court": [20, 10, 200, 4, 0.80], "Bocce Court": [18, 3, 54, 4, 2.50], "Multipurpose Sport Area": [22, 12, 264, 12, 0.35], "Sandpit": [4, 4, 16, null, 1.50] };
   for (const [n, [l, s, area, people, gk]] of Object.entries(sheet)) {
     const e = sport(n);
@@ -458,6 +459,21 @@ const run = async (s, settings, siteExtra) => {
     if (dp.issues.length) dBad.push("variant " + variant + ": " + dp.issues.join("; "));
   }
   check("doors on the roof's edge: the indoor zone's wall never covers a door's landing, and the band along the door edges is paved, not garden", dBad.length === 0, dBad.slice(0, 4).join(" | "));
+
+  // USER RULE (2026-09-26): two outdoor Ping Pong tables stand together, long edge against long edge, no path between them - shuffled or not
+  const ppBad = [];
+  for (let variant = 0; variant <= 6; variant++) {
+    const pp = await A.planLayout(nSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong Outdoor": 2, "Teqball Table": 1, "HIIT Turf Grid": 1, "Trampoline": 1 }), Object.assign({}, zSettings, { seed: 1, shuffle: variant > 0, variant }));
+    const t = pp.courts.filter(c => c.name === "Ping Pong Outdoor");
+    if (t.length !== 2) { ppBad.push("variant " + variant + ": " + t.length + " tables placed"); continue; }
+    const [a, b] = t.map(c => c.rect), long = c => Math.max(c[2] - c[0], c[3] - c[1]);
+    const sideBySideX = Math.abs(a[2] - b[0]) < 1e-6 || Math.abs(b[2] - a[0]) < 1e-6, sideBySideY = Math.abs(a[3] - b[1]) < 1e-6 || Math.abs(b[3] - a[1]) < 1e-6;
+    const sharedX = Math.abs(a[1] - b[1]) < 1e-6 && Math.abs(a[3] - b[3]) < 1e-6, sharedY = Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[2] - b[2]) < 1e-6;
+    const touchLen = sideBySideX && sharedX ? a[3] - a[1] : sideBySideY && sharedY ? a[2] - a[0] : 0;
+    if (Math.abs(touchLen - long(a)) > 1e-6) ppBad.push("variant " + variant + ": " + a.map(v => +v.toFixed(1)).join(",") + " | " + b.map(v => +v.toFixed(1)).join(","));
+    if (pp.issues.length) ppBad.push("variant " + variant + ": " + pp.issues.join("; "));
+  }
+  check("two outdoor Ping Pong tables stand together, long edge to long edge, no path between (shuffled too)", ppBad.length === 0, ppBad.slice(0, 3).join(" | "));
 
   console.log(fails === 0 ? "\nALL ALGORITHMIC PLACEMENT CHECKS PASSED (" + Object.keys(SCENARIOS).length + " roofs, " + ((Date.now() - t0) / 1000).toFixed(1) + " s)" : "\n" + fails + " CHECK(S) FAILED");
   process.exit(fails ? 1 : 0);

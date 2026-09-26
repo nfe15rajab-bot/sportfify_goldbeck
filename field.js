@@ -89,9 +89,11 @@ function drawField(sport, variant, capacity, isDark) {
 
   // Run-off zone
   const roW = d.runoff * scale, roH = d.runoff * scale;
+  // the band is tinted so the run-off reads as floor the players use, not just a line: it is what differs between the size variants of a court
+  const runoffFill = isDark ? "rgba(255,179,102,0.10)" : "rgba(255,179,102,0.18)";
   const runoffEl = `
     <rect x="${ox - roW}" y="${oy - roH}" width="${fw + roW * 2}" height="${fh + roH * 2}"
-          fill="none" stroke="${runoffStroke}" stroke-width="0.7" stroke-dasharray="4,3" rx="2"/>
+          fill="${runoffFill}" stroke="${runoffStroke}" stroke-width="0.7" stroke-dasharray="4,3" rx="2"/>
   `;
 
   // Field surface
@@ -103,16 +105,21 @@ function drawField(sport, variant, capacity, isDark) {
   // Sport-specific lines
   const linesEl = getFieldLines(sport, ox, oy, fw, fh, isDark);
 
-  // Dimension labels
+  // Dimension labels: the dashed outline carries the total (court + run-off), and a line under it says what that total is made of
+  const m = v => String(Math.round(v * 100) / 100);
+  const font = `font-family="'Titillium Web', Arial, sans-serif"`;
+  // the court's own size just outside it on the bottom and right (in the run-off band when that is wide enough to hold it, else just past the dashed
+  // outline), the total with the run-off on the top and left, so the two never overlap
+  const cOff = roH >= 26 ? Math.min(14, roH * 0.55) : roH + 10;
+  const courtDim = isDark ? "#d8b48c" : "#8a5a2b";
   const dimsEl = `
-    <text x="${ox + fw / 2}" y="${oy - roH - 6}"
-          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif">
-      ${d.l} m
-    </text>
-    <text x="${ox - roW - 8}" y="${oy + fh / 2}"
-          text-anchor="middle" font-size="11" fill="${dimColor}" font-family="'Titillium Web', Arial, sans-serif"
-          transform="rotate(-90, ${ox - roW - 8}, ${oy + fh / 2})">
-      ${d.w} m
+    ${archDimSvg("bottom", ox, ox + fw, oy + fh, cOff, `${m(d.l)} m`, courtDim, 10.5)}
+    ${archDimSvg("right", oy, oy + fh, ox + fw, cOff, `${m(d.w)} m`, courtDim, 10.5)}
+    ${archDimSvg("top", ox - roW, ox + fw + roW, oy - roH, 10, `${m(outerL)} m`, dimColor)}
+    ${archDimSvg("left", oy - roH, oy + fh + roH, ox - roW, 10, `${m(outerW)} m`, dimColor)}
+    <text x="${ox + fw / 2}" y="${oy + fh + Math.max(roH + 16, cOff + 26)}"
+          text-anchor="middle" font-size="10.5" fill="${dimColor}" ${font}>
+      Court ${m(d.l)} × ${m(d.w)} m + ${m(d.runoff)} m run-off all round
     </text>
   `;
 
@@ -135,6 +142,32 @@ function drawField(sport, variant, capacity, isDark) {
     ${linesEl}
     ${dimsEl}
   `;
+}
+
+/**
+ * An architect's dimension, as on a plan: the dimension line set `off` px outside an edge, extension lines back to that edge, a 45° tick at each end and
+ * the length written along the line. `side` = "top" (a horizontal edge from x1 to x2 at y) or "left" (a vertical edge from y1 to y2 at x); the text sits
+ * on the far side of the line from the edge, and a vertical one reads bottom to top. Shared by the Sport tab's court drawings (field.js, basketballCourt.js,
+ * volleyballCourt.js).
+ */
+function archDimSvg(side, a, b, at, off, label, color, fontSize) {
+  const t = 4, gap = 2, fs = fontSize || 11;
+  const font = `font-family="'Titillium Web', Arial, sans-serif"`;
+  const tick = (x, y) => `<line x1="${x - t}" y1="${y + t}" x2="${x + t}" y2="${y - t}" stroke-width="1.4"/>`;
+  if (side === "top" || side === "bottom") {
+    const dir = side === "top" ? -1 : 1, y = at + dir * off;
+    const ty = side === "top" ? y - 4 : y + fs + 1;
+    return `<g stroke="${color}" stroke-width="0.8" fill="none">
+        <line x1="${a}" y1="${at + dir * gap}" x2="${a}" y2="${y + dir * t}"/><line x1="${b}" y1="${at + dir * gap}" x2="${b}" y2="${y + dir * t}"/>
+        <line x1="${a - t}" y1="${y}" x2="${b + t}" y2="${y}"/>${tick(a, y)}${tick(b, y)}
+      </g><text x="${(a + b) / 2}" y="${ty}" text-anchor="middle" font-size="${fs}" fill="${color}" ${font}>${label}</text>`;
+  }
+  const dir = side === "left" ? -1 : 1, x = at + dir * off, cy = (a + b) / 2;
+  const tx = side === "left" ? x - 5 : x + fs + 1;                 // turned -90°, the letters stand toward -x from their baseline
+  return `<g stroke="${color}" stroke-width="0.8" fill="none">
+      <line x1="${at + dir * gap}" y1="${a}" x2="${x + dir * t}" y2="${a}"/><line x1="${at + dir * gap}" y1="${b}" x2="${x + dir * t}" y2="${b}"/>
+      <line x1="${x}" y1="${a - t}" x2="${x}" y2="${b + t}"/>${tick(x, a)}${tick(x, b)}
+    </g><text x="${tx}" y="${cy}" text-anchor="middle" font-size="${fs}" fill="${color}" ${font} transform="rotate(-90, ${tx}, ${cy})">${label}</text>`;
 }
 
 function getFieldLines(sport, ox, oy, fw, fh, isDark) {

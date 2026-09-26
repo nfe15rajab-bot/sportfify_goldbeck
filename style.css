@@ -65,11 +65,11 @@ html[data-app-mode="sport"][data-mode="dark"] {
   --fill-accent: #ff7a52; --fill-accent-hover: #ff9470; --text-accent: #ff9f7a; --border-accent: #ff9f7a;
   --bg-accent: rgba(255,90,54,0.22); --accent-hover-tint: rgba(255,90,54,0.30);
 }
-html[data-app-mode="garden"] {
+html[data-app-mode="garden"], html[data-app-mode="gardenBlocks"] {
   --fill-accent: #2f8f4e; --fill-accent-hover: #256e3c; --text-accent: #1f6b39; --border-accent: #2f8f4e;
   --bg-accent: #e3f3e7; --accent-hover-tint: #d3ecd9;
 }
-html[data-app-mode="garden"][data-mode="dark"] {
+html[data-app-mode="garden"][data-mode="dark"], html[data-app-mode="gardenBlocks"][data-mode="dark"] {
   --fill-accent: #4caf6e; --fill-accent-hover: #5fc182; --text-accent: #6fcf8f; --border-accent: #6fcf8f;
   --bg-accent: rgba(76,175,110,0.20); --accent-hover-tint: rgba(76,175,110,0.28);
 }
@@ -982,6 +982,7 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .algo-bar > div.bad { background: var(--text-fail); }
 .algo-bar > div.busy { background: var(--fill-accent); }
 .algo-report { margin: 0; font: 11px/1.5 var(--font-mono, ui-monospace, Consolas, monospace); color: var(--text-secondary); white-space: pre-wrap; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 10px; }
+.algo-tier { font-weight: 700; color: var(--text-accent); background: var(--bg-accent); border-radius: 999px; padding: 0 7px; }
 /* the two boxes under the plan: layout check (left) and people & load (right) */
 .algo-info { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 10px; }
 @media (max-width: 1100px) { .algo-info { grid-template-columns: 1fr; } }
@@ -1222,3 +1223,22 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
    the dimensions and the scale figure follow light and dark mode without the
    drawing code knowing which one is on. */
 .furniture-elevation { display: block; color: inherit; }
+
+.dim-card-total { margin-top: 6px; }
+
+/* the Garden tab: the planter's parameters and its yes / no options */
+.planter-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.planter-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); padding: 3px 4px; border-bottom: 0.5px solid var(--border-strong); }
+.planter-table td { padding: 3px 4px; border-bottom: 0.5px solid var(--border); color: var(--text-primary); vertical-align: middle; }
+.planter-table td small { color: var(--text-muted); }
+.planter-table input { width: 72px; padding: 2px 4px; font-size: 11px; }
+.planter-table .planter-group td { background: var(--surface-1); font-weight: 700; font-size: 10.5px; color: var(--text-secondary); }
+.planter-table .planter-formula td { color: var(--text-secondary); }
+.section .planter-toggle { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-primary); margin: 4px 0; text-transform: none; letter-spacing: 0; }
+.planter-yn { display: inline-flex; border: 0.5px solid var(--border-strong); border-radius: 999px; overflow: hidden; }
+.planter-yn button { border: 0; background: transparent; padding: 3px 12px; font-size: 11px; cursor: pointer; color: var(--text-secondary); }
+.planter-yn button.on { background: var(--fill-accent); color: var(--on-accent); font-weight: 700; }
+.planter-warn { margin: 0 0 6px; font-size: 11px; color: var(--text-fail); }
+.planter-switch { display: grid; grid-template-columns: 1fr 1fr; border: 0.5px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; margin-top: 4px; }
+.planter-switch button { border: 0; background: var(--surface-2); padding: 7px 8px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); }
+.planter-switch button.on { background: var(--fill-accent); color: var(--on-accent); }
