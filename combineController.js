@@ -666,9 +666,11 @@ function applySessionSnapshot(payload, opts = {}) {
     DESIGN_RULES.quietBufferM = payload.design_rules.quiet_buffer_m ?? DESIGN_RULES.quietBufferM;
   }
 
-  combineState.entryPoints = (payload.entry_points || []).map((ep, i) => ({
-    id: `entry_${Date.now()}_${i}`, x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge,
-  }));
+  // Re-snapped onto the roof's real outline: files saved before entries followed the Revit polygon hold spots on its bounding rectangle, off the roof at a notch.
+  combineState.entryPoints = (payload.entry_points || []).map((ep, i) => {
+    const s = nearestBoundaryPoint(combineState.roof, ep.x_m, ep.y_m);
+    return { id: `entry_${Date.now()}_${i}`, x_m: s.x, y_m: s.y, edge: s.edge, nx: s.nx, ny: s.ny };
+  });
 
   // Zones travelled in the export all along and nothing read them back, so a
   // resumed session lost every bed that had been drawn. The roof finish rides

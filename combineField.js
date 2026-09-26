@@ -297,10 +297,10 @@ function syncAddEntryTool() {
   hint.style.display = active ? "block" : "none";
 }
 
-/** Snaps a click (in roof-rectangle meters) to the nearest site edge and stores it as a new entry point. */
+/** Snaps a click (plan metres) onto the nearest side of the real roof outline and stores it as a new entry point, facing into the roof. */
 function addEntryPoint(xm, ym) {
   const snap = nearestBoundaryPoint(combineState.roof, xm, ym);
-  const ep = { id: `entry_${Date.now()}_${entryCounter++}`, edge: snap.edge, x_m: snap.x, y_m: snap.y };
+  const ep = { id: `entry_${Date.now()}_${entryCounter++}`, edge: snap.edge, x_m: snap.x, y_m: snap.y, nx: snap.nx, ny: snap.ny };
   combineState.entryPoints.push(ep);
   combineState.selectedKind = "entry";
   combineState.selectedId = ep.id;
@@ -322,6 +322,97 @@ function addEntryPoint(xm, ym) {
 function canvasLabelFill() {
   return (typeof isDarkMode === "function" && isDarkMode()) ? "#e8ece8" : "#2a2d3a";
 }
+
+/**
+ * The board's numbering: pieces 1, 2, 3… in placement order, ground zones G1, G2…
+ * Entry points get none. Names written out on a 60 m roof overlapped each other,
+ * so the board carries only these numbers and the legend (renderCombineLegend)
+ * says what each one is.
+ */
+function combineBoardNumbers() {
+  const nums = new Map();
+  combineState.items.forEach((it, i) => nums.set(it.id, String(i + 1)));
+  (combineState.zones || []).forEach((z, i) => nums.set(z.id, "G" + (i + 1)));
+  return nums;
+}
+
+/** A round number badge, the same size on screen at any zoom; red when the piece breaks a rule, amber when it can't be reached. */
+function boardBadgeSvg(cx, cy, label, color, state) {
+  const r = 9, w = Math.max(2 * r, 7 * label.length + 8);
+  const ring = state === "warn" ? "#ef4444" : state === "cut" ? "#f59e0b" : color;
+  const bg = (typeof isDarkMode === "function" && isDarkMode()) ? "#1c1e2b" : "#ffffff";
+  return `<g pointer-events="none">
+      <rect x="${cx - w / 2}" y="${cy - r}" width="${w}" height="${2 * r}" rx="${r}" fill="${bg}" stroke="${ring}" stroke-width="${state ? 2 : 1.5}"/>
+      <text x="${cx}" y="${cy + 3.5}" text-anchor="middle" font-size="10" font-weight="700"
+            font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}">${escapeHtml(label)}</text>
+    </g>`;
+}
+
+let combineLegendFolded = false;
+
+/**
+ * The legend beside the board: badge, colour, name and size of every numbered
+ * piece and zone, with what it breaks. A row selects its piece, the way a click
+ * on the board does. `st` carries the rule results drawCombineCanvas already
+ * computed, so nothing is checked twice.
+ */
+function renderCombineLegend(st) {
+  const box = document.getElementById("combine-legend");
+  if (!box) return;
+  const items = combineState.items, zones = combineState.zones || [];
+  const count = items.length + zones.length;
+  box.hidden = count === 0;
+  box.classList.toggle("open", count > 0 && !combineLegendFolded);
+  if (!count) return;
+  const head = `<div class="combine-legend-head"><span><i class="ti ti-list-numbers" aria-hidden="true"></i> Legend</span><span class="combine-legend-count">${count}</span>
+      <button class="combine-legend-fold" data-legend-fold title="${combineLegendFolded ? "Show the legend" : "Hide the legend"}"><i class="ti ${combineLegendFolded ? "ti-chevron-down" : "ti-chevron-up"}" aria-hidden="true"></i></button></div>`;
+  if (combineLegendFolded) { box.innerHTML = head; return; }
+
+  const sel = combineState.selectedId;
+  const row = (kind, id, color, name, size, flag) => `
+      <button class="combine-legend-row${sel === id ? " selected" : ""}" data-legend-kind="${kind}" data-legend-id="${escapeHtml(id)}">
+        <span class="combine-legend-num" style="border-color:${escapeHtml(color)}">${escapeHtml(st.nums.get(id))}</span>
+        <span class="combine-legend-chip" style="background:${escapeHtml(color)}"></span>
+        <span class="combine-legend-name">${escapeHtml(name)}</span>
+        <span class="combine-legend-size">${size}</span>${flag ? `<span class="combine-legend-flag" title="${escapeHtml(flag.tip)}">${flag.icon}</span>` : ""}
+      </button>`;
+
+  const pieceRows = items.map(it => {
+    const fp = getFootprint(it);
+    const flag = st.overlappingIds.has(it.id) ? { icon: "⚠", tip: "Too close to a neighbour or an entry point" }
+      : st.outOfBoundsIds.has(it.id) ? { icon: "⚠", tip: "Outside the roof boundary" }
+      : st.setbackIds.has(it.id) ? { icon: "⚠", tip: "Inside the setback band" }
+      : st.unreachable.has(it.id) ? { icon: "🚫", tip: "Not reachable from an entrance" } : null;
+    return row("item", it.id, (KIND_COLORS[it.kind] || KIND_COLORS.field).stroke, it.label, `${fp.w.toFixed(1)} × ${fp.h.toFixed(1)} m`, flag);
+  }).join("");
+  const zoneRows = zones.map(z => {
+    const kind = (typeof ZONE_KINDS !== "undefined" && (ZONE_KINDS[z.kind] || ZONE_KINDS.green_roof)) || { color: "#0ea355", short: "Zone" };
+    const area = typeof zoneAreaM2 === "function" ? `${zoneAreaM2(z).toFixed(0)} m²` : "";
+    return row("zone", z.id, kind.color, kind.short, area, st.zoneBad.has(z.id) ? { icon: "⚠", tip: "Breaks a zone rule" } : null);
+  }).join("");
+
+  box.innerHTML = head + `<div class="combine-legend-body">
+      ${pieceRows ? `<div class="combine-legend-group">Pieces</div>${pieceRows}` : ""}
+      ${zoneRows ? `<div class="combine-legend-group">Ground zones</div>${zoneRows}` : ""}
+    </div>`;
+}
+
+document.getElementById("combine-legend")?.addEventListener("click", e => {
+  if (e.target.closest("[data-legend-fold]")) {
+    combineLegendFolded = !combineLegendFolded;
+    drawCombineCanvas();
+    return;
+  }
+  const r = e.target.closest("[data-legend-id]");
+  if (!r) return;
+  combineState.selectedKind = r.dataset.legendKind;
+  combineState.selectedId = r.dataset.legendId;
+  if (r.dataset.legendKind === "zone") {
+    drawCombineCanvas();
+    if (typeof renderZonePanel === "function") renderZonePanel();
+  } else if (typeof refreshSuggestions === "function") refreshSuggestions();
+  else drawCombineCanvas();
+});
 
 function drawCombineCanvas() {
   const svg = document.getElementById("combine-canvas");
@@ -395,15 +486,6 @@ function drawCombineCanvas() {
       const spin = item.rotation
         ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
       el += `<g${spin}>${furnitureSvg(x, y, w, h, item, selected, strokeColor, isPlanner)}</g>`;
-      // Below about 26 px the name is wider than the thing it names, so it is
-      // left off — unless the piece is selected, which is the moment you are
-      // asking what it is.
-      if (w > 26 || selected) {
-        el += `<text x="${x + w / 2}" y="${y + h + 9}" text-anchor="middle" font-size="8"
-                     font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-                 ${escapeHtml(item.label)}
-               </text>`;
-      }
       return;
     }
 
@@ -421,11 +503,7 @@ function drawCombineCanvas() {
                 stroke-width="${selected ? 2.5 : 1.5}"
                 stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
                 style="cursor:${isPlanner ? "grab" : "pointer"}"/>
-        </g>
-        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
-              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-          ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
-        </text>`;
+        </g>`;
       return;
     }
 
@@ -445,11 +523,7 @@ function drawCombineCanvas() {
                 stroke-width="${selected ? 2.5 : 1.5}"
                 stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
                 style="cursor:${isPlanner ? "grab" : "pointer"}"/>
-        </g>
-        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
-              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-          ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
-        </text>`;
+        </g>`;
       return;
     }
 
@@ -467,11 +541,7 @@ function drawCombineCanvas() {
                 stroke-width="${selected ? 2.5 : 1.5}"
                 stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
                 style="cursor:${isPlanner ? "grab" : "pointer"}"/>
-        </g>
-        <text x="${x + w / 2}" y="${y + h + 11}" text-anchor="middle" font-size="9"
-              font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-          ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
-        </text>`;
+        </g>`;
       return;
     }
 
@@ -484,10 +554,6 @@ function drawCombineCanvas() {
               style="cursor:${isPlanner ? 'grab' : 'pointer'}"/>
       <circle cx="${x + w / 2}" cy="${y + h / 2}" r="1.6"
               fill="${strokeColor}" pointer-events="none"/>
-      <text x="${x + w / 2}" y="${y + h / 2 + 14}" text-anchor="middle" font-size="9"
-            font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-        ${escapeHtml(item.label)}${cutOff ? " 🚫" : ""}
-      </text>
     `
       : `
       <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
@@ -495,10 +561,6 @@ function drawCombineCanvas() {
             stroke-width="${selected ? 2.5 : 1.5}"
             stroke-dasharray="${warn || cutOff ? '4,2' : 'none'}"
             style="cursor:${isPlanner ? 'grab' : 'pointer'}"/>
-      <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="10"
-            font-family="'Titillium Web', Arial, sans-serif" fill="${canvasLabelFill()}" pointer-events="none">
-        ${escapeHtml(item.label)}${item.rotation ? " (rotated)" : ""}${cutOff ? " 🚫" : ""}
-      </text>
     `;
   });
 
@@ -506,6 +568,25 @@ function drawCombineCanvas() {
   // boundary standing above the floor, not underneath it) but under the
   // suggestion ghosts and entry markers so those stay the topmost, clickable layer.
   el += combineWallSvg(combineState.walls, scale, roofOx, roofOy);
+
+  // One badge per zone and per piece, above the pieces so none hides under a
+  // neighbour; the legend beside the board names them.
+  const nums = combineBoardNumbers();
+  const zoneBad = typeof zonesInViolation === "function" ? zonesInViolation() : new Set();
+  (combineState.zones || []).forEach(z => {
+    if (!z.points || !z.points.length) return;
+    const kind = (typeof ZONE_KINDS !== "undefined" && (ZONE_KINDS[z.kind] || ZONE_KINDS.green_roof)) || { color: "#0ea355" };
+    const cx = roofOx + z.points.reduce((s, p) => s + p.x_m, 0) / z.points.length * scale;
+    const cy = roofOy + z.points.reduce((s, p) => s + p.y_m, 0) / z.points.length * scale;
+    el += boardBadgeSvg(cx, cy, nums.get(z.id), kind.color, zoneBad.has(z.id) ? "warn" : "");
+  });
+  items.forEach(item => {
+    const fp = getFootprint(item);
+    const cx = roofOx + (item.x_m + fp.w / 2) * scale, cy = roofOy + (item.y_m + fp.h / 2) * scale;
+    const state = overlappingIds.has(item.id) || outOfBoundsIds.has(item.id) || setbackIds.has(item.id) ? "warn"
+      : circulation.unreachable.has(item.id) ? "cut" : "";
+    el += boardBadgeSvg(cx, cy, nums.get(item.id), (KIND_COLORS[item.kind] || KIND_COLORS.field).stroke, state);
+  });
 
   // Suggested-spot ghosts for the selected item, drawn over pieces so they
   // read as an overlay, under entry markers so pins stay easy to grab.
@@ -523,7 +604,8 @@ function drawCombineCanvas() {
   entries.forEach((ep, i) => {
     const x = roofOx + ep.x_m * scale;
     const y = roofOy + ep.y_m * scale;
-    const [nx, ny] = ENTRY_NORMALS[ep.edge];
+    // Square to the side it stands on, pointing into the roof (any side of the Revit outline, not just the four of the bounding box).
+    const [nx, ny] = entryInwardNormal(ep);
     // Base of the chevron must run perpendicular to the inward normal (a
     // 90°-rotated copy of it) so the triangle stays visible on every edge
     // — using a fixed horizontal base collapses to zero height on the
@@ -534,13 +616,13 @@ function drawCombineCanvas() {
       <g class="entry-marker${selected ? ' selected' : ''}" data-entry-id="${escapeHtml(ep.id)}" style="cursor:${isPlanner ? 'grab' : 'pointer'}">
         <circle cx="${x}" cy="${y}" r="7" />
         <path class="entry-arrow" d="M${x - 5 * tx},${y - 5 * ty} L${x + nx * 11},${y + ny * 11} L${x + 5 * tx},${y + 5 * ty} Z" />
-        <text x="${x + nx * 20}" y="${y + ny * 20 + 4}" text-anchor="middle" font-size="10" font-weight="700">${i + 1}</text>
       </g>
     `;
   });
 
   svg.innerHTML = el;
   renderCombineTray();
+  renderCombineLegend({ nums, overlappingIds, outOfBoundsIds, setbackIds, unreachable: circulation.unreachable, zoneBad });
 
   const statusEl = document.getElementById("combine-status");
   if (statusEl) {
@@ -1140,13 +1222,15 @@ function initCombineInteractions() {
       const { scale, roofOx, roofOy } = combineLayout();
       const rawXm = (pt.x - roofOx) / scale;
       const rawYm = (pt.y - roofOy) / scale;
-      // Entries only ever live on the site edge — re-snap to whichever
-      // edge is nearest the pointer (can cross to a different edge
-      // mid-drag), then grid-snap along that edge same as items.
-      const snap = nearestBoundaryPoint(combineState.roof, rawXm, rawYm);
+      // Entries only ever live on the roof's edge — re-snap to whichever
+      // side of the outline is nearest the pointer (can cross to a different
+      // side mid-drag), grid-stepping ALONG that side so it never leaves it.
+      const snap = nearestBoundaryPoint(combineState.roof, rawXm, rawYm, SNAP_GRID_M);
       entry.edge = snap.edge;
-      entry.x_m = snapToGrid(snap.x);
-      entry.y_m = snapToGrid(snap.y);
+      entry.x_m = snap.x;
+      entry.y_m = snap.y;
+      entry.nx = snap.nx;
+      entry.ny = snap.ny;
       drawCombineCanvas();
       return;
     }
