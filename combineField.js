@@ -661,6 +661,8 @@ function drawCombineCanvas() {
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);
+  // The 3D view (preview.js) follows the board: it rebuilds its scene from this state, but only while it is showing.
+  if (typeof combinePreviewRefresh === "function") combinePreviewRefresh();
 }
 
 /**

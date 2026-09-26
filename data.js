@@ -7,7 +7,7 @@
  * script the page loads so every later file can rely on it — and so a stale
  * cached page is visible at a glance instead of being inferred from JSON
  * fields that mysteriously fail to appear. */
-const SPORTIFY_BUILD = "2026-09-26-ux-stack-on-sukriti";
+const SPORTIFY_BUILD = "2026-09-26-preview3d";
 console.log("Sportify build:", SPORTIFY_BUILD);
 
 const FIELDS = {

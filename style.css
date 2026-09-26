@@ -1051,6 +1051,35 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .placement-switch button i { font-size: 14px; }
 .placement-switch button:hover { color: var(--text-primary); }
 .placement-switch button.active { background: var(--fill-accent); color: var(--on-accent); }
+.placement-switch button:disabled { opacity: 0.45; cursor: not-allowed; }
+/* ── The 3D view of the roof (preview.js): the Plan / 3D switch above the board, and the stage that replaces the plan ── */
+.combine-view-bar { display: flex; align-items: center; gap: 10px; min-height: 30px; }
+.combine-view-hint { font-size: 11px; color: var(--text-secondary); min-width: 0; }
+.combine-3d { position: absolute; inset: 0; border-radius: var(--radius); overflow: hidden; background: var(--surface-1); border: 0.5px solid var(--border); }
+.combine-3d[hidden] { display: none; }
+.combine-3d canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
+.combine-3d canvas:active { cursor: grabbing; }
+.combine-3d canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--text-accent); }
+.combine-canvas-wrap[data-view="3d"] #combine-canvas, .combine-canvas-wrap[data-view="3d"] .combine-zoom-controls, .combine-canvas-wrap[data-view="3d"] .revit-layers { display: none; }
+.combine-canvas-wrap:has(.combine-legend.open) .combine-3d { right: 242px; }
+.combine-3d-tip { position: absolute; z-index: 3; pointer-events: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.18); white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.combine-3d-tip[hidden] { display: none; }
+.combine-canvas-wrap .combine-3d-compass { position: absolute; top: 8px; left: 8px; width: 44px; height: 44px; color: var(--text-secondary); pointer-events: none; }
+.combine-3d-bar { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 6px 8px; border-radius: var(--radius); background: var(--surface-2); border: 0.5px solid var(--border-strong); box-shadow: 0 2px 10px rgba(0,0,0,0.12); font-size: 11px; color: var(--text-secondary); }
+.combine-3d-bar .pv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.combine-3d-bar .pv-group { display: inline-flex; gap: 2px; }
+.combine-3d-bar .pv-group button { border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-primary); font: 600 11px var(--font-sans); padding: 3px 9px; border-radius: 6px; cursor: pointer; }
+.combine-3d-bar .pv-group button:hover { background: var(--surface-0); color: var(--text-accent); }
+.combine-3d-bar .pv-check, .combine-3d-bar .pv-time { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.combine-3d-bar .pv-time input[type="range"] { width: 120px; }
+.combine-3d-bar output { min-width: 34px; font-variant-numeric: tabular-nums; color: var(--text-primary); font-weight: 600; }
+.combine-3d-bar input:disabled { opacity: 0.5; cursor: not-allowed; }
+.combine-3d-bar .pv-stats { margin-left: auto; color: var(--text-muted); }
+.combine-3d-bar .pv-note { margin: 5px 0 0; line-height: 1.35; max-height: 7.5em; overflow-y: auto; }
+.combine-3d-bar .pv-note:empty, .combine-3d-bar .pv-note[hidden] { display: none; }
+.combine-3d-bar .pv-info { border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-secondary); font: 600 10.5px var(--font-sans); padding: 2px 8px; border-radius: 999px; cursor: pointer; }
+.combine-3d-bar .pv-info:hover, .combine-3d-bar .pv-info[aria-expanded="true"] { color: var(--text-accent); border-color: var(--text-accent); }
+.combine-3d-bar .pv-info[hidden] { display: none; }
 .algo-placement { position: absolute; inset: 0; z-index: 30; background: var(--surface-0); display: flex; flex-direction: column; overflow: hidden; }
 .algo-placement[hidden] { display: none; }
 .algo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 16px 20px 10px; border-bottom: 0.5px solid var(--border); }
