@@ -931,7 +931,7 @@ function algoDrawPreview() {
                 : `<line x1="${R(r[0] + inset)}" y1="${R(cy)}" x2="${R(r[2] - inset)}" y2="${R(cy)}" stroke="#fff" stroke-opacity="0.55" stroke-width="0.12"/>`) : "";
     const dims = !small && h > tf * 3.4 && w > tf * 5.5 ? `<text x="${R(cx)}" y="${R(cy + tf * 1.35)}" text-anchor="middle" font-size="${R(tf * 0.8)}" font-weight="600" fill="${inkSoft}" ${halo}>${escapeHtml(c.long)} × ${escapeHtml(c.short)} m</text>` : "";
     const ty = dims ? cy - tf * 0.05 : cy + tf * 0.35;
-    g += `<g pointer-events="none"><rect x="${R(r[0])}" y="${R(r[1])}" width="${R(w)}" height="${R(h)}" rx="0.25" fill="${escapeHtml(algoRgb(sp.color))}" stroke="${shade(sp.color, 0.55)}" stroke-width="0.14"/>${lines}
+    g += `<g pointer-events="none"><rect x="${R(r[0])}" y="${R(r[1])}" width="${R(w)}" height="${R(h)}" rx="0.25" fill="${escapeHtml(algoRgb(sp.color))}" stroke="${escapeHtml(shade(sp.color, 0.55))}" stroke-width="0.14"/>${lines}
       <text x="${R(cx)}" y="${R(ty)}" text-anchor="middle" font-size="${R(tf)}" font-weight="700" fill="${ink}" ${halo}>${algoEsc(word)}</text>${dims}
       <title>${algoEsc(sp.label)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
   });
