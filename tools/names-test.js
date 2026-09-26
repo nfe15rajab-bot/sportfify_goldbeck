@@ -61,6 +61,7 @@ const offenders = [];
 scripts.forEach(f => { const w = words(read(f)); OLD.forEach(re => { const m = re.exec(w); if (m) offenders.push(f + ": " + m[0]); }); });
 OLD.forEach(re => { const m = re.exec(html.replace(/<!--[\s\S]*?-->/g, "")); if (m) offenders.push("index.html: " + m[0]); });
 check("no script or page still calls a tab by an older name, or says Revit is not there in another wording (comments may say what a tab was called)", offenders.length === 0, offenders.slice(0, 6).join(" | "));
+check("the tour's Revit step names the ribbon's Getting Started button, which the add-in has under that name (its RibbonLayout.cs is checked by the add-in's ReleaseCheck)", /Getting Started in the ribbon/.test(steps.find(s => s.id === "revit").text({ view: "advanced" })) && steps.find(s => s.id === "revit").text({ view: "advanced" }).length < 260);
 check("'Revit not open' is the one wording, in the top bar's pill, the Results tab, the Documents tab, Combine's layers panel, the Revit families tab and the profile", ["whereCore.js", "resultsStoreCore.js", "workspaceBridge.js", "revitLayers.js", "revitFamiliesTab.js", "profileCore.js", "profile.js", "compareController.js", "revitBridge.js"].every(f => /Revit not open/.test(read(f))));
 
 console.log(fails === 0 ? "\nNAMES OK" : "\n" + fails + " CHECK(S) FAILED");

@@ -77,7 +77,7 @@ const TOUR_STEPS = [
   },
   {
     id: "revit", mode: "profile", requires: "profile", target: null, title: "In Revit",
-    text: () => "Open Sportify App docks this app inside Revit. Push to Sportify sends the roof, and Send All to Web App brings the analyses back here. That is the loop. You can take this tour again from the Overview."
+    text: () => "Open Sportify App docks this app inside Revit. Push to Sportify sends the roof, and Send All to Web App brings the analyses back here. That is the loop. Getting Started in the ribbon lists the steps. You can take this tour again from the Overview."
   }
 ];
 
