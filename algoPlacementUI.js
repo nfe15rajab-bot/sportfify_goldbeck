@@ -1082,6 +1082,10 @@ async function algoApply() {
   algoSetMode("manual");
   if (typeof resetCombineView === "function") resetCombineView();
   if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  // Same save-and-send-to-Revit the "Export Combined JSON" button does, fired automatically here too: Apply is already
+  // the deliberate "this is what I want on the roof" moment, and a roof pushed fresh from Revit (Sportify's new
+  // "Update" command) needs the very next Apply to reach Revit without a second, separate manual step.
+  if (typeof downloadCombinedSession === "function") downloadCombinedSession();
   if (typeof showToast === "function") showToast("Placed on the board", `${plan.courts.length} court${plan.courts.length === 1 ? "" : "s"}${zoneCount ? `, ${zoneCount} garden zone${zoneCount === 1 ? "" : "s"}` : ""}. Move any piece by hand; the pathways are the space between them.`);
   if (zoneCount && withoutBuildUp) algoWarnNoBuildUp();            // last, so it is the toast that stays on screen
 }

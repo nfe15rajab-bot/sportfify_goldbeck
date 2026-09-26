@@ -152,51 +152,83 @@ function emptyCardBody(status) {
   return null;
 }
 
+/** Overview cards reuse the results rail's own building blocks (resCard/resTile/resBar/resFindings, analysisResults.js) so the app's own
+    estimates read with the same icons, bars and tone colors as the Revit-sourced results, instead of a second, plainer visual language. */
 function fireSafetyCardHtml() {
   const r = analyzeFireSafety();
   const empty = emptyCardBody(r.status);
-  const body = empty ? empty
-    : r.status === "fail" ? `<p class="hint">⚠️ ${r.unreachableCount} piece(s) have no walkable route to any entry point at all.</p>`
-    : `<p class="hint">${r.withinLimit ? "✅" : "⚠️"} Longest route from a piece to its nearest entry point: <strong>${r.maxDist.toFixed(1)} m</strong> (max. travel distance reference: ${r.maxTravelDistance} m, MBO §35).</p>`;
-  return `<div class="section"><label>Fire Safety <span class="mode-status available">Available now</span></label>${body}</div>`;
+  if (empty) return `<div class="section"><label>Fire Safety <span class="mode-status available">Available now</span></label>${empty}</div>`;
+
+  if (r.status === "fail") {
+    const tiles = `<div class="res-tiles">${resTile("Unreachable pieces", String(r.unreachableCount), "of " + combineState.items.length, "bad")}</div>`;
+    const rec = resFindings([{ kind: "Recommendation", text: "Add or reposition an entry point so every piece has a walkable route to at least one." }]);
+    return resCard({ icon: "ti-flame", title: "Fire Safety", tone: "bad", chip: "no route", body: tiles + rec });
+  }
+  const tone = r.withinLimit ? "ok" : "warn";
+  const barMax = Math.max(r.maxDist, r.maxTravelDistance) * 1.15;
+  const bar = resBar("Longest route to an entry point", r.maxDist, barMax, { ref: r.maxTravelDistance, tone, text: `${r.maxDist.toFixed(1)} m / ${r.maxTravelDistance} m limit` });
+  const rec = r.withinLimit ? "" : resFindings([{ kind: "Recommendation", text: `Shorten the longest route by ${(r.maxDist - r.maxTravelDistance).toFixed(1)} m — move the piece closer to an entry, or add another entry point nearby.` }]);
+  return resCard({ icon: "ti-flame", title: "Fire Safety", sub: "Travel-distance reference: MBO §35", tone, chip: r.withinLimit ? "within limit" : "over limit", body: bar + rec });
 }
 
 function accessibilityCardHtml() {
   const r = analyzeAccessibility();
   const empty = emptyCardBody(r.status);
-  const body = empty ? empty : `
-    <p class="hint">${r.widthOk ? "✅" : "⚠️"} Circulation width set to ${r.currentWidth.toFixed(1)} m (wheelchair two-way reference: ${r.minWidth} m).</p>
-    <p class="hint">${r.reachOk ? "✅ Every piece has a walkable route from an entry point." : "⚠️ Not every piece is reachable — add or move entry points."}</p>`;
-  return `<div class="section"><label>Accessibility <span class="mode-status available">Available now</span></label>${body}</div>`;
+  if (empty) return `<div class="section"><label>Accessibility <span class="mode-status available">Available now</span></label>${empty}</div>`;
+
+  const tone = r.widthOk && r.reachOk ? "ok" : "warn";
+  const barMax = Math.max(r.currentWidth, r.minWidth) * 1.3;
+  const bar = resBar("Circulation width", r.currentWidth, barMax, { ref: r.minWidth, tone: r.widthOk ? "ok" : "bad", text: `${r.currentWidth.toFixed(1)} m / ${r.minWidth} m reference` });
+  const tiles = `<div class="res-tiles">${resTile("Every piece reachable", r.reachOk ? "Yes" : "No", "from an entry point", r.reachOk ? "ok" : "bad")}</div>`;
+  const recs = [];
+  if (!r.widthOk) recs.push({ kind: "Recommendation", text: `Widen circulation to at least ${r.minWidth} m for two-way wheelchair passage.` });
+  if (!r.reachOk) recs.push({ kind: "Recommendation", text: "Add or move entry points so every piece is reachable." });
+  return resCard({ icon: "ti-wheelchair", title: "Accessibility", sub: "Wheelchair two-way passage reference", tone, chip: tone === "ok" ? "meets reference" : "check needed", body: bar + tiles + resFindings(recs) });
 }
 
 function waterManagementCardHtml() {
   const r = analyzeWaterManagement();
   const empty = emptyCardBody(r.status);
-  const body = empty ? empty : `
-    <p class="hint">${r.totalAreaM2.toFixed(1)} m² of garden coverage, ${r.avgDepthCm.toFixed(0)} cm average buildup depth.</p>
-    <p class="hint">Quick estimate of rainfall retention: <strong>~${r.retentionPercent}%</strong> (a rule of thumb, not a hydrology figure). The Soil Percolation analysis in Revit works from the real layers and rain events and is the reference.</p>`;
-  return `<div class="section"><label>Water Management (quick estimate) <span class="mode-status available">Available now</span></label>${body}</div>`;
+  if (empty) return `<div class="section"><label>Water Management (quick estimate) <span class="mode-status available">Available now</span></label>${empty}</div>`;
+
+  const tiles = `<div class="res-tiles">
+    ${resTile("Garden coverage", r.totalAreaM2.toFixed(1) + " m²")}
+    ${resTile("Average buildup depth", r.avgDepthCm.toFixed(0) + " cm")}
+  </div>`;
+  const bar = resBar("Estimated rainfall retention", r.retentionPercent, 100, { tone: "neutral", text: r.retentionPercent + "%" });
+  const note = resFindings([{ kind: "Note", text: "A rule of thumb from buildup depth alone, not a certified hydrology figure. Run the Soil Percolation analysis in Revit for real layers and rain events." }]);
+  return resCard({ icon: "ti-droplet", title: "Water Management", sub: "Quick estimate", tone: "neutral", chip: "estimate", body: tiles + bar + note });
 }
 
 function windExposureCardHtml() {
   const r = analyzeWindExposure();
   const empty = emptyCardBody(r.status);
-  const body = empty ? empty : `
-    <p class="hint">${r.exposedCount} of ${r.totalCount} piece(s) sit within ${r.zoneM} m of the roof edge — the zone with the highest rooftop wind exposure.</p>`;
-  return `<div class="section"><label>Wind Exposure <span class="mode-status available">Available now</span></label>${body}</div>`;
+  if (empty) return `<div class="section"><label>Wind Exposure <span class="mode-status available">Available now</span></label>${empty}</div>`;
+
+  const tone = r.exposedCount > 0 ? "warn" : "ok";
+  const tiles = `<div class="res-tiles">${resTile("In the exposure zone", `${r.exposedCount} / ${r.totalCount}`, `within ${r.zoneM} m of the roof edge`, tone)}</div>`;
+  const bar = resBar("Pieces within the edge-exposure zone", r.exposedCount, r.totalCount, { tone, text: `${r.exposedCount} of ${r.totalCount}` });
+  const rec = r.exposedCount > 0 ? resFindings([{ kind: "Recommendation", text: `Move exposed piece(s) at least ${r.zoneM} m from the roof edge where the layout allows, or run the Wind & Erosion analysis in Revit for real pressure and anchoring figures.` }]) : "";
+  return resCard({ icon: "ti-wind", title: "Wind Exposure", sub: "Geometric proxy — a real wind field needs Revit's Wind & Erosion analysis", tone, chip: tone === "ok" ? "clear" : `${r.exposedCount} exposed`, body: tiles + bar + rec });
 }
 
 function lcaCardHtml() {
   const r = analyzeLCA();
   const empty = emptyCardBody(r.status);
-  const body = empty ? empty
-    : r.coveredCount === 0
-    ? `<p class="hint">None of the ${r.totalCount} piece(s) have both a reference material picked (Sport/Garden's "Reference material (database)" dropdown) and embodied-carbon data filled in yet.</p>
-       <p class="hint">Add missing embodied-carbon figures from the Data tab's Materials edit form.</p>`
-    : `<p class="hint">Estimated embodied carbon: <strong>~${Math.round(r.totalKg).toLocaleString("en-US")} kg CO2e</strong> (A1-A3, illustrative) across ${r.coveredCount} of ${r.totalCount} piece(s).</p>
-       ${r.missingCount ? `<p class="hint">${r.missingCount} piece(s) excluded — no reference material picked, or that material has no embodied-carbon figure yet. Fill gaps in from the Data tab.</p>` : ""}`;
-  return `<div class="section"><label>LCA Estimate <span class="mode-status available">Available now</span></label>${body}</div>`;
+  if (empty) return `<div class="section"><label>LCA Estimate <span class="mode-status available">Available now</span></label>${empty}</div>`;
+
+  if (r.coveredCount === 0) {
+    const body = `<p class="hint">None of the ${r.totalCount} piece(s) have both a reference material picked and embodied-carbon data filled in yet.</p>`
+      + resFindings([{ kind: "Recommendation", text: "Pick a reference material for each piece (Sport/Garden's \"Reference material (database)\" dropdown) and add missing embodied-carbon figures from the Data tab." }]);
+    return resCard({ icon: "ti-recycle", title: "LCA Estimate", tone: "neutral", chip: "no data", body });
+  }
+  const tone = r.missingCount > 0 ? "warn" : "ok";
+  const tiles = `<div class="res-tiles">
+    ${resTile("Embodied carbon", "~" + Math.round(r.totalKg).toLocaleString("en-US") + " kg", "CO2e, A1-A3, illustrative")}
+    ${resTile("Pieces covered", `${r.coveredCount} / ${r.totalCount}`, r.missingCount ? `${r.missingCount} missing data` : "all covered", tone)}
+  </div>`;
+  const rec = r.missingCount > 0 ? resFindings([{ kind: "Recommendation", text: `Fill in missing reference materials or embodied-carbon figures for ${r.missingCount} piece(s) in the Data tab to complete this estimate.` }]) : "";
+  return resCard({ icon: "ti-recycle", title: "LCA Estimate", tone, chip: r.missingCount ? `${r.missingCount} missing` : "complete", body: tiles + rec });
 }
 
 /**

@@ -38,7 +38,10 @@ const RESULT_SECTIONS = {
   accessibility: { title: "Accessibility", run: RUN_PATH_ALGORITHMIC + "Accessibility Analysis" },
   lca: { title: "LCA", run: RUN_PATH_ALGORITHMIC + "LCA Analysis" },
   carbon_impact: { title: "Carbon impact", run: RUN_PATH_ALGORITHMIC + "Carbon Impact Analysis" },
-  sun_and_shading: { title: "Sun and shade", run: RUN_PATH_PHYSICAL + "Environmental → Sun & Shade Analysis" }
+  sun_and_shading: { title: "Sun and shade", run: RUN_PATH_PHYSICAL + "Environmental → Sun & Shade Analysis" },
+  // Shown in the Post Analysis tab (kineticsPostAnalysis.js), not this rail — see ANALYSIS_SUBTABS's note above. Still
+  // listed here so results-keys-parity.js can confirm the add-in and the web app agree on what "kinetics" means.
+  kinetics: { title: "Kinetics", run: "Sportify ribbon → Kinetics" }
 };
 
 /** The rail: id, caption, icon, heading and what the group shows. */
@@ -141,6 +144,7 @@ function stopResultsPolling() {
 
 function renderAnalysisIfShowingResults() {
   if (typeof activeMode !== "undefined" && activeMode === "analysis" && analysisSub !== "overview") renderAnalysisResultsView();
+  if (typeof renderPostAnalysisIfShowing === "function") renderPostAnalysisIfShowing();
 }
 
 // ---------------------------------------------------------------------------------------------------- the rail
@@ -283,8 +287,9 @@ function resCard(opts) {
   // a card that stands for something the add-in sent says whether it is about the layout on screen; the app's own estimates have no section
   const f = opts.section && resSection(opts.section) ? resFreshness(opts.section) : { state: "current" };
   const stale = f.state === "stale";
+  const iconHtml = opts.icon ? `<i class="ti ${escapeHtml(opts.icon)} res-title-icon" aria-hidden="true"></i>` : "";
   return `<section class="res-card tone-${stale ? "warn" : tone}${stale ? " res-stale" : ""}">
-    <header class="res-head"><div><h3 class="res-title">${resEsc(opts.title)}</h3>${opts.sub ? `<div class="res-sub">${resText(opts.sub)}</div>` : ""}</div>
+    <header class="res-head"><div><h3 class="res-title">${iconHtml}${resEsc(opts.title)}</h3>${opts.sub ? `<div class="res-sub">${resText(opts.sub)}</div>` : ""}</div>
       <span class="res-chip tone-${stale ? "warn" : tone}">${resEsc(stale ? "out of date" : opts.chip || "")}</span></header>
     ${resFreshnessNote(f)}
     ${opts.prelim ? resPrelim(opts.prelim) : ""}

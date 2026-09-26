@@ -1,5 +1,8 @@
 ﻿# Serves this folder over http://localhost and opens it in the default
 # browser. Pure PowerShell/.NET — nothing to install, nothing to compile.
+# -NoBrowser: serve only, don't open a browser tab (autostart-sportify.ps1 uses this — nobody is sitting at the
+# keyboard right after login to want a tab popped open for them).
+param([switch]$NoBrowser)
 $root = $PSScriptRoot
 
 function Try-Listen([int]$port) {
@@ -22,12 +25,16 @@ if (-not $listener) {
 
 $url = "http://localhost:$port/"
 Write-Host "Sportify is running at $url"
-Write-Host "Opening it in your default browser..."
+if ($NoBrowser) {
+    Write-Host "(started with -NoBrowser: no tab opened automatically)"
+} else {
+    Write-Host "Opening it in your default browser..."
+}
 Write-Host ""
 Write-Host "Keep this window open while you use Sportify."
 Write-Host "Close it (or press Ctrl+C) to stop the server."
 
-Start-Process $url
+if (-not $NoBrowser) { Start-Process $url }
 
 $mime = @{
     ".html" = "text/html; charset=utf-8"; ".js" = "application/javascript; charset=utf-8"

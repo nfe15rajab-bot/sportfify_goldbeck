@@ -47,6 +47,7 @@ function applyTheme(mode) {
 function setTheme(mode) {
   applyTheme(mode);
   try { localStorage.setItem(THEME_STORAGE_KEY, mode); } catch (e) {}
+  if (typeof profileOnUiChange === "function") profileOnUiChange();      // the PROFILE (profile.js) remembers the theme too
 }
 
 document.getElementById("themeToggle").addEventListener("click", () => {
@@ -60,6 +61,7 @@ document.getElementById("modeGuide").addEventListener("click", () => setMode("gu
 document.getElementById("modeDeliverables").addEventListener("click", () => setMode("deliverables"));
 document.getElementById("modeFamilies").addEventListener("click", () => setMode("families"));
 document.getElementById("modeSession").addEventListener("click", () => setMode("session"));
+document.getElementById("modeProfile").addEventListener("click", () => setMode("profile"));
 document.getElementById("modeSite").addEventListener("click", () => setMode("site"));
 document.getElementById("modeStructure").addEventListener("click", () => setMode("structure"));
 document.getElementById("modeConditions").addEventListener("click", () => setMode("conditions"));
@@ -69,6 +71,7 @@ document.getElementById("modeCombine").addEventListener("click", () => setMode("
 document.getElementById("modeData").addEventListener("click", () => setMode("data"));
 document.getElementById("modeAnalysis").addEventListener("click", () => setMode("analysis"));
 document.getElementById("modeCompare").addEventListener("click", () => setMode("compare"));
+document.getElementById("modePostAnalysis").addEventListener("click", () => setMode("postAnalysis"));
 document.getElementById("btn-guide-start").addEventListener("click", () => setMode("site"));
 
 /* ── Overview / Deliverables / Save Session tabs ──
@@ -92,27 +95,36 @@ wireDeliverable("btn-deliver-combine-json", "btn-combine-json");
 wireDeliverable("btn-deliver-combine-png", "btn-combine-png");
 
 function setMode(mode) {
+  // A workspace the view in force hides (profile.js: the Simple view) is not opened by a link or a button that still points at it; the Profile tab says how to get it.
+  if (typeof profileModeAllowed === "function" && !profileModeAllowed(mode)) {
+    showToast("Hidden in the Simple view", "Switch to Advanced in the Profile tab to open it.");
+    return;
+  }
   const isGarden = mode === "garden";
   const isSport = mode === "sport";
   const isCombine = mode === "combine";
   const isData = mode === "data";
   const isAnalysis = mode === "analysis";
   const isCompare = mode === "compare";
+  const isPostAnalysis = mode === "postAnalysis";
   const isGuide = mode === "guide";
   const isSite = mode === "site";
   const isStructure = mode === "structure";
   const isConditions = mode === "conditions";
   const isDeliverables = mode === "deliverables";
   const isSession = mode === "session";
+  const isProfile = mode === "profile";
   const isFamilies = mode === "families";
 
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
   else if (isAnalysis && typeof buildAnalysisRail === "function") buildAnalysisRail();   // Analysis's own rail: Overview, Garden, Structure, Sun, Sport, Safety, Other
+  else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Post Analysis's own rail: Dynamic Families, Recommendations
 
-  // Revit's analysis results are only polled while an Analysis group that shows them is open.
+  // Revit's analysis results are only polled while an Analysis group that shows them (or Post Analysis, which always
+  // needs the live payload) is open.
   if (typeof startResultsPolling === "function") {
-    if (isAnalysis && typeof analysisSub !== "undefined" && analysisSub !== "overview") startResultsPolling();
+    if (isPostAnalysis || (isAnalysis && typeof analysisSub !== "undefined" && analysisSub !== "overview")) startResultsPolling();
     else stopResultsPolling();
   }
 
@@ -131,8 +143,8 @@ function setMode(mode) {
   // Site, and Guide keep the sidebar visible/hidden per their own
   // minimal needs. Analysis uses the rail for the groups of results Revit
   // sends (analysisResults.js).
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isCompare || isGuide || isSite || isStructure || isConditions || isDeliverables || isSession || isFamilies) ? "none" : "flex";
-  document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession || isFamilies) ? "none" : "flex";
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isCompare || isGuide || isSite || isStructure || isConditions || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
+  document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
 
   document.getElementById("siteConfigurator").style.display = isSite ? "block" : "none";
   document.getElementById("structureConfigurator").style.display = isStructure ? "block" : "none";
@@ -145,6 +157,7 @@ function setMode(mode) {
   document.getElementById("combineConfigurator").style.display = isCombine ? "flex" : "none";
   document.getElementById("dataConfigurator").style.display = isData ? "block" : "none";
   document.getElementById("analysisConfigurator").style.display = isAnalysis ? "block" : "none";
+  document.getElementById("postAnalysisConfigurator").style.display = isPostAnalysis ? "block" : "none";
   document.getElementById("compareConfigurator").style.display = isCompare ? "block" : "none";
 
   document.getElementById("field").style.display = isSport ? "block" : "none";
@@ -156,16 +169,20 @@ function setMode(mode) {
   document.getElementById("conditions-content").style.display = isConditions ? "block" : "none";
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
+  document.getElementById("postAnalysis-content").style.display = isPostAnalysis ? "block" : "none";
   document.getElementById("compare-content").style.display = isCompare ? "block" : "none";
   document.getElementById("families-content").style.display = isFamilies ? "block" : "none";
   document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
   document.getElementById("deliverables-content").style.display = isDeliverables ? "block" : "none";
   if (isDeliverables && typeof renderDeliverables === "function") { renderDeliverables(); if (typeof workspaceRefresh === "function") workspaceRefresh(); }
   document.getElementById("session-content").style.display = isSession ? "block" : "none";
+  document.getElementById("profile-content").style.display = isProfile ? "block" : "none";
+  if (isProfile && typeof profileRender === "function") profileRender();
 
   document.getElementById("modeGuide").classList.toggle("active", isGuide);
   document.getElementById("modeDeliverables").classList.toggle("active", isDeliverables);
   document.getElementById("modeSession").classList.toggle("active", isSession);
+  document.getElementById("modeProfile").classList.toggle("active", isProfile);
   document.getElementById("modeSite").classList.toggle("active", isSite);
   document.getElementById("modeStructure").classList.toggle("active", isStructure);
   document.getElementById("modeConditions").classList.toggle("active", isConditions);
@@ -176,6 +193,7 @@ function setMode(mode) {
   document.getElementById("modeData").classList.toggle("active", isData);
   document.getElementById("modeAnalysis").classList.toggle("active", isAnalysis);
   document.getElementById("modeCompare").classList.toggle("active", isCompare);
+  document.getElementById("modePostAnalysis").classList.toggle("active", isPostAnalysis);
 
   // Explicit branch per mode — a bare `else` here previously meant "anything
   // that isn't garden/sport" silently ran updateCombineUI(), which broke the
@@ -188,6 +206,7 @@ function setMode(mode) {
   else if (isCombine) updateCombineUI();
   else if (isData && typeof updateDataUI === "function") updateDataUI();
   else if (isAnalysis && typeof updateAnalysisUI === "function") updateAnalysisUI();
+  else if (isPostAnalysis && typeof updatePostAnalysisUI === "function") updatePostAnalysisUI();
   else if (isCompare && typeof updateCompareUI === "function") updateCompareUI();
   else if (isFamilies && typeof updateFamiliesUI === "function") updateFamiliesUI();
   else if (isStructure && typeof updateStructureTabUI === "function") { updateStructureUI(); updateAssumptionsUI(); updateStructureTabUI(); }
@@ -218,19 +237,21 @@ function applyRoleLabels(role) {
   });
 }
 
-function setRole(role) {
+function setRole(role, quiet) {
   document.documentElement.dataset.role = role;
   document.getElementById("rolePlanner").classList.toggle("active", role === "planner");
   document.getElementById("roleClient").classList.toggle("active", role === "client");
   applyRoleLabels(role);
   document.querySelectorAll(".rule-input").forEach(el => { el.disabled = role !== "planner"; });
   if (activeMode === "combine" && typeof drawCombineCanvas === "function") drawCombineCanvas();
+  if (quiet) return;      // a profile being loaded (profile.js) sets the role without announcing it
   showToast(
     role === "client" ? "Client mode" : "Planner mode",
     role === "client"
       ? "Pick your sports, garden style, and entrances — the rules handle the rest."
       : "Full manual control unlocked — fine-tune placement and design rules."
   );
+  if (typeof profileOnUiChange === "function") profileOnUiChange();      // the PROFILE (profile.js) remembers the role too
 }
 document.getElementById("rolePlanner").addEventListener("click", () => setRole("planner"));
 document.getElementById("roleClient").addEventListener("click", () => setRole("client"));
@@ -293,6 +314,7 @@ setMode("guide");
 if(typeof initCombineInteractions === "function") initCombineInteractions();
 if(typeof initTrayDragInteractions === "function") initTrayDragInteractions();
 if(typeof updateSiteUI === "function") updateSiteUI();
+if (typeof profileInit === "function") profileInit();      // the PROFILE (profile.js): view, role and theme as the person left them
 startRevitPolling();
 // restoreAutosaveIfAny() is no longer called automatically here — the
 // session gate (sessionGate.js, shown on top of whatever setMode("guide")
