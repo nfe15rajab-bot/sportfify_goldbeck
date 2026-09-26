@@ -103,14 +103,14 @@ async function planFor(qty) {
     // each court's footprint on the roof is the rectangle the packer laid it on, in the piece's own frame turned by its rotation
     let frameOk = true, why = "";
     for (const c of plan.courts) {
-      const item = board.items.find(i => i.label === c.name), r = c.rect;
+      const item = board.items.find(i => i.label === (sport(c.name) || {}).label), r = c.rect;      // the board carries the sport's label ("Polyvalent (multi-sport)" for the Multi Sport Court), not the packing tool's name
       const turned = item.rotation === 90;
       const w = turned ? item.width_m : item.length_m, h = turned ? item.length_m : item.width_m;
       if (!near(w, r[2] - r[0], 0.06) || !near(h, r[3] - r[1], 0.06)) { frameOk = false; why += ` ${c.name}: ${w} x ${h} on a ${(r[2] - r[0]).toFixed(2)} x ${(r[3] - r[1]).toFixed(2)} rectangle;`; }
     }
     check("each piece, turned as it is, fills exactly the rectangle the packer reserved for it", frameOk, why);
 
-    const bball = board.items.find(i => i.label === "Basketball Court"), vball = board.items.find(i => i.label === "Volleyball"), multi = board.items.find(i => i.label === "Multi Sport Court");
+    const bball = board.items.find(i => i.label === "Basketball Court"), vball = board.items.find(i => i.label === "Volleyball"), multi = board.items.find(i => i.label === "Polyvalent (multi-sport)");
     check("the basketball court is one the basketball module recognises, with its own payload (it does not follow the Sport panel)", get("isBasketballItem")(bball) && !!bball.sourceJson.basketball);
     check("the volleyball court is one the volleyball module recognises, with its own payload", get("isVolleyballItem")(vball) && !!vball.sourceJson.volleyball);
     check("the payload's footprint is the piece's own size (what Revit builds is what the packer reserved)",

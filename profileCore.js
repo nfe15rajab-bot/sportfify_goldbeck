@@ -31,6 +31,7 @@ const PROFILE_MODES = {
   structure:    { button: "modeStructure",    label: "Structure inputs", title: "Structure inputs — grid, columns, deck capacity, natural frequency" },
   conditions:   { button: "modeConditions",   label: "Site conditions", title: "Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)" },
   sport:        { button: "modeSport",        label: "Sport",           title: "Sport" },
+  gardenBlocks: { button: "modeGardenBlocks", label: "Garden",           title: "Garden — planters and garden blocks" },
   combine:      { button: "modeCombine",      label: "Combine",         title: "Combine" },
   analysis:     { button: "modeAnalysis",     label: "Results",         title: "Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate" },
   compare:      { button: "modeCompare",      label: "Compare",         title: "Compare" },
@@ -50,7 +51,7 @@ const PROFILE_VIEWS = {
   simple: {
     title: "Simple",
     tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take your documents.",
-    modes: ["guide", "site", "sport", "combine", "analysis", "deliverables", "session", "profile"]
+    modes: ["guide", "site", "sport", "gardenBlocks", "combine", "analysis", "deliverables", "session", "profile"]
   },
   advanced: {
     title: "Advanced",

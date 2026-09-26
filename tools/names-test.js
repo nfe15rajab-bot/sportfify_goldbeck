@@ -20,7 +20,7 @@ const html = read("index.html");
 const M = core.PROFILE_MODES;
 
 // ---------------------------------------------------------------------------------------------------------------- the table
-check("the ids of the workspaces are the ones code, saved profiles and the add-in know (only the words changed)", Object.keys(M).join() === "guide,site,structure,conditions,sport,combine,analysis,compare,postAnalysis,data,families,deliverables,session,profile");
+check("the ids of the workspaces are the ones code, saved profiles and the add-in know (only the words changed)", Object.keys(M).join() === "guide,site,structure,conditions,sport,gardenBlocks,combine,analysis,compare,postAnalysis,data,families,deliverables,session,profile");
 check("the new names: Results, Improve, Catalogue, Revit families, Documents, Structure inputs, Site conditions", ["analysis:Results", "postAnalysis:Improve", "data:Catalogue", "families:Revit families", "deliverables:Documents", "structure:Structure inputs", "conditions:Site conditions"].every(p => M[p.split(":")[0]].label === p.split(":")[1]));
 check("every name is unique, so no two tabs can be confused", new Set(Object.values(M).map(m => m.label)).size === Object.keys(M).length);
 check("a rail label fits on two lines of the 48 px rail (no word over 10 characters, 18 in all), a top bar label on one (16 at most)", Object.entries(M).every(([id, m]) => {

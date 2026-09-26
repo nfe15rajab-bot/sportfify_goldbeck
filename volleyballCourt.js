@@ -342,6 +342,19 @@ function volleyballSurfaceDefs(id, state = volleyballState, s = 10) {
 
 /* ── Preview and panel ───────────────────────────────────────────────────── */
 
+/** The court's own size just outside the court (inside the free zone) and the total with the free zone just outside the drawing, as architect's dimensions. */
+function volleyballDimsSvg(ox, oy, fw, fh, fp, isDark, dim) {
+  if (typeof archDimSvg !== "function") return "";
+  const c = volleyballCourt(), z = volleyballFreeZone(), s = fw / fp.length_m;
+  const cx0 = ox + z.ends_m * s, cy0 = oy + z.sides_m * s, cw = c.length_m * s, ch = c.width_m * s;
+  const courtDim = "rgba(255,255,255,0.92)", r = v => Math.round(v * 100) / 100;        // drawn on the coloured free zone: light reads on any surface colour
+  const off = band => band >= 26 ? Math.min(14, band * 0.55) : band + 10;
+  return archDimSvg("bottom", cx0, cx0 + cw, cy0 + ch, off(z.sides_m * s), `${r(c.length_m)} m`, courtDim, 10.5)
+    + archDimSvg("right", cy0, cy0 + ch, cx0 + cw, off(z.ends_m * s), `${r(c.width_m)} m`, courtDim, 10.5)
+    + archDimSvg("top", ox, ox + fw, oy, 12, `${r(fp.length_m)} m with the free zone`, dim)
+    + archDimSvg("left", oy, oy + fh, ox, 12, `${r(fp.width_m)} m`, dim);
+}
+
 function drawVolleyballPreview(svg, isDark) {
   const fp = volleyballFootprint();
   const PADDING = 46, vw = 420, vh = 260;
@@ -355,11 +368,7 @@ function drawVolleyballPreview(svg, isDark) {
   svg.setAttribute("viewBox", `0 0 ${vw} ${vh}`);
   svg.innerHTML = `
     ${volleyballCourtSvg(ox, oy, fw, fh, volleyballState, "full", isDark)}
-    <text x="${ox + fw / 2}" y="${oy - 16}" text-anchor="middle" font-size="11" fill="${dim}"
-          font-family="'Titillium Web', Arial, sans-serif">${fp.length_m} m including the free zone</text>
-    <text x="${ox - 16}" y="${oy + fh / 2}" text-anchor="middle" font-size="11" fill="${dim}"
-          font-family="'Titillium Web', Arial, sans-serif"
-          transform="rotate(-90, ${ox - 16}, ${oy + fh / 2})">${fp.width_m} m</text>
+    ${volleyballDimsSvg(ox, oy, fw, fh, fp, isDark, dim)}
     <text x="${ox + fw / 2}" y="${Math.min(vh - 6, oy + fh + 22)}" text-anchor="middle" font-size="10" fill="${dim}"
           font-family="'Titillium Web', Arial, sans-serif">
       net ${volleyballNetHeightM().toFixed(2)} m · ${Math.round(w.total_kg).toLocaleString("en-US")} kg on the deck

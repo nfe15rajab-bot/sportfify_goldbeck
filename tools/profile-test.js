@@ -89,7 +89,7 @@ const layout = view => core.profileRailLayout(railItems.map(i => (i.divider ? { 
 const drawn = view => railItems.map((it, i) => (it.divider ? (layout(view)[i] ? "|" : "") : (core.profileModeVisible(view, Object.keys(PROFILE_MODES).find(k => PROFILE_MODES[k].button === it.id) || "") || !/^mode[A-Z]/.test(it.id) ? it.id : ""))).filter(Boolean).join(" ");
 check("Advanced draws the whole rail, every separator included", railItems.length > 0 && layout("advanced").every((v, i) => railItems[i].divider ? v : true) && drawn("advanced").split(" ").length === railItems.length, drawn("advanced"));
 const simpleRail = drawn("simple");
-check("Simple draws the rail as Site | Sport Zones Plants Furniture Combine | Results (no separator at an end or twice in a row)", simpleRail === "modeSite | modeSport btn-zone-toggle btn-vegetation-toggle btn-furniture-toggle modeCombine | modeAnalysis", simpleRail);
+check("Simple draws the rail as Site | Sport Garden Zones Plants Furniture Combine | Results (no separator at an end or twice in a row)", simpleRail === "modeSite | modeSport modeGardenBlocks btn-zone-toggle btn-vegetation-toggle btn-furniture-toggle modeCombine | modeAnalysis", simpleRail);
 
 // the Overview's steps: each leads to a workspace the profile knows, and Simple hides only the last
 const steps = [...html.matchAll(/class="workflow-step" data-goto="(\w+)"/g)].map(m => m[1]);
