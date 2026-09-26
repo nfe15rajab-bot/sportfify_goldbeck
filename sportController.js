@@ -28,20 +28,55 @@ const FIELD_SPORTS = {
   football:   { label: "Football (indoor)", short: "Football", icon: "ti-square-rounded" },
 };
 
-/* ── Activity bars ── */
+/**
+ * Footprint-size tiers for the Outdoor group below — thresholds picked
+ * from this catalog's own distribution (22 activities): <=25 m2 groups the
+ * 9 smallest (Bouldering Wall through Rest area), >100 m2 isolates just the
+ * 3 big-court outliers (3x3 Basketball, Padel, Multi-purpose), and the
+ * other 12 (CrossFit through Pickleball) land in between. Area, not the
+ * longest side, is what "size" means here — the Sprint Lane (63.77 x 1.22
+ * = 77.8 m2) reads as Medium despite its long shape, because it occupies a
+ * Medium amount of roof, which is the question a planner grouping by size
+ * is actually asking.
+ */
+const OUTDOOR_SIZE_TIERS = [
+  { label: "Small", maxArea: 25 },
+  { label: "Medium", maxArea: 100 },
+  { label: "Large", maxArea: Infinity },
+];
+
+/** One activity-bar button, field or activity — the two data shapes share label/short/icon, so one template covers both. */
+function activityIconHtml(kind, id, activeId, item) {
+  return `<button class="activity-icon${id === activeId ? " active" : ""}" data-kind="${kind}" data-id="${id}" title="${escapeHtml(item.label)}">
+            <i class="ti ${item.icon}"></i><span class="activity-icon-label short">${escapeHtml(item.short)}</span><span class="activity-icon-label full">${escapeHtml(item.label)}</span>
+          </button>`;
+}
+
+/* ── Activity bars ──
+ * Grouped Indoor (the six DIN/FIBA/IHF court sports, as the reference
+ * norms define them — not reordered) / Outdoor (every fixed-footprint
+ * ACTIVITIES entry, split into the size tiers above so "what fits in this
+ * leftover 6x4m corner" is a scan, not a hunt through 22 flat icons).
+ */
 function buildActivityBar() {
   const bar = document.getElementById("activity-bar");
-  let html = "";
+  let html = `<div class="rail-cat-header">INDOOR</div>`;
   Object.entries(FIELD_SPORTS).forEach(([id, f]) => {
-    html += `<button class="activity-icon${id === state.sport ? " active" : ""}" data-kind="field" data-id="${id}" title="${escapeHtml(f.label)}">
-               <i class="ti ${f.icon}"></i><span class="activity-icon-label short">${escapeHtml(f.short)}</span><span class="activity-icon-label full">${escapeHtml(f.label)}</span>
-             </button>`;
+    html += activityIconHtml("field", id, state.sport, f);
   });
-  html += `<div class="activity-bar-divider"></div>`;
+
+  const bySize = OUTDOOR_SIZE_TIERS.map(() => []);
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
-    html += `<button class="activity-icon${id === state.activityId ? " active" : ""}" data-kind="activity" data-id="${id}" title="${escapeHtml(a.label)}">
-               <i class="ti ${a.icon}"></i><span class="activity-icon-label short">${escapeHtml(a.short)}</span><span class="activity-icon-label full">${escapeHtml(a.label)}</span>
-             </button>`;
+    const area = a.length * a.width;
+    const tier = OUTDOOR_SIZE_TIERS.findIndex(t => area <= t.maxArea);
+    bySize[tier < 0 ? OUTDOOR_SIZE_TIERS.length - 1 : tier].push([id, a]);
+  });
+  OUTDOOR_SIZE_TIERS.forEach((tier, i) => {
+    if (bySize[i].length === 0) return;
+    html += `<div class="activity-bar-divider"></div><div class="rail-cat-header">${escapeHtml(tier.label.toUpperCase())}</div>`;
+    bySize[i]
+      .sort((a, b) => (a[1].length * a[1].width) - (b[1].length * b[1].width))
+      .forEach(([id, a]) => { html += activityIconHtml("activity", id, state.activityId, a); });
   });
   bar.innerHTML = html;
 
