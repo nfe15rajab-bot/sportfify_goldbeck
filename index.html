@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-26-stack-with-planters"></script>
+  <script src="themeInit.js?v=2026-09-26-session-names"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -13,7 +13,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-26-stack-with-planters" />
+  <link rel="stylesheet" href="style.css?v=2026-09-26-session-names" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -750,6 +750,17 @@
               <p class="hint ws-status" id="dl-status"></p>
             </div>
 
+            <!-- The names the files are called after (sessionNames.js) -->
+            <div class="session-names" id="session-names">
+              <div class="deliverable-group-title"><i class="ti ti-tag" aria-hidden="true"></i>Session and iteration</div>
+              <p class="hint">The reports, schedules, diagrams, charts and films Sportify makes start with these two names, so the files of the iterations of one session (or of several sessions) can be told apart in one folder. Both are optional.</p>
+              <div class="session-names-row">
+                <label>Session<input type="text" id="session-name" maxlength="60" autocomplete="off" spellcheck="false" placeholder="e.g. DIGITAL TOOLS AND METHODS 2 - Roof and Sports" /></label>
+                <label>Iteration<input type="text" id="session-iteration" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. Algorithmic" /></label>
+              </div>
+              <p class="hint session-names-preview" id="session-names-preview"></p>
+            </div>
+
             <div class="deliverables-grid">
               <div class="deliverable-group">
                 <div class="deliverable-group-title"><i class="ti ti-ball-basketball" aria-hidden="true"></i>Sport</div>
@@ -1171,71 +1182,72 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="apiSession.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="data.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="carbon.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="activitiesData.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="vegetation.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="furnitureElevation.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="furniture.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="canvasFlyouts.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="zones.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="roofFinish.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="assumptions.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="roofFeatures.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="structure.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="assemblies.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="gardenData.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="prebuiltSessions.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="rules.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="sunPosition.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="balls.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="field.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="basketballCourt.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="volleyballCourt.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="activityField.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="planters.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="padelCourt.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="gardenField.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="combineField.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="previewCore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="preview.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="siteField.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="buildupEditor.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="dataTab.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="localSession.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="revitBridge.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="sportController.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="gardenController.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="windZones.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="siteController.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="combineController.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="resultsStoreCore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="analysisController.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="analysisResults.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="resultsStore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="siteTabs.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="roofProgram.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="workspaceBridge.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="algoPlacementCore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="algoPlacementUI.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="revitLayers.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="compareController.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="designPanel.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="inspector.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="combineHistory.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="profileCore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="profile.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="quizCore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="quiz.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="tourCore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="tour.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="whereCore.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="where.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="sessionGate.js?v=2026-09-26-stack-with-planters"></script>
-  <script src="main.js?v=2026-09-26-stack-with-planters"></script>
+  <script src="escape.js?v=2026-09-26-session-names"></script>
+  <script src="apiSession.js?v=2026-09-26-session-names"></script>
+  <script src="data.js?v=2026-09-26-session-names"></script>
+  <script src="carbon.js?v=2026-09-26-session-names"></script>
+  <script src="activitiesData.js?v=2026-09-26-session-names"></script>
+  <script src="vegetation.js?v=2026-09-26-session-names"></script>
+  <script src="furnitureElevation.js?v=2026-09-26-session-names"></script>
+  <script src="furniture.js?v=2026-09-26-session-names"></script>
+  <script src="canvasFlyouts.js?v=2026-09-26-session-names"></script>
+  <script src="zones.js?v=2026-09-26-session-names"></script>
+  <script src="roofFinish.js?v=2026-09-26-session-names"></script>
+  <script src="assumptions.js?v=2026-09-26-session-names"></script>
+  <script src="roofFeatures.js?v=2026-09-26-session-names"></script>
+  <script src="structure.js?v=2026-09-26-session-names"></script>
+  <script src="assemblies.js?v=2026-09-26-session-names"></script>
+  <script src="gardenData.js?v=2026-09-26-session-names"></script>
+  <script src="prebuiltSessions.js?v=2026-09-26-session-names"></script>
+  <script src="rules.js?v=2026-09-26-session-names"></script>
+  <script src="sunPosition.js?v=2026-09-26-session-names"></script>
+  <script src="balls.js?v=2026-09-26-session-names"></script>
+  <script src="field.js?v=2026-09-26-session-names"></script>
+  <script src="basketballCourt.js?v=2026-09-26-session-names"></script>
+  <script src="volleyballCourt.js?v=2026-09-26-session-names"></script>
+  <script src="activityField.js?v=2026-09-26-session-names"></script>
+  <script src="planters.js?v=2026-09-26-session-names"></script>
+  <script src="padelCourt.js?v=2026-09-26-session-names"></script>
+  <script src="gardenField.js?v=2026-09-26-session-names"></script>
+  <script src="combineField.js?v=2026-09-26-session-names"></script>
+  <script src="previewCore.js?v=2026-09-26-session-names"></script>
+  <script src="preview.js?v=2026-09-26-session-names"></script>
+  <script src="siteField.js?v=2026-09-26-session-names"></script>
+  <script src="buildupEditor.js?v=2026-09-26-session-names"></script>
+  <script src="dataTab.js?v=2026-09-26-session-names"></script>
+  <script src="localSession.js?v=2026-09-26-session-names"></script>
+  <script src="revitBridge.js?v=2026-09-26-session-names"></script>
+  <script src="sportController.js?v=2026-09-26-session-names"></script>
+  <script src="gardenController.js?v=2026-09-26-session-names"></script>
+  <script src="windZones.js?v=2026-09-26-session-names"></script>
+  <script src="siteController.js?v=2026-09-26-session-names"></script>
+  <script src="combineController.js?v=2026-09-26-session-names"></script>
+  <script src="resultsStoreCore.js?v=2026-09-26-session-names"></script>
+  <script src="analysisController.js?v=2026-09-26-session-names"></script>
+  <script src="analysisResults.js?v=2026-09-26-session-names"></script>
+  <script src="resultsStore.js?v=2026-09-26-session-names"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-26-session-names"></script>
+  <script src="siteTabs.js?v=2026-09-26-session-names"></script>
+  <script src="roofProgram.js?v=2026-09-26-session-names"></script>
+  <script src="workspaceBridge.js?v=2026-09-26-session-names"></script>
+  <script src="sessionNames.js?v=2026-09-26-session-names"></script>
+  <script src="algoPlacementCore.js?v=2026-09-26-session-names"></script>
+  <script src="algoPlacementUI.js?v=2026-09-26-session-names"></script>
+  <script src="revitLayers.js?v=2026-09-26-session-names"></script>
+  <script src="compareController.js?v=2026-09-26-session-names"></script>
+  <script src="designPanel.js?v=2026-09-26-session-names"></script>
+  <script src="inspector.js?v=2026-09-26-session-names"></script>
+  <script src="combineHistory.js?v=2026-09-26-session-names"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-26-session-names"></script>
+  <script src="profileCore.js?v=2026-09-26-session-names"></script>
+  <script src="profile.js?v=2026-09-26-session-names"></script>
+  <script src="quizCore.js?v=2026-09-26-session-names"></script>
+  <script src="quiz.js?v=2026-09-26-session-names"></script>
+  <script src="tourCore.js?v=2026-09-26-session-names"></script>
+  <script src="tour.js?v=2026-09-26-session-names"></script>
+  <script src="whereCore.js?v=2026-09-26-session-names"></script>
+  <script src="where.js?v=2026-09-26-session-names"></script>
+  <script src="sessionGate.js?v=2026-09-26-session-names"></script>
+  <script src="main.js?v=2026-09-26-session-names"></script>
 </body>
 </html>

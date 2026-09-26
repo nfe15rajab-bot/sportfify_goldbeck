@@ -1412,3 +1412,14 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .planter-switch { display: grid; grid-template-columns: 1fr 1fr; border: 0.5px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; margin-top: 4px; }
 .planter-switch button { border: 0; background: var(--surface-2); padding: 7px 8px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); }
 .planter-switch button.on { background: var(--fill-accent); color: var(--on-accent); }
+
+/* ── The session's and the iteration's name, for the files (sessionNames.js, the Documents tab) ── */
+.session-names { margin: 0 0 14px; padding: 12px 14px; border: 0.5px solid var(--border-strong); border-radius: var(--radius); background: var(--surface-2); }
+.session-names .deliverable-group-title { margin-bottom: 4px; }
+.session-names .hint { font-size: 12px; line-height: 1.45; color: var(--text-secondary); margin: 2px 0 6px; max-width: none; }
+.session-names-row { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; margin: 8px 0 4px; }
+.session-names-row label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; font-weight: 600; color: var(--text-secondary); min-width: 0; }
+.session-names-row input { font: 12px var(--font-sans); padding: 6px 8px; border-radius: 6px; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-primary); min-width: 0; }
+.session-names-row input:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 1px; }
+.session-names-preview { margin: 4px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .session-names-row { grid-template-columns: 1fr; } }

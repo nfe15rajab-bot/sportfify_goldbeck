@@ -84,7 +84,7 @@ async function workspaceRefresh() {
   else if (typeof profileRevitClosed === "function") profileRevitClosed();
   const changed = was !== ws.ok || JSON.stringify(nextFiles) !== JSON.stringify(workspaceState.files) || JSON.stringify(ws.json && ws.json.kinds) !== JSON.stringify(workspaceState.kinds);
   workspaceState.files = nextFiles;
-  if (was !== true && ws.ok) { workspaceState.draftSent = null; workspaceState.layoutId = null; }      // Revit was (re)started: it has lost the draft, send it again
+  if (was !== true && ws.ok) { workspaceState.draftSent = null; workspaceState.layoutId = null; if (typeof sessionNames !== "undefined") sessionNames.sent = null; }      // Revit was (re)started: it has lost the draft and the names, send them again
   if (changed) workspaceChanged();
   if (was !== ws.ok && ws.ok) syncDraftLayout(true);
 }
@@ -140,7 +140,11 @@ async function layoutIdOf(text) {
 /** The JSON text of the layout on screen, as it is sent to the add-in; null when nothing is placed. */
 function currentDraftBody() {
   if (typeof buildCombinedPayload !== "function" || typeof combineState === "undefined" || !combineState.items.length) return null;
-  try { return JSON.stringify(buildCombinedPayload()); } catch (e) { return null; }
+  try {
+    const payload = buildCombinedPayload();
+    delete payload.session;      // the names of the session and the iteration go in their own request (sessionNames.js): they are not the layout, and must not change its identity
+    return JSON.stringify(payload);
+  } catch (e) { return null; }
 }
 
 let lastIdentifiedBody;      // undefined until the first look
@@ -449,4 +453,4 @@ function renderDeliverables() {
 workspaceRefresh();
 setInterval(workspaceRefresh, WORKSPACE_POLL_MS);
 refreshLayoutIdNow();
-setInterval(() => { refreshLayoutIdNow(); syncDraftLayout(false); }, DRAFT_SYNC_MS);
+setInterval(() => { refreshLayoutIdNow(); syncDraftLayout(false); if (typeof sessionNamesSync === "function") sessionNamesSync(false); }, DRAFT_SYNC_MS);
