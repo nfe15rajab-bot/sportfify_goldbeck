@@ -254,7 +254,7 @@ function renderSailMechanics(s) {
     ${resTile("Ground tracks", resNum(s.tracks, 0) + " × " + resNum(s.rail_length_m, 1) + " m", (s.shape === "triangle" ? "an L: one along x, one along y; " : "two parallel; ") + "a carriage runs " + resNum(s.travel_m, 1) + " m, in " + resNum(s.travel_seconds, 0) + " s at " + resNum(s.drive_speed_cm_s, 1) + " cm/s")}
     ${resTile("Carriage drive", resNum(s.carriage_force_kn, 2) + " kN", "about " + resNum(s.drive_power_w, 0) + " W a motor (the fabric's pull, the wind, rolling friction, with the safety factor)")}
     ${resTile("Shade with the masts running", resNum(s.shade_tracked_min_percent, 0) + "%", "at worst, against " + resNum(s.shade_fixed_min_percent, 0) + "% for a sail that stays put (means " + resNum(s.shade_tracked_mean_percent, 0) + "% and " + resNum(s.shade_fixed_mean_percent, 0) + "%)", s.shade_tracked_min_percent > s.shade_fixed_min_percent ? "ok" : "")}
-    ${resTile("Storm", resNum(s.storm_height_m, 1) + " m", "the masts run in, then telescope down to this height and the fabric is slack")}
+    ${resTile("Storm", resNum(s.storm_height_m, 1) + " m", "the masts run in, then telescope down" + (s.mast_stages > 1 ? " (" + s.mast_stages + " stages of " + resNum(s.mast_stage_m, 2) + " m: the lowest they can go)" : "") + " and the fabric is slack")}
   </div>`;
   const findings = Array.isArray(s.findings) && s.findings.length ? `<ul class="res-list">${s.findings.map(f => `<li>${resText(f)}</li>`).join("")}</ul>` : "";
   return `<div class="res-block"><label>Sail on movable pillars</label>${tiles}${findings}</div>`;
