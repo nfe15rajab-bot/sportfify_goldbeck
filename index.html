@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="themeInit.js?v=2026-09-26-ux-capabilities"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -13,7 +13,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-25-ux-profile-photo" />
+  <link rel="stylesheet" href="style.css?v=2026-09-26-ux-capabilities" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -801,6 +801,11 @@
               </div>
             </div>
 
+            <h2 class="profile-heading">This computer</h2>
+            <p class="profile-note">Sportify looks for the tools it can use, so nobody is asked whether they have them. What is missing is hidden instead of failing when it is clicked.</p>
+            <div class="profile-machine" id="profile-machine"></div>
+            <p class="profile-note" id="profile-machine-hidden"></p>
+
             <h2 class="profile-heading">Where your profile is kept</h2>
             <p class="profile-note" id="profile-status"></p>
             <div class="overview-actions profile-actions">
@@ -1083,60 +1088,60 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="apiSession.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="data.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="carbon.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="activitiesData.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="vegetation.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="furnitureElevation.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="furniture.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="canvasFlyouts.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="zones.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="roofFinish.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="assumptions.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="roofFeatures.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="structure.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="assemblies.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="gardenData.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="prebuiltSessions.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="rules.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="sunPosition.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="balls.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="field.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="basketballCourt.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="volleyballCourt.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="activityField.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="padelCourt.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="gardenField.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="combineField.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="siteField.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="buildupEditor.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="dataTab.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="localSession.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="revitBridge.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="sportController.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="gardenController.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="windZones.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="siteController.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="combineController.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="analysisController.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="analysisResults.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="siteTabs.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="roofProgram.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="workspaceBridge.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="algoPlacementCore.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="algoPlacementUI.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="revitLayers.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="compareController.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="designPanel.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="inspector.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="combineHistory.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="profileCore.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="profile.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="sessionGate.js?v=2026-09-25-ux-profile-photo"></script>
-  <script src="main.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="escape.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="apiSession.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="data.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="carbon.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="activitiesData.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="vegetation.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="furnitureElevation.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="furniture.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="canvasFlyouts.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="zones.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="roofFinish.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="assumptions.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="roofFeatures.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="structure.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="assemblies.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="gardenData.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="prebuiltSessions.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="rules.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="sunPosition.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="balls.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="field.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="basketballCourt.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="volleyballCourt.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="activityField.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="padelCourt.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="gardenField.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="combineField.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="siteField.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="buildupEditor.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="dataTab.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="localSession.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="revitBridge.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="sportController.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="gardenController.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="windZones.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="siteController.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="combineController.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="analysisController.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="analysisResults.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="siteTabs.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="roofProgram.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="workspaceBridge.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="algoPlacementCore.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="algoPlacementUI.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="revitLayers.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="compareController.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="designPanel.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="inspector.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="combineHistory.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="profileCore.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="profile.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="sessionGate.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="main.js?v=2026-09-26-ux-capabilities"></script>
 </body>
 </html>

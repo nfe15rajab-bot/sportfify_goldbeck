@@ -180,6 +180,15 @@ html[data-role="client"] .planner-only { display: none !important; }
 .profile-row { display: flex; gap: 48px; flex-wrap: wrap; }
 .profile-segment { display: inline-flex; }
 .profile-note { font-size: 12.5px; color: var(--text-secondary); margin-top: 10px; max-width: 700px; line-height: 1.5; }
+.profile-machine { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-width: 760px; }
+.profile-machine-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 1.5); }
+.profile-machine-row > i { font-size: 20px; margin-top: 1px; flex-shrink: 0; color: var(--text-muted); }
+.profile-machine-ok > i { color: var(--text-success); }
+.profile-machine-missing > i { color: var(--text-warning, var(--text-secondary)); }
+.profile-machine-title { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--text-primary); }
+.profile-machine-state { font-size: 11px; color: var(--text-secondary); }
+.profile-machine-text { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.45; }
+.profile-machine-affects { font-size: 12px; color: var(--text-primary); margin-top: 3px; line-height: 1.45; }
 .profile-actions { flex-wrap: wrap; }
 .profile-actions .overview-action-btn { flex: 1 1 calc(50% - 10px); }
 .session-gate-profile { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; }

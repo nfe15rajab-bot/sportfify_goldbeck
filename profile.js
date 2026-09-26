@@ -21,10 +21,12 @@ const profileState = {
   source: "default",      // where the profile in force came from: "default", "browser", "file" or "revit"
   shared: null,           // null = not asked yet; true = Revit has this profile; false = Revit is not open (it gets the profile when both are); "error" = Revit refused it
   file: "",               // where the add-in wrote Sportify-PROFILE.json in the Sportify folder (its answer to the last POST /profile), "" until it has
+  machine: null,          // the add-in's answer to GET /capabilities (what this computer has, what its ribbon hides), null while Revit is not reachable
   note: ""                // the last thing that happened, in words (shown in the tab)
 };
 let profileApplying = false;
 let profileSyncing = false;
+let profileMachineLoading = false;
 let profileNameTimer = null;
 
 // ------------------------------------------------------------------------------------------------ the browser's copy
@@ -115,6 +117,25 @@ async function profilePushToRevit(p) {
   if (r.ok && r.json && typeof r.json.file === "string") profileState.file = r.json.file;
   if (profileState.shared === "error") profileState.note = "Revit did not take the profile: " + (r.error || "no reason given");
   profileRenderStatus();
+  if (r.ok) profileLoadMachine(false);      // the ribbon follows the view, so what it hides has changed
+}
+
+/** What this computer has, and what the Sportify tab in Revit hides because of it and of the view: asked of the add-in (which looks; nobody is asked). */
+async function profileLoadMachine(refresh) {
+  if (typeof localApi !== "function" || (profileMachineLoading && !refresh)) return;      // one plain question at a time; an explicit refresh always goes through
+  profileMachineLoading = true;
+  try {
+    const r = await localApi("/capabilities" + (refresh ? "?refresh=1" : ""));
+    profileState.machine = r.ok && r.json ? r.json : null;
+  } finally {
+    profileMachineLoading = false;
+  }
+  profileRenderMachine();
+}
+
+/** main.js: the Profile tab was opened. Look at the computer again (Unity may have been installed since Revit started). */
+function profileOnTabOpen() {
+  if (profileState.shared !== false) profileLoadMachine(true);
 }
 
 /** Called by workspaceBridge.js on every answer of the add-in: whichever copy is newer wins, and a copy the other lacks is sent to it. */
@@ -135,6 +156,7 @@ async function profileSyncWithRevit() {
       await profilePushToRevit(local);
     }
     if (profileState.shared !== "error") profileState.shared = true;
+    if (!profileState.machine) profileLoadMachine(false);      // first contact with the add-in: what this computer has
   } finally {
     profileSyncing = false;
   }
@@ -145,7 +167,9 @@ async function profileSyncWithRevit() {
 function profileRevitClosed() {
   if (profileState.shared === false) return;
   profileState.shared = false;
+  profileState.machine = null;
   profileRenderStatus();
+  profileRenderMachine();
 }
 
 // ------------------------------------------------------------------------------------------------ the buttons of the tab
@@ -339,8 +363,34 @@ function profileRenderGateLine() {
   el.textContent = (p.person.name ? "Welcome back, " + p.person.name + ". " : "") + "PROFILE: " + PROFILE_VIEWS[p.view].title + " view, " + p.role + (p.updated ? "" : " (defaults)") + ". Change it in the Profile tab.";
 }
 
+/** "This computer": what the add-in found (Unity, SOLIDWORKS, Chrome), what that means, and which Revit buttons are hidden. Every word from the add-in goes through escapeHtml. */
+function profileRenderMachine() {
+  const el = document.getElementById("profile-machine");
+  if (el) {
+    const words = { ok: "found", missing: "not found", unknown: "unknown" };
+    const icons = { ok: "ti-circle-check", missing: "ti-circle-x", unknown: "ti-help-circle" };
+    el.innerHTML = profileMachineRows(profileState.machine).map(row => `
+      <div class="profile-machine-row profile-machine-${escapeHtml(row.state)}">
+        <i class="ti ${icons[row.state] || icons.unknown}" aria-hidden="true"></i>
+        <div class="profile-machine-body">
+          <div class="profile-machine-title"><strong>${escapeHtml(row.label)}</strong><span class="profile-machine-state">${escapeHtml(words[row.state] || words.unknown)}</span></div>
+          ${row.text ? `<div class="profile-machine-text">${escapeHtml(row.text)}</div>` : ""}
+          ${row.affects ? `<div class="profile-machine-affects">${escapeHtml(row.affects)}</div>` : ""}
+        </div>
+      </div>`).join("");
+  }
+  const hiddenEl = document.getElementById("profile-machine-hidden");
+  if (hiddenEl) {
+    const hidden = profileHiddenButtons(profileState.machine);
+    hiddenEl.textContent = !profileState.machine ? ""
+      : hidden.length ? "Hidden in the Sportify tab of Revit (because of your view and this computer): " + hidden.join(", ") + ". Choose Advanced to show what your view hides; what needs a tool that is not installed comes back once the tool is."
+      : "Nothing is hidden in the Sportify tab of Revit.";
+  }
+}
+
 function profileRender() {
   profileRenderPerson();
+  profileRenderMachine();
   profileRenderChoices();
   profileRenderStatus();
   profileRenderGateLine();

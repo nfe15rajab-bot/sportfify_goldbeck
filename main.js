@@ -177,7 +177,7 @@ function setMode(mode) {
   if (isDeliverables && typeof renderDeliverables === "function") { renderDeliverables(); if (typeof workspaceRefresh === "function") workspaceRefresh(); }
   document.getElementById("session-content").style.display = isSession ? "block" : "none";
   document.getElementById("profile-content").style.display = isProfile ? "block" : "none";
-  if (isProfile && typeof profileRender === "function") profileRender();
+  if (isProfile && typeof profileRender === "function") { profileRender(); if (typeof profileOnTabOpen === "function") profileOnTabOpen(); }
 
   document.getElementById("modeGuide").classList.toggle("active", isGuide);
   document.getElementById("modeDeliverables").classList.toggle("active", isDeliverables);

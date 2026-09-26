@@ -161,6 +161,44 @@ function profileSame(a, b) {
   return strip(a) === strip(b);
 }
 
+// ------------------------------------------------------------------------------------------------------------------------ this computer
+
+/**
+ * What the Profile tab says about this computer, from the Revit add-in's GET /capabilities answer (null when the add-in is not reachable: nothing can be known without it).
+ * One row per thing: { key, label, state: "ok" | "missing" | "unknown", text (the add-in's own sentence), affects (what it means for the person) }. Nobody is asked whether they
+ * have Unity or SOLIDWORKS: the add-in looks.
+ */
+function profileMachineRows(caps) {
+  if (!caps || typeof caps !== "object" || Array.isArray(caps)) {
+    return [{ key: "revit", label: "Revit add-in", state: "unknown", text: "Not connected. Open a project in Revit with the Sportify add-in and this page can tell what this computer has. The web app works without it.", affects: "" }];
+  }
+  const sentence = t => (t && typeof t.note === "string" ? t.note.slice(0, 300) : "");
+  const found = t => !!(t && t.found === true);
+  const unity = caps.unity, sw = caps.solidworks, chrome = caps.chrome;
+  return [
+    { key: "revit", label: "Revit add-in", state: "ok", text: "Connected.", affects: "" },
+    {
+      key: "unity", label: "Unity", state: found(unity) ? "ok" : "missing", text: sentence(unity),
+      affects: found(unity) ? "3D videos of the analyses, Ball Trajectory Simulation and Record Isolated Video are available."
+        : "No 3D videos here: the analyses give their charts as a PDF instead, and the buttons that need Unity are hidden in Revit."
+    },
+    {
+      key: "solidworks", label: "SOLIDWORKS", state: found(sw) ? "ok" : "missing", text: sentence(sw),
+      affects: found(sw) ? "Simulate (SOLIDWORKS) can build a dynamic unit as a mechanical assembly." : "Simulate (SOLIDWORKS) is hidden in Revit: the dynamic units are still placed, only not built as an assembly."
+    },
+    {
+      key: "chrome", label: "Chrome", state: found(chrome) ? "ok" : "missing", text: sentence(chrome),
+      affects: found(chrome) ? "The Sportify web app opens in Chrome." : "The Sportify web app opens in your default browser instead."
+    }
+  ];
+}
+
+/** The words of the buttons the Sportify tab in Revit hides at the moment (from the same answer), as short texts; [] when none or unknown. */
+function profileHiddenButtons(caps) {
+  const list = caps && Array.isArray(caps.ribbon_hidden) ? caps.ribbon_hidden : [];
+  return list.map(h => (h && typeof h.text === "string" ? h.text.trim().slice(0, 60) : "")).filter(Boolean).slice(0, 60);
+}
+
 // ------------------------------------------------------------------------------------------------------------------------ the file
 
 /** The text of a profile file (Sportify-PROFILE.json): the profile in an envelope that says what it is, so a session file is not mistaken for it. */
@@ -183,6 +221,6 @@ if (typeof module !== "undefined" && module.exports) {
     PROFILE_SCHEMA, PROFILE_NAME, PROFILE_FILE_KIND, PROFILE_STORAGE_KEY, PROFILE_MODES, PROFILE_VIEWS, PROFILE_ROLES, PROFILE_THEMES,
     PROFILE_PHOTO_MAX_CHARS, PROFILE_PERSON_NAME_MAX, normalizePhoto, normalizePerson,
     profileDefaults, profileModeVisible, profileHiddenModes, profileRailLayout, normalizeQuiz, normalizeProfile, profileStamped, profileIsNewer, profileSame,
-    profileToFileText, profileFromFileText
+    profileToFileText, profileFromFileText, profileMachineRows, profileHiddenButtons
   };
 }
