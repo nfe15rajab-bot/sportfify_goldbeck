@@ -85,6 +85,19 @@ document.getElementById("overviewWorkflow")?.addEventListener("click", e => {
   if (btn) setMode(btn.dataset.goto);
 });
 
+/* The Overview's "What's new" cards: the profile, the quiz, and the two ways of placing (manual and algorithmic, both in Combine). */
+document.getElementById("overviewFeatures")?.addEventListener("click", e => {
+  const card = e.target.closest("[data-feature]");
+  if (!card) return;
+  const feature = card.dataset.feature;
+  if (feature === "profile") setMode("profile");
+  else if (feature === "quiz") { if (typeof quizOpen === "function") quizOpen(undefined); }
+  else if (feature === "manual" || feature === "algo") {
+    setMode("combine");
+    if (typeof algoSetMode === "function") algoSetMode(feature);
+  }
+});
+
 function wireDeliverable(overviewId, realId) {
   document.getElementById(overviewId)?.addEventListener("click", () => document.getElementById(realId)?.click());
 }
@@ -315,6 +328,7 @@ if(typeof initCombineInteractions === "function") initCombineInteractions();
 if(typeof initTrayDragInteractions === "function") initTrayDragInteractions();
 if(typeof updateSiteUI === "function") updateSiteUI();
 if (typeof profileInit === "function") profileInit();      // the PROFILE (profile.js): view, role and theme as the person left them
+if (typeof quizInit === "function") quizInit();            // the start-up quiz (quiz.js): wired now, opened by the welcome screen for a new person
 startRevitPolling();
 // restoreAutosaveIfAny() is no longer called automatically here — the
 // session gate (sessionGate.js, shown on top of whatever setMode("guide")

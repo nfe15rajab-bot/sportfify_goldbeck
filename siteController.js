@@ -151,6 +151,18 @@ document.getElementById("siteNorthDeg").addEventListener("input", e => {
   document.getElementById("site-north-val").textContent = `${siteState.northDeg}°`;
   updateSiteUI();
 });
+/** Sets the roof's orientation (degrees clockwise from the top of the plan to true north) as if the slider had been moved: the state, the slider, its label. The quiz sends it. */
+function siteApplyNorth(deg) {
+  const d = Math.round(((Number(deg) % 360) + 360) % 360);
+  siteState.northSet = true;
+  siteState.northDeg = d;
+  const slider = document.getElementById("siteNorthDeg");
+  if (slider) slider.value = String(d);
+  const label = document.getElementById("site-north-val");
+  if (label) label.textContent = `${d}°`;
+  updateSiteUI();
+}
+
 document.getElementById("siteDate").addEventListener("input", e => { siteState.date = e.target.value; updateSiteUI(); });
 document.getElementById("siteTime").addEventListener("input", e => { siteState.time = e.target.value; updateSiteUI(); });
 

@@ -189,6 +189,66 @@ html[data-role="client"] .planner-only { display: none !important; }
 .profile-machine-state { font-size: 11px; color: var(--text-secondary); }
 .profile-machine-text { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.45; }
 .profile-machine-affects { font-size: 12px; color: var(--text-primary); margin-top: 3px; line-height: 1.45; }
+/* ── The start-up quiz (quiz.js) and "Your next step" on the Overview ── */
+.quiz-overlay { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; background: rgba(8,9,20,0.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.2s ease; }
+.quiz-overlay.quiz-shown { opacity: 1; }
+.quiz-card { width: min(580px, 94vw); max-height: 92vh; overflow-y: auto; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 24px 28px 22px; box-shadow: 0 24px 64px rgba(0,0,0,0.4); }
+.quiz-dots { display: flex; gap: 6px; margin-bottom: 14px; }
+.quiz-dot { height: 4px; flex: 1; border-radius: 2px; background: var(--border-strong); }
+.quiz-dot-done { background: var(--fill-accent); opacity: 0.55; }
+.quiz-dot-now { background: var(--fill-accent); }
+.quiz-progress { font-size: 11px; font-weight: 700; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.05em; }
+.quiz-card h2 { font-size: 19px; font-weight: 700; color: var(--text-primary); margin: 4px 0 0; }
+.quiz-card .hint { font-size: 12.5px; margin-top: 6px; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.quiz-option { display: flex; gap: 12px; align-items: center; text-align: left; padding: 10px 14px; background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; font-family: var(--font-sans); color: var(--text-secondary); transition: border-color 0.15s, background 0.15s; }
+.quiz-option:hover { border-color: var(--border-accent); }
+.quiz-option.quiz-selected { border-color: var(--border-accent); background: var(--bg-accent); }
+.quiz-mark { width: 20px; height: 20px; flex-shrink: 0; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; }
+.quiz-mark-round { border-radius: 50%; }
+.quiz-mark-square { border-radius: 5px; }
+.quiz-mark i { font-size: 13px; opacity: 0; color: var(--on-accent); }
+.quiz-selected .quiz-mark { background: var(--fill-accent); border-color: var(--fill-accent); }
+.quiz-selected .quiz-mark i { opacity: 1; }
+.quiz-option-text { display: flex; flex-direction: column; gap: 2px; }
+.quiz-option-text strong { font-size: 13px; color: var(--text-primary); }
+.quiz-option-text small { font-size: 11.5px; line-height: 1.4; }
+.quiz-card { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+/* the buttons stay in view whatever the height of the window: the options scroll, the navigation does not */
+.quiz-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px -28px -22px; padding: 14px 28px; position: sticky; bottom: -22px; background: var(--surface-2); border-top: 0.5px solid var(--border-strong); }
+@media (max-height: 820px) { .quiz-options { gap: 6px; margin-top: 12px; } .quiz-option { padding: 7px 12px; } .quiz-card { padding-top: 18px; } }
+.quiz-nav .btn-export { width: auto; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; }
+.quiz-nav .btn-export[disabled] { opacity: 0.45; cursor: not-allowed; }
+.quiz-nav .session-gate-link { margin: 0; font-size: 12px; }
+.quiz-details { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--border-strong); }
+.quiz-detail label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.quiz-detail-hint { font-size: 11.5px; font-weight: 400; color: var(--text-secondary); margin-top: 4px; }
+.quiz-detail label .quiz-detail-hint { margin: 0 0 0 6px; }
+.quiz-search-row { display: flex; gap: 8px; }
+.quiz-search-row input { flex: 1; min-width: 0; padding: 8px 10px; font-size: 13px; background: var(--surface-1); color: var(--text-primary); border: 0.5px solid var(--border-strong); border-radius: var(--radius); font-family: var(--font-sans); }
+.quiz-search-row input:focus { outline: none; border-color: var(--border-accent); }
+.quiz-search-row input[type="number"] { flex: 0 0 140px; }
+.quiz-search-row .btn-export { width: auto; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px; }
+.quiz-results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.quiz-result { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 8px 12px; background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; font-family: var(--font-sans); font-size: 12.5px; line-height: 1.4; color: var(--text-primary); }
+.quiz-result:hover, .quiz-result:focus { border-color: var(--border-accent); background: var(--bg-accent); outline: none; }
+.quiz-result i, .quiz-chosen i { color: var(--text-accent); margin-top: 1px; flex-shrink: 0; }
+.quiz-chosen { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; padding: 8px 12px; background: var(--bg-accent); border: 0.5px solid var(--border-accent); border-radius: var(--radius); font-size: 12.5px; color: var(--text-primary); }
+.quiz-chosen span { flex: 1; }
+.quiz-chosen .session-gate-link { margin: 0; flex-shrink: 0; }
+.quiz-summary { margin: 14px 0 6px 18px; font-size: 13.5px; line-height: 1.65; color: var(--text-primary); }
+.quiz-answers { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; max-width: 700px; }
+.quiz-answer-row { display: flex; gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 0.5px solid var(--border-strong); font-size: 12.5px; }
+.quiz-answer-title { flex: 0 0 200px; color: var(--text-secondary); }
+.quiz-answer-text { flex: 1; color: var(--text-primary); }
+.quiz-answer-row .session-gate-link { margin: 0; flex-shrink: 0; }
+.quiz-foot { margin-top: 12px; }
+.next-step { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 12px 16px; background: var(--bg-accent); border: 0.5px solid var(--border-accent); border-radius: calc(var(--radius) * 1.5); }
+.next-step > i { font-size: 22px; color: var(--text-accent); flex-shrink: 0; }
+.next-step-body { flex: 1; min-width: 0; }
+.next-step-title { font-size: 10.5px; font-weight: 700; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.05em; }
+.next-step-text { font-size: 13px; color: var(--text-primary); margin-top: 2px; line-height: 1.45; }
+.next-step .btn-export { width: auto; padding: 8px 14px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; }
 .profile-actions { flex-wrap: wrap; }
 .profile-actions .overview-action-btn { flex: 1 1 calc(50% - 10px); }
 .session-gate-profile { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; }
@@ -514,18 +574,15 @@ html[data-role="client"] .planner-only { display: none !important; }
 .mode-status.available { background: var(--bg-success); color: var(--text-success); border: 0.5px solid var(--border-success); }
 .mode-status.vision { background: var(--violet-tint); color: var(--violet); border: 0.5px solid var(--violet); }
 
-/* Fixed height (not aspect-ratio-driven auto) so the 3 philosophy cards
-   stay visually aligned regardless of each diagram's own viewBox aspect —
-   the SVG's own preserveAspectRatio (default xMidYMid meet) fits the
-   artwork inside without distortion either way. */
-.philosophy-diagram { width: 100%; height: 130px; margin: 8px 0; display: block; }
-.guide-grid.step-grid { align-items: stretch; }
-.guide-grid.step-grid .section { display: flex; flex-direction: column; }
-.philosophy-diagram.grid rect { fill: var(--fill-accent); opacity: 0.75; }
-.philosophy-diagram.fractal .diagram-outline { fill: none; stroke: var(--border-strong); stroke-width: 1.5; }
-.philosophy-diagram.fractal .diagram-path { fill: none; stroke: var(--violet); stroke-width: 2; stroke-dasharray: 4,3; stroke-linecap: round; stroke-linejoin: round; }
-.philosophy-diagram.organic .diagram-blob { fill: var(--bg-success); stroke: var(--text-success); stroke-width: 1.5; }
-.philosophy-diagram.organic .diagram-dot { fill: var(--text-success); opacity: 0.8; }
+/* The Overview's "What's new": four cards (Profile, the quiz, manual and algorithmic placement), each with a button that goes there */
+.feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+.feature-card { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: calc(var(--radius) * 1.5); transition: border-color 0.15s, box-shadow 0.15s; }
+.feature-card:hover { border-color: var(--border-strong); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.feature-head { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.feature-head i { font-size: 22px; color: var(--text-accent); }
+.feature-card .hint { flex: 1; font-size: 12px; line-height: 1.5; margin: 0; }
+.feature-card .btn-export { align-self: flex-start; width: auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; }
+@media (max-width: 720px) { .feature-grid { grid-template-columns: 1fr; } }
 
 /* ── Smarter-rules advisory (Combine's Rules step) ── */
 .smart-rule-advisory { margin-top: 8px; padding: 8px; border-radius: var(--radius); background: var(--violet-tint); border: 0.5px solid var(--violet); font-size: 10.5px; line-height: 1.4; color: var(--text-primary); }

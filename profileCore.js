@@ -8,6 +8,8 @@
  *   theme   "dark", "light", or null (follow the operating system).
  *   quiz    what the start-up quiz learned (goal, analyses wanted, site data at hand, experience), or null until it has been taken. It only ever sets defaults.
  *   person  who this is: a name and a photo (a small JPEG, PNG or WebP as a data URL, made by profile.js from whatever picture the person chose). Both optional.
+ *   extras  what the person added to the Simple view (PROFILE_EXTRAS); landing: the workspace to start in (or null: the Overview); onboarded: the start-up quiz was taken or skipped,
+ *           so it is not asked again.
  *
  * The file the Revit add-in keeps (settings.json, key "profile") holds the same object, so the ribbon and the web app agree. Whatever arrives from a file, from the
  * add-in or from the browser's storage goes through normalizeProfile(): it never throws and always returns something the app can apply.
@@ -53,6 +55,23 @@ const PROFILE_VIEWS = {
   }
 };
 
+/**
+ * What a person can ADD to the Simple view (the start-up quiz picks them from the analyses the person cares about): each brings back the tab(s) of the web app it names and, in the Revit
+ * add-in, its buttons (RibbonVisibility.ExtraButtons, the same keys; tools/ReleaseCheck compares the two lists). Safety and carbon have no tab of their own: their results are in the
+ * Analysis tab, only their Revit buttons come back.
+ */
+const PROFILE_EXTRAS = {
+  structure:    { label: "Structure",                       modes: ["structure"] },
+  conditions:   { label: "Site conditions",                 modes: ["conditions"] },
+  compare:      { label: "Comparing variants",              modes: ["compare"] },
+  postAnalysis: { label: "Post Analysis (moving shading)",  modes: ["postAnalysis"] },
+  safety:       { label: "Safety checks",                   modes: [] },
+  carbon:       { label: "Carbon and materials",            modes: [] }
+};
+
+/** The workspaces a person can start in. */
+const PROFILE_LANDINGS = ["guide", "site", "sport", "combine", "analysis", "deliverables"];
+
 const PROFILE_ROLES = ["planner", "client"];
 const PROFILE_THEMES = ["dark", "light"];
 
@@ -63,19 +82,29 @@ const PROFILE_PHOTO_PATTERN = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]
 
 function profileDefaults() {
   // Advanced is the default until the start-up quiz has said otherwise: nothing a person already knew disappears by itself.
-  return { schema: PROFILE_SCHEMA, name: PROFILE_NAME, updated: null, view: "advanced", role: "planner", theme: null, quiz: null, person: { name: "", photo: null } };
+  return { schema: PROFILE_SCHEMA, name: PROFILE_NAME, updated: null, view: "advanced", role: "planner", theme: null, quiz: null, extras: [], landing: null, onboarded: false, person: { name: "", photo: null } };
 }
 
-/** Is this workspace shown in this view? An unknown view counts as Advanced; an unknown workspace is never hidden (it is not one of ours to judge). */
-function profileModeVisible(view, mode) {
+/**
+ * Is this workspace shown in this view? An unknown view counts as Advanced; an unknown workspace is never hidden (it is not one of ours to judge). The Simple view also shows the
+ * workspaces of the extras the person added (PROFILE_EXTRAS); Advanced shows everything anyway.
+ */
+function profileModeVisible(view, mode, extras) {
   if (!PROFILE_MODES[mode]) return true;
   const v = PROFILE_VIEWS[view] || PROFILE_VIEWS.advanced;
-  return v.modes.includes(mode);
+  if (v.modes.includes(mode)) return true;
+  return view === "simple" && Array.isArray(extras) && extras.some(e => PROFILE_EXTRAS[e] && PROFILE_EXTRAS[e].modes.includes(mode));
 }
 
-/** The workspaces a view hides, in the order of the tabs: what the Profile tab tells the person before they switch. */
-function profileHiddenModes(view) {
-  return Object.keys(PROFILE_MODES).filter(m => !profileModeVisible(view, m));
+/** The workspaces a view (with the person's extras) hides, in the order of the tabs: what the Profile tab tells the person before they switch. */
+function profileHiddenModes(view, extras) {
+  return Object.keys(PROFILE_MODES).filter(m => !profileModeVisible(view, m, extras));
+}
+
+/** The extras, cleaned: only the ones that exist, each once, in the order of PROFILE_EXTRAS. */
+function normalizeExtras(v) {
+  const wanted = Array.isArray(v) ? v : [];
+  return Object.keys(PROFILE_EXTRAS).filter(k => wanted.includes(k));
 }
 
 /**
@@ -139,6 +168,9 @@ function normalizeProfile(raw) {
   if (typeof o.name === "string" && o.name.trim()) p.name = o.name.trim().slice(0, 40);
   if (typeof o.updated === "string" && Number.isFinite(Date.parse(o.updated))) p.updated = new Date(o.updated).toISOString();
   p.quiz = normalizeQuiz(o.quiz);
+  p.extras = normalizeExtras(o.extras);
+  if (PROFILE_LANDINGS.includes(o.landing)) p.landing = o.landing;
+  p.onboarded = o.onboarded === true;
   p.person = normalizePerson(o.person);
   return p;
 }
@@ -219,6 +251,7 @@ function profileFromFileText(text) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     PROFILE_SCHEMA, PROFILE_NAME, PROFILE_FILE_KIND, PROFILE_STORAGE_KEY, PROFILE_MODES, PROFILE_VIEWS, PROFILE_ROLES, PROFILE_THEMES,
+    PROFILE_EXTRAS, PROFILE_LANDINGS, normalizeExtras,
     PROFILE_PHOTO_MAX_CHARS, PROFILE_PERSON_NAME_MAX, normalizePhoto, normalizePerson,
     profileDefaults, profileModeVisible, profileHiddenModes, profileRailLayout, normalizeQuiz, normalizeProfile, profileStamped, profileIsNewer, profileSame,
     profileToFileText, profileFromFileText, profileMachineRows, profileHiddenButtons

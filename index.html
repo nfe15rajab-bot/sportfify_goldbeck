@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="themeInit.js?v=2026-09-26-ux-quiz4"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -13,7 +13,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-26-ux-capabilities" />
+  <link rel="stylesheet" href="style.css?v=2026-09-26-ux-quiz4" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -51,6 +51,11 @@
         <input type="file" id="gate-load-file" accept=".json" style="display:none" />
         <p class="hint" id="sessionGateStatus"></p>
       </div>
+    </div>
+
+    <!-- The start-up quiz (quiz.js): four questions and what they set; opens once for a new person, and from the Profile tab -->
+    <div id="quizOverlay" class="quiz-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
+      <div class="quiz-card" id="quizCard"></div>
     </div>
 
     <div class="mode-toggle">
@@ -618,6 +623,8 @@
               <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Site, Sport, Garden, Combine, Analysis, Compare and Data all live in the rail on the left — here's the order they're meant to be used in.</p>
             </div>
 
+            <div class="next-step" id="overviewNext" style="display:none"></div>
+
               <div class="workflow-row" id="overviewWorkflow">
                 <button class="workflow-step" data-goto="site"><span class="workflow-num">1</span><i class="ti ti-map-pin" aria-hidden="true"></i><span class="workflow-label">Site</span><span class="hint">Roof size, location, sun</span></button>
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
@@ -631,46 +638,36 @@
               </div>
 
               <div class="guide-hero guide-section-spacer">
-                <h2>How it thinks</h2>
-                <p class="hint">Three layout philosophies Sportify can work from — whichever one you build toward, the same rules underneath decide if it's actually usable.</p>
+                <h2>What's new</h2>
+                <p class="hint">Four things that make Sportify yours: who you are and what you see, a few questions that set it up for you, and the two ways of placing a layout on the roof.</p>
               </div>
 
-              <div class="step-grid guide-grid">
-              <div class="section">
-                <label>Grid-based <span class="mode-status available">Available now</span></label>
-                <svg viewBox="0 0 100 74" class="philosophy-diagram grid" aria-hidden="true">
-                  <rect x="4" y="4" width="18" height="18" rx="3"/><rect x="28" y="4" width="18" height="18" rx="3"/><rect x="52" y="4" width="18" height="18" rx="3"/><rect x="76" y="4" width="18" height="18" rx="3"/>
-                  <rect x="4" y="28" width="18" height="18" rx="3"/><rect x="28" y="28" width="18" height="18" rx="3"/><rect x="52" y="28" width="18" height="18" rx="3"/><rect x="76" y="28" width="18" height="18" rx="3"/>
-                  <rect x="4" y="52" width="18" height="18" rx="3"/><rect x="28" y="52" width="18" height="18" rx="3"/><rect x="52" y="52" width="18" height="18" rx="3"/><rect x="76" y="52" width="18" height="18" rx="3"/>
-                </svg>
-                <p class="hint">Define a base module and every piece aligns to it — orderly, predictable, easy to extend. Combine's rule-based auto-arrange already produces a tidy, grid-like default layout today.</p>
+              <div class="feature-grid" id="overviewFeatures">
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-user-circle" aria-hidden="true"></i><span>Profile</span></div>
+                  <p class="hint">Your name and photo, the Simple or Advanced view, your role and the theme — saved on this computer and shared with the Sportify tab in Revit. It also shows which tools this computer has (Unity, SOLIDWORKS, Chrome): what cannot work here is hidden instead of failing.</p>
+                  <button type="button" class="btn-export" data-feature="profile">Open your profile<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-list-check" aria-hidden="true"></i><span>The quiz</span></div>
+                  <p class="hint">Four short questions — what you want to do, which analyses matter, what you already have about the site, how well you know Sportify — set what is shown first and where Sportify opens. It only sets defaults, and you can take it again any time.</p>
+                  <button type="button" class="btn-export" data-feature="quiz">Take the quiz<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-hand-move" aria-hidden="true"></i><span>Manual placement</span></div>
+                  <p class="hint">Drag sports and garden pieces onto the roof yourself, in Combine. The rules — clearance, setback, circulation width, entry points — check every move, and suggested spots show where a piece fits.</p>
+                  <button type="button" class="btn-export" data-feature="manual">Place by hand<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-wand" aria-hidden="true"></i><span>Algorithmic placement</span></div>
+                  <p class="hint">Say which courts you want and how many, and the packing engine (a port of the Rhino Rooftop Sports Court Planner) places them by rules: a garden band along the edge, courts against the setback first, a clear path to every lift and ramp, the leftover as garden pockets. Apply it to Combine, then change anything by hand.</p>
+                  <button type="button" class="btn-export" data-feature="algo">Try algorithmic placement<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
               </div>
-              <div class="section">
-                <label>Fractal <span class="mode-status vision">Vision</span></label>
-                <svg viewBox="0 0 100 74" class="philosophy-diagram fractal" aria-hidden="true">
-                  <rect x="3" y="3" width="94" height="68" rx="2" class="diagram-outline"/>
-                  <line x1="50" y1="3" x2="50" y2="71" class="diagram-outline"/>
-                  <line x1="3" y1="37" x2="50" y2="37" class="diagram-outline"/>
-                  <line x1="75" y1="37" x2="75" y2="71" class="diagram-outline"/>
-                  <path d="M12,20 L40,20 L40,55 L62,55 L62,15 L90,15" class="diagram-path"/>
-                </svg>
-                <p class="hint">Circulation branches recursively, like a maze, subdividing the roof into progressively smaller zones instead of one central corridor. The circulation engine's grid + pathfinding core is already built toward this.</p>
-              </div>
-              <div class="section">
-                <label>Organic <span class="mode-status vision">Vision</span></label>
-                <svg viewBox="0 0 100 74" class="philosophy-diagram organic" aria-hidden="true">
-                  <path d="M18,20 C8,30 8,50 22,60 C36,70 60,70 78,55 C94,42 90,18 72,10 C55,3 30,8 18,20 Z" class="diagram-blob"/>
-                  <circle cx="32" cy="34" r="6" class="diagram-dot"/>
-                  <circle cx="55" cy="44" r="5" class="diagram-dot"/>
-                  <circle cx="48" cy="24" r="4" class="diagram-dot"/>
-                </svg>
-                <p class="hint">Draw the boundary by hand — zones adapt to a freeform shape instead of a rectangle, the way a real garden follows the land rather than a grid. Combine already renders an arbitrary polygon boundary when one is imported from Revit; hand-drawing one yourself is the natural next step.</p>
-              </div>
-            </div>
 
             <div class="guide-hero guide-section-spacer">
               <h2>The rules every layout follows</h2>
-              <p class="hint">Whichever philosophy a layout comes from, four rules decide whether it's actually usable — the same ones Combine's auto-arrange and suggested spots already respect (see them live, with the same wording, in Combine's Rules step).</p>
+              <p class="hint">Whether a layout is placed by hand or by the algorithm, four rules decide whether it's actually usable — the same ones Combine's auto-arrange and suggested spots already respect (see them live, with the same wording, in Combine's Rules step).</p>
             </div>
 
             <div class="rule-explain-grid guide-grid">
@@ -800,6 +797,9 @@
                 </div>
               </div>
             </div>
+
+            <h2 class="profile-heading">Your answers</h2>
+            <div id="profile-quiz"></div>
 
             <h2 class="profile-heading">This computer</h2>
             <p class="profile-note">Sportify looks for the tools it can use, so nobody is asked whether they have them. What is missing is hidden instead of failing when it is clicked.</p>
@@ -1088,60 +1088,62 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="apiSession.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="data.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="carbon.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="activitiesData.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="vegetation.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="furnitureElevation.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="furniture.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="canvasFlyouts.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="zones.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="roofFinish.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="assumptions.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="roofFeatures.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="structure.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="assemblies.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="gardenData.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="prebuiltSessions.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="rules.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="sunPosition.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="balls.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="field.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="basketballCourt.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="volleyballCourt.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="activityField.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="padelCourt.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="gardenField.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="combineField.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="siteField.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="buildupEditor.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="dataTab.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="localSession.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="revitBridge.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="sportController.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="gardenController.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="windZones.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="siteController.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="combineController.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="analysisController.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="analysisResults.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="siteTabs.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="roofProgram.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="workspaceBridge.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="algoPlacementCore.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="algoPlacementUI.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="revitLayers.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="compareController.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="designPanel.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="inspector.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="combineHistory.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="profileCore.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="profile.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="sessionGate.js?v=2026-09-26-ux-capabilities"></script>
-  <script src="main.js?v=2026-09-26-ux-capabilities"></script>
+  <script src="escape.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="apiSession.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="data.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="carbon.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="activitiesData.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="vegetation.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="furnitureElevation.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="furniture.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="canvasFlyouts.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="zones.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="roofFinish.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="assumptions.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="roofFeatures.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="structure.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="assemblies.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="gardenData.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="prebuiltSessions.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="rules.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="sunPosition.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="balls.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="field.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="basketballCourt.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="volleyballCourt.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="activityField.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="padelCourt.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="gardenField.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="combineField.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="siteField.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="buildupEditor.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="dataTab.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="localSession.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="revitBridge.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="sportController.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="gardenController.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="windZones.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="siteController.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="combineController.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="analysisController.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="analysisResults.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="siteTabs.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="roofProgram.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="workspaceBridge.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="algoPlacementCore.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="algoPlacementUI.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="revitLayers.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="compareController.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="designPanel.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="inspector.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="combineHistory.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="profileCore.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="profile.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="quizCore.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="quiz.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="sessionGate.js?v=2026-09-26-ux-quiz4"></script>
+  <script src="main.js?v=2026-09-26-ux-quiz4"></script>
 </body>
 </html>

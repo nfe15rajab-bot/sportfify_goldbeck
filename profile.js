@@ -53,25 +53,31 @@ function profileTidy(container, separatorSelector) {
 }
 
 /** Is this workspace part of the view in force? (main.js asks before it opens one.) */
-function profileModeAllowed(mode) { return profileModeVisible(profileState.profile.view, mode); }
+function profileModeAllowed(mode) { return profileModeVisible(profileState.profile.view, mode, profileState.profile.extras); }
 
-function profileApplyView(view) {
+/** Where Sportify opens: the workspace the person's answers chose (the quiz), when the view shows it; else the Overview. main.js asks after the welcome screen. */
+function profileLandingMode() {
+  const p = profileState.profile;
+  return p.landing && profileModeVisible(p.view, p.landing, p.extras) ? p.landing : "guide";
+}
+
+function profileApplyView(view, extras) {
   Object.keys(PROFILE_MODES).forEach(mode => {
     const el = document.getElementById(PROFILE_MODES[mode].button);
-    if (el) el.classList.toggle("view-hidden", !profileModeVisible(view, mode));
+    if (el) el.classList.toggle("view-hidden", !profileModeVisible(view, mode, extras));
   });
   const rail = document.getElementById("modeRail");
   if (rail) profileTidy(rail, ".activity-bar-divider");
   const row = document.getElementById("overviewWorkflow");
   if (row) {
-    row.querySelectorAll(".workflow-step[data-goto]").forEach(step => step.classList.toggle("view-hidden", !profileModeVisible(view, step.dataset.goto)));
+    row.querySelectorAll(".workflow-step[data-goto]").forEach(step => step.classList.toggle("view-hidden", !profileModeVisible(view, step.dataset.goto, extras)));
     let n = 0;
     row.querySelectorAll(".workflow-step:not(.view-hidden) .workflow-num").forEach(num => { num.textContent = String(++n); });
     profileTidy(row, ".workflow-arrow");
   }
   document.documentElement.dataset.view = view;
   // a workspace the new view hides must not stay open
-  if (typeof activeMode !== "undefined" && !profileModeVisible(view, activeMode) && typeof setMode === "function") setMode("guide");
+  if (typeof activeMode !== "undefined" && !profileModeVisible(view, activeMode, extras) && typeof setMode === "function") setMode("guide");
 }
 
 /** Puts a profile in force: the view, the role, the theme, and what the Profile tab and the welcome screen say. Does not save (see profileChange). */
@@ -81,7 +87,7 @@ function profileApply(p, source) {
   if (source) profileState.source = source;
   profileApplying = true;
   try {
-    profileApplyView(prof.view);
+    profileApplyView(prof.view, prof.extras);
     if (document.documentElement.dataset.role !== prof.role && typeof setRole === "function") setRole(prof.role, true);
     if (prof.theme && document.documentElement.dataset.mode !== prof.theme && typeof setTheme === "function") setTheme(prof.theme);
   } finally {
@@ -282,7 +288,7 @@ function profileImportFile(file) {
 
 function profileReset() {
   const d = profileDefaults();
-  profileChange({ view: d.view, role: d.role, quiz: null }, "Back to the defaults: Advanced view, planner. Your name, photo and the theme stay as they are.");
+  profileChange({ view: d.view, role: d.role, quiz: null, extras: [], landing: null }, "Back to the defaults: Advanced view, planner, no quiz answers. Your name, photo and the theme stay as they are.");
 }
 
 // ------------------------------------------------------------------------------------------------ what the tab and the welcome screen say
@@ -301,10 +307,11 @@ function profileRenderChoices() {
   }
   const noteEl = document.getElementById("profile-view-note");
   if (noteEl) {
-    const hidden = profileHiddenModes(p.view).map(m => PROFILE_MODES[m].label);
-    noteEl.textContent = hidden.length
+    const hidden = profileHiddenModes(p.view, p.extras).map(m => PROFILE_MODES[m].label);
+    const added = p.view === "simple" && p.extras.length ? "Added to it because of your answers: " + p.extras.map(k => PROFILE_EXTRAS[k].label).join(", ") + ". " : "";
+    noteEl.textContent = added + (hidden.length
       ? "Hidden in the " + PROFILE_VIEWS[p.view].title + " view: " + hidden.join(", ") + ". They are one click away in Advanced; nothing is deleted."
-      : "Nothing is hidden: every tab is shown.";
+      : "Nothing is hidden: every tab is shown.");
   }
   document.querySelectorAll("[data-profile-role]").forEach(b => b.classList.toggle("active", b.dataset.profileRole === p.role));
   document.querySelectorAll("[data-profile-theme]").forEach(b => b.classList.toggle("active", b.dataset.profileTheme === (p.theme || document.documentElement.dataset.mode)));
@@ -391,6 +398,8 @@ function profileRenderMachine() {
 function profileRender() {
   profileRenderPerson();
   profileRenderMachine();
+  if (typeof quizRenderProfileSection === "function") quizRenderProfileSection();      // quiz.js: the answers and the buttons to take the quiz again
+  if (typeof quizRenderNextStep === "function") quizRenderNextStep();                  // quiz.js: "Your next step" on the Overview
   profileRenderChoices();
   profileRenderStatus();
   profileRenderGateLine();

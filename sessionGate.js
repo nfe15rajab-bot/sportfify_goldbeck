@@ -43,7 +43,8 @@ if (gatePieceCount > 0) {
 function leaveSessionGate() {
   sessionGateEl.classList.add("session-gate-hidden");
   setTimeout(() => { sessionGateEl.style.display = "none"; }, 250);
-  setMode("guide"); // Overview — same landing mode as a fresh page load
+  // Where the person's answers say to start (the quiz: Site, Combine, Analysis or Deliverables), else the Overview — same as a fresh page load
+  setMode(typeof profileLandingMode === "function" ? profileLandingMode() : "guide");
 }
 
 /**
@@ -94,7 +95,11 @@ gateFileInput.addEventListener("change", e => {
   e.target.value = "";
 });
 
-gateNewBtn.addEventListener("click", leaveSessionGate);
+gateNewBtn.addEventListener("click", () => {
+  leaveSessionGate();
+  // a person who starts a new session and has never met the quiz is offered it now (quiz.js decides: never twice, never for someone who has set their profile by hand)
+  if (typeof quizMaybeOpen === "function") setTimeout(quizMaybeOpen, 300);
+});
 
 /**
  * ── Goldbeck IFC roof prebuilt sessions ──
