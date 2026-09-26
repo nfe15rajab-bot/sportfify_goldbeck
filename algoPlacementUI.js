@@ -17,15 +17,18 @@ const ALGO_STORAGE_KEY = "sportify-algo-placement";
 
 /** How each court of the packing tool maps onto the Sportify catalogue (so the export, and Revit, know what it is). */
 const ALGO_CATALOGUE = {
-  "Multi Sport Court": { kind: "field", sport: "polyvalent", variant: "mini" },
-  "Basketball Court": { kind: "field", sport: "basketball", variant: "mini" },
-  "Badminton": { kind: "field", sport: "badminton", variant: "mini" },
-  "Handball": { kind: "field", sport: "handball", variant: "mini" },
-  "Volleyball": { kind: "field", sport: "volleyball", variant: "mini" },
+  "Multi Sport Court": { kind: "field", sport: "polyvalent" },
+  "Basketball Court": { kind: "field", sport: "basketball" },
+  "Badminton": { kind: "field", sport: "badminton" },
+  "Handball": { kind: "field", sport: "handball" },
+  "Volleyball": { kind: "field", sport: "volleyball" },
+  "Football": { kind: "field", sport: "football" },
+  "Badminton Outdoor": { kind: "activity", id: "badminton_outdoor" },
   "Yoga": { kind: "activity", id: "yoga_deck" },
   "Bocce Court": { kind: "activity", id: "urban_bocce" },
   "Calisthenics": { kind: "activity", id: "calisthenics" },
   "Ping Pong": { kind: "activity", id: "ping_pong" },
+  "Ping Pong Outdoor": { kind: "activity", id: "ping_pong" },     // after "Ping Pong": the manual board's zone lookup (combineField.js) takes the last, outdoor one
   "Mini Golf": { kind: "activity", id: "minigolf_lane" },
   "Sandpit": { kind: "activity", id: "sand_pit" },
   "3x3 Streetbasketball": { kind: "activity", id: "streetbasketball_3x3" },
@@ -75,15 +78,18 @@ const ALGO_MIN_PATH_M = 2.0;
 /** With zoning the primary paths (outside the zones, between them) are 2.0 to 2.5 m; inside a zone 1.5 to 1.8 m; around lifts, stairs and ramps 2.5 m. */
 const ALGO_PRIMARY_MAX_M = 2.5;
 
-/** What the list offers, under the headings a person reads. The 20 x 12 "Multi Sport Court" and Rest / Hydration Area are in no list (they stay in the engine, whose Rhino-parity and zoning tests use their names). */
+/**
+ * What the list offers, under the headings a person reads: every sport the Sport tab offers (keep the two in step). "Multi Sport Court" is the Sport tab's
+ * Polyvalent court; the reference sheet's 22 x 12 Multipurpose area duplicated it and is in no list any more, nor is Rest / Hydration Area (both stay in the
+ * engine, whose Rhino-parity and zoning tests use their names).
+ */
 const ALGO_LISTS = [
-  { heading: "Outdoor sports", names: ["3x3 Streetbasketball", "Basketball Court", "Handball", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Multipurpose Sport Area", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
-  { heading: "Indoor sports", names: ["Ping Pong", "Bouldering Wall", "Badminton"] },
+  { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] }
 ];
 /** Which headings each roof type shows. Garden Core keeps only the garden activities; Mixed and a roof with no type yet show everything. */
-const ALGO_ROOF_HEADINGS = { sports: ["Outdoor sports", "Indoor sports", "Indoor services"], garden: ["Garden activities"] };
+const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services"], garden: ["Garden activities"] };
 
 /** The lists the current roof type offers: [{ heading, names }]. */
 function algoListsForRoof() {
@@ -135,6 +141,14 @@ const algoState = {
   algoState.good = Object.assign({}, algoState.qty);
 })();
 
+// A size tier chosen in the Sport tab: the list shows it and the plan uses its size at once (the preview re-checks when this mode is open, or when it opens next)
+document.addEventListener("sportify:tier-changed", () => {
+  if (!algoAdoptSpecifiedSizes() || !algoState.built) { if (algoState.built) algoApplyRoofType(); return; }
+  algoState.plan = null; algoState.planKey = ""; algoState.fit = null; algoState.fitKey = ""; algoState.avail = {};
+  algoBuildPanel();
+  if (algoState.mode === "algo") algoSchedulePreview(0);
+});
+
 function algoSave() {
   try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings })); } catch (e) { /* not kept */ }
 }
@@ -146,7 +160,18 @@ const algoRgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
 /** The specifying module's state as the Sport panel has it now, with the size variant the packing tool uses; null for a sport that is not specified (or its module is not loaded). */
 function algoSpecifiedState(name) {
   const spec = ALGO_SPECIFIED[name];
-  return spec && spec.ready() ? Object.assign({}, spec.state(), { variant: ALGO_CATALOGUE[name].variant }) : null;
+  return spec && spec.ready() ? Object.assign({}, spec.state(), { variant: algoTierOf(name) || "mini" }) : null;
+}
+
+/** The size tier chosen in the Sport tab for an item of this list (activitiesData.js getSportTier); null for an item that has one size. */
+function algoTierKey(name) {
+  const cat = ALGO_CATALOGUE[name];
+  if (!cat) return null;
+  return cat.kind === "field" ? cat.sport : "act:" + cat.id;
+}
+function algoTierOf(name) {
+  const key = algoTierKey(name);
+  return key && typeof getSportTier === "function" ? getSportTier(key) : null;
 }
 
 /**
@@ -156,6 +181,20 @@ function algoSpecifiedState(name) {
  */
 function algoAdoptSpecifiedSizes() {
   let changed = false;
+  // every item sized in tiers takes the playing area of the tier chosen in the Sport tab (the run-off is not added yet); the specified sports below then
+  // replace theirs with what their own module works out for that tier
+  // (an activity with one size takes the Sport tab's footprint too, so the two lists never disagree - e.g. pickleball's court with its run-off)
+  for (const [name, cat] of Object.entries(ALGO_CATALOGUE)) {
+    const sp = AlgoPlacement.SPORTS.find(s => s.name === name), tier = algoTierOf(name);
+    if (!sp || ALGO_SPECIFIED[name]) continue;
+    const act = cat.kind === "activity" && typeof ACTIVITIES !== "undefined" ? ACTIVITIES[cat.id] : null;
+    if (!tier && !act) continue;
+    const d = cat.kind === "field" ? (typeof FIELDS !== "undefined" && FIELDS[cat.sport] && FIELDS[cat.sport][tier])
+                                   : act && (tier ? act.variants && act.variants[tier] : { l: act.length, w: act.width });
+    if (!d) continue;
+    const long = algoRound(Math.max(d.l, d.w)), short = algoRound(Math.min(d.l, d.w));
+    if (sp.long !== long || sp.short !== short) { sp.long = long; sp.short = short; changed = true; }
+  }
   for (const name of Object.keys(ALGO_SPECIFIED)) {
     const st = algoSpecifiedState(name), sp = AlgoPlacement.SPORTS.find(s => s.name === name);
     if (!st || !sp) continue;
@@ -317,7 +356,10 @@ function algoSetMode(mode) {
 /** The reference-sheet figures under a court's name: footprint, area, active headcount and dead load Gk. The four courts that are not in the sheet say so instead of showing a made-up number. */
 function algoSportMeta(sp) {
   const fmt = n => String(Math.round(n * 10) / 10);
-  const parts = [`<span title="Footprint">${fmt(sp.long)} × ${fmt(sp.short)} m</span>`, `<span title="Area">${fmt(sp.long * sp.short)} m²</span>`];
+  const tier = algoTierOf(sp.name);
+  const parts = [];
+  if (tier) parts.push(`<span class="algo-tier" title="Size variant, chosen in the Sport tab">${algoEsc(sportTierLabel(tier))}</span>`);
+  parts.push(`<span title="Footprint">${fmt(sp.long)} × ${fmt(sp.short)} m</span>`, `<span title="Area">${fmt(sp.long * sp.short)} m²</span>`);
   if (sp.headcount == null && !sp.headcountNote && sp.deadLoad == null) {
     parts.push(`<span class="algo-sport-none" title="Headcount and dead load come from the reference sheet, which does not list this court">headcount and dead load: not in the reference sheet</span>`);
   } else {
@@ -348,7 +390,7 @@ function algoFilterSports(text) {
 /** The path rule in words: the zoning rules once the roof has a type, the plain 2 m rule before. */
 function algoRuleHintHtml() {
   if (!algoZoningOn()) return `<strong>The rule: every court has a clear path of at least ${ALGO_MIN_PATH_M.toFixed(1)} m all around it, big courts included, so no two courts ever touch.</strong> Each entry point opens a ${ALGO_MIN_PATH_M.toFixed(1)} m or wider way in across the garden band, and the main pathway never narrows below ${ALGO_MIN_PATH_M.toFixed(1)} m. A side that sits on the setback line borders the garden band instead of a path.`;
-  return `<strong>Zones:</strong> items of one zone (outdoor, indoor, garden) are placed close together, identical ones side by side and lined up. <strong>Paths, the widest that fits:</strong> 1.8 then 1.5 m inside a zone; 2.5 then 2.0 m for the primary paths outside the zones and between them (the two fields above), starting from the entry points. <strong>Indoor items</strong> ignore the setback and may stand in the garden band; the indoor zone grows from the Locker corner. Outdoor and garden items keep to the setback line.`;
+  return `<strong>Zones:</strong> items of one zone (outdoor, indoor, garden) are placed close together, identical ones side by side and lined up. <strong>Paths, the widest that fits:</strong> 1.8 then 1.5 m inside a zone; 2.5 then 2.0 m for the primary paths outside the zones and between them (the two fields above), starting from the entry points. <strong>Indoor items</strong> ignore the setback and may stand in the garden band; the indoor zone grows from the Locker corner. Outdoor and garden items keep to the setback line. <strong>Ping Pong:</strong> two tables always stand together, side by side along their long edges, with no path between them.`;
 }
 
 /** The list of items for the current roof type, grouped under the headings of ALGO_LISTS. */
@@ -435,6 +477,7 @@ function algoBuildPanel() {
           <button class="btn-export" data-act="back"><i class="ti ti-hand-move" aria-hidden="true"></i>Back to manual</button>
         </div>
         <label class="algo-check"><input type="checkbox" id="algo-garden" ${s.gardenZones ? "checked" : ""}> Draw the garden (band and pockets) as green roof zones</label>
+        <label class="algo-check"><input type="checkbox" id="algo-markings" ${s.courtMarkings !== false ? "checked" : ""}> Draw the courts as in the Sport tab (lines, nets, run-off)</label>
       </div>
     </div>`;
   algoState.built = true;
@@ -479,6 +522,7 @@ function algoBindPanel(panel) {
     else if (t.name === "algo-opt") algoState.settings.leftoverPath = t.value === "1";
     else if (t.id === "algo-keepclear") algoState.settings.keepClear = t.checked;
     else if (t.id === "algo-garden") { algoState.settings.gardenZones = t.checked; algoSave(); return; }
+    else if (t.id === "algo-markings") { algoState.settings.courtMarkings = t.checked; algoSave(); algoDrawPreview(); return; }
     else return;
     algoChanged();
   });
@@ -523,6 +567,7 @@ async function algoPreview(msg) {
   if (algoState.mode !== "algo") return;
   if (algoAdoptSpecifiedSizes() && algoState.built) { algoState.plan = null; algoState.planKey = ""; algoState.fit = null; algoState.fitKey = ""; algoBuildPanel(); }   // the Sport panel changed a court's specification
   const token = ++algoState.token;
+  const prevKey = algoState.planKey;                                          // the inputs of the layout on screen, which the dots were checked against
   algoState.msg = msg || "";
   const ready = (combineState.entryPoints || []).length > 0;
   if (!ready) {
@@ -566,6 +611,14 @@ async function algoPreview(msg) {
   }
   if (token !== algoState.token) return;
   algoState.busy = false;
+  // A green dot is a promise (user, 2026-09-26: "whatever is in green should be able to go in"). The dot's check found a complete, checked layout for exactly
+  // this selection plus one of the item just added; the search here is the same one but with its own time budget, so it can miss a layout that one found.
+  // Then that proven layout is used.
+  if (plan.unplaced.length && added.length === 1) {
+    const n = added[0], av = algoState.avail && algoState.avail[n];
+    const oneMore = AlgoPlacement.SPORTS.every(s => (qty[s.name] || 0) === (good[s.name] || 0) + (s.name === n ? 1 : 0));
+    if (oneMore && av && av.ok && av.plan && av.key === prevKey && !av.plan.unplaced.length && !av.plan.issues.length) plan = av.plan;
+  }
   if (plan.unplaced.length) {
     const counts = {};
     plan.courts.forEach(c => { counts[c.name] = (counts[c.name] || 0) + 1; });
@@ -724,17 +777,18 @@ async function algoProbeAvailability() {
     if (!visible.has(sp.name) || (algoState.qty[sp.name] || 0) > 0 || (fit && fit.sports[sp.name])) continue;
     const cached = algoState.avail[sp.name];
     if (cached && cached.key === key) continue;
-    let ok = false, why = "";
+    let ok = false, why = "", found = null;
     if (total + sp.long * sp.short > AlgoPlacement.BUILT_LIMIT_PCT / 100 * site.usableArea) why = "the courts would cover more than " + AlgoPlacement.BUILT_LIMIT_PCT + "% of the sports area";
     else {
       try {
         const plan = await AlgoPlacement.planLayout(site, base.concat([{ name: sp.name, w: sp.long, h: sp.short }]), settings);
         ok = !plan.unplaced.length && !plan.issues.length;
+        if (ok) found = plan;                // green is a promise: the layout that proves it is kept, and the preview falls back to it (algoPreview)
         if (!ok) why = plan.unplaced.length ? (base.length ? "no room left beside the items already chosen" : algoEntryWords(plan.unplaced[0].reason)) : algoEntryWords(plan.issues[0]);
       } catch (e) { why = "could not be checked"; }
     }
     if (tok !== algoState.probeToken || algoInputKey() !== key) { algoState.probing = false; return; }        // the selection changed meanwhile: a newer check takes over
-    algoState.avail[sp.name] = { key, ok, why };
+    algoState.avail[sp.name] = { key, ok, why, plan: found };
     algoRefreshDots();
     await new Promise(r => setTimeout(r, 0));                                                                 // let the page breathe between items
   }
@@ -860,6 +914,65 @@ function algoRefreshSiteNote() {
   note.innerHTML = `${algoEsc(size)} · ${program ? algoEsc(program.label) : '<button type="button" class="btn-link" data-roof-type-open>roof type not set</button>'}`;
 }
 
+/**
+ * The roof's own dimensions, as on an architect's plan: every edge of the footprint gets a dimension line set `off` outside it, extension lines back to the
+ * edge, a 45° tick at each end, and its length in metres written along the line (turned with the edge, never upside down).
+ */
+function algoRoofDimensions(foot, off, fs, color) {
+  const R = algoRound, n = foot.length;
+  let area2 = 0;
+  for (let i = 0; i < n; i++) { const a = foot[i], c = foot[(i + 1) % n]; area2 += a[0] * c[1] - c[0] * a[1]; }
+  const sgn = area2 > 0 ? 1 : -1;                                   // which side of each edge is outside, from the outline's winding
+  const tick = fs * 0.32, gap = Math.min(0.3, off * 0.2), tf = fs * 0.62;
+  let out = `<g class="algo-dims" pointer-events="none" stroke="${color}" stroke-width="0.07" fill="none">`;
+  let text = "";
+  for (let i = 0; i < n; i++) {
+    const a = foot[i], c = foot[(i + 1) % n];
+    const dx = c[0] - a[0], dy = c[1] - a[1], len = Math.hypot(dx, dy);
+    if (len < 0.05) continue;
+    const tx = dx / len, ty = dy / len, nx = sgn * ty, ny = -sgn * tx;   // along the edge, and the outward normal
+    const p = (q, d) => [q[0] + nx * d, q[1] + ny * d];
+    const A = p(a, off), C = p(c, off), e0 = p(a, gap), e1 = p(a, off + tick), f0 = p(c, gap), f1 = p(c, off + tick);
+    const tk = q => `<line x1="${R(q[0] - (tx + nx) * tick * 0.7)}" y1="${R(q[1] - (ty + ny) * tick * 0.7)}" x2="${R(q[0] + (tx + nx) * tick * 0.7)}" y2="${R(q[1] + (ty + ny) * tick * 0.7)}" stroke-width="0.13"/>`;
+    out += `<line x1="${R(e0[0])}" y1="${R(e0[1])}" x2="${R(e1[0])}" y2="${R(e1[1])}"/><line x1="${R(f0[0])}" y1="${R(f0[1])}" x2="${R(f1[0])}" y2="${R(f1[1])}"/>`
+      + `<line x1="${R(A[0] - tx * tick)}" y1="${R(A[1] - ty * tick)}" x2="${R(C[0] + tx * tick)}" y2="${R(C[1] + ty * tick)}"/>` + tk(A) + tk(C);
+    let ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (ang > 90) ang -= 180; else if (ang <= -90) ang += 180;           // read left to right, or bottom to top
+    const m = p([(a[0] + c[0]) / 2, (a[1] + c[1]) / 2], off + tf * 0.75);
+    text += `<text x="${R(m[0])}" y="${R(m[1])}" transform="rotate(${R(ang)} ${R(m[0])} ${R(m[1])})" text-anchor="middle" dominant-baseline="middle" font-size="${R(tf)}" font-weight="600" fill="${color}">${len.toFixed(2)}</text>`;
+  }
+  return out + `</g><g pointer-events="none">${text}</g>`;
+}
+
+/**
+ * A placed court drawn as the Sport tab draws it (lines, nets, keys, run-off band) inside its rectangle on the plan, turned with it; "" for an item the
+ * Sport tab has no geometry for. Drawing only - the rectangle is exactly the one the plan placed. The Sport tab's drawers work in pixels, so the court is
+ * drawn in a local frame of K px per metre and scaled back to metres.
+ */
+function algoCourtMarkings(c, sp) {
+  const K = 20, r = c.rect, w = r[2] - r[0], h = r[3] - r[1];
+  const turned = h > w + 1e-6;                                  // the court's long side runs down the plan
+  const L = (turned ? h : w) * K, S = (turned ? w : h) * K;     // the local frame: long side along x
+  const cat = ALGO_CATALOGUE[c.name];
+  let inner = "";
+  try {
+    if (c.name === "Basketball Court" && typeof basketballCourtSvg === "function") inner = basketballCourtSvg(0, 0, L, S, algoSpecifiedState(c.name) || basketballState, "full", false);
+    else if (c.name === "Volleyball" && typeof volleyballCourtSvg === "function") inner = volleyballCourtSvg(0, 0, L, S, algoSpecifiedState(c.name) || volleyballState, "full", false);
+    else if (c.name === "Padel Tennis Court" && typeof padelCourtSvg === "function" && Math.abs(L / S - 2) < 0.05) inner = padelCourtSvg(0, 0, L, S, padelState, "full", false);
+    else if (cat && cat.kind === "field" && typeof getFieldLines === "function")
+      inner = `<rect x="0" y="0" width="${L}" height="${S}" fill="#ffcc9e"/>${getFieldLines(cat.sport, 0, 0, L, S, false)}`;
+    else if (cat && cat.kind === "activity" && typeof ACTIVITIES !== "undefined" && ACTIVITIES[cat.id] && ACTIVITIES[cat.id].play && typeof activityCourtSvg === "function") {
+      const a = ACTIVITIES[cat.id];
+      inner = `<rect x="0" y="0" width="${L}" height="${S}" fill="#fbfaf7"/>` + activityCourtSvg(Object.assign({}, a, { length: L / K, width: S / K }), 0, 0, L, S, false).svg;
+    }
+  } catch (e) { inner = ""; }
+  if (!inner) return "";
+  const R = algoRound;
+  const tf = turned ? `translate(${R(r[2])} ${R(r[1])}) rotate(90) scale(${1 / K})` : `translate(${R(r[0])} ${R(r[1])}) scale(${1 / K})`;
+  const clip = `algoclip_${Math.random().toString(36).slice(2, 8)}`;
+  return `<defs><clipPath id="${clip}"><rect x="0" y="0" width="${L}" height="${S}"/></clipPath></defs><g transform="${tf}"><g clip-path="url(#${clip})">${inner}</g></g>`;
+}
+
 /** The plan drawn as SVG in metres, in the roof's own orientation (the Rhino form's preview). */
 function algoDrawPreview() {
   const host = document.getElementById("algo-preview");
@@ -869,9 +982,12 @@ function algoDrawPreview() {
     host.innerHTML = `<div class="algo-preview-empty">${algoEsc(algoState.status || "Place an entry point on the roof edge in Manual placement to see the live preview.")}</div>`;
     return;
   }
-  const b = site.bbox, pad = Math.max(1.2, (b.x1 - b.x0) * 0.025);
-  const vx = b.x0 - pad, vy = b.y0 - pad * 1.6, vw = b.x1 - b.x0 + 2 * pad, vh = b.y1 - b.y0 + pad * 3.2;
-  const fs = Math.max(0.7, Math.min(2.2, Math.min(vw, vh) / 22));
+  const b = site.bbox;
+  const fs = Math.max(0.7, Math.min(2.2, Math.min(b.x1 - b.x0 + 4, b.y1 - b.y0 + 6) / 22));
+  // room round the roof for its dimension lines (every edge, outside the roof), then the indoor-zone tag above and the scale bar below
+  const dimOff = fs * 1.5, dimPad = dimOff + fs * 1.1;
+  const pad = dimPad + 0.4, tagH = fs * 0.95;
+  const vx = b.x0 - pad, vy = b.y0 - pad - tagH - 0.4, vw = b.x1 - b.x0 + 2 * pad, vh = b.y1 - b.y0 + 2 * pad + tagH + 0.4 + fs * 1.6;
   const R = algoRound;
   const rect = (r, fill, extra) => `<rect x="${R(r[0])}" y="${R(r[1])}" width="${R(r[2] - r[0])}" height="${R(r[3] - r[1])}" fill="${fill}" ${extra || ""}/>`;
   const C = AlgoPlacement;
@@ -911,7 +1027,8 @@ function algoDrawPreview() {
     } else {
       g += `<g pointer-events="none"><rect x="${R(z[0])}" y="${R(z[1])}" width="${R(z[2] - z[0])}" height="${R(z[3] - z[1])}" fill="none" stroke="${ZONE}" stroke-width="0.22" stroke-dasharray="0.9 0.6"/></g>`;
     }
-    const lw = fs * 0.62 * 6.8, lh = fs * 0.95, ly0 = z[1] - lh - 0.35;                                           // the zone's name in a small tag above it
+    // the zone's name in a small tag above it - above the roof's dimension line when the zone reaches the roof's top edge
+    const lw = fs * 0.62 * 6.8, lh = tagH, ly0 = z[1] - b.y0 < dimPad + lh ? b.y0 - dimPad - lh - 0.3 : z[1] - lh - 0.35;
     g += `<g pointer-events="none"><rect x="${R(z[0])}" y="${R(ly0)}" width="${R(lw)}" height="${R(lh)}" rx="${R(lh / 2)}" fill="${ZONE}"/><text x="${R(z[0] + lw / 2)}" y="${R(ly0 + lh * 0.72)}" text-anchor="middle" font-size="${R(fs * 0.62)}" font-weight="700" fill="#fff">Indoor zone</text></g>`;
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
@@ -931,6 +1048,22 @@ function algoDrawPreview() {
                 : `<line x1="${R(r[0] + inset)}" y1="${R(cy)}" x2="${R(r[2] - inset)}" y2="${R(cy)}" stroke="#fff" stroke-opacity="0.55" stroke-width="0.12"/>`) : "";
     const dims = !small && h > tf * 3.4 && w > tf * 5.5 ? `<text x="${R(cx)}" y="${R(cy + tf * 1.35)}" text-anchor="middle" font-size="${R(tf * 0.8)}" font-weight="600" fill="${inkSoft}" ${halo}>${escapeHtml(c.long)} × ${escapeHtml(c.short)} m</text>` : "";
     const ty = dims ? cy - tf * 0.05 : cy + tf * 0.35;
+    // the court as the Sport tab draws it (switch under the plan); its name and size on a small light label so they read over the court lines
+    const court = algoState.settings.courtMarkings !== false ? algoCourtMarkings(c, sp) : "";
+    if (court) {
+      // a court big enough carries a centred label with its size; a small one (a table) a compact name tag on its top edge, so the table stays visible
+      const compact = Math.min(w, h) < 7;
+      const label = algoEsc(word), size = !small && !compact ? `${escapeHtml(c.long)} × ${escapeHtml(c.short)} m` : "";
+      const lf = compact ? tf * 0.62 : tf;
+      const lwM = Math.max(label.length * lf * 0.62, size.length * lf * 0.46) + lf * 0.9, lhM = size ? lf * 2.3 : lf * 1.35;
+      const ly = compact ? r[1] + lhM / 2 + 0.12 : cy;
+      g += `<g pointer-events="none">${court}<rect x="${R(r[0])}" y="${R(r[1])}" width="${R(w)}" height="${R(h)}" fill="none" stroke="${escapeHtml(shade(sp.color, 0.55))}" stroke-width="0.14"/>
+        <rect x="${R(cx - lwM / 2)}" y="${R(ly - lhM / 2)}" width="${R(lwM)}" height="${R(lhM)}" rx="${R(lf * 0.35)}" fill="#ffffff" fill-opacity="0.86"/>
+        <text x="${R(cx)}" y="${R(size ? ly - lf * 0.15 : ly + lf * 0.35)}" text-anchor="middle" font-size="${R(lf)}" font-weight="700" fill="#141414">${label}</text>
+        ${size ? `<text x="${R(cx)}" y="${R(ly + lf * 0.85)}" text-anchor="middle" font-size="${R(lf * 0.7)}" font-weight="600" fill="#2b2b2b">${size}</text>` : ""}
+        <title>${algoEsc(sp.label)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
+      return;
+    }
     g += `<g pointer-events="none"><rect x="${R(r[0])}" y="${R(r[1])}" width="${R(w)}" height="${R(h)}" rx="0.25" fill="${escapeHtml(algoRgb(sp.color))}" stroke="${escapeHtml(shade(sp.color, 0.55))}" stroke-width="0.14"/>${lines}
       <text x="${R(cx)}" y="${R(ty)}" text-anchor="middle" font-size="${R(tf)}" font-weight="700" fill="${ink}" ${halo}>${algoEsc(word)}</text>${dims}
       <title>${algoEsc(sp.label)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
@@ -943,8 +1076,9 @@ function algoDrawPreview() {
     const p = (s, t) => `${R(ep.x_m + tx * s + nx * t)},${R(ep.y_m + ty * s + ny * t)}`;
     g += `<g pointer-events="none"><path d="M${p(-a, -a * 0.35)} L${p(0, a * 1.3)} L${p(a, -a * 0.35)} L${p(0, a * 0.35)} Z" fill="#f59e0b" stroke="#78350f" stroke-width="0.09" stroke-linejoin="round"/><title>Entry point</title></g>`;
   });
-  // a 10 m scale bar under the roof's bottom-left corner
-  const sbx = b.x0, sby = b.y1 + pad * 0.9, seg = 5;
+  g += algoRoofDimensions(site.foot, dimOff, fs, EDGE);
+  // a 10 m scale bar under the roof's bottom-left corner, below the dimension lines
+  const sbx = b.x0, sby = b.y1 + pad + 0.2, seg = 5;
   g += `<g pointer-events="none">${[0, 1].map(i => rect([sbx + i * seg, sby, sbx + (i + 1) * seg, sby + 0.35], i ? "#fff" : EDGE, `stroke="${EDGE}" stroke-width="0.07"`)).join("")}`
     + [0, 5, 10].map(m => `<text x="${R(sbx + m)}" y="${R(sby + 0.35 + fs * 0.7)}" text-anchor="middle" font-size="${R(fs * 0.55)}" fill="${EDGE}">${m}${m === 10 ? " m" : ""}</text>`).join("") + `</g>`;
   host.innerHTML = `<svg id="algo-svg" viewBox="${R(vx)} ${R(vy)} ${R(vw)} ${R(vh)}" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:${R(vw / vh)}" role="img" aria-label="Preview of the packed roof">${g}</svg>`;
@@ -961,14 +1095,15 @@ function algoCatalogueSource(name, sp) {
   const cat = ALGO_CATALOGUE[name];
   const quality = "medium";
   if (cat.kind === "field" && typeof FIELDS !== "undefined" && FIELDS[cat.sport]) {
-    const d = FIELDS[cat.sport][cat.variant] || Object.values(FIELDS[cat.sport])[0];
+    const variant = algoTierOf(name) || "mini";
+    const d = FIELDS[cat.sport][variant] || Object.values(FIELDS[cat.sport])[0];
     const mat = typeof MATERIALS !== "undefined" ? MATERIALS[quality] : { floor: "", marking: "", gradin: "" };
     const frame = algoItemFrame(sp);
     const src = {
       version: "1.0", generator: "Sportify-Algorithmic-Placement",
-      quality_key: typeof getQualityKey === "function" ? getQualityKey(cat.sport, cat.variant, quality) : "",
+      quality_key: typeof getQualityKey === "function" ? getQualityKey(cat.sport, variant, quality) : "",
       // the packing tool's sizes are FINAL envelopes (run-off included), so the run-off is not added again
-      field: { sport: cat.sport, variant: cat.variant, norm: d.norm, dimensions: { length_m: frame.length_m, width_m: frame.width_m, runoff_m: 0, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
+      field: { sport: cat.sport, variant, norm: d.norm, dimensions: { length_m: frame.length_m, width_m: frame.width_m, runoff_m: 0, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
       materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: quality, reference_material: null, reference_provider: null },
       layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"]
     };
@@ -983,7 +1118,8 @@ function algoCatalogueSource(name, sp) {
   return {
     version: "1.0", generator: "Sportify-Algorithmic-Placement",
     quality_key: typeof getActivityQualityKey === "function" ? getActivityQualityKey(cat.id) : "",
-    activity: { type_id: cat.id, category: a ? a.category : "court", norm: a ? a.norm : "", dimensions: { length_m: sp.long, width_m: sp.short } },
+    activity: Object.assign({ type_id: cat.id, category: a ? a.category : "court", norm: a ? a.norm : "", dimensions: { length_m: sp.long, width_m: sp.short } },
+      algoTierOf(name) && a && a.variants ? { variant: algoTierOf(name), norm: a.variants[algoTierOf(name)].norm } : {}),
     materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null }
   };
 }

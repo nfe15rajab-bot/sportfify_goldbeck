@@ -25,6 +25,7 @@ const PROFILE_MODES = {
   structure:    { button: "modeStructure",    label: "Structure" },
   conditions:   { button: "modeConditions",   label: "Conditions" },
   sport:        { button: "modeSport",        label: "Sport" },
+  gardenBlocks: { button: "modeGardenBlocks", label: "Garden" },
   combine:      { button: "modeCombine",      label: "Combine" },
   analysis:     { button: "modeAnalysis",     label: "Analysis" },
   compare:      { button: "modeCompare",      label: "Compare" },
@@ -44,7 +45,7 @@ const PROFILE_VIEWS = {
   simple: {
     title: "Simple",
     tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take the deliverables.",
-    modes: ["guide", "site", "sport", "combine", "analysis", "deliverables", "session", "profile"]
+    modes: ["guide", "site", "sport", "gardenBlocks", "combine", "analysis", "deliverables", "session", "profile"]
   },
   advanced: {
     title: "Advanced",

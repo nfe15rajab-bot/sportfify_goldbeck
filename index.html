@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-26-sukriti-merge"></script>
+  <script src="themeInit.js?v=2026-09-26-sukriti-planters"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -13,7 +13,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-26-sukriti-merge" />
+  <link rel="stylesheet" href="style.css?v=2026-09-26-sukriti-planters" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -84,6 +84,7 @@
       <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Conditions</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
+      <button id="modeGardenBlocks" class="activity-icon" title="Garden — planters and garden blocks"><i class="ti ti-plant" aria-hidden="true"></i><span class="activity-icon-label">Garden</span></button>
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
       <button id="btn-vegetation-toggle" class="activity-icon" title="Vegetation — trees, shrubs, planting"><i class="ti ti-tree" aria-hidden="true"></i><span class="activity-icon-label">Plants</span></button>
       <button id="btn-furniture-toggle" class="activity-icon" title="Furniture — benches, tables, bins, bollards, lights"><i class="ti ti-armchair" aria-hidden="true"></i><span class="activity-icon-label">Furniture</span></button>
@@ -278,6 +279,7 @@
               <div class="dim-card"><div class="val" id="d-run">—</div><div class="lbl">Run-off (m)</div></div>
               <div class="dim-card"><div class="val" id="d-h">—</div><div class="lbl">Height min (m)</div></div>
             </div>
+            <div class="dim-card dim-card-total"><div class="val" id="d-total">—</div><div class="lbl">Total with run-off (m) — what it takes on the roof</div></div>
           </div>
           <div class="export-area">
             <button class="btn-export accent" id="btn-push-sport">
@@ -296,6 +298,12 @@
           <div class="section">
             <label>Category</label>
             <p class="hint" id="activity-category">—</p>
+          </div>
+
+          <!-- Mini / Standard / Competition, for the court activities a norm sizes in tiers (activitiesData.js `variants`); hidden for the rest. -->
+          <div class="section" id="activity-tier-section" hidden>
+            <label for="activityVariant">Size variant</label>
+            <select id="activityVariant"></select>
           </div>
 
           <!-- Filled by a sport that specifies itself (padelCourt.js). When it
@@ -337,6 +345,14 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <div id="gardenBlocksConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Garden</h2>
+          <p>Parametric planters — the Revit family "Planter"</p>
+        </div>
+        <div id="planter-panel"></div>
       </div>
 
       <div id="gardenConfigurator" style="display:none">
@@ -594,6 +610,7 @@
       <div class="canvas-wrap">
         <svg id="field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
         <svg id="garden-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
+        <svg id="planter-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
 
         <div id="site-content" style="display:none">
           <div id="site-map" class="site-map"></div>
@@ -1085,60 +1102,61 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="apiSession.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="data.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="carbon.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="activitiesData.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="vegetation.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="furnitureElevation.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="furniture.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="canvasFlyouts.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="zones.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="roofFinish.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="assumptions.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="roofFeatures.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="structure.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="assemblies.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="gardenData.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="prebuiltSessions.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="rules.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="sunPosition.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="balls.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="field.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="basketballCourt.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="volleyballCourt.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="activityField.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="padelCourt.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="gardenField.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="combineField.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="siteField.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="buildupEditor.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="dataTab.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="localSession.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="revitBridge.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="sportController.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="gardenController.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="windZones.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="siteController.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="combineController.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="analysisController.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="analysisResults.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="siteTabs.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="roofProgram.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="workspaceBridge.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="algoPlacementCore.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="algoPlacementUI.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="revitLayers.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="compareController.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="designPanel.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="inspector.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="combineHistory.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="profileCore.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="profile.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="sessionGate.js?v=2026-09-26-sukriti-merge"></script>
-  <script src="main.js?v=2026-09-26-sukriti-merge"></script>
+  <script src="escape.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="apiSession.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="data.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="carbon.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="activitiesData.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="vegetation.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="furnitureElevation.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="furniture.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="canvasFlyouts.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="zones.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="roofFinish.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="assumptions.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="roofFeatures.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="structure.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="assemblies.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="gardenData.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="prebuiltSessions.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="rules.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="sunPosition.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="balls.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="field.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="basketballCourt.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="volleyballCourt.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="activityField.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="planters.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="padelCourt.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="gardenField.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="combineField.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="siteField.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="buildupEditor.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="dataTab.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="localSession.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="revitBridge.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="sportController.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="gardenController.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="windZones.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="siteController.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="combineController.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="analysisController.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="analysisResults.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="siteTabs.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="roofProgram.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="workspaceBridge.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="algoPlacementCore.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="algoPlacementUI.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="revitLayers.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="compareController.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="designPanel.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="inspector.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="combineHistory.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="profileCore.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="profile.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="sessionGate.js?v=2026-09-26-sukriti-planters"></script>
+  <script src="main.js?v=2026-09-26-sukriti-planters"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
 const state = {
   selectionType: "field",
   sport: "polyvalent",
-  variant: "mini",
+  variant: typeof getSportTier === "function" ? (getSportTier("polyvalent") || "mini") : "mini",
   capacity: 0,
   quality: "medium",
   activityId: null,
@@ -24,7 +24,7 @@ const FIELD_SPORTS = {
   basketball: { label: "Basketball", short: "B-Ball", icon: "ti-square-rounded" },
   handball:   { label: "Handball", short: "Handb.", icon: "ti-square-rounded" },
   volleyball: { label: "Volleyball", short: "V-Ball", icon: "ti-square-rounded" },
-  badminton:  { label: "Badminton", short: "Badm.", icon: "ti-square-rounded" },
+  badminton:  { label: "Badminton", short: "Badm.", icon: "ti-square-rounded", hidden: true },   // not offered (2026-09-26); kept so older layouts still open
   football:   { label: "Football (indoor)", short: "Football", icon: "ti-square-rounded" },
 };
 
@@ -33,12 +33,14 @@ function buildActivityBar() {
   const bar = document.getElementById("activity-bar");
   let html = "";
   Object.entries(FIELD_SPORTS).forEach(([id, f]) => {
+    if (f.hidden) return;
     html += `<button class="activity-icon${id === state.sport ? " active" : ""}" data-kind="field" data-id="${id}" title="${escapeHtml(f.label)}">
                <i class="ti ${f.icon}"></i><span class="activity-icon-label">${escapeHtml(f.short)}</span>
              </button>`;
   });
   html += `<div class="activity-bar-divider"></div>`;
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
+    if (a.hidden) return;
     html += `<button class="activity-icon${id === state.activityId ? " active" : ""}" data-kind="activity" data-id="${id}" title="${escapeHtml(a.label)}">
                <i class="ti ${a.icon}"></i><span class="activity-icon-label">${escapeHtml(a.short)}</span>
              </button>`;
@@ -54,6 +56,8 @@ function buildActivityBar() {
 
       if (kind === "field") {
         state.selectionType = "field"; state.sport = id;
+        state.variant = getSportTier(id) || "mini";                         // the tier last chosen for this sport
+        document.getElementById("variant").value = state.variant;
         document.getElementById("field-params").style.display = "block";
         document.getElementById("activity-params").style.display = "none";
         document.getElementById("sport-panel-title").textContent = "Field configurator";
@@ -63,11 +67,14 @@ function buildActivityBar() {
       } else {
         state.selectionType = "activity"; state.activityId = id;
         const a = ACTIVITIES[id];
-        state.activityLength = a.length; state.activityWidth = a.width;
+        const tier = getSportTier("act:" + id);                               // a court activity sized in tiers: the one last chosen
+        state.activityTier = tier;
+        state.activityLength = tier ? a.variants[tier].l : a.length; state.activityWidth = tier ? a.variants[tier].w : a.width;
+        fillActivityTierSelect(id, tier);
         state.activityQuantity = 1; state.activityCapacity = 0; state.activityQuality = "medium";
 
-        document.getElementById("activityLength").value = a.length;
-        document.getElementById("activityWidth").value = a.width;
+        document.getElementById("activityLength").value = state.activityLength;
+        document.getElementById("activityWidth").value = state.activityWidth;
         document.getElementById("activityQuantity").value = 1;
         document.getElementById("qty-val").textContent = "1";
         // Capacity removed: an activity's capacity was never a slider. A padel
@@ -93,6 +100,11 @@ function updateUI() {
   document.getElementById("d-w").textContent = d.w;
   document.getElementById("d-run").textContent = d.runoff;
   document.getElementById("d-h").textContent = d.h;
+  // the footprint the court really takes (as Push to Combine places it): a volleyball court works out its own free zone
+  const fp = (state.sport === "volleyball" && typeof volleyballFootprint === "function") ? volleyballFootprint()
+    : { length_m: d.l + d.runoff * 2, width_m: d.w + d.runoff * 2 };
+  const r2 = v => Math.round(v * 100) / 100;
+  document.getElementById("d-total").textContent = `${r2(fp.length_m)} × ${r2(fp.width_m)}`;
 
   const sportLabel = FIELD_SPORTS[state.sport]?.label.replace(/\s*\(.*\)/, "") || state.sport;
   const variantLabel = state.variant.charAt(0).toUpperCase() + state.variant.slice(1);
@@ -106,13 +118,35 @@ function updateActivityUI() {
   if (!a) return;
   document.getElementById("activity-category").textContent = a.category.charAt(0).toUpperCase() + a.category.slice(1);
   const qtyLabel = state.activityQuantity > 1 ? ` × ${state.activityQuantity}` : "";
-  document.getElementById("field-label").textContent = `${a.label}${qtyLabel}`;
-  document.getElementById("norm-badge").textContent = a.norm;
+  const tierV = state.activityTier && a.variants && a.variants[state.activityTier];
+  document.getElementById("field-label").textContent = `${a.label}${tierV && activityTierKeys(state.activityId).length > 1 ? " — " + sportTierLabel(state.activityTier) : ""}${qtyLabel}`;
+  document.getElementById("norm-badge").textContent = tierV ? tierV.norm : a.norm;
   if(typeof drawActivity === "function") drawActivity(state.activityId, { length: state.activityLength, width: state.activityWidth }, isDarkMode());
 }
 
 /* ── Sport Listeners & Exports ── */
-document.getElementById("variant").addEventListener("change", e => { state.variant = e.target.value; updateUI(); });
+document.getElementById("variant").addEventListener("change", e => { state.variant = e.target.value; setSportTier(state.sport, state.variant); updateUI(); });
+document.getElementById("variant").value = state.variant;
+
+/** The activity's "Size variant" list: the tiers it offers, the chosen one selected; hidden for an activity with one size. */
+function fillActivityTierSelect(id, tier) {
+  const keys = activityTierKeys(id);
+  const sec = document.getElementById("activity-tier-section"), sel = document.getElementById("activityVariant");
+  sel.innerHTML = keys.map(k => { const v = ACTIVITIES[id].variants[k]; return `<option value="${k}">${escapeHtml(sportTierLabel(k))} (${v.l} × ${v.w} m)</option>`; }).join("");
+  if (tier) sel.value = tier;
+  sec.hidden = keys.length < 2;
+}
+
+document.getElementById("activityVariant").addEventListener("change", e => {
+  const a = ACTIVITIES[state.activityId], v = a && a.variants && a.variants[e.target.value];
+  if (!v) return;
+  state.activityTier = e.target.value;
+  setSportTier("act:" + state.activityId, state.activityTier);
+  state.activityLength = v.l; state.activityWidth = v.w;
+  document.getElementById("activityLength").value = v.l;
+  document.getElementById("activityWidth").value = v.w;
+  updateActivityUI();
+});
 // Spectator stands removed: a rooftop court is not a venue with seating, and
 // the slider only ever added grandstand geometry nobody was designing for.
 // state.capacity stays at 0 so drawField(), the DXF export and the payload all
@@ -192,7 +226,8 @@ function buildActivityPayload() {
     activity: {
       type_id: state.activityId,
       category: a.category,
-      norm: a.norm,
+      norm: state.activityTier && a.variants ? a.variants[state.activityTier].norm : a.norm,
+      ...(state.activityTier ? { variant: state.activityTier } : {}),
       dimensions: { length_m: state.activityLength, width_m: state.activityWidth },
     },
     materials: { surface: mat.surface, structure: mat.structure, quality_level: state.activityQuality, reference_material: null, reference_provider: null },
