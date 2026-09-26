@@ -22,8 +22,8 @@ const adv = tour.tourPlan({ view: "advanced" });
 const simple = tour.tourPlan({ view: "simple", extras: [] });
 check("the steps have unique ids, a title, and words of a sentence or two (under 260 characters)", new Set(tour.TOUR_STEPS.map(s => s.id)).size === tour.TOUR_STEPS.length && tour.TOUR_STEPS.every(s => s.title && s.title.length <= 40 && s.mode && (s.target === null || typeof s.target === "string")) && adv.every(s => s.text.length > 20 && s.text.length <= 260));
 check("Advanced sees the whole tour, in order, numbered 1 to " + adv.length, adv.length === tour.TOUR_STEPS.length && adv.every((s, i) => s.index === i + 1 && s.total === adv.length) && adv[0].id === "path" && adv.at(-1).id === "revit");
-check("Simple leaves out the steps of the tabs it hides (structure, conditions, compare, post analysis) and keeps the rest", simple.map(s => s.id).join() === "path,topbar,rail,site,sport,combine,analysis,deliverables,profile,revit" && simple.every((s, i) => s.total === simple.length && s.index === i + 1));
-check("an extra the quiz added brings its step back, in its place in the tour", tour.tourPlan({ view: "simple", extras: ["structure", "postAnalysis"] }).map(s => s.id).join() === "path,topbar,rail,site,sport,combine,analysis,structure,postAnalysis,deliverables,profile,revit" && tour.tourPlan({ view: "simple", extras: ["safety", "carbon"] }).length === simple.length);
+check("Simple leaves out the steps of the tabs it hides (structure, conditions, compare, post analysis) and keeps the rest", simple.map(s => s.id).join() === "path,topbar,where,rail,site,sport,combine,analysis,deliverables,profile,revit" && simple.every((s, i) => s.total === simple.length && s.index === i + 1));
+check("an extra the quiz added brings its step back, in its place in the tour", tour.tourPlan({ view: "simple", extras: ["structure", "postAnalysis"] }).map(s => s.id).join() === "path,topbar,where,rail,site,sport,combine,analysis,structure,postAnalysis,deliverables,profile,revit" && tour.tourPlan({ view: "simple", extras: ["safety", "carbon"] }).length === simple.length);
 check("extras change nothing in Advanced, which sees everything anyway", tour.tourPlan({ view: "advanced", extras: ["structure"] }).length === adv.length);
 check("the words follow the view: the rail step says which view it is, and where the other one is", /Simple view/.test(simple.find(s => s.id === "rail").text) && /Advanced view/.test(adv.find(s => s.id === "rail").text) && simple.find(s => s.id === "path").text !== adv.find(s => s.id === "path").text);
 check("anything that is not a profile is the Advanced tour, and never throws", [null, undefined, 5, "x", [], {}, { view: "expert" }, { view: "simple", extras: "structure" }].every(g => { const p = tour.tourPlan(g); return Array.isArray(p) && p.length >= simple.length; }) && tour.tourPlan({ view: "expert" }).length === adv.length);
@@ -135,17 +135,17 @@ const allTargets = () => Object.fromEntries(tour.TOUR_STEPS.filter(s => s.target
 (async () => {
   {
     const p = page({ targets: allTargets() });
-    check("start opens the overlay on the first step: its number, its title, its words, and Back is disabled on the first", p.run("tourStart()") === true && (await p.settle(), p.overlay().style.display === "block") && /Step 1 of 14/.test(p.card()) && /The path Sportify follows/.test(p.card()) && /data-tour-act="back" disabled/.test(p.card()) && />Next</.test(p.card().replace(/<i[^>]*><\/i>/g, "")));
+    check("start opens the overlay on the first step: its number, its title, its words, and Back is disabled on the first", p.run("tourStart()") === true && (await p.settle(), p.overlay().style.display === "block") && /Step 1 of 15/.test(p.card()) && /The path Sportify follows/.test(p.card()) && /data-tour-act="back" disabled/.test(p.card()) && />Next</.test(p.card().replace(/<i[^>]*><\/i>/g, "")));
     check("the target is lit: the spotlight sits on it (with the air around it) and the page is not dimmed as a whole", p.spot().display === "block" && p.spot().left === "94px" && p.spot().top === "74px" && !p.overlay().classes.has("tour-dim"));
     check("the card is placed by the geometry (below the target) and shown, and Next has the keyboard focus", p.els.tourCard.style.visibility === "visible" && Number.parseFloat(p.els.tourCard.style.top) > 140 && p.els.tourCard.focused >= 1);
     check("the target is scrolled into view", p.calls.scrolled >= 1);
     check("the workspace the tour starts on is the one it is already on: no needless switch", p.calls.setMode.length === 0);
     p.click("next"); await p.settle();
-    check("Next goes to step 2 (same workspace: nothing is switched)", /Step 2 of 14/.test(p.card()) && /The top bar/.test(p.card()) && p.calls.setMode.length === 0);
-    for (let i = 0; i < 2; i++) { p.click("next"); await p.settle(); }
-    check("a step in another workspace opens it first (the site tab for step 4), then points at it", /Step 4 of 14/.test(p.card()) && p.calls.setMode.at(-1) === "site" && p.sandbox.activeMode === "site");
+    check("Next goes to step 2 (same workspace: nothing is switched)", /Step 2 of 15/.test(p.card()) && /The top bar/.test(p.card()) && p.calls.setMode.length === 0);
+    for (let i = 0; i < 3; i++) { p.click("next"); await p.settle(); }
+    check("a step in another workspace opens it first (the site tab for step 5), then points at it", /Step 5 of 15/.test(p.card()) && p.calls.setMode.at(-1) === "site" && p.sandbox.activeMode === "site");
     p.click("back"); await p.settle();
-    check("Back goes to the step before, into its workspace (the Overview again)", /Step 3 of 14/.test(p.card()) && p.calls.setMode.at(-1) === "guide" && !/data-tour-act="back" disabled/.test(p.card()));
+    check("Back goes to the step before, into its workspace (the Overview again)", /Step 4 of 15/.test(p.card()) && p.calls.setMode.at(-1) === "guide" && !/data-tour-act="back" disabled/.test(p.card()));
     for (let i = 0; i < 20; i++) { if (!p.run("tourState.active")) break; p.click("next"); await p.settle(); }
     const visited = p.calls.setMode.filter((m, i, a) => i === 0 || m !== a[i - 1]);
     check("going through the whole tour visits the workspaces in the plan's order", visited.join() === "site,guide,site,sport,combine,analysis,structure,conditions,compare,postAnalysis,deliverables,profile,guide", visited.join());
@@ -154,18 +154,18 @@ const allTargets = () => Object.fromEntries(tour.TOUR_STEPS.filter(s => s.target
   {
     const p = page({ targets: allTargets() });
     p.run("tourStart()"); await p.settle();
-    for (let i = 0; i < 13; i++) { p.click("next"); await p.settle(); }
-    check("the last step is only words: no spotlight, the page is dimmed as a whole, and the card is centred", /Step 14 of 14/.test(p.card()) && /In Revit/.test(p.card()) && /Finish/.test(p.card()) && p.spot().display === "none" && p.overlay().classes.has("tour-dim") && Math.abs(Number.parseFloat(p.els.tourCard.style.left) + 170 - 640) < 1);
+    for (let i = 0; i < 14; i++) { p.click("next"); await p.settle(); }
+    check("the last step is only words: no spotlight, the page is dimmed as a whole, and the card is centred", /Step 15 of 15/.test(p.card()) && /In Revit/.test(p.card()) && /Finish/.test(p.card()) && p.spot().display === "none" && p.overlay().classes.has("tour-dim") && Math.abs(Number.parseFloat(p.els.tourCard.style.left) + 170 - 640) < 1);
   }
   {
     const p = page({ targets: allTargets() });
     p.run("tourStart()"); await p.settle();
-    check("ArrowRight goes forward and is handled (the page is not scrolled by it)", p.key("ArrowRight") === true && (await p.settle(), /Step 2 of 14/.test(p.card())));
-    check("ArrowLeft goes back", p.key("ArrowLeft") === true && (await p.settle(), /Step 1 of 14/.test(p.card())));
+    check("ArrowRight goes forward and is handled (the page is not scrolled by it)", p.key("ArrowRight") === true && (await p.settle(), /Step 2 of 15/.test(p.card())));
+    check("ArrowLeft goes back", p.key("ArrowLeft") === true && (await p.settle(), /Step 1 of 15/.test(p.card())));
     p.key("ArrowLeft"); await p.settle();
-    check("Back on the first step does nothing", /Step 1 of 14/.test(p.card()));
-    check("Enter is left to the focused button (no second Next from the keyboard handler)", p.key("Enter") === false && (await p.settle(), /Step 1 of 14/.test(p.card())));
-    for (let i = 0; i < 4; i++) { p.key("ArrowRight"); await p.settle(); }
+    check("Back on the first step does nothing", /Step 1 of 15/.test(p.card()));
+    check("Enter is left to the focused button (no second Next from the keyboard handler)", p.key("Enter") === false && (await p.settle(), /Step 1 of 15/.test(p.card())));
+    for (let i = 0; i < 5; i++) { p.key("ArrowRight"); await p.settle(); }
     p.key("Escape");
     check("Escape ends the tour without the 'that was the tour' message, and puts the person back where they started", p.overlay().style.display === "none" && !p.run("tourState.active") && p.sandbox.activeMode === "guide" && !p.calls.toasts.length);
     check("keys do nothing when there is no tour", p.key("ArrowRight") === false && p.overlay().style.display === "none");
@@ -176,18 +176,18 @@ const allTargets = () => Object.fromEntries(tour.TOUR_STEPS.filter(s => s.target
     p.click("next"); await p.settle();
     p.click("end"); await p.settle();
     check("ending the tour from a workspace other than the Overview puts the person back in it (where they started)", p.sandbox.activeMode === "combine" && p.overlay().style.display === "none" && p.calls.setMode.at(-1) === "combine");
-    check("the tour can be taken again after it ended", p.run("tourStart()") === true && (await p.settle(), /Step 1 of 14/.test(p.card())));
+    check("the tour can be taken again after it ended", p.run("tourStart()") === true && (await p.settle(), /Step 1 of 15/.test(p.card())));
   }
   {
     const p = page({ profile: { view: "simple", extras: [] }, targets: allTargets() });
     p.run("tourStart()"); await p.settle();
-    for (let i = 0; i < 12; i++) { if (!p.run("tourState.active")) break; p.click("next"); await p.settle(); }
-    check("the Simple tour has 10 steps and never switches to a workspace Simple hides", p.run("tourState.plan.length") === 10 && p.calls.setMode.every(m => core.profileModeVisible("simple", m, [])), p.calls.setMode.join());
+    for (let i = 0; i < 13; i++) { if (!p.run("tourState.active")) break; p.click("next"); await p.settle(); }
+    check("the Simple tour has 11 steps and never switches to a workspace Simple hides", p.run("tourState.plan.length") === 11 && p.calls.setMode.every(m => core.profileModeVisible("simple", m, [])), p.calls.setMode.join());
   }
   {
     const p = page({ targets: {} });
     p.run("tourStart()"); await p.settle();
-    check("a target that is not in the page is not pointed at: the card is centred and the page dimmed, and the tour goes on", p.spot().display === "none" && p.overlay().classes.has("tour-dim") && /Step 1 of 14/.test(p.card()));
+    check("a target that is not in the page is not pointed at: the card is centred and the page dimmed, and the tour goes on", p.spot().display === "none" && p.overlay().classes.has("tour-dim") && /Step 1 of 15/.test(p.card()));
     const q = page({ targets: Object.assign(allTargets(), { "#overviewWorkflow": R(10, 10, 0, 0) }) });
     q.run("tourStart()"); await q.settle();
     check("a target that is hidden (no size) is treated the same way", q.spot().display === "none" && q.overlay().classes.has("tour-dim"));
@@ -205,7 +205,7 @@ const allTargets = () => Object.fromEntries(tour.TOUR_STEPS.filter(s => s.target
     const p = page({ targets: allTargets() });
     p.run("tourStart()"); await p.settle();
     p.click("next"); p.click("next"); p.click("next"); await p.settle();
-    check("clicking Next several times quickly ends on the right step, drawn once (a slow step never overwrites a newer one)", /Step 4 of 14/.test(p.card()) && p.run("tourState.index") === 3);
+    check("clicking Next several times quickly ends on the right step, drawn once (a slow step never overwrites a newer one)", /Step 4 of 15/.test(p.card()) && p.run("tourState.index") === 3);
   }
   {
     const t = allTargets();
@@ -219,7 +219,7 @@ const allTargets = () => Object.fromEntries(tour.TOUR_STEPS.filter(s => s.target
   {
     const p = page({ targets: allTargets() });
     p.docHandlers.click({ target: { closest: sel => (sel === "[data-tour-start]" ? {} : null) } }); await p.settle();
-    check("anything marked data-tour-start starts the tour (the Overview's button, the Profile tab's)", p.run("tourState.active") === true && /Step 1 of 14/.test(p.card()));
+    check("anything marked data-tour-start starts the tour (the Overview's button, the Profile tab's)", p.run("tourState.active") === true && /Step 1 of 15/.test(p.card()));
     const q = page({ targets: allTargets() });
     q.docHandlers.click({ target: { closest: () => null } }); await q.settle();
     check("a click on anything else does not", q.run("tourState.active") === false);

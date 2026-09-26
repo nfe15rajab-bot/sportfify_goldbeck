@@ -23,7 +23,11 @@ const TOUR_STEPS = [
   },
   {
     id: "topbar", mode: "guide", target: ".mode-toggle", title: "The top bar",
-    text: () => "Overview (where you are), Deliverables (everything Sportify makes for you), Save Session (a file you keep), New Session (the welcome screen again) and your Profile."
+    text: () => "Overview (where you are), Deliverables (everything Sportify makes for you), Save Session (a file you keep), New Session (the welcome screen again) and your Profile. The pill on the right says whether Revit is open."
+  },
+  {
+    id: "where", mode: "guide", target: "#overviewWhere", title: "What runs where",
+    text: () => "Here you decide: the site, the sports, the placement. Revit turns the decision into a building: the model, the full analyses, the documents. Unity and SOLIDWORKS are engines Revit calls. No Revit open? You keep working in 2D."
   },
   {
     id: "rail", mode: "guide", target: "#modeRail", title: "Your workspaces",

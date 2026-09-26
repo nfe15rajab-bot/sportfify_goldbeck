@@ -137,6 +137,7 @@ async function profileLoadMachine(refresh) {
     profileMachineLoading = false;
   }
   profileRenderMachine();
+  if (typeof whereRender === "function") whereRender();      // Unity and SOLIDWORKS in the Overview's card and on the badges
 }
 
 /** main.js: the Profile tab was opened. Look at the computer again (Unity may have been installed since Revit started). */
@@ -176,6 +177,7 @@ function profileRevitClosed() {
   profileState.machine = null;
   profileRenderStatus();
   profileRenderMachine();
+  if (typeof whereRender === "function") whereRender();
 }
 
 // ------------------------------------------------------------------------------------------------ the buttons of the tab

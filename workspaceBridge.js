@@ -21,6 +21,7 @@ const DRAFT_SYNC_MS = 3000;
 
 const workspaceState = {
   connected: null,            // null until the first answer, then true / false
+  revitVersion: "",           // which Revit ("2025"), as the add-in says
   folder: "", defaultFolder: "", settingsFile: "",
   kinds: [],                  // [{ key, folder, title, hint, count }]
   files: [],                  // [{ kind, name, size, modified_utc, url }], newest first
@@ -60,6 +61,7 @@ async function localApi(path, opts) {
 
 function workspaceChanged() {
   workspaceState.stamp++;
+  if (typeof whereRender === "function") whereRender();      // the status of Revit in the top bar, the badges, the Overview's card (where.js)
   if (typeof activeMode !== "undefined" && activeMode === "deliverables") renderDeliverables();
   if (typeof renderAnalysisIfShowingResults === "function") renderAnalysisIfShowingResults();
   if (typeof updateRevitLayersUI === "function") updateRevitLayersUI();
@@ -74,6 +76,7 @@ async function workspaceRefresh() {
     workspaceState.folder = ws.json.folder || "";
     workspaceState.defaultFolder = ws.json.default_folder || "";
     workspaceState.settingsFile = ws.json.settings_file || "";
+    workspaceState.revitVersion = typeof ws.json.revit_version === "string" ? ws.json.revit_version : "";
     workspaceState.kinds = ws.json.kinds || [];
   }
   const nextFiles = files.ok && files.json ? files.json.files || [] : [];
@@ -373,7 +376,7 @@ function wsRunPanelHtml() {
     : noLayout ? "Place something on the roof in Combine first: the analysis runs on the layout."
     : "Runs the physical analyses on the layout as it is now (your Structure and Site conditions inputs included) and brings the results and charts here.";
   return `<label>Run</label>
-    <button class="btn-export primary ws-run-btn" data-ws-action="run" ${!on || noLayout || running ? "disabled" : ""}><i class="ti ${running ? "ti-loader-2 ws-spin" : "ti-player-play"}" aria-hidden="true"></i>${running ? "Running..." : "Run analysis"}</button>
+    <button class="btn-export primary ws-run-btn" data-ws-action="run" ${!on || noLayout || running ? "disabled" : ""}><i class="ti ${running ? "ti-loader-2 ws-spin" : "ti-player-play"}" aria-hidden="true"></i>${running ? "Running..." : "Run analysis"}${typeof whereChipHtml === "function" ? whereChipHtml("revit") : ""}</button>
     <p class="hint">${wsEsc(note)}</p>
     ${workspaceState.message ? `<p class="ws-message tone-${escapeHtml(workspaceState.message.tone)}">${workspaceState.message.html}</p>` : ""}`;
 }
@@ -400,7 +403,7 @@ function wsActionButton(name, icon, title, sub, needsLayout) {
   const disabled = !on || busy || (needsLayout && !workspaceHasLayout());
   const why = !on ? "Needs Revit open with the Sportify add-in." : needsLayout && !workspaceHasLayout() ? "Place something in Combine first." : "";
   return `<button class="deliverable-item" data-ws-action="${name}" ${disabled ? "disabled" : ""} ${why ? `title="${wsEsc(why)}"` : ""}>
-    <i class="ti ${busy ? "ti-loader-2 ws-spin" : icon}" aria-hidden="true"></i><span>${wsEsc(title)}<small>${wsEsc(busy ? "Working..." : sub)}</small></span></button>`;
+    <i class="ti ${busy ? "ti-loader-2 ws-spin" : icon}" aria-hidden="true"></i><span>${wsEsc(title)}<small>${wsEsc(busy ? "Working..." : sub)}</small></span>${typeof whereChipHtml === "function" ? whereChipHtml("revit") : ""}</button>`;
 }
 
 function renderDeliverables() {
