@@ -114,6 +114,18 @@ function page({ connected = true, stored = null, noStorage = false } = {}) {
     check("the names are limited in the page too (60 and 40 characters), like the add-in does", /id="session-name"[^>]*maxlength="60"/.test(html) && /id="session-iteration"[^>]*maxlength="40"/.test(html));
   }
 
+  // ---------------------------------------------------------------------------------------------------------------- the Documents tab shows the iteration's folder
+  {
+    const wb = read("workspaceBridge.js"), html = read("index.html");
+    const fn = /function wsFileMeta\(f\) \{[\s\S]*?\n\}/.exec(wb);
+    check("the Documents tab's file list is built by wsFileMeta, which puts the iteration's folder in front of the size and the time", !!fn && /wsFileMeta\(f\)/.test(wb.slice(wb.indexOf("function renderDeliverables"))));
+    const sandbox = { wsSize: n => n + " B", wsTime: t => "T:" + t, String };
+    vm.runInContext(fn[0], vm.createContext(sandbox));
+    const meta = f => vm.runInContext("wsFileMeta(" + JSON.stringify(f) + ")", sandbox);
+    check("a file in an iteration's folder says so; one in the kind's own folder (or an older add-in, which sends no folder) is what it was", meta({ folder: "Algorithmic", size: 5, modified_utc: "x" }) === "Algorithmic · 5 B · T:x" && meta({ folder: "", size: 5, modified_utc: "x" }) === "5 B · T:x" && meta({ size: 5, modified_utc: "x" }) === "5 B · T:x");
+    check("the Documents tab says that an iteration name also gives a folder of that name", /one folder per iteration/.test(html.slice(html.indexOf('id="session-names"'), html.indexOf('class="deliverables-grid"'))));
+  }
+
   console.log(fails === 0 ? "\nSESSION NAMES OK" : `\n${fails} check(s) failed`);
   process.exit(fails === 0 ? 0 : 1);
 })();

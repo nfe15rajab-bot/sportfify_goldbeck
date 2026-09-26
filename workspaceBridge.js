@@ -401,6 +401,11 @@ function wsTime(iso) {
   return isNaN(d) ? "" : d.toLocaleString([], { dateStyle: "short", timeStyle: "short" });
 }
 
+/** The line under a file's link: the iteration's folder when the file is in one, then its size and its time. */
+function wsFileMeta(f) {
+  return (f.folder ? String(f.folder) + " · " : "") + wsSize(f.size) + " · " + wsTime(f.modified_utc);
+}
+
 function wsActionButton(name, icon, title, sub, needsLayout) {
   const on = workspaceState.connected === true;
   const busy = !!workspaceState.busy[name];
@@ -443,7 +448,7 @@ function renderDeliverables() {
     return `<section class="dl-folder">
       <header><div><h3>${wsEsc(k.title)}</h3><div class="hint">${wsEsc(k.hint)}</div></div>
         <button class="btn-export ws-inline-btn" data-ws-action="openFolder" data-kind="${wsEsc(k.key)}" title="Open ${wsEsc(k.folder)} in Explorer"><i class="ti ti-folder" aria-hidden="true"></i></button></header>
-      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(localUrl(f.url))}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsSize(f.size))} · ${wsEsc(wsTime(f.modified_utc))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
+      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(localUrl(f.url))}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsFileMeta(f))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
     </section>`;
   }).join("");
 }
