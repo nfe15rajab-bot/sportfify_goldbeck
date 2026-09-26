@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-26-ux-renames"></script>
+  <script src="themeInit.js?v=2026-09-26-ux-docs"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -13,7 +13,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-26-ux-renames" />
+  <link rel="stylesheet" href="style.css?v=2026-09-26-ux-docs" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -659,7 +659,7 @@
 
               <div class="guide-hero guide-section-spacer">
                 <h2>What's new</h2>
-                <p class="hint">Four things that make Sportify yours: who you are and what you see, a few questions that set it up for you, and the two ways of placing a layout on the roof.</p>
+                <p class="hint">Five things that make Sportify yours and clear: who you are and what you see, a few questions that set it up for you, the two ways of placing a layout on the roof, and every analysis at a glance.</p>
               </div>
 
               <div class="feature-grid" id="overviewFeatures">
@@ -682,6 +682,11 @@
                   <div class="feature-head"><i class="ti ti-wand" aria-hidden="true"></i><span>Algorithmic placement</span></div>
                   <p class="hint">Say which courts you want and how many, and the packing engine (a port of the Rhino Rooftop Sports Court Planner) places them by rules: a garden band along the edge, courts against the setback first, a clear path to every lift and ramp, the leftover as garden pockets. Apply it to Combine, then change anything by hand.</p>
                   <button type="button" class="btn-export" data-feature="algo">Try algorithmic placement<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span>Results at a glance</span></div>
+                  <p class="hint">One tile per analysis for the whole layout: Revit's full analysis where it has run, this app's quick estimate otherwise, each marked with where it comes from. Select a piece in Combine and its own results appear beside the roof, live as you drag it.</p>
+                  <button type="button" class="btn-export" data-feature="results">See the results<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
                 </div>
               </div>
 
@@ -1111,68 +1116,68 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-26-ux-renames"></script>
-  <script src="apiSession.js?v=2026-09-26-ux-renames"></script>
-  <script src="data.js?v=2026-09-26-ux-renames"></script>
-  <script src="carbon.js?v=2026-09-26-ux-renames"></script>
-  <script src="activitiesData.js?v=2026-09-26-ux-renames"></script>
-  <script src="vegetation.js?v=2026-09-26-ux-renames"></script>
-  <script src="furnitureElevation.js?v=2026-09-26-ux-renames"></script>
-  <script src="furniture.js?v=2026-09-26-ux-renames"></script>
-  <script src="canvasFlyouts.js?v=2026-09-26-ux-renames"></script>
-  <script src="zones.js?v=2026-09-26-ux-renames"></script>
-  <script src="roofFinish.js?v=2026-09-26-ux-renames"></script>
-  <script src="assumptions.js?v=2026-09-26-ux-renames"></script>
-  <script src="roofFeatures.js?v=2026-09-26-ux-renames"></script>
-  <script src="structure.js?v=2026-09-26-ux-renames"></script>
-  <script src="assemblies.js?v=2026-09-26-ux-renames"></script>
-  <script src="gardenData.js?v=2026-09-26-ux-renames"></script>
-  <script src="prebuiltSessions.js?v=2026-09-26-ux-renames"></script>
-  <script src="rules.js?v=2026-09-26-ux-renames"></script>
-  <script src="sunPosition.js?v=2026-09-26-ux-renames"></script>
-  <script src="balls.js?v=2026-09-26-ux-renames"></script>
-  <script src="field.js?v=2026-09-26-ux-renames"></script>
-  <script src="basketballCourt.js?v=2026-09-26-ux-renames"></script>
-  <script src="volleyballCourt.js?v=2026-09-26-ux-renames"></script>
-  <script src="activityField.js?v=2026-09-26-ux-renames"></script>
-  <script src="padelCourt.js?v=2026-09-26-ux-renames"></script>
-  <script src="gardenField.js?v=2026-09-26-ux-renames"></script>
-  <script src="combineField.js?v=2026-09-26-ux-renames"></script>
-  <script src="siteField.js?v=2026-09-26-ux-renames"></script>
-  <script src="buildupEditor.js?v=2026-09-26-ux-renames"></script>
-  <script src="dataTab.js?v=2026-09-26-ux-renames"></script>
-  <script src="localSession.js?v=2026-09-26-ux-renames"></script>
-  <script src="revitBridge.js?v=2026-09-26-ux-renames"></script>
-  <script src="sportController.js?v=2026-09-26-ux-renames"></script>
-  <script src="gardenController.js?v=2026-09-26-ux-renames"></script>
-  <script src="windZones.js?v=2026-09-26-ux-renames"></script>
-  <script src="siteController.js?v=2026-09-26-ux-renames"></script>
-  <script src="combineController.js?v=2026-09-26-ux-renames"></script>
-  <script src="resultsStoreCore.js?v=2026-09-26-ux-renames"></script>
-  <script src="analysisController.js?v=2026-09-26-ux-renames"></script>
-  <script src="analysisResults.js?v=2026-09-26-ux-renames"></script>
-  <script src="resultsStore.js?v=2026-09-26-ux-renames"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-26-ux-renames"></script>
-  <script src="siteTabs.js?v=2026-09-26-ux-renames"></script>
-  <script src="roofProgram.js?v=2026-09-26-ux-renames"></script>
-  <script src="workspaceBridge.js?v=2026-09-26-ux-renames"></script>
-  <script src="algoPlacementCore.js?v=2026-09-26-ux-renames"></script>
-  <script src="algoPlacementUI.js?v=2026-09-26-ux-renames"></script>
-  <script src="revitLayers.js?v=2026-09-26-ux-renames"></script>
-  <script src="compareController.js?v=2026-09-26-ux-renames"></script>
-  <script src="designPanel.js?v=2026-09-26-ux-renames"></script>
-  <script src="inspector.js?v=2026-09-26-ux-renames"></script>
-  <script src="combineHistory.js?v=2026-09-26-ux-renames"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-26-ux-renames"></script>
-  <script src="profileCore.js?v=2026-09-26-ux-renames"></script>
-  <script src="profile.js?v=2026-09-26-ux-renames"></script>
-  <script src="quizCore.js?v=2026-09-26-ux-renames"></script>
-  <script src="quiz.js?v=2026-09-26-ux-renames"></script>
-  <script src="tourCore.js?v=2026-09-26-ux-renames"></script>
-  <script src="tour.js?v=2026-09-26-ux-renames"></script>
-  <script src="whereCore.js?v=2026-09-26-ux-renames"></script>
-  <script src="where.js?v=2026-09-26-ux-renames"></script>
-  <script src="sessionGate.js?v=2026-09-26-ux-renames"></script>
-  <script src="main.js?v=2026-09-26-ux-renames"></script>
+  <script src="escape.js?v=2026-09-26-ux-docs"></script>
+  <script src="apiSession.js?v=2026-09-26-ux-docs"></script>
+  <script src="data.js?v=2026-09-26-ux-docs"></script>
+  <script src="carbon.js?v=2026-09-26-ux-docs"></script>
+  <script src="activitiesData.js?v=2026-09-26-ux-docs"></script>
+  <script src="vegetation.js?v=2026-09-26-ux-docs"></script>
+  <script src="furnitureElevation.js?v=2026-09-26-ux-docs"></script>
+  <script src="furniture.js?v=2026-09-26-ux-docs"></script>
+  <script src="canvasFlyouts.js?v=2026-09-26-ux-docs"></script>
+  <script src="zones.js?v=2026-09-26-ux-docs"></script>
+  <script src="roofFinish.js?v=2026-09-26-ux-docs"></script>
+  <script src="assumptions.js?v=2026-09-26-ux-docs"></script>
+  <script src="roofFeatures.js?v=2026-09-26-ux-docs"></script>
+  <script src="structure.js?v=2026-09-26-ux-docs"></script>
+  <script src="assemblies.js?v=2026-09-26-ux-docs"></script>
+  <script src="gardenData.js?v=2026-09-26-ux-docs"></script>
+  <script src="prebuiltSessions.js?v=2026-09-26-ux-docs"></script>
+  <script src="rules.js?v=2026-09-26-ux-docs"></script>
+  <script src="sunPosition.js?v=2026-09-26-ux-docs"></script>
+  <script src="balls.js?v=2026-09-26-ux-docs"></script>
+  <script src="field.js?v=2026-09-26-ux-docs"></script>
+  <script src="basketballCourt.js?v=2026-09-26-ux-docs"></script>
+  <script src="volleyballCourt.js?v=2026-09-26-ux-docs"></script>
+  <script src="activityField.js?v=2026-09-26-ux-docs"></script>
+  <script src="padelCourt.js?v=2026-09-26-ux-docs"></script>
+  <script src="gardenField.js?v=2026-09-26-ux-docs"></script>
+  <script src="combineField.js?v=2026-09-26-ux-docs"></script>
+  <script src="siteField.js?v=2026-09-26-ux-docs"></script>
+  <script src="buildupEditor.js?v=2026-09-26-ux-docs"></script>
+  <script src="dataTab.js?v=2026-09-26-ux-docs"></script>
+  <script src="localSession.js?v=2026-09-26-ux-docs"></script>
+  <script src="revitBridge.js?v=2026-09-26-ux-docs"></script>
+  <script src="sportController.js?v=2026-09-26-ux-docs"></script>
+  <script src="gardenController.js?v=2026-09-26-ux-docs"></script>
+  <script src="windZones.js?v=2026-09-26-ux-docs"></script>
+  <script src="siteController.js?v=2026-09-26-ux-docs"></script>
+  <script src="combineController.js?v=2026-09-26-ux-docs"></script>
+  <script src="resultsStoreCore.js?v=2026-09-26-ux-docs"></script>
+  <script src="analysisController.js?v=2026-09-26-ux-docs"></script>
+  <script src="analysisResults.js?v=2026-09-26-ux-docs"></script>
+  <script src="resultsStore.js?v=2026-09-26-ux-docs"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-26-ux-docs"></script>
+  <script src="siteTabs.js?v=2026-09-26-ux-docs"></script>
+  <script src="roofProgram.js?v=2026-09-26-ux-docs"></script>
+  <script src="workspaceBridge.js?v=2026-09-26-ux-docs"></script>
+  <script src="algoPlacementCore.js?v=2026-09-26-ux-docs"></script>
+  <script src="algoPlacementUI.js?v=2026-09-26-ux-docs"></script>
+  <script src="revitLayers.js?v=2026-09-26-ux-docs"></script>
+  <script src="compareController.js?v=2026-09-26-ux-docs"></script>
+  <script src="designPanel.js?v=2026-09-26-ux-docs"></script>
+  <script src="inspector.js?v=2026-09-26-ux-docs"></script>
+  <script src="combineHistory.js?v=2026-09-26-ux-docs"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-26-ux-docs"></script>
+  <script src="profileCore.js?v=2026-09-26-ux-docs"></script>
+  <script src="profile.js?v=2026-09-26-ux-docs"></script>
+  <script src="quizCore.js?v=2026-09-26-ux-docs"></script>
+  <script src="quiz.js?v=2026-09-26-ux-docs"></script>
+  <script src="tourCore.js?v=2026-09-26-ux-docs"></script>
+  <script src="tour.js?v=2026-09-26-ux-docs"></script>
+  <script src="whereCore.js?v=2026-09-26-ux-docs"></script>
+  <script src="where.js?v=2026-09-26-ux-docs"></script>
+  <script src="sessionGate.js?v=2026-09-26-ux-docs"></script>
+  <script src="main.js?v=2026-09-26-ux-docs"></script>
 </body>
 </html>

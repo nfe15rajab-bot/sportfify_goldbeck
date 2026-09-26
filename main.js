@@ -85,13 +85,14 @@ document.getElementById("overviewWorkflow")?.addEventListener("click", e => {
   if (btn) setMode(btn.dataset.goto);
 });
 
-/* The Overview's "What's new" cards: the profile, the quiz, and the two ways of placing (manual and algorithmic, both in Combine). */
+/* The Overview's "What's new" cards: the profile, the quiz, the two ways of placing (manual and algorithmic, both in Combine) and the results. */
 document.getElementById("overviewFeatures")?.addEventListener("click", e => {
   const card = e.target.closest("[data-feature]");
   if (!card) return;
   const feature = card.dataset.feature;
   if (feature === "profile") setMode("profile");
   else if (feature === "quiz") { if (typeof quizOpen === "function") quizOpen(undefined); }
+  else if (feature === "results") setMode("analysis");
   else if (feature === "manual" || feature === "algo") {
     setMode("combine");
     if (typeof algoSetMode === "function") algoSetMode(feature);

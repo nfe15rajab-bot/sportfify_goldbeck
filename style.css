@@ -598,6 +598,7 @@ html[data-role="client"] .planner-only { display: none !important; }
 .feature-head i { font-size: 22px; color: var(--text-accent); }
 .feature-card .hint { flex: 1; font-size: 12px; line-height: 1.5; margin: 0; }
 .feature-card .btn-export { align-self: flex-start; width: auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; }
+.feature-grid > .feature-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
 @media (max-width: 720px) { .feature-grid { grid-template-columns: 1fr; } }
 
 /* ── Smarter-rules advisory (Combine's Rules step) ── */
