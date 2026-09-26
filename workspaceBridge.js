@@ -77,7 +77,8 @@ async function workspaceRefresh() {
     workspaceState.kinds = ws.json.kinds || [];
   }
   const nextFiles = files.ok && files.json ? files.json.files || [] : [];
-  if (ws.ok) pullRevitConfig();
+  if (ws.ok) { pullRevitConfig(); if (typeof profileSyncWithRevit === "function") profileSyncWithRevit(); }      // the PROFILE (profile.js): the newer copy of Revit's and this page's wins
+  else if (typeof profileRevitClosed === "function") profileRevitClosed();
   const changed = was !== ws.ok || JSON.stringify(nextFiles) !== JSON.stringify(workspaceState.files) || JSON.stringify(ws.json && ws.json.kinds) !== JSON.stringify(workspaceState.kinds);
   workspaceState.files = nextFiles;
   if (was !== true && ws.ok) { workspaceState.draftSent = null; workspaceState.layoutId = null; }      // Revit was (re)started: it has lost the draft, send it again
