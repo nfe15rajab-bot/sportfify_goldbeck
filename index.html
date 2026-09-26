@@ -836,6 +836,14 @@
               <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
               <!-- Combine's "Revit layers" switch (revitLayers.js): what the Revit model has, drawn over the roof only when turned on -->
               <div class="revit-layers" id="revit-layers"></div>
+              <!-- The single most important first action in a fresh session — shown right on the roof (not
+                   buried in the Rules tab, ⚙) until it's satisfied. See drawCombineCanvas's visibility toggle
+                   and syncAddEntryTool's active-state/instruction swap (combineField.js). -->
+              <div class="combine-entry-cta" id="combine-entry-cta" hidden>
+                <i class="ti ti-door-enter" aria-hidden="true"></i>
+                <span id="combine-entry-cta-text">Add an entry point so pathways have somewhere to start.</span>
+                <button class="btn-export accent" id="btn-add-entry-cta"><i class="ti ti-map-pin-plus" aria-hidden="true"></i>Add Entry Point</button>
+              </div>
               <!-- What each number on the board is (combineField.js, renderCombineLegend) -->
               <div class="combine-legend" id="combine-legend" hidden></div>
               <div class="combine-zoom-controls">

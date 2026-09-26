@@ -295,6 +295,19 @@ function syncAddEntryTool() {
   const active = combineState.tool === "addEntry";
   btn.classList.toggle("active", active);
   hint.style.display = active ? "block" : "none";
+
+  // The on-canvas call-to-action (index.html's #combine-entry-cta) mirrors
+  // the same active state and swaps to the same "click the edge" wording,
+  // since it's the copy this button's own toggle is reached through most
+  // of the time — see the click wiring in combineController.js.
+  const ctaBtn = document.getElementById("btn-add-entry-cta");
+  const ctaText = document.getElementById("combine-entry-cta-text");
+  if (ctaBtn) ctaBtn.classList.toggle("active", active);
+  if (ctaText) {
+    ctaText.textContent = active
+      ? "Tool active — click near the site edge to drop one pin (click the button again to cancel)."
+      : "Add an entry point so pathways have somewhere to start.";
+  }
 }
 
 /** Snaps a click (plan metres) onto the nearest side of the real roof outline and stores it as a new entry point, facing into the roof. */
@@ -421,6 +434,9 @@ function drawCombineCanvas() {
   const items = combineState.items;
   const entries = combineState.entryPoints;
   const { scale, roofPxW, roofPxH, roofOx, roofOy } = combineLayout();
+
+  const entryCta = document.getElementById("combine-entry-cta");
+  if (entryCta) entryCta.hidden = entries.length > 0;
 
   let el = `
     <text x="${CVW / 2}" y="24" text-anchor="middle" font-size="12"
