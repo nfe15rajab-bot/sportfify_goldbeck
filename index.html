@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-23-combine-wall-white"></script>
+  <script src="themeInit.js?v=2026-09-25-ux-profile-photo"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -13,7 +13,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-23-combine-wall-white" />
+  <link rel="stylesheet" href="style.css?v=2026-09-25-ux-profile-photo" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -43,6 +43,10 @@
           <p class="hint session-gate-presets-intro">Three real, rule-checked layouts on the actual Goldbeck roof (67.6 × 21 m, 4 entries) — pick one to start editing, or use it as-is.</p>
           <div class="preset-cards" id="presetCards"></div>
         </div>
+        <div class="session-gate-profile">
+          <img id="sessionGatePhoto" class="profile-avatar-small" alt="" style="display:none" />
+          <p class="hint" id="sessionGateProfile"></p>
+        </div>
         <button class="session-gate-link" id="btn-gate-load-file" style="display:none">Or load from a file instead</button>
         <input type="file" id="gate-load-file" accept=".json" style="display:none" />
         <p class="hint" id="sessionGateStatus"></p>
@@ -54,6 +58,7 @@
       <button id="modeDeliverables" class="mode-btn">Deliverables</button>
       <button id="modeSession" class="mode-btn">Save Session</button>
       <button id="btn-new-session" class="mode-btn" title="Reopen the welcome picker — resume, start fresh, load a preset or a file">New Session</button>
+      <button id="modeProfile" class="mode-btn" title="Your PROFILE — Simple or Advanced view, role and theme; saved and reloaded every time">Profile</button>
     </div>
 
     <div class="top-right-controls">
@@ -755,6 +760,71 @@
           </div>
         </div>
 
+        <div id="profile-content" style="display:none">
+          <div class="guide-wrap">
+            <div class="guide-hero">
+              <h1>Profile</h1>
+              <p class="hint">Your PROFILE keeps how Sportify looks and behaves for you: the view (Simple or Advanced), your role and the theme. Every change is saved at once, on this computer and in Revit, and reloaded whenever you open Sportify.</p>
+            </div>
+
+            <div class="profile-person">
+              <div class="profile-avatar" id="profile-avatar"><i class="ti ti-user" aria-hidden="true"></i></div>
+              <div class="profile-person-fields">
+                <label class="profile-label" for="profile-person-name">Your name</label>
+                <input type="text" id="profile-person-name" maxlength="60" placeholder="Name shown on your profile" autocomplete="name" />
+                <div class="profile-person-buttons">
+                  <button type="button" class="btn-export" id="btn-profile-photo"><i class="ti ti-camera" aria-hidden="true"></i><span id="btn-profile-photo-label">Add a photo</span></button>
+                  <button type="button" class="btn-export" id="btn-profile-photo-remove" style="display:none"><i class="ti ti-trash" aria-hidden="true"></i>Remove photo</button>
+                </div>
+                <input type="file" id="profile-photo-file" accept="image/*" style="display:none" />
+              </div>
+            </div>
+
+            <h2 class="profile-heading">View</h2>
+            <div class="profile-choice" id="profile-view" role="group" aria-label="View"></div>
+            <p class="profile-note" id="profile-view-note"></p>
+
+            <div class="profile-row">
+              <div>
+                <h2 class="profile-heading">Role</h2>
+                <div class="role-toggle profile-segment" role="group" aria-label="Role">
+                  <button type="button" class="role-btn" data-profile-role="planner"><i class="ti ti-ruler-2" aria-hidden="true"></i>Planner</button>
+                  <button type="button" class="role-btn" data-profile-role="client"><i class="ti ti-user" aria-hidden="true"></i>Client</button>
+                </div>
+              </div>
+              <div>
+                <h2 class="profile-heading">Theme</h2>
+                <div class="role-toggle profile-segment" role="group" aria-label="Theme">
+                  <button type="button" class="role-btn" data-profile-theme="dark"><i class="ti ti-moon" aria-hidden="true"></i>Dark</button>
+                  <button type="button" class="role-btn" data-profile-theme="light"><i class="ti ti-sun" aria-hidden="true"></i>Light</button>
+                </div>
+              </div>
+            </div>
+
+            <h2 class="profile-heading">Where your profile is kept</h2>
+            <p class="profile-note" id="profile-status"></p>
+            <div class="overview-actions profile-actions">
+              <button class="btn-export overview-action-btn" id="btn-profile-reload">
+                <i class="ti ti-refresh" aria-hidden="true"></i>
+                <span><strong>Reload my profile</strong><small>Read the saved copy again (Revit's, when it is open)</small></span>
+              </button>
+              <button class="btn-export overview-action-btn" id="btn-profile-export">
+                <i class="ti ti-download" aria-hidden="true"></i>
+                <span><strong>Export profile</strong><small>A file, Sportify-PROFILE.json, for another computer</small></span>
+              </button>
+              <button class="btn-export overview-action-btn" id="btn-profile-import">
+                <i class="ti ti-upload" aria-hidden="true"></i>
+                <span><strong>Import profile</strong><small>Load a Sportify-PROFILE.json file</small></span>
+              </button>
+              <button class="btn-export overview-action-btn" id="btn-profile-reset">
+                <i class="ti ti-restore" aria-hidden="true"></i>
+                <span><strong>Reset</strong><small>Back to Advanced view and planner</small></span>
+              </button>
+            </div>
+            <input type="file" id="profile-import-file" accept=".json" style="display:none" />
+          </div>
+        </div>
+
         <div id="combineConfigurator" style="display:none">
           <!-- Algorithmic placement (algoPlacementUI.js): an alternative to placing pieces by hand; covers the board while it is chosen -->
           <div class="algo-placement" id="algo-placement" hidden></div>
@@ -1013,58 +1083,60 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="apiSession.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="data.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="carbon.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="activitiesData.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="vegetation.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="furnitureElevation.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="furniture.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="canvasFlyouts.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="zones.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="roofFinish.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="assumptions.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="roofFeatures.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="structure.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="assemblies.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="gardenData.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="prebuiltSessions.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="rules.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="sunPosition.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="balls.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="field.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="basketballCourt.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="volleyballCourt.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="activityField.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="padelCourt.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="gardenField.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="combineField.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="siteField.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="buildupEditor.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="dataTab.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="localSession.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="revitBridge.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="sportController.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="gardenController.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="windZones.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="siteController.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="combineController.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="analysisController.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="analysisResults.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="siteTabs.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="roofProgram.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="workspaceBridge.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="algoPlacementCore.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="algoPlacementUI.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="revitLayers.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="compareController.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="designPanel.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="inspector.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="combineHistory.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="sessionGate.js?v=2026-09-23-combine-wall-white"></script>
-  <script src="main.js?v=2026-09-23-combine-wall-white"></script>
+  <script src="escape.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="apiSession.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="data.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="carbon.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="activitiesData.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="vegetation.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="furnitureElevation.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="furniture.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="canvasFlyouts.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="zones.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="roofFinish.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="assumptions.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="roofFeatures.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="structure.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="assemblies.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="gardenData.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="prebuiltSessions.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="rules.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="sunPosition.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="balls.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="field.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="basketballCourt.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="volleyballCourt.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="activityField.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="padelCourt.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="gardenField.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="combineField.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="siteField.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="buildupEditor.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="dataTab.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="localSession.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="revitBridge.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="sportController.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="gardenController.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="windZones.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="siteController.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="combineController.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="analysisController.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="analysisResults.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="siteTabs.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="roofProgram.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="workspaceBridge.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="algoPlacementCore.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="algoPlacementUI.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="revitLayers.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="compareController.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="designPanel.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="inspector.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="combineHistory.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="profileCore.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="profile.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="sessionGate.js?v=2026-09-25-ux-profile-photo"></script>
+  <script src="main.js?v=2026-09-25-ux-profile-photo"></script>
 </body>
 </html>
