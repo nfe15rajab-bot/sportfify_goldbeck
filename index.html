@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-26-ux-results"></script>
+  <script src="themeInit.js?v=2026-09-26-ux-renames"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -13,7 +13,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-26-ux-results" />
+  <link rel="stylesheet" href="style.css?v=2026-09-26-ux-renames" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -66,7 +66,7 @@
 
     <div class="mode-toggle">
       <button id="modeGuide" class="mode-btn active">Overview</button>
-      <button id="modeDeliverables" class="mode-btn">Deliverables</button>
+      <button id="modeDeliverables" class="mode-btn" title="Documents & files — layouts, charts, reports and schedules, kept in your Sportify folder">Documents</button>
       <button id="modeSession" class="mode-btn">Save Session</button>
       <button id="btn-new-session" class="mode-btn" title="Reopen the welcome picker — resume, start fresh, load a preset or a file">New Session</button>
       <button id="modeProfile" class="mode-btn" title="Your PROFILE — Simple or Advanced view, role and theme; saved and reloaded every time">Profile</button>
@@ -94,8 +94,8 @@
 
     <nav class="mode-rail" id="modeRail" title="Sportify workspaces">
       <button id="modeSite" class="activity-icon" title="Site"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="activity-icon-label">Site</span></button>
-      <button id="modeStructure" class="activity-icon" title="Structure — grid, columns, deck capacity, natural frequency"><i class="ti ti-building" aria-hidden="true"></i><span class="activity-icon-label">Structure</span></button>
-      <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Conditions</span></button>
+      <button id="modeStructure" class="activity-icon" title="Structure inputs — grid, columns, deck capacity, natural frequency"><i class="ti ti-building" aria-hidden="true"></i><span class="activity-icon-label">Structure inputs</span></button>
+      <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Site conditions</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
@@ -103,13 +103,13 @@
       <button id="btn-furniture-toggle" class="activity-icon" title="Furniture — benches, tables, bins, bollards, lights"><i class="ti ti-armchair" aria-hidden="true"></i><span class="activity-icon-label">Furniture</span></button>
       <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
       <div class="activity-bar-divider"></div>
-      <button id="modeAnalysis" class="activity-icon" title="Analysis"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Analysis</span></button>
+      <button id="modeAnalysis" class="activity-icon" title="Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Results</span></button>
       <button id="modeCompare" class="activity-icon" title="Compare"><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="activity-icon-label">Compare</span></button>
-      <button id="modePostAnalysis" class="activity-icon" title="Post Analysis — dynamic families and where to improve the design next"><i class="ti ti-transform" aria-hidden="true"></i><span class="activity-icon-label">Post Analysis</span></button>
+      <button id="modePostAnalysis" class="activity-icon" title="Improve — what to change first, ranked, and the moving parts that answer the analysis"><i class="ti ti-transform" aria-hidden="true"></i><span class="activity-icon-label">Improve</span></button>
       <div class="activity-bar-divider"></div>
-      <button id="modeData" class="activity-icon" title="Data"><i class="ti ti-database" aria-hidden="true"></i><span class="activity-icon-label">Data</span></button>
+      <button id="modeData" class="activity-icon" title="Catalogue — the reference data the app and Revit read: sports, materials, analysis figures"><i class="ti ti-database" aria-hidden="true"></i><span class="activity-icon-label">Catalogue</span></button>
       <div class="activity-bar-divider"></div>
-      <button id="modeFamilies" class="activity-icon" title="Revit Families"><i class="ti ti-box-multiple" aria-hidden="true"></i><span class="activity-icon-label">Families</span></button>
+      <button id="modeFamilies" class="activity-icon" title="Revit families — what your Revit project has loaded, to place in Combine"><i class="ti ti-box-multiple" aria-hidden="true"></i><span class="activity-icon-label">Revit families</span></button>
     </nav>
 
     <nav class="activity-bar" id="activity-bar"></nav>
@@ -118,7 +118,7 @@
       <div id="siteConfigurator" style="display:none">
         <div class="panel-header">
           <h2>Site</h2>
-          <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine/Analysis for shading decisions. The roof's structure and the site's conditions (wind, snow, use over the day) have their own tabs.</p>
+          <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine and the results for shading decisions. The roof's structure and the site's conditions (wind, snow, use over the day) have their own tabs: Structure inputs and Site conditions.</p>
         </div>
         <div class="section planner-only" id="roof-setup">
           <label>1 · How do you define the roof?</label>
@@ -200,7 +200,7 @@
 
       <div id="structureConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Structure</h2>
+          <h2>Structure inputs</h2>
           <p>What the roof deck is made of and what it can carry: the grid and columns from Revit, the deck capacity, the natural frequency and the comfort limits. The static and dynamic structural analyses rest on them.</p>
         </div>
   <div class="section planner-only">
@@ -426,8 +426,8 @@
 
       <div id="dataConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Reference data</h2>
-          <p>Sports, materials, norms &amp; vegetal palettes for Germany</p>
+          <h2>Catalogue</h2>
+          <p>The reference data the app and Revit read: sports, materials, norms &amp; vegetal palettes for Germany, and the figures the analyses run on</p>
         </div>
 
         <div class="section">
@@ -502,7 +502,7 @@
 
       <div id="analysisConfigurator" style="display:none">
         <div class="panel-header">
-          <h2 id="analysis-heading">Analysis: the whole layout at a glance</h2>
+          <h2 id="analysis-heading">Results: the whole layout at a glance</h2>
           <p id="analysis-intro">One tile per analysis. Revit's full analysis when it has run on this layout, this app's quick estimate otherwise. Click a tile for the details.</p>
         </div>
         <div class="section" id="analysisResultsSection" style="display:none"></div>
@@ -518,8 +518,8 @@
 
       <div id="postAnalysisConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Post Analysis</h2>
-          <p>Where the analysis results turn into design: dynamic families driven by their own numbers, and what still needs attention, ranked by what matters most to you.</p>
+          <h2>Improve</h2>
+          <p>Where the results turn into design: dynamic families driven by their own numbers, and what still needs attention, ranked by what matters most to you.</p>
         </div>
         <div class="section">
           <label><i class="ti ti-adjustments" aria-hidden="true"></i> Priority</label>
@@ -629,7 +629,7 @@
           <div class="guide-wrap">
             <div class="guide-hero">
               <h1>Design your roof, your way</h1>
-              <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Site, Sport, Garden, Combine, Analysis, Compare and Data all live in the rail on the left — here's the order they're meant to be used in.</p>
+              <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Site, Sport, Garden, Combine, Results, Compare and the Catalogue all live in the rail on the left — here's the order they're meant to be used in.</p>
             </div>
 
             <div class="next-step" id="overviewNext" style="display:none"></div>
@@ -645,7 +645,7 @@
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
                 <button class="workflow-step" data-goto="combine"><span class="workflow-num">3</span><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="workflow-label">Combine</span><span class="hint">Drag pieces onto the roof</span></button>
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
-                <button class="workflow-step" data-goto="analysis"><span class="workflow-num">4</span><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="workflow-label">Analysis</span><span class="hint">Check the layout</span></button>
+                <button class="workflow-step" data-goto="analysis"><span class="workflow-num">4</span><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="workflow-label">Results</span><span class="hint">Check the layout</span></button>
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
                 <button class="workflow-step" data-goto="compare"><span class="workflow-num">5</span><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="workflow-label">Compare</span><span class="hint">Weigh variants against each other</span></button>
               </div>
@@ -723,7 +723,7 @@
         <div id="deliverables-content" style="display:none">
           <div class="guide-wrap">
             <div class="guide-hero">
-              <h1>Deliverables</h1>
+              <h1>Documents &amp; files</h1>
               <p class="hint">Everything Sportify makes, in one folder on your machine with a subfolder for every kind of deliverable. With Revit connected the app and Revit share that folder: exports are saved there by themselves, the analyses run on your layout with one button, and nothing has to be imported or exported by hand.</p>
               <p class="hint ws-status" id="dl-status"></p>
             </div>
@@ -1111,68 +1111,68 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-26-ux-results"></script>
-  <script src="apiSession.js?v=2026-09-26-ux-results"></script>
-  <script src="data.js?v=2026-09-26-ux-results"></script>
-  <script src="carbon.js?v=2026-09-26-ux-results"></script>
-  <script src="activitiesData.js?v=2026-09-26-ux-results"></script>
-  <script src="vegetation.js?v=2026-09-26-ux-results"></script>
-  <script src="furnitureElevation.js?v=2026-09-26-ux-results"></script>
-  <script src="furniture.js?v=2026-09-26-ux-results"></script>
-  <script src="canvasFlyouts.js?v=2026-09-26-ux-results"></script>
-  <script src="zones.js?v=2026-09-26-ux-results"></script>
-  <script src="roofFinish.js?v=2026-09-26-ux-results"></script>
-  <script src="assumptions.js?v=2026-09-26-ux-results"></script>
-  <script src="roofFeatures.js?v=2026-09-26-ux-results"></script>
-  <script src="structure.js?v=2026-09-26-ux-results"></script>
-  <script src="assemblies.js?v=2026-09-26-ux-results"></script>
-  <script src="gardenData.js?v=2026-09-26-ux-results"></script>
-  <script src="prebuiltSessions.js?v=2026-09-26-ux-results"></script>
-  <script src="rules.js?v=2026-09-26-ux-results"></script>
-  <script src="sunPosition.js?v=2026-09-26-ux-results"></script>
-  <script src="balls.js?v=2026-09-26-ux-results"></script>
-  <script src="field.js?v=2026-09-26-ux-results"></script>
-  <script src="basketballCourt.js?v=2026-09-26-ux-results"></script>
-  <script src="volleyballCourt.js?v=2026-09-26-ux-results"></script>
-  <script src="activityField.js?v=2026-09-26-ux-results"></script>
-  <script src="padelCourt.js?v=2026-09-26-ux-results"></script>
-  <script src="gardenField.js?v=2026-09-26-ux-results"></script>
-  <script src="combineField.js?v=2026-09-26-ux-results"></script>
-  <script src="siteField.js?v=2026-09-26-ux-results"></script>
-  <script src="buildupEditor.js?v=2026-09-26-ux-results"></script>
-  <script src="dataTab.js?v=2026-09-26-ux-results"></script>
-  <script src="localSession.js?v=2026-09-26-ux-results"></script>
-  <script src="revitBridge.js?v=2026-09-26-ux-results"></script>
-  <script src="sportController.js?v=2026-09-26-ux-results"></script>
-  <script src="gardenController.js?v=2026-09-26-ux-results"></script>
-  <script src="windZones.js?v=2026-09-26-ux-results"></script>
-  <script src="siteController.js?v=2026-09-26-ux-results"></script>
-  <script src="combineController.js?v=2026-09-26-ux-results"></script>
-  <script src="resultsStoreCore.js?v=2026-09-26-ux-results"></script>
-  <script src="analysisController.js?v=2026-09-26-ux-results"></script>
-  <script src="analysisResults.js?v=2026-09-26-ux-results"></script>
-  <script src="resultsStore.js?v=2026-09-26-ux-results"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-26-ux-results"></script>
-  <script src="siteTabs.js?v=2026-09-26-ux-results"></script>
-  <script src="roofProgram.js?v=2026-09-26-ux-results"></script>
-  <script src="workspaceBridge.js?v=2026-09-26-ux-results"></script>
-  <script src="algoPlacementCore.js?v=2026-09-26-ux-results"></script>
-  <script src="algoPlacementUI.js?v=2026-09-26-ux-results"></script>
-  <script src="revitLayers.js?v=2026-09-26-ux-results"></script>
-  <script src="compareController.js?v=2026-09-26-ux-results"></script>
-  <script src="designPanel.js?v=2026-09-26-ux-results"></script>
-  <script src="inspector.js?v=2026-09-26-ux-results"></script>
-  <script src="combineHistory.js?v=2026-09-26-ux-results"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-26-ux-results"></script>
-  <script src="profileCore.js?v=2026-09-26-ux-results"></script>
-  <script src="profile.js?v=2026-09-26-ux-results"></script>
-  <script src="quizCore.js?v=2026-09-26-ux-results"></script>
-  <script src="quiz.js?v=2026-09-26-ux-results"></script>
-  <script src="tourCore.js?v=2026-09-26-ux-results"></script>
-  <script src="tour.js?v=2026-09-26-ux-results"></script>
-  <script src="whereCore.js?v=2026-09-26-ux-results"></script>
-  <script src="where.js?v=2026-09-26-ux-results"></script>
-  <script src="sessionGate.js?v=2026-09-26-ux-results"></script>
-  <script src="main.js?v=2026-09-26-ux-results"></script>
+  <script src="escape.js?v=2026-09-26-ux-renames"></script>
+  <script src="apiSession.js?v=2026-09-26-ux-renames"></script>
+  <script src="data.js?v=2026-09-26-ux-renames"></script>
+  <script src="carbon.js?v=2026-09-26-ux-renames"></script>
+  <script src="activitiesData.js?v=2026-09-26-ux-renames"></script>
+  <script src="vegetation.js?v=2026-09-26-ux-renames"></script>
+  <script src="furnitureElevation.js?v=2026-09-26-ux-renames"></script>
+  <script src="furniture.js?v=2026-09-26-ux-renames"></script>
+  <script src="canvasFlyouts.js?v=2026-09-26-ux-renames"></script>
+  <script src="zones.js?v=2026-09-26-ux-renames"></script>
+  <script src="roofFinish.js?v=2026-09-26-ux-renames"></script>
+  <script src="assumptions.js?v=2026-09-26-ux-renames"></script>
+  <script src="roofFeatures.js?v=2026-09-26-ux-renames"></script>
+  <script src="structure.js?v=2026-09-26-ux-renames"></script>
+  <script src="assemblies.js?v=2026-09-26-ux-renames"></script>
+  <script src="gardenData.js?v=2026-09-26-ux-renames"></script>
+  <script src="prebuiltSessions.js?v=2026-09-26-ux-renames"></script>
+  <script src="rules.js?v=2026-09-26-ux-renames"></script>
+  <script src="sunPosition.js?v=2026-09-26-ux-renames"></script>
+  <script src="balls.js?v=2026-09-26-ux-renames"></script>
+  <script src="field.js?v=2026-09-26-ux-renames"></script>
+  <script src="basketballCourt.js?v=2026-09-26-ux-renames"></script>
+  <script src="volleyballCourt.js?v=2026-09-26-ux-renames"></script>
+  <script src="activityField.js?v=2026-09-26-ux-renames"></script>
+  <script src="padelCourt.js?v=2026-09-26-ux-renames"></script>
+  <script src="gardenField.js?v=2026-09-26-ux-renames"></script>
+  <script src="combineField.js?v=2026-09-26-ux-renames"></script>
+  <script src="siteField.js?v=2026-09-26-ux-renames"></script>
+  <script src="buildupEditor.js?v=2026-09-26-ux-renames"></script>
+  <script src="dataTab.js?v=2026-09-26-ux-renames"></script>
+  <script src="localSession.js?v=2026-09-26-ux-renames"></script>
+  <script src="revitBridge.js?v=2026-09-26-ux-renames"></script>
+  <script src="sportController.js?v=2026-09-26-ux-renames"></script>
+  <script src="gardenController.js?v=2026-09-26-ux-renames"></script>
+  <script src="windZones.js?v=2026-09-26-ux-renames"></script>
+  <script src="siteController.js?v=2026-09-26-ux-renames"></script>
+  <script src="combineController.js?v=2026-09-26-ux-renames"></script>
+  <script src="resultsStoreCore.js?v=2026-09-26-ux-renames"></script>
+  <script src="analysisController.js?v=2026-09-26-ux-renames"></script>
+  <script src="analysisResults.js?v=2026-09-26-ux-renames"></script>
+  <script src="resultsStore.js?v=2026-09-26-ux-renames"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-26-ux-renames"></script>
+  <script src="siteTabs.js?v=2026-09-26-ux-renames"></script>
+  <script src="roofProgram.js?v=2026-09-26-ux-renames"></script>
+  <script src="workspaceBridge.js?v=2026-09-26-ux-renames"></script>
+  <script src="algoPlacementCore.js?v=2026-09-26-ux-renames"></script>
+  <script src="algoPlacementUI.js?v=2026-09-26-ux-renames"></script>
+  <script src="revitLayers.js?v=2026-09-26-ux-renames"></script>
+  <script src="compareController.js?v=2026-09-26-ux-renames"></script>
+  <script src="designPanel.js?v=2026-09-26-ux-renames"></script>
+  <script src="inspector.js?v=2026-09-26-ux-renames"></script>
+  <script src="combineHistory.js?v=2026-09-26-ux-renames"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-26-ux-renames"></script>
+  <script src="profileCore.js?v=2026-09-26-ux-renames"></script>
+  <script src="profile.js?v=2026-09-26-ux-renames"></script>
+  <script src="quizCore.js?v=2026-09-26-ux-renames"></script>
+  <script src="quiz.js?v=2026-09-26-ux-renames"></script>
+  <script src="tourCore.js?v=2026-09-26-ux-renames"></script>
+  <script src="tour.js?v=2026-09-26-ux-renames"></script>
+  <script src="whereCore.js?v=2026-09-26-ux-renames"></script>
+  <script src="where.js?v=2026-09-26-ux-renames"></script>
+  <script src="sessionGate.js?v=2026-09-26-ux-renames"></script>
+  <script src="main.js?v=2026-09-26-ux-renames"></script>
 </body>
 </html>

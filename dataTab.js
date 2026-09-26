@@ -1,5 +1,5 @@
 /**
- * dataTab.js — Sportify reference-data browser (Data tab)
+ * dataTab.js — Sportify reference-data browser (Catalogue tab)
  * Read-only view over the .NET backend's sports/norms/materials/providers
  * and vegetal-palette catalog. This is the first feature in the app with a
  * hard backend dependency, so every fetch failure renders an explicit,
@@ -405,7 +405,7 @@ function updateDataUI() {
 
 /* ── Shared material/provider reference lookups — used by the Sport and
    Garden configurators' "reference material/provider" dropdowns, not just
-   this Data tab. Lives here since this file already owns DATA_API_BASE /
+   this Catalogue tab. Lives here since this file already owns DATA_API_BASE /
    fetchDataEntity / the shared cache, and loads before sportController.js
    and gardenController.js in index.html. ── */
 async function fetchReferenceMaterials() { return fetchDataEntity("materials", "sports/materials"); }
@@ -443,7 +443,7 @@ function readReferenceSelection(selectEl, manualEl, items) {
   return picked ? picked.name : null;
 }
 
-/* ── Data tab: domain switch + search wiring ── */
+/* ── Catalogue tab: domain switch + search wiring ── */
 document.getElementById("data-domain-btns").addEventListener("click", e => {
   const btn = e.target.closest(".q-btn");
   if (btn && typeof setDataDomain === "function") setDataDomain(btn.dataset.domain);

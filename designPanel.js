@@ -140,7 +140,7 @@ function computeQuantityTakeoff() {
   };
 }
 
-/* referenceMaterialName(item): which catalog material a piece is made of, is in carbon.js (with the carbon sum), shared with the Analysis tab and the add-in. */
+/* referenceMaterialName(item): which catalog material a piece is made of, is in carbon.js (with the carbon sum), shared with the Results tab and the add-in. */
 
 /**
  * Courts, activity pieces and equipment: area times the reference material's
@@ -326,7 +326,7 @@ function computeAccessMetric(circulation) {
 }
 
 /**
- * Embodied carbon, same basis as the Analysis tab: a piece's area times its
+ * Embodied carbon, same basis as the Results tab: a piece's area times its
  * reference material's kg CO2e/m². Pieces without either are counted as
  * uncovered, never as zero.
  *
@@ -341,7 +341,7 @@ function computeCarbonMetric() {
   if (!materials || typeof getFootprint !== "function") {
     return { totalKg: null, covered: 0, total: items.length, reason: "material carbon figures not loaded" };
   }
-  const { totalKg, coveredCount, totalCount } = embodiedCarbon(items, materials);      // carbon.js: the same sum as the Analysis tab's LCA
+  const { totalKg, coveredCount, totalCount } = embodiedCarbon(items, materials);      // carbon.js: the same sum as the Results tab's LCA
   return { totalKg: coveredCount ? totalKg : null, covered: coveredCount, total: totalCount };
 }
 

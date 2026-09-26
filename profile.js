@@ -356,7 +356,7 @@ function profileStatusText() {
   const stamp = new Date(p.updated).toLocaleString();
   if (profileState.shared === true) return "Saved " + stamp + " in this browser, in Revit's settings file and as Sportify-PROFILE.json in the Profile folder of your Sportify folder" + (profileState.file ? " (" + profileState.file + ")" : "") + ", so the Sportify tab in Revit and this page agree.";
   if (profileState.shared === "error") return "Saved " + stamp + " in this browser. Revit did not take it.";
-  return "Saved " + stamp + " in this browser. Revit is not open: it gets the profile the next time both are open.";
+  return "Saved " + stamp + " in this browser. Revit not open: it gets the profile the next time both are open.";
 }
 
 function profileRenderStatus() {

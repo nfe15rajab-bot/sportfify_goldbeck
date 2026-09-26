@@ -69,6 +69,6 @@ async function pollRevitBoundary() {
       else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
     }
   } catch (err) {
-    if(statusEl) statusEl.textContent = "Not connected to Revit. Import an exported file, or enter the size by hand.";
+    if(statusEl) statusEl.textContent = "Revit not open. Import an exported file, or enter the size by hand.";
   }
 }

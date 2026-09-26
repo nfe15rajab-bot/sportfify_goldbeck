@@ -43,7 +43,7 @@ if (gatePieceCount > 0) {
 function leaveSessionGate() {
   sessionGateEl.classList.add("session-gate-hidden");
   setTimeout(() => { sessionGateEl.style.display = "none"; }, 250);
-  // Where the person's answers say to start (the quiz: Site, Combine, Analysis or Deliverables), else the Overview — same as a fresh page load
+  // Where the person's answers say to start (the quiz: Site, Combine, Results or Documents), else the Overview — same as a fresh page load
   setMode(typeof profileLandingMode === "function" ? profileLandingMode() : "guide");
 }
 

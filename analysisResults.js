@@ -1,9 +1,9 @@
 /**
- * analysisResults.js — the Analysis tab's groups, and what the Revit add-in found.
+ * analysisResults.js — the Results tab's groups, and what the Revit add-in found.
  *
  * The Revit add-in publishes what its analyses found (GET localhost:5679/analysis-results): the numbers of the garden analyses (rain, wind, erosion), the structural ones (static loads,
  * dynamic analysis), the ball simulation, fire safety and accessibility, sun and shade, LCA and carbon. The Unity recordings that go with them are served beside them (GET /recording).
- * The Analysis tab is a second rail with one button per group, the way Sport shows its sports. (The Revit button "Send All to Web App" sends the physical analyses in one go; each analysis
+ * The Results tab is a second rail with one button per group, the way Sport shows its sports. (The Revit button "Send All to Web App" sends the physical analyses in one go; each analysis
  * command also publishes its own result as soon as it has one.) Compare is not in this: it compares the user's saved iterations.
  *
  *   Overview   the whole layout at a glance: one tile per analysis (resultsStore.js), each saying its headline and where it comes from; a tile opens its card below
@@ -41,14 +41,14 @@ const RESULT_SECTIONS = {
   lca: { title: "LCA", run: RUN_PATH_ALGORITHMIC + "LCA Analysis" },
   carbon_impact: { title: "Carbon impact", run: RUN_PATH_ALGORITHMIC + "Carbon Impact Analysis" },
   sun_and_shading: { title: "Sun and shade", run: RUN_PATH_PHYSICAL + "Environmental → Sun & Shade Analysis" },
-  // Shown in the Post Analysis tab (kineticsPostAnalysis.js), not this rail — see ANALYSIS_SUBTABS's note above. Still
+  // Shown in the Improve tab (kineticsPostAnalysis.js), not this rail — see ANALYSIS_SUBTABS's note above. Still
   // listed here so results-keys-parity.js can confirm the add-in and the web app agree on what "kinetics" means.
   kinetics: { title: "Kinetics", run: "Sportify ribbon → Kinetics" }
 };
 
 /** The rail: id, caption, icon, heading and what the group shows. */
 const ANALYSIS_SUBTABS = [
-  { id: "overview", label: "Overview", icon: "ti-layout-grid", title: "Analysis: the whole layout at a glance", intro: "One tile per analysis. Revit's full analysis when it has run on this layout, this app's quick estimate otherwise. Click a tile for the details." },
+  { id: "overview", label: "Overview", icon: "ti-layout-grid", title: "Results: the whole layout at a glance", intro: "One tile per analysis. Revit's full analysis when it has run on this layout, this app's quick estimate otherwise. Click a tile for the details." },
   {
     id: "garden", label: "Garden", icon: "ti-plant-2", title: "Garden: rain, wind and erosion",
     intro: "What rain, wind and the weather do to the green roofs: how much water each build-up keeps, whether a build-up would lift off or a tree blow over.",
@@ -166,7 +166,7 @@ function renderAnalysisIfShowingResults() {
 
 // ---------------------------------------------------------------------------------------------------- the rail
 
-/** Fills the second rail (the one Sport uses for its sports) with the Analysis tab's groups. */
+/** Fills the second rail (the one Sport uses for its sports) with the Results tab's groups. */
 function buildAnalysisRail() {
   const bar = document.getElementById("activity-bar");
   if (!bar) return;
@@ -286,7 +286,7 @@ function resInputs(inputs) {
 
 function resPrelim(note) {
   return `<div class="res-prelim"><i class="ti ti-alert-triangle" aria-hidden="true"></i><div><strong>PRELIMINARY</strong> ${resText((note || "").replace(/^PRELIMINARY:?\s*/, ""))}
-    <div class="hint">Enter your own values or accept the built-in ones (the Structure and Site conditions tabs, or the window Revit opens before the analysis) to make this a result rather than a screening.</div></div></div>`;
+    <div class="hint">Enter your own values or accept the built-in ones (the Structure inputs and Site conditions tabs, or the window Revit opens before the analysis) to make this a result rather than a screening.</div></div></div>`;
 }
 
 /** The recording beside the numbers: playable while Revit is running and serving it. */

@@ -1,6 +1,6 @@
 // Tests for the one store of analysis results (resultsStoreCore.js, resultsStore.js). Run: node tools/results-store-test.js
 //
-// One list of analyses and one function for each thing a reader is told about one (tone, chip, headline), read by every screen: the Analysis tab's overview (a tile per analysis), the cards under
+// One list of analyses and one function for each thing a reader is told about one (tone, chip, headline), read by every screen: the Results tab's overview (a tile per analysis), the cards under
 // each group of that tab, and Combine's inspector (the analyses that apply to the selected piece, live). This pins the rule (Revit's full analysis when it has run, else this app's quick estimate,
 // else not run), the words, that the catalogue is the same list the Revit add-in publishes under, and, with the REAL scripts in a vm on a small layout, that a tile and its card say the same
 // thing, that a result about an earlier layout is flagged and not left saying "holds", and that a piece's rows follow the layout as it changes.
@@ -46,7 +46,7 @@ vm.runInContext("function getFootprint(obj) { const rotated = (obj.rotation % 18
 for (const f of ["escape.js", "data.js", "rules.js", "carbon.js", "gardenData.js", "resultsStoreCore.js", "analysisController.js", "analysisResults.js", "resultsStore.js", "inspector.js"]) load(f);
 
 const SECTIONS = get("RESULT_SECTIONS"), RAIL = get("ANALYSIS_SUBTABS");
-check("the catalogue is the list of sections the add-in publishes (RESULT_SECTIONS) without kinetics, which lives in the Post Analysis tab", Object.keys(SECTIONS).filter(k => k !== "kinetics").sort().join() === CAT.map(e => e.key).sort().join());
+check("the catalogue is the list of sections the add-in publishes (RESULT_SECTIONS) without kinetics, which lives in the Improve tab", Object.keys(SECTIONS).filter(k => k !== "kinetics").sort().join() === CAT.map(e => e.key).sort().join());
 check("its titles are the sections' titles", CAT.every(e => SECTIONS[e.key].title === e.title));
 check("the groups are the tab's rail (same ids, labels, icons, in the same order) without the overview and the site conditions, and each group holds the sections the rail says it holds",
   RAIL.filter(t => t.id !== "overview" && t.id !== "conditions").map(t => t.id + ":" + t.label + ":" + t.icon).join() === GROUPS.map(g => g.id + ":" + g.label + ":" + g.icon).join()
@@ -199,7 +199,7 @@ check("the inspector adds the strip for a placed piece only, and is given the ro
 
 // ---------------------------------------------------------------------------------------------------------------- what is left of the old explorer, and the page
 const page = read("index.html");
-check("the old per-component explorer is gone from the Analysis tab (its analyses are in Combine's inspector now)", !/renderComponentExplorer|analysis-component-list|componentSections/.test(read("analysisController.js")) && !/analysis-component/.test(read("style.css")));
+check("the old per-component explorer is gone from the Results tab (its analyses are in Combine's inspector now)", !/renderComponentExplorer|analysis-component-list|componentSections/.test(read("analysisController.js")) && !/analysis-component/.test(read("style.css")));
 check("the scripts are loaded in order: the core before the analyses that use it, the drawing after analysisResults.js", (() => { const at = f => page.indexOf(`<script src="${f}?v=`); return at("resultsStoreCore.js") > 0 && at("resultsStoreCore.js") < at("analysisController.js") && at("analysisResults.js") < at("resultsStore.js") && at("resultsStore.js") < at("main.js"); })());
 check("the overview is polled like the other groups (it shows what Revit sent): setAnalysisSub no longer stops polling, and main.js polls the whole tab and once on Combine", !/stopResultsPolling\(\); else startResultsPolling/.test(read("analysisResults.js")) && /isPostAnalysis \|\| isAnalysis/.test(read("main.js")) && /isCombine && typeof pollAnalysisResults/.test(read("main.js")));
 check("the words are plain: no 'bridge' anywhere in the store", !/bridge/i.test(read("resultsStoreCore.js")) && !/bridge/i.test(read("resultsStore.js")));

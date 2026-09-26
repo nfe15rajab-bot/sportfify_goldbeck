@@ -10,7 +10,7 @@
  *   exports         when connected, the app's own exports (layout JSON, roof PNG, field JSON/DXF, garden JSON) are saved in the folder instead of the browser's
  *                   Downloads; offline they download as before
  *   commands        run the physical analyses, make the charts PDF, the analysis report and the schedule, ask Revit for the functional diagrams,
- *                   open the folder in Explorer (the Deliverables tab, and the Analysis tab's Run analysis button)
+ *                   open the folder in Explorer (the Documents tab, and the Results tab's Run analysis button)
  *   charts          the analyses' charts as SVG (GET /charts), shown in the Analysis groups and written to the charts PDF
  *
  * Nothing is computed here. Not connected is a normal state (the app works alone); every action says so plainly instead of failing quietly.
@@ -55,7 +55,7 @@ async function localApi(path, opts) {
     }
     return { ok: res.ok, status: res.status, json, error: json && json.error ? json.error : res.ok ? "" : "The add-in answered " + res.status + "." };
   } catch (e) {
-    return { ok: false, status: 0, json: null, error: localSession.problem || "Revit is not reachable: open a project in Revit with the Sportify add-in loaded." };
+    return { ok: false, status: 0, json: null, error: localSession.problem || "Revit not open: open a project in Revit with the Sportify add-in loaded." };
   }
 }
 
@@ -94,7 +94,7 @@ async function workspaceRefresh() {
 let lastConfigKey = "";
 
 /**
- * The inputs the designer entered or accepted in Revit's assumptions window come into the app's own (Structure and Site conditions tabs), so nothing is typed twice.
+ * The inputs the designer entered or accepted in Revit's assumptions window come into the app's own (Structure inputs and Site conditions tabs), so nothing is typed twice.
  * Only where the app has no decision of its own yet: what was entered here is never overwritten.
  */
 async function pullRevitConfig() {
@@ -231,7 +231,7 @@ const WS_ACTIONS = {
       await loadCharts(true);
       const list = r.json.analyses || [];
       const failed = list.filter(a => !a.sent);
-      const text = `${r.json.sent} of ${list.length} analyses ran and their results are on the Analysis tab.` + (failed.length ? " Not run: " + failed.map(a => `${a.title} (${a.problem || "no reason given"})`).join("; ") + "." : "");
+      const text = `${r.json.sent} of ${list.length} analyses ran and their results are on the Results tab.` + (failed.length ? " Not run: " + failed.map(a => `${a.title} (${a.problem || "no reason given"})`).join("; ") + "." : "");
       return { ok: failed.length === 0, text };
     }
   },
@@ -288,7 +288,7 @@ async function workspaceAction(name, btn) {
   const action = WS_ACTIONS[name];
   if (!action || workspaceState.busy[name]) return;
   if (workspaceState.connected !== true) {
-    workspaceState.message = { tone: "bad", html: "Revit is not connected: open a project in Revit with the Sportify add-in loaded, then try again." };
+    workspaceState.message = { tone: "bad", html: "Revit not open: open a project in Revit with the Sportify add-in loaded, then try again." };
     workspaceChanged();
     return;
   }
@@ -367,12 +367,12 @@ function wsChartsHtml(keys) {
 
 const WS_TITLES = { structural_loads: "Structural loads", dynamic_analysis: "Dynamic analysis", wind_erosion: "Wind and erosion", soil_percolation: "Rain and soil percolation", sun_and_shading: "Sun and shade" };
 
-/** The Analysis tab's left-panel block: connection, the Run analysis button and what the last action said. */
+/** The Results tab's left-panel block: connection, the Run analysis button and what the last action said. */
 function wsRunPanelHtml() {
   const on = workspaceState.connected === true;
   const running = !!workspaceState.busy.run;
   const noLayout = !workspaceHasLayout();
-  const note = !on ? "Revit is not connected: the analysis runs inside the Revit add-in."
+  const note = !on ? "Revit not open: the analysis runs inside the Revit add-in."
     : noLayout ? "Place something on the roof in Combine first: the analysis runs on the layout."
     : "Runs the physical analyses on the layout as it is now (your Structure and Site conditions inputs included) and brings the results and charts here.";
   return `<label>Run</label>
@@ -381,7 +381,7 @@ function wsRunPanelHtml() {
     ${workspaceState.message ? `<p class="ws-message tone-${escapeHtml(workspaceState.message.tone)}">${workspaceState.message.html}</p>` : ""}`;
 }
 
-// ------------------------------------------------------------------------------------------------ the Deliverables tab
+// ------------------------------------------------------------------------------------------------ the Documents tab
 
 function wsEsc(s) {
   return escapeHtml(s);
@@ -414,7 +414,7 @@ function renderDeliverables() {
     ? `<span class="res-dot live"></span> Connected to Revit. Everything you export here is kept in <code>${wsEsc(workspaceState.folder)}</code>
         <button class="btn-export ws-inline-btn" data-ws-action="openFolder"><i class="ti ti-folder-open" aria-hidden="true"></i>Open folder</button>`
     : workspaceState.connected === false
-      ? `<span class="res-dot off"></span> Revit is not connected. Exports download through the browser, and the analysis, PDF and schedule buttons wait for Revit (open a project with the Sportify add-in loaded). Your folder is created by the installer, by default <em>Documents\\Sportify Workspace</em>.`
+      ? `<span class="res-dot off"></span> Revit not open. Exports download through the browser, and the analysis, PDF and schedule buttons wait for Revit (open a project with the Sportify add-in loaded). Your folder is created by the installer, by default <em>Documents\\Sportify Workspace</em>.`
       : `<span class="res-dot"></span> Looking for Revit...`;
 
   const actions = document.getElementById("dl-actions");

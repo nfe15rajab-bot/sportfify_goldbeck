@@ -520,7 +520,7 @@ html[data-role="client"] .planner-only { display: none !important; }
 .activity-bar::-webkit-scrollbar { width: 4px; }
 .activity-bar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 .activity-icon { width: 48px; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px 2px; background: transparent; border: none; border-left: 2px solid transparent; color: rgba(255,255,255,0.55); cursor: pointer; font-size: 16px; flex-shrink: 0; transition: color 0.12s, background 0.12s; }
-.activity-icon .activity-icon-label { font-size: 8px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.1; text-align: center; color: inherit; max-width: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-icon .activity-icon-label { font-size: 8px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.1; text-align: center; color: inherit; max-width: 44px; max-height: 2.25em; overflow: hidden; overflow-wrap: break-word; }
 .activity-icon:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.06); }
 .activity-icon.active { color: #ffffff; border-left-color: var(--fill-accent); background: rgba(255,255,255,0.08); }
 .activity-bar-divider { width: 28px; height: 1px; background: rgba(255,255,255,0.15); margin: 6px 0; flex-shrink: 0; }

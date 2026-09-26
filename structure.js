@@ -68,11 +68,11 @@ function applyDynamicSite(payload) {
   combineState.naturalFrequencyHz = st && st.natural_frequency_hz > 0 ? st.natural_frequency_hz : null;
 }
 
-/** Grid lines (chain-dotted, with a name bubble outside the roof edge) and columns, for the Combine canvas and the Structure tab. Not interactive. */
+/** Grid lines (chain-dotted, with a name bubble outside the roof edge) and columns, for the Combine canvas and the Structure inputs tab. Not interactive. */
 function structureSvg(scale, roofOx, roofOy, force) {
   const st = combineState.structure;
   if (!st) return "";
-  // Combine draws each part only when its Revit layer is on (revitLayers.js); the Structure tab (force) always shows all of it.
+  // Combine draws each part only when its Revit layer is on (revitLayers.js); the Structure inputs tab (force) always shows all of it.
   const show = key => force || (typeof revitLayerShown === "function" ? revitLayerShown(key) : true);
   const BUBBLE_R = 8;
   let out = "";
@@ -115,7 +115,7 @@ function escapeStructureText(s) {
   return escapeHtml(s);
 }
 
-/** Status line and checkbox of the Structure tab's grid section. Safe to call before the elements exist. */
+/** Status line and checkbox of the Structure inputs tab's grid section. Safe to call before the elements exist. */
 /** The grid section's status line (and its switch and button): what Revit gave, and what the deck capacity is. Does not touch the assumptions panel (that calls this). */
 function updateStructureStatus() {
   const status = document.getElementById("site-structure-status");
@@ -138,7 +138,7 @@ function updateStructureStatus() {
   if (clear) clear.style.display = st ? "" : "none";
 }
 
-/** Status line and checkbox of the Structure tab's grid section, and the assumptions panels. Safe to call before the elements exist. */
+/** Status line and checkbox of the Structure inputs tab's grid section, and the assumptions panels. Safe to call before the elements exist. */
 function updateStructureUI() {
   updateStructureStatus();
   if (typeof updateAssumptionsUI === "function") updateAssumptionsUI();   // the deck capacity, frequency and comfort limits (Structure tab) and the snow, schedule and sun targets (Site conditions tab) are in the assumptions panels

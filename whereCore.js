@@ -5,12 +5,12 @@
  *   this app     is where you DECIDE: the site, the sports and the garden, the placement, quick estimates, comparing variants (2D, fast, no Revit needed)
  *   Revit        is where the decision becomes a BUILDING: the model, the layout as families, the full analyses on it, schedules, views, the Sportify folder of documents
  *   engines      (Unity, SOLIDWORKS) are programs Revit calls for a video or a mechanical assembly. They are never places you go: Sportify finds them and hides what cannot work
- * Results always come back to the Analysis tab, whichever program computed them.
+ * Results always come back to the Results tab, whichever program computed them.
  *
  * A status, in words a person can act on, for each of the three, and the little badge ("Revit", "Unity", "SOLIDWORKS") that marks an action which needs one of them.
  */
 
-const WHERE_RULE = "Decide here. Build in Revit. Results come back to the Analysis tab.";
+const WHERE_RULE = "Decide here. Build in Revit. The answers come back to the Results tab.";
 
 /** The card on the Overview: three columns, one sentence each. Every claim is about something that exists (tools/where-test.js checks the names against the page and the analyses). */
 const WHERE_COLUMNS = [

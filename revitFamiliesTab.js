@@ -90,8 +90,8 @@ function familiesMessageHtml() {
   if (familiesState.status === "offline") {
     return `
       <div class="section span-2">
-        <label>Revit not reachable</label>
-        <p class="hint">Can't reach the Sportify add-in at <code>${REVIT_FAMILIES_URL}</code>.</p>
+        <label>Revit not open</label>
+        <p class="hint">The Sportify add-in does not answer at <code>${REVIT_FAMILIES_URL}</code>.</p>
         <p class="hint">Open Revit with the Sportify add-in loaded, then press Fetch again.</p>
       </div>`;
   }

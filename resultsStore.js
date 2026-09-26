@@ -2,7 +2,7 @@
  * resultsStore.js — draws the one store of analysis results (resultsStoreCore.js has the words and the rule; this gathers the inputs and makes the HTML).
  *
  * Two views of the same store:
- *   the overview  the Analysis tab's default: one icon tile per analysis, grouped as the tab's rail is. A tile says the headline number, whether it is Revit's full analysis or this app's quick
+ *   the overview  the Results tab's default: one icon tile per analysis, grouped as the tab's rail is. A tile says the headline number, whether it is Revit's full analysis or this app's quick
  *                 estimate, and whether it is about the layout on screen. Clicking it opens the group with that analysis's card (analysisResults.js resultsCardHtml: the tile and the card call the
  *                 same functions, so they cannot disagree).
  *   one piece     Combine's inspector, for the piece you selected: an icon per analysis that applies to it, the selected one's own figures and words, live as the piece is dragged (the inspector

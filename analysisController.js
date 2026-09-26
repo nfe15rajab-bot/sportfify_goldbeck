@@ -3,14 +3,14 @@
  * Early, approximate previews of checks the Revit add-in later runs at full BIM fidelity — pure calculations against the current Combine layout (circulation paths, garden theme data, roof
  * geometry), no physics or rendering. Four kinds of things here:
  *   analyze*()         the layout-wide number of each estimate (fire safety, accessibility, water, wind exposure, LCA)
- *   the *CardHtml()    the card each one is drawn as, shown under its analysis in the Analysis tab when Revit has not sent its full one (analysisResults.js resultsCardHtml)
+ *   the *CardHtml()    the card each one is drawn as, shown under its analysis in the Results tab when Revit has not sent its full one (analysisResults.js resultsCardHtml)
  *   piece*()           what each says about ONE piece, which Combine's inspector shows live (resultsStore.js)
  *   sun path chart     this app's own drawing of the sun's height across the day at the site, under the Sun group
  * The overview of the tab (a tile per analysis: Revit's number if it has run, else the estimate) is resultsStore.js; the words on every tile, card and row come from resultsStoreCore.js.
  */
 
 /* ── Reference figures, sourced from the .NET database's AnalysisParameter
-   rows (Data tab → Analysis domain) instead of living as bare constants.
+   rows (Catalogue tab → Analysis domain) instead of living as bare constants.
    The literal values below are only the offline fallback — used verbatim
    if the backend can't be reached, so this tab never breaks standalone,
    and identical to what this file hardcoded before this was wired up. ── */
@@ -210,14 +210,14 @@ function lcaCardHtml() {
   return estimateCard("lca", "lca", analyzeLCA(), "Embodied carbon of the picked reference materials (A1 to A3), illustrative", r => {
     if (r.coveredCount === 0) {
       return `<p class="hint">None of the ${r.totalCount} piece(s) have both a reference material picked and embodied-carbon data filled in yet.</p>`
-        + resFindings([{ kind: "Recommendation", text: "Pick a reference material for each piece (Sport/Garden's \"Reference material (database)\" dropdown) and add missing embodied-carbon figures from the Data tab." }]);
+        + resFindings([{ kind: "Recommendation", text: "Pick a reference material for each piece (Sport/Garden's \"Reference material (database)\" dropdown) and add missing embodied-carbon figures from the Catalogue tab." }]);
     }
     const tone = r.missingCount > 0 ? "warn" : "ok";
     const tiles = `<div class="res-tiles">
       ${resTile("Embodied carbon", "~" + Math.round(r.totalKg).toLocaleString("en-US") + " kg", "CO2e, A1-A3, illustrative")}
       ${resTile("Pieces covered", `${r.coveredCount} / ${r.totalCount}`, r.missingCount ? `${r.missingCount} missing data` : "all covered", tone)}
     </div>`;
-    const rec = r.missingCount > 0 ? resFindings([{ kind: "Recommendation", text: `Fill in missing reference materials or embodied-carbon figures for ${r.missingCount} piece(s) in the Data tab to complete this estimate.` }]) : "";
+    const rec = r.missingCount > 0 ? resFindings([{ kind: "Recommendation", text: `Fill in missing reference materials or embodied-carbon figures for ${r.missingCount} piece(s) in the Catalogue tab to complete this estimate.` }]) : "";
     return tiles + rec;
   });
 }
@@ -229,7 +229,7 @@ const ESTIMATE_CARDS = { fire: fireSafetyCardHtml, access: accessibilityCardHtml
  * ── Sun Path chart ──
  * The first prototype of "graphs the web app can do that Revit can't as
  * a simple 2D chart" (Revit's own sun tool only visualizes a path on the
- * 3D model) — feeds into the Revit Deliverables report as a PNG. Samples
+ * 3D model) — feeds into the Revit analysis report as a PNG. Samples
  * getSunPosition() (sunPosition.js) across the day by handing it a
  * shallow siteState copy per time slice rather than mutating the real
  * siteState, since that function reads siteState.time internally.
@@ -322,7 +322,7 @@ function sunPathSectionHtml() {
   }
   return `<div class="section span-2">
     <label>Sun Path — Today <span class="mode-status available">Available now</span></label>
-    <p class="hint">Altitude across the day at the current site — a 2D analytical chart Revit's own sun tool doesn't offer (it only draws a path on the 3D model). Exports as a PNG for the Revit Deliverables report.</p>
+    <p class="hint">Altitude across the day at the current site — a 2D analytical chart Revit's own sun tool doesn't offer (it only draws a path on the 3D model). Exports as a PNG for the analysis report.</p>
     ${svg}
     <button class="btn-export accent" id="btn-download-sunpath" style="margin-top:8px">
       <i class="ti ti-file-download" aria-hidden="true"></i>Download Chart (PNG)

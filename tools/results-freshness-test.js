@@ -1,4 +1,4 @@
-// Tests for how the Analysis tab tells a result that is about the layout on screen from one that is about an earlier layout. Run: node tools/results-freshness-test.js
+// Tests for how the Results tab tells a result that is about the layout on screen from one that is about an earlier layout. Run: node tools/results-freshness-test.js
 //
 // The Revit add-in stamps every section of its results with { layout_id, computed_at } (the layout's id is the first 16 hex characters of the SHA-256 of the layout
 // JSON the app posted) and drops the sections of other layouts when it publishes. The app computes the same id for what is on screen and badges what does not match.

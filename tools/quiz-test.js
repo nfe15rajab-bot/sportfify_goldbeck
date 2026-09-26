@@ -38,10 +38,10 @@ const answers = (goal, analyses, site, experience) => ({ goal, analyses, site_da
 const out = a => quiz.quizOutcome(a);
 
 check("someone who knows Sportify well gets the Advanced view, everyone else Simple", out(answers("design", [], [], "expert")).view === "advanced" && out(answers("design", [], [], "first")).view === "simple" && out(answers("design", [], [], "some")).view === "simple");
-check("the analyses chosen bring back their extras: structure, conditions (sun, wind and rain together), post analysis, safety, carbon, each once", out(answers("check", ["structure", "sun", "wind", "rain", "kinetics", "safety", "carbon"], [], "some")).extras.join() === "structure,conditions,postAnalysis,safety,carbon" && out(answers("check", ["sun", "rain"], [], "some")).extras.join() === "conditions" && out(answers("check", [], [], "some")).extras.length === 0);
+check("the analyses chosen bring back their extras: structure, conditions (sun, wind and rain together), improve, safety, carbon, each once", out(answers("check", ["structure", "sun", "wind", "rain", "kinetics", "safety", "carbon"], [], "some")).extras.join() === "structure,conditions,postAnalysis,safety,carbon" && out(answers("check", ["sun", "rain"], [], "some")).extras.join() === "conditions" && out(answers("check", [], [], "some")).extras.length === 0);
 check("designing with a roof model and a location starts in Combine; without a roof model or without a location, in Site", out(answers("design", [], ["roof_outline", "location"], "some")).landing === "combine" && out(answers("design", [], ["location"], "some")).landing === "site" && out(answers("design", [], ["roof_outline"], "some")).landing === "site" && out(answers("design", [], ["none"], "first")).landing === "site");
-check("checking a design starts in Analysis when there is a roof model, in Site (where the roof comes in) when there is not", out(answers("check", ["sun"], ["roof_outline"], "some")).landing === "analysis" && out(answers("check", ["sun"], [], "some")).landing === "site");
-check("making documents starts in Deliverables", out(answers("documents", [], [], "first")).landing === "deliverables");
+check("checking a design starts in Results when there is a roof model, in Site (where the roof comes in) when there is not", out(answers("check", ["sun"], ["roof_outline"], "some")).landing === "analysis" && out(answers("check", ["sun"], [], "some")).landing === "site");
+check("making documents starts in Documents", out(answers("documents", [], [], "first")).landing === "deliverables");
 check("the next step is one sentence and points at a workspace that exists", ["design", "check", "documents", null].every(g => [[], ["roof_outline"], ["roof_outline", "location"]].every(s => { const n = out(answers(g, ["sun"], s, "first")).next; return typeof n.text === "string" && n.text.length > 10 && n.text.length < 260 && core.PROFILE_MODES[n.goto]; })));
 check("the next step names what to do first: the roof from Revit when there is none, the location when only that is missing, Combine when both are there", /Push to Sportify/.test(out(answers("design", [], [], "first")).next.text) && /where the roof is/i.test(out(answers("design", [], ["roof_outline"], "first")).next.text) && out(answers("design", [], ["roof_outline", "location"], "first")).next.goto === "combine");
 check("checking names the analyses the person chose", /sun and shade, wind and erosion/.test(out(answers("check", ["sun", "wind"], ["roof_outline"], "some")).next.text));
@@ -62,7 +62,7 @@ check("every outcome names things that exist: a view, extras of the profile, a l
 })());
 check("the summary says the view (and what was added to Simple), where Sportify opens, and what to do first", (() => {
   const s = out(answers("check", ["structure", "sun"], ["roof_outline"], "some")).summary;
-  return s.length === 3 && s[0] === "Simple view, with structure, site conditions added." && s[1] === "Sportify opens on Analysis." && /^First: /.test(s[2]);
+  return s.length === 3 && s[0] === "Simple view, with structure inputs, site conditions added." && s[1] === "Sportify opens on Results." && /^First: /.test(s[2]);
 })());
 check("an Advanced view is not described as having anything 'added'", out(answers("check", ["structure"], [], "expert")).summary[0] === "Advanced view.");
 
@@ -83,7 +83,7 @@ check("extras are cleaned: only the ones that exist, each once, in the profile's
 check("a landing the profile does not allow is dropped, one it allows is kept", core.normalizeProfile({ landing: "deliverables" }).landing === "deliverables" && core.normalizeProfile({ landing: "profile" }).landing === null && core.normalizeProfile({ landing: "<script>" }).landing === null && core.normalizeProfile({}).landing === null);
 check("onboarded is only ever true or false", core.normalizeProfile({ onboarded: true }).onboarded === true && core.normalizeProfile({ onboarded: "yes" }).onboarded === false && core.normalizeProfile({}).onboarded === false);
 check("Simple with an extra shows the extra's tab and nothing else more; Advanced ignores extras; an unknown extra brings nothing", core.profileModeVisible("simple", "structure", ["structure"]) && !core.profileModeVisible("simple", "conditions", ["structure"]) && !core.profileModeVisible("simple", "structure", ["nope"]) && !core.profileModeVisible("simple", "structure") && core.profileModeVisible("advanced", "structure", []));
-check("safety and carbon add no tab (their results are in Analysis): Simple stays as it is for them", core.profileHiddenModes("simple", ["safety", "carbon"]).join() === core.profileHiddenModes("simple").join());
+check("safety and carbon add no tab (their results are in Results): Simple stays as it is for them", core.profileHiddenModes("simple", ["safety", "carbon"]).join() === core.profileHiddenModes("simple").join());
 check("the tabs Simple hides shrink by exactly the extras' tabs", core.profileHiddenModes("simple", ["structure", "conditions"]).join() === "compare,postAnalysis,data,families");
 
 // ---------------------------------------------------------------------------------------------------------------- the files
@@ -184,7 +184,7 @@ function page({ stored = null, siteState = null } = {}) {
   p.act("next");
   check("Show my setup without an answer to the last question does nothing", p.run("quizState.step") === 3);
   p.option("experience", "first"); p.act("next");
-  check("the result says what Sportify will show: the view, where it opens, what to do first, and the answers, each with a way to change it", p.run("quizState.step") === 4 && /Simple view, with structure added\./.test(p.card()) && /Sportify opens on Analysis\./.test(p.card()) && /First: /.test(p.card()) && (p.card().match(/data-quiz-edit/g) || []).length === 4 && /Apply and start/.test(p.card()));
+  check("the result says what Sportify will show: the view, where it opens, what to do first, and the answers, each with a way to change it", p.run("quizState.step") === 4 && /Simple view, with structure inputs added\./.test(p.card()) && /Sportify opens on Results\./.test(p.card()) && /First: /.test(p.card()) && (p.card().match(/data-quiz-edit/g) || []).length === 4 && /Apply and start/.test(p.card()));
   p.click("quizOverlay", { "[data-quiz-edit]": { dataset: { quizEdit: "1" } } });
   check("Change goes back to that question, with the answers kept", p.run("quizState.step") === 1 && p.run("quizState.answers.goal") === "check" && p.run("quizState.answers.analyses.join()") === "structure");
   p.act("next"); p.act("next"); p.act("next");
@@ -192,11 +192,11 @@ function page({ stored = null, siteState = null } = {}) {
   p.act("apply");
   const applied = p.saved();
   check("Apply sets the profile from the answers: view, extras, landing, the answers themselves, and that the quiz was taken", applied.view === "simple" && applied.extras.join() === "structure" && applied.landing === "analysis" && applied.onboarded === true && applied.quiz.goal === "check" && applied.quiz.analyses.join() === "structure" && applied.quiz.experience === "first" && !!applied.quiz.taken && !!applied.updated);
-  check("...then closes the quiz and opens the workspace it chose (Analysis: a roof model and a design to check)", p.run("quizState.open") === false && p.els.quizOverlay.style.display === "none" && p.calls.setMode.at(-1) === "analysis");
-  check("a toast says what was set", p.calls.toasts.some(t => /Sportify is set up: Simple view, with structure added\./.test(t)));
+  check("...then closes the quiz and opens the workspace it chose (Results: a roof model and a design to check)", p.run("quizState.open") === false && p.els.quizOverlay.style.display === "none" && p.calls.setMode.at(-1) === "analysis");
+  check("a toast says what was set", p.calls.toasts.some(t => /Sportify is set up: Simple view, with structure inputs added\./.test(t)));
   check("the quiz does not open by itself again", p.run("quizMaybeOpen()") === false);
   check("the view now follows: the Simple view shows the structure tab the person asked for, and hides the rest of what Simple hides", p.run('profileModeAllowed("structure")') === true && p.run('profileModeAllowed("conditions")') === false && p.run("profileLandingMode()") === "analysis");
-  check("the Overview shows 'Your next step' with a button to get there", p.els.overviewNext.style.display === "flex" && /Your next step/.test(p.els.overviewNext.innerHTML) && /data-goto="analysis"/.test(p.els.overviewNext.innerHTML) && /Go to Analysis/.test(p.els.overviewNext.innerHTML));
+  check("the Overview shows 'Your next step' with a button to get there", p.els.overviewNext.style.display === "flex" && /Your next step/.test(p.els.overviewNext.innerHTML) && /data-goto="analysis"/.test(p.els.overviewNext.innerHTML) && /Go to Results/.test(p.els.overviewNext.innerHTML));
   p.calls.setMode.length = 0;
   p.click("overviewNext", { "[data-goto]": { dataset: { goto: "analysis" } } });
   check("its button opens that workspace", p.calls.setMode.at(-1) === "analysis");

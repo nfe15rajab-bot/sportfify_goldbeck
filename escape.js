@@ -2,7 +2,7 @@
  * escape.js — the one way text goes into markup.
  *
  * The app builds its screens by joining HTML strings and assigning them to innerHTML. Text that reaches such a string unescaped IS markup: a plant, a build-up or a
- * piece of furniture whose name was typed in the Data tab (or came from the API, or a saved session file, or a family in someone's Revit) could carry a <script>-like
+ * piece of furniture whose name was typed in the Catalogue tab (or came from the API, or a saved session file, or a family in someone's Revit) could carry a <script>-like
  * payload or break out of an attribute. Every ${...} that puts a name, a label, a description, a note, a source, a provider or an error message into a template goes
  * through escapeHtml; a link's address through safeUrl. tools/escape-audit-test.js reads every script and fails when one does not.
  *

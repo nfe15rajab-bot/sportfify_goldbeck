@@ -1,5 +1,5 @@
 /**
- * siteTabs.js — the Structure tab and the Site conditions tab.
+ * siteTabs.js — the Structure inputs tab and the Site conditions tab.
  *
  * The Site tab had grown to hold everything the analyses need to know about the place: where the roof is, how it is turned, the structural grid, the deck's
  * capacity and frequency, the snow, the day's schedule, the sun targets. It is split by what each thing is about:
@@ -95,7 +95,7 @@ function structureInputsCardHtml(edit) {
     "The deck capacity is the structural engineer's figure; the roof cannot know it. Enter it, or accept the built-in value knowingly: until then every structural result is marked PRELIMINARY.",
     assumptionGroupKeys(ASSUMPTION_GROUPS.structure), gridTile + slabTile,
     edit ? "" : "Enter or accept the values in the panel on the left. Revit asks for the same values before it runs an analysis.",
-    edit ? siteTabEditButton("structure", "Change them in the Structure tab") : "");
+    edit ? siteTabEditButton("structure", "Change them in the Structure inputs tab") : "");
 }
 
 function updateStructureTabUI() {
@@ -168,7 +168,7 @@ function updateSiteTabsUI() {
   else if (activeMode === "conditions") updateConditionsTabUI();
 }
 
-// ---------------------------------------------------------------------------------------------------- the Analysis tab's views of them
+// ---------------------------------------------------------------------------------------------------- the Results tab's views of them
 
 /** The headline of a received result, for the "which results use them" table; "" when it has not come. */
 function conditionsResultHeadline(name) {
@@ -180,7 +180,7 @@ function conditionsResultHeadline(name) {
   return "";
 }
 
-/** The Analysis tab's "Conditions" group: the conditions as they stand, and which results they drive, with the way to each. */
+/** The Results tab's "Conditions" group: the conditions as they stand, and which results they drive, with the way to each. */
 function renderConditionsResults() {
   const rows = [
     { name: "wind_erosion", title: "Wind and erosion", uses: "wind zone, roof height", group: "garden", where: "Garden" },
@@ -198,7 +198,7 @@ function renderConditionsResults() {
   return conditionsCardsHtml(true) + drives;
 }
 
-// The buttons above: one opens another tab, one another group of the Analysis tab. Delegated, because the views are redrawn.
+// The buttons above: one opens another tab, one another group of the Results tab. Delegated, because the views are redrawn.
 document.addEventListener("click", e => {
   const tab = e.target.closest("[data-open-tab]");
   if (tab && typeof setMode === "function") { setMode(tab.dataset.openTab); return; }

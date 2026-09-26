@@ -5,8 +5,8 @@
  * material, or a material with no carbon figure, is counted as missing, never as zero: a layout that reads as carbon-free because nothing was looked up is worse than
  * a layout with a gap.
  *
- * This used to exist three times: the Analysis tab's LCA card (analyzeLCA), the Design panel's CO2 metric (computeCarbonMetric) and the single-piece line under the
- * Analysis tab's component list, and the Revit add-in's LCA command was a fourth. They disagreed: the Analysis tab did not know that a piece with no material picked
+ * This used to exist three times: the Results tab's LCA card (analyzeLCA), the Design panel's CO2 metric (computeCarbonMetric) and the single-piece line under the
+ * Results tab's component list, and the Revit add-in's LCA command was a fourth. They disagreed: the Results tab did not know that a piece with no material picked
  * means the material of its quality tier (the Design panel, Moamen's, did), so the same layout had two totals. Now all of them call embodiedCarbon() /
  * pieceEmbodiedCarbon() here, with his rule for which material a piece is made of, and the add-in's LCA (EmbodiedCarbon.cs) is the same function in C#: Tools/AnalysisParity
  * runs both on every fixture layout and fails when they differ.

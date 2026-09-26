@@ -7,7 +7,7 @@
  * not; this file only decides what is DRAWN in Combine, layer by layer, because the structure in particular makes a busy plan busier.
  *
  * Off by default. The panel also carries the way on: what Revit has pushed, the results and the settings that came back from it, the Run analysis button and the
- * way to the Deliverables tab, so the loop (select in Revit, see the layers, run the analysis, read the results, take the deliverables) is in one place.
+ * way to the Documents tab, so the loop (select in Revit, see the layers, run the analysis, read the results, take the deliverables) is in one place.
  */
 
 /**
@@ -77,7 +77,7 @@ function updateRevitLayersUI() {
   const connected = typeof workspaceState !== "undefined" && workspaceState.connected === true;
   const head = `<label class="revit-layers-master" title="Show what the Revit model has, layer by layer, over the roof"><input type="checkbox" id="revit-layers-master" ${L.on ? "checked" : ""}>
       <span class="revit-layers-title"><i class="ti ti-stack-2" aria-hidden="true"></i> Revit layers</span>
-      <span class="revit-layers-state ${connected ? "live" : ""}">${connected ? "connected" : "not connected"}</span></label>${L.on ? `<button class="revit-layers-fold" id="revit-layers-fold" title="${L.folded ? "Show the layers" : "Hide the list, keep the layers"}"><i class="ti ${L.folded ? "ti-chevron-down" : "ti-chevron-up"}" aria-hidden="true"></i></button>` : ""}`;
+      <span class="revit-layers-state ${connected ? "live" : ""}">${connected ? "connected" : "Revit not open"}</span></label>${L.on ? `<button class="revit-layers-fold" id="revit-layers-fold" title="${L.folded ? "Show the layers" : "Hide the list, keep the layers"}"><i class="ti ${L.folded ? "ti-chevron-down" : "ti-chevron-up"}" aria-hidden="true"></i></button>` : ""}`;
   if (!L.on || L.folded) {
     box.innerHTML = head;
     return;

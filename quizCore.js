@@ -4,7 +4,7 @@
  * The quiz only ever sets DEFAULTS, and every one of them can be changed in the Profile tab or by taking the quiz again:
  *   view      Simple, unless the person says they know Sportify well (then Advanced, which shows everything);
  *   extras    what is added to the Simple view because the person cares about it (an analysis they chose brings back its tab and its buttons in Revit);
- *   landing   where Sportify opens: Site, Combine, Analysis or Deliverables, by what the person wants to do and what they already have;
+ *   landing   where Sportify opens: Site, Combine, Results or Documents, by what the person wants to do and what they already have;
  *   next step one sentence and one button on the Overview: what to do first.
  * Which tools this computer has is not asked: the Revit add-in looks (SportifyCapabilities), so there is no fifth question.
  *
@@ -105,13 +105,13 @@ function quizOutcome(answers) {
 
   let landing, next;
   if (a.goal === "check") {
-    landing = has("roof_outline") ? "analysis" : "site";      // an Analysis tab with no roof behind it is empty: start where the roof comes in
+    landing = has("roof_outline") ? "analysis" : "site";      // a Results tab with no roof behind it is empty: start where the roof comes in
     next = has("roof_outline")
-      ? { text: "Open Analysis and run the checks" + (a.analyses.length ? " you chose (" + a.analyses.map(x => quizLabel("analyses", x).toLowerCase()).join(", ") + ")" : "") + ": Revit sends the results here.", goto: "analysis" }
-      : { text: "Bring the roof you want to check into Sportify: in Revit select it and use Push to Sportify. Then open Analysis.", goto: "site" };
+      ? { text: "Open Results" + (a.analyses.length ? " for the checks you chose (" + a.analyses.map(x => quizLabel("analyses", x).toLowerCase()).join(", ") + ")" : "") + ": the quick estimates are there at once, and Revit sends the full analyses.", goto: "analysis" }
+      : { text: "Bring the roof you want to check into Sportify: in Revit select it and use Push to Sportify. Then open Results.", goto: "site" };
   } else if (a.goal === "documents") {
     landing = "deliverables";
-    next = { text: "Open Deliverables: the analysis report, the schedules and the diagrams are made from there.", goto: "deliverables" };
+    next = { text: "Open Documents: the analysis report, the schedules and the diagrams are made from there.", goto: "deliverables" };
   } else {
     // design (also when nothing was answered: the main path starts with the site)
     if (has("roof_outline") && has("location")) {

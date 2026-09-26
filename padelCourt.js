@@ -7,7 +7,7 @@
  * padel court. So none of that is a parameter here: the geometry is the sport's
  * definition, and it lives in code for the same reason the "a membrane layer
  * must be zero thickness" rule does — it is a standard, not a catalog anyone
- * should be editing from the Data tab.
+ * should be editing from the Catalogue tab.
  *
  * What IS a choice — the wall system, the surface, the court type — is exposed,
  * and those are products with prices and weights, which belong in the database.
@@ -66,7 +66,7 @@ const PADEL = {
 
 /* ── The four things that are actually a choice ─────────────────────────────
    Everything above is fixed by the rules. These are products, and products
-   live in the database — adding a fourth surface is a row in the Data tab, not
+   live in the database — adding a fourth surface is a row in the Catalogue tab, not
    a change to this file. They started life as constants here, which meant a
    landscape architect needed a developer to add a colour.
 
@@ -217,7 +217,7 @@ function shade(hex, t) {          // t>0 lighter, t<0 darker
 function padelSurfaceAppearance(state = padelState) {
   const picked = PADEL_OPTIONS.surfaceColour?.values?.[state.surfaceColour]?.hex || "#2f6fb5";
   // The texture is a property of the product, so it comes from the catalog —
-  // a new surface added in the Data tab says for itself how it should read.
+  // a new surface added in the Catalogue tab says for itself how it should read.
   switch (PADEL_OPTIONS.surface?.values?.[state.surface]?.texture || state.surface) {
     case "speckle":
     case "concrete":

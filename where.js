@@ -19,7 +19,7 @@ function whereContext() {
   };
 }
 
-/** The badge for an action that needs `need` ("revit", "unity", "solidworks"), as markup for the places that draw their buttons themselves (the Deliverables tab, the Run panel). */
+/** The badge for an action that needs `need` ("revit", "unity", "solidworks"), as markup for the places that draw their buttons themselves (the Documents tab, the Run panel). */
 function whereChipHtml(need) {
   const n = whereNeed(need, whereContext());
   if (!n.name) return "";

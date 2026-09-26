@@ -2,8 +2,8 @@
  * profileCore.js — the PROFILE: what a person chose about how Sportify looks and behaves for them, as a plain object that can be saved, reloaded, sent to Revit and
  * carried to another machine. No DOM and no network in this file (profile.js does those), so tools/profile-test.js can run it as it is.
  *
- *   view    "simple" or "advanced". A VIEW, not a lock: Simple hides the tabs of the deeper work (structure, site conditions, compare, post analysis, data, families) and
- *           leaves the main path (Overview, Site, Sport, Combine, Analysis, Deliverables); Advanced shows everything. Switching is one click in the Profile tab.
+ *   view    "simple" or "advanced". A VIEW, not a lock: Simple hides the tabs of the deeper work (structure inputs, site conditions, compare, improve, catalogue, revit families) and
+ *           leaves the main path (Overview, Site, Sport, Combine, Results, Documents); Advanced shows everything. Switching is one click in the Profile tab.
  *   role    "planner" or "client": the existing role of the app (the top right switch).
  *   theme   "dark", "light", or null (follow the operating system).
  *   quiz    what the start-up quiz learned (goal, analyses wanted, site data at hand, experience), or null until it has been taken. It only ever sets defaults.
@@ -20,37 +20,41 @@ const PROFILE_NAME = "PROFILE";
 const PROFILE_FILE_KIND = "sportify-profile";
 const PROFILE_STORAGE_KEY = "sportify-profile";
 
-/** Every workspace of the app, by the name main.js's setMode() uses, with the button that opens it and the words a person knows it by. */
+/**
+ * Every workspace of the app, by the name main.js's setMode() uses (these ids stay: code, saved profiles and the add-in know them), with the button that opens it, the words a person knows it by
+ * (`label`: on the button and everywhere the app names the tab) and what it is for (`title`: the button's tooltip). tools/names-test.js checks the page against this table, and that no
+ * text of the app still calls a tab by an older name.
+ */
 const PROFILE_MODES = {
-  guide:        { button: "modeGuide",        label: "Overview" },
-  site:         { button: "modeSite",         label: "Site" },
-  structure:    { button: "modeStructure",    label: "Structure" },
-  conditions:   { button: "modeConditions",   label: "Conditions" },
-  sport:        { button: "modeSport",        label: "Sport" },
-  combine:      { button: "modeCombine",      label: "Combine" },
-  analysis:     { button: "modeAnalysis",     label: "Analysis" },
-  compare:      { button: "modeCompare",      label: "Compare" },
-  postAnalysis: { button: "modePostAnalysis", label: "Post Analysis" },
-  data:         { button: "modeData",         label: "Data" },
-  families:     { button: "modeFamilies",     label: "Families" },
-  deliverables: { button: "modeDeliverables", label: "Deliverables" },
-  session:      { button: "modeSession",      label: "Save Session" },
-  profile:      { button: "modeProfile",      label: "Profile" }
+  guide:        { button: "modeGuide",        label: "Overview",        title: "" },
+  site:         { button: "modeSite",         label: "Site",            title: "Site" },
+  structure:    { button: "modeStructure",    label: "Structure inputs", title: "Structure inputs — grid, columns, deck capacity, natural frequency" },
+  conditions:   { button: "modeConditions",   label: "Site conditions", title: "Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)" },
+  sport:        { button: "modeSport",        label: "Sport",           title: "Sport" },
+  combine:      { button: "modeCombine",      label: "Combine",         title: "Combine" },
+  analysis:     { button: "modeAnalysis",     label: "Results",         title: "Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate" },
+  compare:      { button: "modeCompare",      label: "Compare",         title: "Compare" },
+  postAnalysis: { button: "modePostAnalysis", label: "Improve",         title: "Improve — what to change first, ranked, and the moving parts that answer the analysis" },
+  data:         { button: "modeData",         label: "Catalogue",       title: "Catalogue — the reference data the app and Revit read: sports, materials, analysis figures" },
+  families:     { button: "modeFamilies",     label: "Revit families",  title: "Revit families — what your Revit project has loaded, to place in Combine" },
+  deliverables: { button: "modeDeliverables", label: "Documents",       title: "Documents & files — layouts, charts, reports and schedules, kept in your Sportify folder" },
+  session:      { button: "modeSession",      label: "Save Session",    title: "" },
+  profile:      { button: "modeProfile",      label: "Profile",         title: "Your PROFILE — Simple or Advanced view, role and theme; saved and reloaded every time" }
 };
 
 /**
  * What each view shows. The Simple list is the main path the Overview lays out (Site, Sport/Garden, Combine, Analysis) plus the tabs that are always there
- * (Overview, Deliverables, Save Session, Profile). It is the ONE place to change what Simple means; tools/profile-test.js checks it against the page.
+ * (Overview, Documents, Save Session, Profile). It is the ONE place to change what Simple means; tools/profile-test.js checks it against the page.
  */
 const PROFILE_VIEWS = {
   simple: {
     title: "Simple",
-    tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take the deliverables.",
+    tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take your documents.",
     modes: ["guide", "site", "sport", "combine", "analysis", "deliverables", "session", "profile"]
   },
   advanced: {
     title: "Advanced",
-    tagline: "Everything: also the structure and site-condition inputs, comparing variants, the post-analysis of the dynamic families, the data tables and the Revit families.",
+    tagline: "Everything: also the structure inputs and site conditions, comparing variants, Improve (what to change first, the moving shading), the Catalogue and the Revit families.",
     modes: Object.keys(PROFILE_MODES)
   }
 };
@@ -58,13 +62,13 @@ const PROFILE_VIEWS = {
 /**
  * What a person can ADD to the Simple view (the start-up quiz picks them from the analyses the person cares about): each brings back the tab(s) of the web app it names and, in the Revit
  * add-in, its buttons (RibbonVisibility.ExtraButtons, the same keys; tools/ReleaseCheck compares the two lists). Safety and carbon have no tab of their own: their results are in the
- * Analysis tab, only their Revit buttons come back.
+ * Results tab, only their Revit buttons come back.
  */
 const PROFILE_EXTRAS = {
-  structure:    { label: "Structure",                       modes: ["structure"] },
+  structure:    { label: "Structure inputs",                modes: ["structure"] },
   conditions:   { label: "Site conditions",                 modes: ["conditions"] },
   compare:      { label: "Comparing variants",              modes: ["compare"] },
-  postAnalysis: { label: "Post Analysis (moving shading)",  modes: ["postAnalysis"] },
+  postAnalysis: { label: "Improve (recommendations, moving shading)", modes: ["postAnalysis"] },
   safety:       { label: "Safety checks",                   modes: [] },
   carbon:       { label: "Carbon and materials",            modes: [] }
 };
@@ -202,7 +206,7 @@ function profileSame(a, b) {
  */
 function profileMachineRows(caps) {
   if (!caps || typeof caps !== "object" || Array.isArray(caps)) {
-    return [{ key: "revit", label: "Revit add-in", state: "unknown", text: "Not connected. Open a project in Revit with the Sportify add-in and this page can tell what this computer has. The web app works without it.", affects: "" }];
+    return [{ key: "revit", label: "Revit add-in", state: "unknown", text: "Revit not open. Open a project in Revit with the Sportify add-in and this page can tell what this computer has. The web app works without it.", affects: "" }];
   }
   const sentence = t => (t && typeof t.note === "string" ? t.note.slice(0, 300) : "");
   const found = t => !!(t && t.found === true);

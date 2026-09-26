@@ -50,7 +50,7 @@ const ASSEMBLY_LAYER_FUNCTIONS = {
  * Loaded from the API, not from this file.
  *
  * The catalog lives in the reference database so that adding a ZinCo product
- * is a form in the Data tab rather than a code change and a deploy — which is
+ * is a form in the Catalogue tab rather than a code change and a deploy — which is
  * the whole point, since the people who know the products are not the people
  * who edit JavaScript.
  *

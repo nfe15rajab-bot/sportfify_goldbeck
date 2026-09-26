@@ -19,11 +19,11 @@ const TOUR_STEPS = [
     id: "path", mode: "guide", target: "#overviewWorkflow", title: "The path Sportify follows",
     text: p => p.view === "simple"
       ? "Set the site, choose the sports and the garden, place them on the roof, then check the layout. Each step is a tab in the rail on the left; the arrows show the order."
-      : "Site, sports and garden, Combine, Analysis, and Compare to weigh variants. Each step is a tab in the rail on the left; the arrows show the order."
+      : "Site, sports and garden, Combine, Results, and Compare to weigh variants. Each step is a tab in the rail on the left; the arrows show the order."
   },
   {
     id: "topbar", mode: "guide", target: ".mode-toggle", title: "The top bar",
-    text: () => "Overview (where you are), Deliverables (everything Sportify makes for you), Save Session (a file you keep), New Session (the welcome screen again) and your Profile. The pill on the right says whether Revit is open."
+    text: () => "Overview (where you are), Documents (everything Sportify makes for you), Save Session (a file you keep), New Session (the welcome screen again) and your Profile. The pill on the right says whether Revit is open."
   },
   {
     id: "where", mode: "guide", target: "#overviewWhere", title: "What runs where",
@@ -32,7 +32,7 @@ const TOUR_STEPS = [
   {
     id: "rail", mode: "guide", target: "#modeRail", title: "Your workspaces",
     text: p => p.view === "simple"
-      ? "This is the Simple view: only the main path is shown. Structure, site conditions, comparing variants and the rest are one click away when you choose Advanced in the Profile tab."
+      ? "This is the Simple view: only the main path is shown. Structure inputs, site conditions, comparing variants and the rest are one click away when you choose Advanced in the Profile tab."
       : "This is the Advanced view: every workspace is here. If it is too much, the Simple view in the Profile tab shows only the main path."
   },
   {
@@ -52,7 +52,7 @@ const TOUR_STEPS = [
     text: () => "One tile per analysis for the whole layout: Revit's full result when it has run, this app's quick estimate otherwise, each marked with where it comes from. The groups on the left open the cards, with charts and videos."
   },
   {
-    id: "structure", mode: "structure", target: "#structure-content", title: "Structure",
+    id: "structure", mode: "structure", target: "#structure-content", title: "Structure inputs",
     text: () => "The structural inputs: the grid, the columns and the capacity of the deck. The analyses use them, and whatever is still unconfirmed is marked PRELIMINARY."
   },
   {
@@ -64,11 +64,11 @@ const TOUR_STEPS = [
     text: () => "Save layouts for Compare and weigh them against each other."
   },
   {
-    id: "postAnalysis", mode: "postAnalysis", target: "#postAnalysis-content", title: "Post Analysis",
-    text: () => "Moving shading (louvres, sails, fences) built from the analysis, and where to improve the design next."
+    id: "postAnalysis", mode: "postAnalysis", target: "#postAnalysis-content", title: "Improve",
+    text: () => "What to change first, ranked from the results, and the moving shading (louvres, sails, fences) built from the analysis."
   },
   {
-    id: "deliverables", mode: "deliverables", target: "#deliverables-content .guide-hero", title: "Take the deliverables",
+    id: "deliverables", mode: "deliverables", target: "#deliverables-content .guide-hero", title: "Take your documents",
     text: () => "Layouts, charts, the analysis report, schedules and diagrams are kept in your Sportify folder. This tab lists them and can ask Revit for the ones it makes."
   },
   {

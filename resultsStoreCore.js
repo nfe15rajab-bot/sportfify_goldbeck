@@ -2,10 +2,10 @@
  * resultsStoreCore.js — ONE store of analysis results, and the one rule for what each analysis says. Pure (no DOM, no network, no globals of the app), so tools/results-store-test.js runs it as it is;
  * resultsStore.js gathers the inputs and draws it.
  *
- * Why it exists. The same analysis used to be told in several places by several pieces of code: the Analysis tab's own quick-estimate cards, the tabs that show what Revit found, the per-piece
+ * Why it exists. The same analysis used to be told in several places by several pieces of code: the Results tab's own quick-estimate cards, the tabs that show what Revit found, the per-piece
  * explorer, Revit's ribbon. Nobody could tell which number came from where, or whether two of them were the same thing. Now there is one list of analyses (the catalogue below) and one function
  * for each thing a reader is told about an analysis (the tone, the chip, the headline), and every screen reads them:
- *   - the Analysis tab's overview: one icon tile per analysis, the global picture, by default;
+ *   - the Results tab's overview: one icon tile per analysis, the global picture, by default;
  *   - the cards under each group of that tab (the tile and its card cannot disagree: they call the same function);
  *   - Combine's inspector: for the piece you selected, the analyses that apply to it, live as it is dragged.
  *
@@ -20,7 +20,7 @@
 
 /** tones: "ok" | "warn" | "bad" | "neutral" | "prelim" (rests on inputs nobody confirmed) | "none" (nothing to judge yet). */
 
-/** The groups of the Analysis tab's rail that hold results, in the order of the tab's rail (analysisResults.js ANALYSIS_SUBTABS has the same ids, labels and icons: tools/results-store-test.js). */
+/** The groups of the Results tab's rail that hold results, in the order of the tab's rail (analysisResults.js ANALYSIS_SUBTABS has the same ids, labels and icons: tools/results-store-test.js). */
 const RESULTS_GROUPS = [
   { id: "garden", label: "Garden", icon: "ti-plant-2" },
   { id: "structure", label: "Structure", icon: "ti-building" },
@@ -31,7 +31,7 @@ const RESULTS_GROUPS = [
 ];
 
 /**
- * Every analysis, keyed by the name of the section the Revit add-in publishes it under (RESULT_SECTIONS in analysisResults.js has the same keys plus "kinetics", which lives in the Post Analysis tab).
+ * Every analysis, keyed by the name of the section the Revit add-in publishes it under (RESULT_SECTIONS in analysisResults.js has the same keys plus "kinetics", which lives in the Improve tab).
  *   estimate  which quick estimate this app computes for it ("fire", "access", "water", "wind", "lca"), or null: it has none, only Revit's full analysis
  *   piece     which pieces it says something about: "all", "garden" (only garden pieces), or null (a whole-roof analysis)
  */
@@ -322,7 +322,7 @@ function pieceSummary(key, d) {
   if (key === "lca") {
     if (!d.material) return { tone: "none", chip: "no material", headline: "No reference material", text: "No reference material picked for this piece: choose one in Sport or Garden (\"Reference material (database)\")." };
     if (d.why === "not in the catalogue") return { tone: "none", chip: "not in the catalogue", headline: d.material, text: d.material + ": not found in the database (typed as text, perhaps), so there is no carbon figure to look up." };
-    if (d.kg == null) return { tone: "warn", chip: "no carbon figure", headline: d.material, text: d.material + ": no embodied-carbon figure yet. Add one in the Data tab, Materials." };
+    if (d.kg == null) return { tone: "warn", chip: "no carbon figure", headline: d.material, text: d.material + ": no embodied-carbon figure yet. Add one in the Catalogue tab, Materials." };
     return { tone: "neutral", chip: "~" + resultsFmt(Math.round(d.kg), 0) + " kg", headline: "~" + resultsFmt(Math.round(d.kg), 0) + " kg CO₂e",
       text: d.material + ": " + resultsFmt(d.areaM2, 1) + " m² × " + d.kgPerM2 + " " + (d.unit || "kg CO2e/m2") + " = ~" + resultsFmt(Math.round(d.kg), 0) + " kg CO₂e (A1-A3, illustrative)." };
   }

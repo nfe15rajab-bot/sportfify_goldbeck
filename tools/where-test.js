@@ -16,7 +16,7 @@ const where = require(path.join(web, "whereCore.js"));
 const html = read("index.html");
 
 // ---------------------------------------------------------------------------------------------------------------- the rule and the card
-check("the rule is one short line: decide here, build in Revit, results come back to the Analysis tab", where.WHERE_RULE === "Decide here. Build in Revit. Results come back to the Analysis tab." && where.WHERE_RULE.length < 90);
+check("the rule is one short line: decide here, build in Revit, the answers come back to the Results tab", where.WHERE_RULE === "Decide here. Build in Revit. The answers come back to the Results tab." && where.WHERE_RULE.length < 90);
 check("the card has three columns: this app (decide), Revit (build), engines (Revit calls them)", where.WHERE_COLUMNS.map(c => c.key + ":" + c.tagline).join() === "app:Decide,revit:Build,engines:Revit calls them");
 check("each column has three or four points, each one line (under 100 characters), and none uses the word 'bridge'", where.WHERE_COLUMNS.every(c => c.points.length >= 3 && c.points.length <= 4 && c.points.every(p => p.length > 15 && p.length < 100 && !/bridge/i.test(p))));
 const icons = read("vendor/tabler-icons/tabler-icons.css");
@@ -68,7 +68,7 @@ check("an action drawn by the page's own markup that needs Revit says so (data-n
 const scripts = [...html.matchAll(/<script src="([^"?]+)/g)].map(m => m[1]);
 check("whereCore.js is loaded before where.js, both before the welcome screen and main.js", scripts.indexOf("whereCore.js") >= 0 && scripts.indexOf("whereCore.js") < scripts.indexOf("where.js") && scripts.indexOf("where.js") < scripts.indexOf("sessionGate.js") && scripts.indexOf("sessionGate.js") < scripts.indexOf("main.js"));
 const bridge = read("workspaceBridge.js");
-check("the workspace bridge tells where.js on every change, keeps the version the add-in gives, and draws the badge on the Deliverables actions and the Run button", /function workspaceChanged\(\) \{[\s\S]*?whereRender\(\)/.test(bridge) && /workspaceState\.revitVersion = typeof ws\.json\.revit_version === "string"/.test(bridge) && (bridge.match(/whereChipHtml\("revit"\)/g) || []).length === 2);
+check("the workspace bridge tells where.js on every change, keeps the version the add-in gives, and draws the badge on the Documents actions and the Run button", /function workspaceChanged\(\) \{[\s\S]*?whereRender\(\)/.test(bridge) && /workspaceState\.revitVersion = typeof ws\.json\.revit_version === "string"/.test(bridge) && (bridge.match(/whereChipHtml\("revit"\)/g) || []).length === 2);
 check("the profile tells where.js when what this computer has arrives or goes, and main.js starts it", (read("profile.js").match(/whereRender\(\)/g) || []).length === 2 && /whereInit\(\)/.test(read("main.js")));
 check("the where files never fetch anything: the state is what the app already knows", !/fetch\(|localApi\(|localStorage/.test(read("where.js")) && !/fetch\(|document\.|window\./.test(read("whereCore.js")));
 check("the pill gives way to the centred tab bar on narrow screens: label gone below 1240 px, the pill itself below 1000 px (found by measuring the real page: it overlapped the tabs)", /@media \(max-width: 1240px\) \{.*\.where-pill #whereRevitLabel \{ display: none/.test(read("style.css")) && /@media \(max-width: 1000px\) \{ \.where-pill \{ display: none/.test(read("style.css")));

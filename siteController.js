@@ -133,7 +133,7 @@ function updateSiteUI() {
   updateWindAndHeightUI();
   if (typeof updateStructureUI === "function") updateStructureUI();
   if (typeof updateRoofFeaturesUI === "function") updateRoofFeaturesUI();
-  if (typeof updateSiteTabsUI === "function") updateSiteTabsUI();      // the Structure and Site conditions tabs show the same site
+  if (typeof updateSiteTabsUI === "function") updateSiteTabsUI();      // the Structure inputs and Site conditions tabs show the same site
 }
 
 document.getElementById("siteWindZone").addEventListener("change", e => {

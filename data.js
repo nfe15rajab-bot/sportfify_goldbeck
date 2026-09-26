@@ -7,7 +7,7 @@
  * script the page loads so every later file can rely on it — and so a stale
  * cached page is visible at a glance instead of being inferred from JSON
  * fields that mysteriously fail to appear. */
-const SPORTIFY_BUILD = "2026-09-26-ux-results";
+const SPORTIFY_BUILD = "2026-09-26-ux-renames";
 console.log("Sportify build:", SPORTIFY_BUILD);
 
 const FIELDS = {
@@ -46,10 +46,10 @@ const FIELDS = {
 /**
  * Sport dimensions: one source.
  *
- * The database (Sportify.Api's FieldVariants, edited in the Data tab and read by the Revit add-in through the layouts the app sends) is the source of the playing-field
+ * The database (Sportify.Api's FieldVariants, edited in the Catalogue tab and read by the Revit add-in through the layouts the app sends) is the source of the playing-field
  * sizes. The table above is what is used until the API answers, and when it cannot be reached (the app works alone); Tools/SourceParity (in the Revit/API repository) fails when
  * the two disagree in what the API seeds, so a fresh install and this file say the same. Once the API answers, its variants replace the table's entries in place, so a change
- * made in the Data tab is what the Sport tab draws and what a layout exports; nothing here has to be edited by hand.
+ * made in the Catalogue tab is what the Sport tab draws and what a layout exports; nothing here has to be edited by hand.
  */
 const FIELD_VARIANTS_API = "http://localhost:5107/api/Sports";
 

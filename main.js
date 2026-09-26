@@ -132,9 +132,9 @@ function setMode(mode) {
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
   else if (isAnalysis && typeof buildAnalysisRail === "function") buildAnalysisRail();   // Analysis's own rail: Overview, then a group per kind of analysis
-  else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Post Analysis's own rail: Dynamic Families, Recommendations
+  else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Improve's own rail: Dynamic Families, Recommendations
 
-  // Revit's analysis results are only polled while the Analysis tab (its overview shows them too) or Post Analysis is open. Combine asks once
+  // Revit's analysis results are only polled while the Results tab (its overview shows them too) or Improve is open. Combine asks once
   // when it opens, so the results shown for a selected piece are not older than the visit.
   if (typeof startResultsPolling === "function") {
     if (isPostAnalysis || isAnalysis) startResultsPolling();
