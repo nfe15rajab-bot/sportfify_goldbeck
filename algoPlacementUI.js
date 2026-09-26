@@ -869,56 +869,85 @@ function algoDrawPreview() {
     host.innerHTML = `<div class="algo-preview-empty">${algoEsc(algoState.status || "Place an entry point on the roof edge in Manual placement to see the live preview.")}</div>`;
     return;
   }
-  const b = site.bbox, pad = Math.max(1, (b.x1 - b.x0) * 0.02);
-  const vx = b.x0 - pad, vy = b.y0 - pad, vw = b.x1 - b.x0 + 2 * pad, vh = b.y1 - b.y0 + 2 * pad;
+  const b = site.bbox, pad = Math.max(1.2, (b.x1 - b.x0) * 0.025);
+  const vx = b.x0 - pad, vy = b.y0 - pad * 1.6, vw = b.x1 - b.x0 + 2 * pad, vh = b.y1 - b.y0 + pad * 3.2;
   const fs = Math.max(0.7, Math.min(2.2, Math.min(vw, vh) / 22));
-  const rect = (r, fill, extra) => `<rect x="${algoRound(r[0])}" y="${algoRound(r[1])}" width="${algoRound(r[2] - r[0])}" height="${algoRound(r[3] - r[1])}" fill="${fill}" ${extra || ""}/>`;
+  const R = algoRound;
+  const rect = (r, fill, extra) => `<rect x="${R(r[0])}" y="${R(r[1])}" width="${R(r[2] - r[0])}" height="${R(r[3] - r[1])}" fill="${fill}" ${extra || ""}/>`;
   const C = AlgoPlacement;
-  let g = "";
-  g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="${algoRgb(C.COLOR_GARDEN)}"/>`;        // the garden band
-  site.usableRects.forEach(r => { g += rect(r, "#fcfcfc"); });                                                        // the usable zone
+  // plan palette: warm paving, a garden with a leaf-dot texture, a pale indoor floor, and the roof edge in dark slate
+  const PAVE = "#dcd8cf", GARDEN = "#9fcd84", GARDEN_DOT = "#86b86b", FLOOR = "#eef2f8", EDGE = "#2f3542", WALL = "#2f3542", ZONE = "#1e3a8a";
+  const shade = (rgb, f) => `rgb(${rgb.map(v => Math.round(v * f)).join(",")})`;
+  // a path rect gets a hairline of its own colour, so neighbouring rects meet without a seam
+  const pave = r => rect(r, PAVE, `stroke="${PAVE}" stroke-width="0.06" shape-rendering="crispEdges"`);
+  const garden = r => rect(r, "url(#algo-garden)");
+  let g = `<defs>
+      <pattern id="algo-garden" width="1.2" height="1.2" patternUnits="userSpaceOnUse"><rect width="1.2" height="1.2" fill="${GARDEN}"/><circle cx="0.3" cy="0.3" r="0.13" fill="${GARDEN_DOT}"/><circle cx="0.9" cy="0.9" r="0.13" fill="${GARDEN_DOT}"/></pattern>    </defs>`;
+  g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="url(#algo-garden)"/>`;                    // the garden band
+  site.usableRects.forEach(r => { g += rect(r, "#fbfaf7", 'stroke="#fbfaf7" stroke-width="0.06"'); });              // the usable zone
   const band = (plan && plan.bandRects) || site.bandRects;                                                           // with zoning, less the indoor items standing in it
-  if (band.length && site.entries.length) band.forEach(r => { g += rect(r, algoRgb(C.COLOR_GARDEN)); });
+  if (band.length && site.entries.length) band.forEach(r => { g += garden(r); });
   if (plan) {
-    plan.pockets.forEach(r => { g += rect(r, algoRgb(C.COLOR_GARDEN)); });
-    plan.pathRects.forEach(r => { g += rect(r, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges"'); });
+    plan.pockets.forEach(r => { g += garden(r); });
+    plan.pathRects.forEach(r => { g += pave(r); });
   }
+  // The entrances: each way in across the garden band as pathway (the door's arrow is drawn on top, below)
+  site.entries.forEach(r => { g += pave(r); });
   if (plan && plan.indoorZone) {                                                                                       // the indoor zone: walls round it, so no garden inside
     const z = plan.indoorZone;
-    // the roof outline is painted garden underneath everything, so the setback strip inside the zone is painted over as plain floor
-    site.bandRects.forEach(r => {
-      const ix = [Math.max(r[0], z[0]), Math.max(r[1], z[1]), Math.min(r[2], z[2]), Math.min(r[3], z[3])];
-      if (ix[2] > ix[0] && ix[3] > ix[1]) g += rect(ix, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges"');
-    });
-    const wallColor = "#5b6b8c", lineColor = "#1e3a8a";
+    g += rect(z, FLOOR, `stroke="${FLOOR}" stroke-width="0.06"`);                                                      // its own floor, over the band and paths inside it
     if (plan.wall) {
-      // a real wall (its thickness centred on the dotted line, so it needs no space beyond what every sport already keeps clear of it), the door left open
-      g += `<g pointer-events="none">` + plan.wall.rects.map(r => rect(r, wallColor, `stroke="${lineColor}" stroke-width="0.05"`)).join("") + `</g>`;
-      const d = plan.wall.door;
-      g += `<g pointer-events="none"><line x1="${algoRound(d.x0)}" y1="${algoRound(d.y0)}" x2="${algoRound(d.x1)}" y2="${algoRound(d.y1)}" stroke="${lineColor}" stroke-width="0.08" stroke-dasharray="0.15 0.15"/></g>`;
+      // a real wall (its thickness centred on the zone line), the door left open with its swing drawn as in a plan
+      g += `<g pointer-events="none">` + plan.wall.rects.map(r => rect(r, WALL, 'shape-rendering="crispEdges"')).join("") + `</g>`;
+      const d = plan.wall.door, horiz = Math.abs(d.x1 - d.x0) >= Math.abs(d.y1 - d.y0);
+      const w = horiz ? Math.abs(d.x1 - d.x0) : Math.abs(d.y1 - d.y0);
+      const mx = (d.x0 + d.x1) / 2, my = (d.y0 + d.y1) / 2, zc = [(z[0] + z[2]) / 2, (z[1] + z[3]) / 2];
+      const out = horiz ? Math.sign(my - zc[1]) || 1 : Math.sign(mx - zc[0]) || 1;                                     // the door opens outward, onto the path
+      const hx = horiz ? Math.min(d.x0, d.x1) : mx, hy = horiz ? my : Math.min(d.y0, d.y1);                        // hinge at one end of the opening
+      const lx = horiz ? hx : hx + out * w, ly = horiz ? hy + out * w : hy;                                        // the open leaf's far end
+      const ex = horiz ? hx + w : hx, ey = horiz ? hy : hy + w;                                                    // the closed position's far end
+      const sweep = horiz ? (out > 0 ? 0 : 1) : (out > 0 ? 1 : 0);
+      g += `<g pointer-events="none" fill="none" stroke="${WALL}" stroke-width="0.07"><line x1="${R(hx)}" y1="${R(hy)}" x2="${R(lx)}" y2="${R(ly)}"/><path d="M${R(lx)},${R(ly)} A${R(w)},${R(w)} 0 0 ${sweep} ${R(ex)},${R(ey)}" stroke-dasharray="0.18 0.14"/></g>`;
     } else {
-      g += `<g pointer-events="none"><rect x="${algoRound(z[0])}" y="${algoRound(z[1])}" width="${algoRound(z[2] - z[0])}" height="${algoRound(z[3] - z[1])}" fill="none" stroke="${lineColor}" stroke-width="0.22" stroke-dasharray="0.9 0.6"/></g>`;
+      g += `<g pointer-events="none"><rect x="${R(z[0])}" y="${R(z[1])}" width="${R(z[2] - z[0])}" height="${R(z[3] - z[1])}" fill="none" stroke="${ZONE}" stroke-width="0.22" stroke-dasharray="0.9 0.6"/></g>`;
     }
-    g += `<text x="${algoRound(z[0] + 0.5)}" y="${algoRound(z[1] - 0.4)}" font-size="${fs * 0.75}" font-weight="700" fill="${lineColor}">Indoor zone</text>`;
+    const lw = fs * 0.62 * 6.8, lh = fs * 0.95, ly0 = z[1] - lh - 0.35;                                           // the zone's name in a small tag above it
+    g += `<g pointer-events="none"><rect x="${R(z[0])}" y="${R(ly0)}" width="${R(lw)}" height="${R(lh)}" rx="${R(lh / 2)}" fill="${ZONE}"/><text x="${R(z[0] + lw / 2)}" y="${R(ly0 + lh * 0.72)}" text-anchor="middle" font-size="${R(fs * 0.62)}" font-weight="700" fill="#fff">Indoor zone</text></g>`;
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
-  // The entrances: each way in across the garden band as pathway, with the door's arrow on the roof edge (moved on the Manual board, not here).
-  site.entries.forEach(r => { g += rect(r, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges" pointer-events="none"'); });
-  (combineState.entryPoints || []).forEach(ep => {
-    const [nx, ny] = typeof entryInwardNormal === "function" ? entryInwardNormal(ep) : [0, 1];
-    const tx = -ny, ty = nx, a = fs * 0.55;
-    g += `<g pointer-events="none"><path d="M${algoRound(ep.x_m - tx * a)},${algoRound(ep.y_m - ty * a)} L${algoRound(ep.x_m + nx * a * 1.6)},${algoRound(ep.y_m + ny * a * 1.6)} L${algoRound(ep.x_m + tx * a)},${algoRound(ep.y_m + ty * a)} Z" fill="#ffb300" stroke="#7a4f00" stroke-width="0.08"/><title>Entry point</title></g>`;
-  });
   if (plan) plan.courts.forEach(c => {
     const sp = C.SPORTS.find(s => s.name === c.name), r = c.rect;
-    const cx = (r[0] + r[2]) / 2, cy = (r[1] + r[3]) / 2, word = c.name.split(" ")[0];
-    const small = r[2] - r[0] < fs * (word.length * 0.62 + 1) && r[3] - r[1] < fs * (word.length * 0.62 + 1);
-    g += `<g pointer-events="none"><rect x="${algoRound(r[0])}" y="${algoRound(r[1])}" width="${algoRound(r[2] - r[0])}" height="${algoRound(r[3] - r[1])}" fill="${escapeHtml(algoRgb(sp.color))}" stroke="#282828" stroke-width="0.14"/>
-      <text x="${algoRound(cx)}" y="${algoRound(cy + fs * 0.35)}" text-anchor="middle" font-size="${small ? fs * 0.7 : fs}" font-weight="600" fill="#141414">${algoEsc(word)}</text>
+    const w = r[2] - r[0], h = r[3] - r[1], cx = (r[0] + r[2]) / 2, cy = (r[1] + r[3]) / 2, word = c.name.split(" ")[0];
+    const small = w < fs * (word.length * 0.62 + 1) && h < fs * (word.length * 0.62 + 1);
+    const tf = small ? fs * 0.7 : fs, halo = "";
+    // text colour by the item's own brightness: white on dark items, near-black on light ones
+    const lum = (0.299 * sp.color[0] + 0.587 * sp.color[1] + 0.114 * sp.color[2]) / 255;
+    const ink = lum < 0.5 ? "#ffffff" : "#141414", inkSoft = lum < 0.5 ? "rgba(255,255,255,0.88)" : "#2b2b2b";
+    const isCourt = sp.group === "Courts" && Math.min(w, h) > 4;
+    // faint court lines: an inner boundary and the half-way line across the long side
+    const inset = Math.min(w, h) * 0.08;
+    const lines = isCourt ? `<rect x="${R(r[0] + inset)}" y="${R(r[1] + inset)}" width="${R(w - 2 * inset)}" height="${R(h - 2 * inset)}" fill="none" stroke="#fff" stroke-opacity="0.55" stroke-width="0.12"/>`
+      + (w >= h ? `<line x1="${R(cx)}" y1="${R(r[1] + inset)}" x2="${R(cx)}" y2="${R(r[3] - inset)}" stroke="#fff" stroke-opacity="0.55" stroke-width="0.12"/>`
+                : `<line x1="${R(r[0] + inset)}" y1="${R(cy)}" x2="${R(r[2] - inset)}" y2="${R(cy)}" stroke="#fff" stroke-opacity="0.55" stroke-width="0.12"/>`) : "";
+    const dims = !small && h > tf * 3.4 && w > tf * 5.5 ? `<text x="${R(cx)}" y="${R(cy + tf * 1.35)}" text-anchor="middle" font-size="${R(tf * 0.8)}" font-weight="600" fill="${inkSoft}" ${halo}>${escapeHtml(c.long)} × ${escapeHtml(c.short)} m</text>` : "";
+    const ty = dims ? cy - tf * 0.05 : cy + tf * 0.35;
+    g += `<g pointer-events="none"><rect x="${R(r[0])}" y="${R(r[1])}" width="${R(w)}" height="${R(h)}" rx="0.25" fill="${escapeHtml(algoRgb(sp.color))}" stroke="${shade(sp.color, 0.55)}" stroke-width="0.14"/>${lines}
+      <text x="${R(cx)}" y="${R(ty)}" text-anchor="middle" font-size="${R(tf)}" font-weight="700" fill="${ink}" ${halo}>${algoEsc(word)}</text>${dims}
       <title>${algoEsc(sp.label)} ${c.long} × ${escapeHtml(c.short)} m${c.rotated ? ", turned 90°" : ""}${c.onEdge ? ", on the setback line" : ""}</title></g>`;
   });
-  g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="none" stroke="#3c3c3c" stroke-width="0.18" pointer-events="none"/>`;
-  host.innerHTML = `<svg id="algo-svg" viewBox="${algoRound(vx)} ${algoRound(vy)} ${algoRound(vw)} ${algoRound(vh)}" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:${algoRound(vw / vh)}" role="img" aria-label="Preview of the packed roof">${g}</svg>`;
+  g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="none" stroke="${EDGE}" stroke-width="0.3" stroke-linejoin="miter" pointer-events="none"/>`;
+  // the doors: an arrow pointing in, on the roof edge (moved on the Manual board, not here)
+  (combineState.entryPoints || []).forEach(ep => {
+    const [nx, ny] = typeof entryInwardNormal === "function" ? entryInwardNormal(ep) : [0, 1];
+    const tx = -ny, ty = nx, a = fs * 0.6;
+    const p = (s, t) => `${R(ep.x_m + tx * s + nx * t)},${R(ep.y_m + ty * s + ny * t)}`;
+    g += `<g pointer-events="none"><path d="M${p(-a, -a * 0.35)} L${p(0, a * 1.3)} L${p(a, -a * 0.35)} L${p(0, a * 0.35)} Z" fill="#f59e0b" stroke="#78350f" stroke-width="0.09" stroke-linejoin="round"/><title>Entry point</title></g>`;
+  });
+  // a 10 m scale bar under the roof's bottom-left corner
+  const sbx = b.x0, sby = b.y1 + pad * 0.9, seg = 5;
+  g += `<g pointer-events="none">${[0, 1].map(i => rect([sbx + i * seg, sby, sbx + (i + 1) * seg, sby + 0.35], i ? "#fff" : EDGE, `stroke="${EDGE}" stroke-width="0.07"`)).join("")}`
+    + [0, 5, 10].map(m => `<text x="${R(sbx + m)}" y="${R(sby + 0.35 + fs * 0.7)}" text-anchor="middle" font-size="${R(fs * 0.55)}" fill="${EDGE}">${m}${m === 10 ? " m" : ""}</text>`).join("") + `</g>`;
+  host.innerHTML = `<svg id="algo-svg" viewBox="${R(vx)} ${R(vy)} ${R(vw)} ${R(vh)}" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:${R(vw / vh)}" role="img" aria-label="Preview of the packed roof">${g}</svg>`;
 }
 
 // ------------------------------------------------------------------------------------------------ apply to Combine
