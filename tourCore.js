@@ -45,11 +45,11 @@ const TOUR_STEPS = [
   },
   {
     id: "combine", mode: "combine", target: "[data-placement-switch]", title: "Place them on the roof",
-    text: () => "Manual: drag pieces onto the roof yourself; the rules (clearance, setback, circulation width, entry points) check every move. Algorithmic: say how many of each court you want and the packing engine places them; then change anything by hand."
+    text: () => "Manual: drag pieces onto the roof; the rules check every move, and a selected piece shows its own results beside the roof. Algorithmic: say how many of each court you want and the packing engine places them; then change anything by hand."
   },
   {
     id: "analysis", mode: "analysis", target: "#activity-bar", title: "Check the layout",
-    text: () => "Revit sends its physical analyses here (structure, sun, wind, rain, dynamics) with charts and, where Unity is installed, videos. The groups on the left sort them. Run them from the Sportify tab in Revit."
+    text: () => "One tile per analysis for the whole layout: Revit's full result when it has run, this app's quick estimate otherwise, each marked with where it comes from. The groups on the left open the cards, with charts and videos."
   },
   {
     id: "structure", mode: "structure", target: "#structure-content", title: "Structure",

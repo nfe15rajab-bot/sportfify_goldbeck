@@ -1,12 +1,12 @@
 /**
- * analysisController.js — Analysis Tools tab
- * Early, approximate previews of checks the Revit add-in later runs at
- * full BIM fidelity — pure calculations against the current Combine
- * layout (circulation paths, garden theme data, roof geometry), no
- * physics or rendering. Two parts: a layout-wide summary (5 cards, same
- * as before) and a per-component explorer below it — click a pushed
- * piece on the left, see its own parameters/analysis breakdown on the
- * right, organized the same way a BIM family's properties would be.
+ * analysisController.js — the app's own quick estimates
+ * Early, approximate previews of checks the Revit add-in later runs at full BIM fidelity — pure calculations against the current Combine layout (circulation paths, garden theme data, roof
+ * geometry), no physics or rendering. Four kinds of things here:
+ *   analyze*()         the layout-wide number of each estimate (fire safety, accessibility, water, wind exposure, LCA)
+ *   the *CardHtml()    the card each one is drawn as, shown under its analysis in the Analysis tab when Revit has not sent its full one (analysisResults.js resultsCardHtml)
+ *   piece*()           what each says about ONE piece, which Combine's inspector shows live (resultsStore.js)
+ *   sun path chart     this app's own drawing of the sun's height across the day at the site, under the Sun group
+ * The overview of the tab (a tile per analysis: Revit's number if it has run, else the estimate) is resultsStore.js; the words on every tile, card and row come from resultsStoreCore.js.
  */
 
 /* ── Reference figures, sourced from the .NET database's AnalysisParameter
@@ -146,90 +146,84 @@ function edgeDistanceM(item, roof) {
   return Math.min(distLeft, distRight, distTop, distBottom);
 }
 
-function emptyCardBody(status) {
-  if (status === "empty") return `<p class="hint">Push a sport, activity, or garden piece to Combine to check this.</p>`;
-  if (status === "no-entries") return `<p class="hint">Add an entry point on the Combine board to check this.</p>`;
-  return null;
+/**
+ * The quick estimates' cards. They use the same building blocks as the results of the Revit add-in (resCard/resTile/resBar/resFindings, analysisResults.js) and the same tone and chip words
+ * (estimateSummary, resultsStoreCore.js: the overview's tile says exactly what the card says), and each says it is this app's own quick estimate. They are shown by resultsCardHtml
+ * (analysisResults.js) under the analysis they estimate, when Revit has not sent its full analysis of it.
+ */
+function estimateCard(key, kind, r, sub, bodyFn) {
+  const s = estimateSummary(kind, r);
+  const title = resultsCatalogueEntry(key).title;
+  if (s.tone === "none") return resCard({ key, source: "estimate", title, sub, tone: "neutral", chip: s.chip, body: `<p class="hint">${escapeHtml(s.note || "")}</p>` });
+  return resCard({ key, source: "estimate", title, sub, tone: s.tone, chip: s.chip, body: bodyFn(r, s) });
 }
 
-/** Overview cards reuse the results rail's own building blocks (resCard/resTile/resBar/resFindings, analysisResults.js) so the app's own
-    estimates read with the same icons, bars and tone colors as the Revit-sourced results, instead of a second, plainer visual language. */
 function fireSafetyCardHtml() {
-  const r = analyzeFireSafety();
-  const empty = emptyCardBody(r.status);
-  if (empty) return `<div class="section"><label>Fire Safety <span class="mode-status available">Available now</span></label>${empty}</div>`;
-
-  if (r.status === "fail") {
-    const tiles = `<div class="res-tiles">${resTile("Unreachable pieces", String(r.unreachableCount), "of " + combineState.items.length, "bad")}</div>`;
-    const rec = resFindings([{ kind: "Recommendation", text: "Add or reposition an entry point so every piece has a walkable route to at least one." }]);
-    return resCard({ icon: "ti-flame", title: "Fire Safety", tone: "bad", chip: "no route", body: tiles + rec });
-  }
-  const tone = r.withinLimit ? "ok" : "warn";
-  const barMax = Math.max(r.maxDist, r.maxTravelDistance) * 1.15;
-  const bar = resBar("Longest route to an entry point", r.maxDist, barMax, { ref: r.maxTravelDistance, tone, text: `${r.maxDist.toFixed(1)} m / ${r.maxTravelDistance} m limit` });
-  const rec = r.withinLimit ? "" : resFindings([{ kind: "Recommendation", text: `Shorten the longest route by ${(r.maxDist - r.maxTravelDistance).toFixed(1)} m — move the piece closer to an entry, or add another entry point nearby.` }]);
-  return resCard({ icon: "ti-flame", title: "Fire Safety", sub: "Travel-distance reference: MBO §35", tone, chip: r.withinLimit ? "within limit" : "over limit", body: bar + rec });
+  return estimateCard("fire_safety", "fire", analyzeFireSafety(), "Travel-distance reference: MBO §35", r => {
+    if (r.status === "fail") {
+      const tiles = `<div class="res-tiles">${resTile("Unreachable pieces", String(r.unreachableCount), "of " + combineState.items.length, "bad")}</div>`;
+      return tiles + resFindings([{ kind: "Recommendation", text: "Add or reposition an entry point so every piece has a walkable route to at least one." }]);
+    }
+    const tone = r.withinLimit ? "ok" : "warn";
+    const barMax = Math.max(r.maxDist, r.maxTravelDistance) * 1.15;
+    const bar = resBar("Longest route to an entry point", r.maxDist, barMax, { ref: r.maxTravelDistance, tone, text: `${r.maxDist.toFixed(1)} m / ${r.maxTravelDistance} m limit` });
+    const rec = r.withinLimit ? "" : resFindings([{ kind: "Recommendation", text: `Shorten the longest route by ${(r.maxDist - r.maxTravelDistance).toFixed(1)} m — move the piece closer to an entry, or add another entry point nearby.` }]);
+    return bar + rec;
+  });
 }
 
 function accessibilityCardHtml() {
-  const r = analyzeAccessibility();
-  const empty = emptyCardBody(r.status);
-  if (empty) return `<div class="section"><label>Accessibility <span class="mode-status available">Available now</span></label>${empty}</div>`;
-
-  const tone = r.widthOk && r.reachOk ? "ok" : "warn";
-  const barMax = Math.max(r.currentWidth, r.minWidth) * 1.3;
-  const bar = resBar("Circulation width", r.currentWidth, barMax, { ref: r.minWidth, tone: r.widthOk ? "ok" : "bad", text: `${r.currentWidth.toFixed(1)} m / ${r.minWidth} m reference` });
-  const tiles = `<div class="res-tiles">${resTile("Every piece reachable", r.reachOk ? "Yes" : "No", "from an entry point", r.reachOk ? "ok" : "bad")}</div>`;
-  const recs = [];
-  if (!r.widthOk) recs.push({ kind: "Recommendation", text: `Widen circulation to at least ${r.minWidth} m for two-way wheelchair passage.` });
-  if (!r.reachOk) recs.push({ kind: "Recommendation", text: "Add or move entry points so every piece is reachable." });
-  return resCard({ icon: "ti-wheelchair", title: "Accessibility", sub: "Wheelchair two-way passage reference", tone, chip: tone === "ok" ? "meets reference" : "check needed", body: bar + tiles + resFindings(recs) });
+  return estimateCard("accessibility", "access", analyzeAccessibility(), "Wheelchair two-way passage reference", r => {
+    const barMax = Math.max(r.currentWidth, r.minWidth) * 1.3;
+    const bar = resBar("Circulation width", r.currentWidth, barMax, { ref: r.minWidth, tone: r.widthOk ? "ok" : "bad", text: `${r.currentWidth.toFixed(1)} m / ${r.minWidth} m reference` });
+    const tiles = `<div class="res-tiles">${resTile("Every piece reachable", r.reachOk ? "Yes" : "No", "from an entry point", r.reachOk ? "ok" : "bad")}</div>`;
+    const recs = [];
+    if (!r.widthOk) recs.push({ kind: "Recommendation", text: `Widen circulation to at least ${r.minWidth} m for two-way wheelchair passage.` });
+    if (!r.reachOk) recs.push({ kind: "Recommendation", text: "Add or move entry points so every piece is reachable." });
+    return bar + tiles + resFindings(recs);
+  });
 }
 
 function waterManagementCardHtml() {
-  const r = analyzeWaterManagement();
-  const empty = emptyCardBody(r.status);
-  if (empty) return `<div class="section"><label>Water Management (quick estimate) <span class="mode-status available">Available now</span></label>${empty}</div>`;
-
-  const tiles = `<div class="res-tiles">
-    ${resTile("Garden coverage", r.totalAreaM2.toFixed(1) + " m²")}
-    ${resTile("Average buildup depth", r.avgDepthCm.toFixed(0) + " cm")}
-  </div>`;
-  const bar = resBar("Estimated rainfall retention", r.retentionPercent, 100, { tone: "neutral", text: r.retentionPercent + "%" });
-  const note = resFindings([{ kind: "Note", text: "A rule of thumb from buildup depth alone, not a certified hydrology figure. Run the Soil Percolation analysis in Revit for real layers and rain events." }]);
-  return resCard({ icon: "ti-droplet", title: "Water Management", sub: "Quick estimate", tone: "neutral", chip: "estimate", body: tiles + bar + note });
+  return estimateCard("soil_percolation", "water", analyzeWaterManagement(), "Quick estimate from the build-up depth. The rain events and the real layers are the full analysis in Revit", r => {
+    const tiles = `<div class="res-tiles">
+      ${resTile("Garden coverage", r.totalAreaM2.toFixed(1) + " m²")}
+      ${resTile("Average buildup depth", r.avgDepthCm.toFixed(0) + " cm")}
+    </div>`;
+    const bar = resBar("Estimated rainfall retention", r.retentionPercent, 100, { tone: "neutral", text: r.retentionPercent + "%" });
+    const note = resFindings([{ kind: "Note", text: "A rule of thumb from buildup depth alone, not a certified hydrology figure. Run the Soil Percolation analysis in Revit for real layers and rain events." }]);
+    return tiles + bar + note;
+  });
 }
 
 function windExposureCardHtml() {
-  const r = analyzeWindExposure();
-  const empty = emptyCardBody(r.status);
-  if (empty) return `<div class="section"><label>Wind Exposure <span class="mode-status available">Available now</span></label>${empty}</div>`;
-
-  const tone = r.exposedCount > 0 ? "warn" : "ok";
-  const tiles = `<div class="res-tiles">${resTile("In the exposure zone", `${r.exposedCount} / ${r.totalCount}`, `within ${r.zoneM} m of the roof edge`, tone)}</div>`;
-  const bar = resBar("Pieces within the edge-exposure zone", r.exposedCount, r.totalCount, { tone, text: `${r.exposedCount} of ${r.totalCount}` });
-  const rec = r.exposedCount > 0 ? resFindings([{ kind: "Recommendation", text: `Move exposed piece(s) at least ${r.zoneM} m from the roof edge where the layout allows, or run the Wind & Erosion analysis in Revit for real pressure and anchoring figures.` }]) : "";
-  return resCard({ icon: "ti-wind", title: "Wind Exposure", sub: "Geometric proxy — a real wind field needs Revit's Wind & Erosion analysis", tone, chip: tone === "ok" ? "clear" : `${r.exposedCount} exposed`, body: tiles + bar + rec });
+  return estimateCard("wind_erosion", "wind", analyzeWindExposure(), "Geometric proxy: a real wind field needs Revit's Wind & Erosion analysis", r => {
+    const tone = r.exposedCount > 0 ? "warn" : "ok";
+    const tiles = `<div class="res-tiles">${resTile("In the exposure zone", `${r.exposedCount} / ${r.totalCount}`, `within ${r.zoneM} m of the roof edge`, tone)}</div>`;
+    const bar = resBar("Pieces within the edge-exposure zone", r.exposedCount, r.totalCount, { tone, text: `${r.exposedCount} of ${r.totalCount}` });
+    const rec = r.exposedCount > 0 ? resFindings([{ kind: "Recommendation", text: `Move exposed piece(s) at least ${r.zoneM} m from the roof edge where the layout allows, or run the Wind & Erosion analysis in Revit for real pressure and anchoring figures.` }]) : "";
+    return tiles + bar + rec;
+  });
 }
 
 function lcaCardHtml() {
-  const r = analyzeLCA();
-  const empty = emptyCardBody(r.status);
-  if (empty) return `<div class="section"><label>LCA Estimate <span class="mode-status available">Available now</span></label>${empty}</div>`;
-
-  if (r.coveredCount === 0) {
-    const body = `<p class="hint">None of the ${r.totalCount} piece(s) have both a reference material picked and embodied-carbon data filled in yet.</p>`
-      + resFindings([{ kind: "Recommendation", text: "Pick a reference material for each piece (Sport/Garden's \"Reference material (database)\" dropdown) and add missing embodied-carbon figures from the Data tab." }]);
-    return resCard({ icon: "ti-recycle", title: "LCA Estimate", tone: "neutral", chip: "no data", body });
-  }
-  const tone = r.missingCount > 0 ? "warn" : "ok";
-  const tiles = `<div class="res-tiles">
-    ${resTile("Embodied carbon", "~" + Math.round(r.totalKg).toLocaleString("en-US") + " kg", "CO2e, A1-A3, illustrative")}
-    ${resTile("Pieces covered", `${r.coveredCount} / ${r.totalCount}`, r.missingCount ? `${r.missingCount} missing data` : "all covered", tone)}
-  </div>`;
-  const rec = r.missingCount > 0 ? resFindings([{ kind: "Recommendation", text: `Fill in missing reference materials or embodied-carbon figures for ${r.missingCount} piece(s) in the Data tab to complete this estimate.` }]) : "";
-  return resCard({ icon: "ti-recycle", title: "LCA Estimate", tone, chip: r.missingCount ? `${r.missingCount} missing` : "complete", body: tiles + rec });
+  return estimateCard("lca", "lca", analyzeLCA(), "Embodied carbon of the picked reference materials (A1 to A3), illustrative", r => {
+    if (r.coveredCount === 0) {
+      return `<p class="hint">None of the ${r.totalCount} piece(s) have both a reference material picked and embodied-carbon data filled in yet.</p>`
+        + resFindings([{ kind: "Recommendation", text: "Pick a reference material for each piece (Sport/Garden's \"Reference material (database)\" dropdown) and add missing embodied-carbon figures from the Data tab." }]);
+    }
+    const tone = r.missingCount > 0 ? "warn" : "ok";
+    const tiles = `<div class="res-tiles">
+      ${resTile("Embodied carbon", "~" + Math.round(r.totalKg).toLocaleString("en-US") + " kg", "CO2e, A1-A3, illustrative")}
+      ${resTile("Pieces covered", `${r.coveredCount} / ${r.totalCount}`, r.missingCount ? `${r.missingCount} missing data` : "all covered", tone)}
+    </div>`;
+    const rec = r.missingCount > 0 ? resFindings([{ kind: "Recommendation", text: `Fill in missing reference materials or embodied-carbon figures for ${r.missingCount} piece(s) in the Data tab to complete this estimate.` }]) : "";
+    return tiles + rec;
+  });
 }
+
+/** The quick estimate each analysis has, by the name the catalogue gives it (resultsStoreCore.js). */
+const ESTIMATE_CARDS = { fire: fireSafetyCardHtml, access: accessibilityCardHtml, water: waterManagementCardHtml, wind: windExposureCardHtml, lca: lcaCardHtml };
 
 /**
  * ── Sun Path chart ──
@@ -336,266 +330,67 @@ function sunPathSectionHtml() {
   </div>`;
 }
 
-/* ── Per-component explorer ──
- * Left: one clickable card per pushed piece. Right: that piece's own
- * parameters, organized into the same section taxonomy a BIM family's
- * properties would use — General, Providers & Materials, then each
- * relevant analysis, each shown only when it actually applies to this
- * item's kind (no manual toggle needed: a garden item just never shows
- * a Water Management section irrelevant to a sport piece, and vice
- * versa) since the item's own kind already determines what's relevant.
+/* ── One piece: what the quick estimates say about it ──
+ * Combine's inspector shows these live for the selected piece (resultsStore.js draws them, resultsStoreCore.js pieceSummary words them). Each function returns the numbers
+ * and nothing else: `circulation` is the one drawCombineCanvas has just computed, so a drag does not run the routing twice.
  */
 
-let selectedComponentId = null;
-
-const KIND_LABELS = { field: "Sport Field", activity: "Activity", garden: "Garden" };
-const KIND_ICONS = { field: "ti-square-rounded", activity: "ti-run", garden: "ti-leaf" };
-
-/** Fallback for activity pieces pushed before buildActivityPayload() existed (empty sourceJson) — looks the label up in the reference data directly instead. */
-function findActivityMeta(label) {
-  if (typeof ACTIVITIES !== "object") return null;
-  return Object.values(ACTIVITIES).find(a => a.label === label) || null;
-}
-
+/** "field" -> "Field", "garden_bed" -> "Garden bed": the reference data's ids, said for people (compareController.js uses it too). */
 function titleCase(s) {
   return typeof s === "string" && s.length ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ") : "—";
 }
 
-function componentListItemHtml(item) {
-  const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
-  const active = item.id === selectedComponentId ? " active" : "";
-  return `
-    <button class="analysis-component-item${active}" data-component-id="${escapeHtml(item.id)}">
-      <i class="ti ${escapeHtml(KIND_ICONS[item.kind] || "ti-square-rounded")}" aria-hidden="true"></i>
-      <span class="analysis-component-item-text">
-        <span class="analysis-component-item-label">${escapeHtml(item.label)}</span>
-        <span class="analysis-component-item-dims">${fp.w.toFixed(1)} × ${fp.h.toFixed(1)} m</span>
-      </span>
-    </button>`;
+function pieceFireSafety(item, circulation) {
+  if (combineState.entryPoints.length === 0) return { state: "no-entries" };
+  const c = circulation || computeCirculation(combineState, DESIGN_RULES);
+  if (c.unreachable.has(item.id)) return { state: "unreachable" };
+  const path = c.paths.find(p => p.itemId === item.id);
+  if (!path) return { state: "no-route" };
+  return { state: "ok", lengthM: pathLengthM(path.points), limitM: getAnalysisParam("Fire Safety", "max_travel_distance_m") };
 }
 
-function detailSectionHtml(icon, title, badgeHtml, bodyHtml) {
-  return `
-    <div class="analysis-detail-section">
-      <div class="analysis-detail-section-head">
-        <i class="ti ${icon}" aria-hidden="true"></i>
-        <label>${title}</label>
-        ${badgeHtml || ""}
-      </div>
-      ${bodyHtml}
-    </div>`;
-}
-
-function generalSectionHtml(item) {
-  const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
-  let relevance = "—";
-  let quality = "—";
-
-  if (item.kind === "field" && item.sourceJson?.field) {
-    relevance = `${titleCase(item.sourceJson.field.sport)} — ${item.sourceJson.field.norm || "—"}`;
-    quality = titleCase(item.sourceJson.materials?.quality_level);
-  } else if (item.kind === "garden" && item.sourceJson?.garden) {
-    const g = item.sourceJson.garden;
-    relevance = `${titleCase(g.type_id)} — ${titleCase(g.theme)} (${titleCase(g.category)})`;
-    quality = titleCase(g.materials?.quality_level);
-  } else if (item.kind === "activity") {
-    if (item.sourceJson?.activity) {
-      const a = item.sourceJson.activity;
-      relevance = `${titleCase(a.category)} — ${a.norm}`;
-      quality = titleCase(item.sourceJson.materials?.quality_level);
-    } else {
-      // Pieces pushed before buildActivityPayload() existed have no
-      // sourceJson.activity to read — fall back to the reference data.
-      const meta = findActivityMeta(item.label);
-      relevance = meta ? `${titleCase(meta.category)} — ${meta.norm}` : "—";
-    }
-  }
-
-  return `
-    <div class="dims" style="grid-template-columns:repeat(2,1fr);">
-      <div class="dim-card"><div class="val">${fp.w.toFixed(1)} × ${fp.h.toFixed(1)} m</div><div class="lbl">Dimensions</div></div>
-      <div class="dim-card"><div class="val">${escapeHtml(KIND_LABELS[item.kind] || item.kind)}</div><div class="lbl">Kind</div></div>
-    </div>
-    <p class="hint" style="margin-top:8px"><strong>Field of relevance:</strong> ${relevance}</p>
-    <p class="hint"><strong>Overall quality:</strong> ${quality}</p>`;
-}
-
-function materialsSectionHtml(item) {
-  if (item.kind === "field" && item.sourceJson?.materials) {
-    const m = item.sourceJson.materials;
-    return `
-      <p class="hint"><strong>Floor surface:</strong> ${m.floor_surface || "—"}</p>
-      <p class="hint"><strong>Line marking:</strong> ${m.line_marking || "—"}</p>
-      <p class="hint"><strong>Gradin type:</strong> ${m.gradin_type || "—"}</p>
-      <p class="hint"><strong>Reference material:</strong> ${m.reference_material || "— none picked"}</p>
-      <p class="hint"><strong>Reference provider:</strong> ${m.reference_provider || "— none picked"}</p>`;
-  }
-  if (item.kind === "garden" && item.sourceJson?.garden) {
-    const g = item.sourceJson.garden;
-    const layers = (g.layers || []).map(l => `
-      <div class="dim-card"><div class="val">${(l.thickness_m * 100).toFixed(0)} cm</div><div class="lbl">${escapeHtml(titleCase(l.layer_name))} — ${escapeHtml(l.material)}</div></div>
-    `).join("");
-    return `
-      <p class="hint"><strong>Waterproofing:</strong> ${g.materials?.waterproofing || "—"}</p>
-      <p class="hint"><strong>Drainage:</strong> ${g.materials?.drainage || "—"}</p>
-      <p class="hint"><strong>Reference material:</strong> ${g.materials?.reference_material || "— none picked"}</p>
-      <p class="hint"><strong>Reference provider:</strong> ${g.materials?.reference_provider || "— none picked"}</p>
-      <div class="dims" style="grid-template-columns:1fr;margin-top:6px;">${layers}</div>`;
-  }
-  if (item.kind === "activity" && item.sourceJson?.materials) {
-    const m = item.sourceJson.materials;
-    return `
-      <p class="hint"><strong>Surface:</strong> ${escapeHtml(m.surface || "—")}</p>
-      <p class="hint"><strong>Structure:</strong> ${m.structure || "—"}</p>
-      <p class="hint"><strong>Reference material:</strong> ${m.reference_material || "— none picked"}</p>
-      <p class="hint"><strong>Reference provider:</strong> ${m.reference_provider || "— none picked"}</p>`;
-  }
-  return `<p class="hint">No material data available for this piece — it was likely pushed before buildActivityPayload() existed. Push it again to pick up real data.</p>`;
-}
-
-function fireSafetyDetailHtml(item) {
-  if (combineState.entryPoints.length === 0) return `<p class="hint">Add an entry point on the Combine board to check this.</p>`;
-  const circulation = computeCirculation(combineState, DESIGN_RULES);
-  if (circulation.unreachable.has(item.id)) {
-    return `<p class="hint">⚠️ No walkable route to any entry point at all.</p>`;
-  }
-  const path = circulation.paths.find(p => p.itemId === item.id);
-  if (!path) return `<p class="hint">No route computed yet — try recalculating (add/move an item or entry point).</p>`;
-  return `<p class="hint">Route to nearest entry point: <strong>${pathLengthM(path.points).toFixed(1)} m</strong>.</p>`;
-}
-
-function accessibilityDetailHtml(item) {
+function pieceAccessibility(item, circulation) {
   const minWidth = getAnalysisParam("Accessibility", "min_circulation_width_m");
-  const widthOk = DESIGN_RULES.circulationWidth_m >= minWidth;
-  const circulation = combineState.entryPoints.length > 0 ? computeCirculation(combineState, DESIGN_RULES) : null;
-  const reachable = circulation ? !circulation.unreachable.has(item.id) : false;
-  return `
-    <p class="hint">${widthOk ? "✅" : "⚠️"} Circulation width set to ${DESIGN_RULES.circulationWidth_m.toFixed(1)} m (wheelchair two-way reference: ${minWidth} m) — a layout-wide setting, not per-piece.</p>
-    <p class="hint">${reachable ? "✅ This piece has a walkable route from an entry point." : "⚠️ Not reachable from an entry point yet."}</p>`;
+  const hasEntries = combineState.entryPoints.length > 0;
+  const c = hasEntries ? (circulation || computeCirculation(combineState, DESIGN_RULES)) : null;
+  return { hasEntries, reachable: c ? !c.unreachable.has(item.id) : false, widthOk: DESIGN_RULES.circulationWidth_m >= minWidth, currentWidth: DESIGN_RULES.circulationWidth_m, minWidth };
 }
 
-function waterManagementDetailHtml(item) {
+function pieceWater(item) {
   const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
-  const area = fp.w * fp.h;
   const theme = GARDEN_THEMES[item.sourceJson?.garden?.theme] || GARDEN_THEMES.custom;
   const depthCm = Object.values(theme.layers).reduce((sum, l) => sum + l.thickness_m * 100, 0);
-  const retentionPercent = computeRetentionPercent(depthCm);
-  return `
-    <p class="hint">${area.toFixed(1)} m², ${depthCm.toFixed(0)} cm buildup depth.</p>
-    <p class="hint">Estimated rainfall retention: <strong>~${retentionPercent}%</strong> (illustrative — not a certified hydrology figure).</p>`;
+  return { areaM2: fp.w * fp.h, depthCm, retentionPercent: computeRetentionPercent(depthCm) };
 }
 
-function windExposureDetailHtml(item) {
-  const zoneM = getAnalysisParam("Wind Exposure", "edge_exposure_zone_m");
-  const dist = edgeDistanceM(item, combineState.roof);
-  const exposed = dist < zoneM;
-  if (dist < 0) return `<p class="hint">⚠️ This piece extends past the roof boundary — resize or move it before this check means anything.</p>`;
-  return `<p class="hint">${exposed ? "⚠️" : "✅"} ${dist.toFixed(1)} m from the nearest roof edge${exposed ? ` — inside the ${zoneM} m elevated-exposure zone.` : "."}</p>`;
+function pieceWind(item) {
+  return { distM: edgeDistanceM(item, combineState.roof), zoneM: getAnalysisParam("Wind Exposure", "edge_exposure_zone_m") };
 }
 
-function lcaDetailHtml(item) {
-  const piece = pieceEmbodiedCarbon(item, analysisMaterialsCache);
-  if (!piece.material) {
-    return `<p class="hint">No reference material selected for this piece — pick one from the "Reference material (database)" dropdown in Sport/Garden mode to enable this.</p>`;
-  }
-  if (piece.why === "not in the catalogue") {
-    return `<p class="hint"><strong>Reference material:</strong> ${escapeHtml(piece.material)}</p><p class="hint">Not found in the database (likely typed as manual text) — no embodied-carbon figure to look up.</p>`;
-  }
-  if (piece.kg == null) {
-    return `<p class="hint"><strong>Reference material:</strong> ${escapeHtml(piece.material)}</p><p class="hint">⚠️ No embodied-carbon figure yet for this material — add one from the Data tab's Materials edit form.</p>`;
-  }
-  return `
-    <p class="hint"><strong>Reference material:</strong> ${escapeHtml(piece.material)}</p>
-    <p class="hint">${piece.areaM2.toFixed(1)} m² × ${escapeHtml(piece.kgPerM2)} ${escapeHtml(piece.unit || "kg CO2e/m2")} = <strong>~${piece.kg.toFixed(0)} kg CO2e</strong> (A1-A3, illustrative).</p>
-    <p class="hint">${escapeHtml(piece.source || "")}</p>`;
+function pieceLca(item) {
+  return pieceEmbodiedCarbon(item, analysisMaterialsCache);
 }
 
-/** Which sections apply to which item kind — the "toggle" the user asked for: automatic per selected item, not a manual switch, since the item's own kind already determines what's relevant. */
-function componentSections(item) {
-  const sections = [
-    { icon: "ti-info-circle", title: "General", html: generalSectionHtml(item) },
-    { icon: "ti-package", title: "Providers & Materials", html: materialsSectionHtml(item) },
-    { icon: "ti-flame", title: "Fire Safety", badge: "available", html: fireSafetyDetailHtml(item) },
-    { icon: "ti-wheelchair", title: "Accessibility", badge: "available", html: accessibilityDetailHtml(item) },
-  ];
-  if (item.kind === "garden") {
-    sections.push({ icon: "ti-droplet", title: "Water Management", badge: "available", html: waterManagementDetailHtml(item) });
-  }
-  sections.push({ icon: "ti-wind", title: "Wind Exposure", badge: "available", html: windExposureDetailHtml(item) });
-  sections.push({ icon: "ti-recycle", title: "LCA", badge: "available", html: lcaDetailHtml(item) });
-  return sections;
+/** The numbers of one analysis for one piece, by the catalogue's key (resultsStoreCore.js). */
+function pieceAnalysisData(key, item, circulation) {
+  if (key === "fire_safety") return pieceFireSafety(item, circulation);
+  if (key === "accessibility") return pieceAccessibility(item, circulation);
+  if (key === "soil_percolation") return pieceWater(item);
+  if (key === "wind_erosion") return pieceWind(item);
+  if (key === "lca") return pieceLca(item);
+  return null;
 }
 
-function componentDetailHtml(item) {
-  const badgeHtml = b => b === "available" ? `<span class="mode-status available">Available now</span>` : b === "soon" ? `<span class="mode-status vision">Coming soon</span>` : "";
-  const sections = componentSections(item).map(s => detailSectionHtml(s.icon, s.title, badgeHtml(s.badge), s.html)).join("");
-  return `
-    <div class="analysis-component-detail-head">
-      <i class="ti ${escapeHtml(KIND_ICONS[item.kind] || "ti-square-rounded")}" aria-hidden="true"></i>
-      <div>
-        <div class="analysis-component-detail-title">${escapeHtml(item.label)}</div>
-        <div class="hint">${escapeHtml(KIND_LABELS[item.kind] || item.kind)} — parameters below are exactly what gets sent to Revit for family placement and deeper analysis.</div>
-      </div>
-    </div>
-    <div class="analysis-detail-sections">${sections}</div>`;
-}
-
-function renderComponentExplorer() {
-  const listEl = document.getElementById("analysis-component-list");
-  const detailEl = document.getElementById("analysis-component-detail");
-  if (!listEl || !detailEl) return;
-
-  if (combineState.items.length === 0) {
-    listEl.innerHTML = `<p class="hint" style="padding:10px 14px;">Nothing pushed to Combine yet.</p>`;
-    detailEl.innerHTML = `<p class="hint" style="padding:10px 14px;">Push a sport, activity, or garden piece to see its parameters here.</p>`;
-    return;
-  }
-
-  if (!combineState.items.some(it => it.id === selectedComponentId)) {
-    selectedComponentId = combineState.items[0].id;
-  }
-
-  listEl.innerHTML = combineState.items.map(componentListItemHtml).join("");
-  const selected = combineState.items.find(it => it.id === selectedComponentId);
-  detailEl.innerHTML = componentDetailHtml(selected);
-
-  listEl.querySelectorAll(".analysis-component-item").forEach(btn => {
-    btn.addEventListener("click", () => {
-      selectedComponentId = btn.dataset.componentId;
-      renderComponentExplorer();
-    });
-  });
-}
-
+/** The overview of the tab: one tile per analysis (resultsStore.js). Every group of the tab below it has the card behind each tile. */
 function renderAnalysisContent() {
   const contentEl = document.getElementById("analysis-content");
   if (!contentEl) return;
-  contentEl.innerHTML = `
-    <div class="step-grid">
-      ${fireSafetyCardHtml()}
-      ${accessibilityCardHtml()}
-      ${waterManagementCardHtml()}
-      ${windExposureCardHtml()}
-      ${lcaCardHtml()}
-    </div>
-    <div class="step-grid">
-      ${sunPathSectionHtml()}
-    </div>
-    <div class="analysis-components-heading">
-      <i class="ti ti-list-details" aria-hidden="true"></i>
-      <span>Component Details</span>
-      <span class="hint">Click a pushed piece to see its own parameters — the same data Revit uses for family placement.</span>
-    </div>
-    <div class="analysis-components">
-      <div class="analysis-component-list" id="analysis-component-list"></div>
-      <div class="analysis-component-detail" id="analysis-component-detail"></div>
-    </div>`;
-  renderComponentExplorer();
-  document.getElementById("btn-download-sunpath")?.addEventListener("click", downloadSunPathPng);
+  contentEl.innerHTML = typeof resultsOverviewHtml === "function" ? resultsOverviewHtml() : "";
+  if (typeof resultsOverviewWire === "function") resultsOverviewWire(contentEl);
 }
 
 function updateAnalysisUI() {
-  // The rail's other buttons (Garden, Structure, Sun, Sport, Safety, Other) show what Revit's analyses found: analysisResults.js.
+  // The rail's other buttons (Safety, Garden, Structure, Sun, Sport, Other) show the card of each analysis: Revit's full analysis, else this app's quick estimate: analysisResults.js.
   if (typeof analysisSub !== "undefined" && analysisSub !== "overview" && typeof renderAnalysisResultsView === "function") {
     renderAnalysisResultsView();
     return;

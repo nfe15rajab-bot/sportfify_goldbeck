@@ -25,7 +25,12 @@ check("the note on the same numbers is one sentence and names the analyses that 
 
 // what the card claims about this app must be true of this app
 const analysisSrc = read("analysisController.js");
-check("'quick estimates: fire safety, accessibility, LCA, sun path, wind and water' are analyses this app computes itself (its Analysis tab has a card for each)", ["Fire Safety", "Accessibility", "LCA Estimate", "Sun Path", "Wind Exposure", "Water Management"].every(t => analysisSrc.includes("<label>" + t)) && /quick estimates: fire safety, accessibility, LCA, sun path, wind and water/i.test(where.WHERE_COLUMNS[0].points.join(" ")));
+const store = require(path.join(web, "resultsStoreCore.js"));
+check("'quick estimates: fire safety, accessibility, LCA, sun path, wind and water' are analyses this app computes itself: the results store has a quick estimate for each of fire safety, accessibility, rain (water), wind and LCA, computed by functions that exist, and the Sun group draws the site's sun path",
+  store.RESULTS_CATALOGUE.filter(e => e.estimate).map(e => e.key).sort().join() === "accessibility,fire_safety,lca,soil_percolation,wind_erosion"
+  && ["analyzeFireSafety", "analyzeAccessibility", "analyzeWaterManagement", "analyzeWindExposure", "analyzeLCA", "sunPathSectionHtml"].every(f => analysisSrc.includes("function " + f + "("))
+  && /sunPathSectionHtml\(\)/.test(read("analysisResults.js"))
+  && /quick estimates: fire safety, accessibility, LCA, sun path, wind and water/i.test(where.WHERE_COLUMNS[0].points.join(" ")));
 check("'set the site: the address, which way it faces, the roof size' are inputs of the Site tab", ["siteAddressSearch", "siteNorthDeg", "roofLength", "roofWidth"].every(id => html.includes('id="' + id + '"')));
 check("'place them on the roof by hand or by the algorithm' is the Combine tab's manual and algorithmic switch", /data-placement="manual"/.test(read("algoPlacementUI.js")) && /data-placement="algo"/.test(read("algoPlacementUI.js")) && /by hand or by the algorithm/.test(where.WHERE_COLUMNS[0].points.join(" ")));
 check("'compare variants and save your sessions' are tabs of this app", html.includes('id="modeCompare"') && html.includes('id="modeSession"'));

@@ -36,6 +36,7 @@ const get = expr => vm.runInContext(expr, ctx);
 
 load("escape.js");
 load("localSession.js");
+load("resultsStoreCore.js");      // the words and the catalogue analysisResults.js draws its cards with
 load("analysisResults.js");
 load("workspaceBridge.js");
 

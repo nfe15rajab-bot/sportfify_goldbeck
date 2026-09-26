@@ -1,27 +1,29 @@
 /**
- * analysisResults.js — the Analysis tab's sub-rail of results from Revit.
+ * analysisResults.js — the Analysis tab's groups, and what the Revit add-in found.
  *
- * The Revit add-in publishes what its analyses found (GET localhost:5679/analysis-results): the numbers of the garden analyses (rain, wind,
- * erosion), the structural ones (static loads, dynamic analysis), the ball simulation, fire safety and accessibility, sun and shade, LCA and carbon. The
- * Unity recordings that go with them are served beside them (GET /recording). This file shows them here, in the Analysis tab, the way Sport shows its
- * sports: a second rail with one button per group. (The Revit button "Send All to Web App" sends the physical analyses in one go; each analysis command
- * also publishes its own result as soon as it has one.) Compare is not in this: it compares the user's saved iterations.
+ * The Revit add-in publishes what its analyses found (GET localhost:5679/analysis-results): the numbers of the garden analyses (rain, wind, erosion), the structural ones (static loads,
+ * dynamic analysis), the ball simulation, fire safety and accessibility, sun and shade, LCA and carbon. The Unity recordings that go with them are served beside them (GET /recording).
+ * The Analysis tab is a second rail with one button per group, the way Sport shows its sports. (The Revit button "Send All to Web App" sends the physical analyses in one go; each analysis
+ * command also publishes its own result as soon as it has one.) Compare is not in this: it compares the user's saved iterations.
  *
- *   Overview   what Analysis always was: the app's own early checks on the Combine layout (analysisController.js)
+ *   Overview   the whole layout at a glance: one tile per analysis (resultsStore.js), each saying its headline and where it comes from; a tile opens its card below
+ *   Safety     fire safety and circulation, accessibility
  *   Garden     rain and soil percolation, wind and erosion
  *   Structure  static loads by bay, balance, advice; the dynamic analysis (crowds, weather, resonance)
- *   Sun        direct sun hours per zone, shade at midday, the shading equipment to place and what it weighs on the deck
+ *   Sun        direct sun hours per zone, shade at midday, the shading equipment to place and what it weighs on the deck; the sun path chart of the site
  *   Sport      ball trajectories, roof exits and fences
- *   Safety     fire safety and circulation, accessibility
  *   Other      LCA and carbon
  *
- * Nothing is computed here: it reads, lays out and says what state each result is in (from Revit now, received earlier, not run yet). A result
- * that rests on inputs nobody confirmed (deck capacity, snow zone ...) is shown as PRELIMINARY, with the inputs, never as a verdict.
+ * There is ONE card per analysis (resultsCardHtml): Revit's full analysis when it has run, else this app's own quick estimate where there is one (analysisController.js: fire safety,
+ * accessibility, rain, wind, LCA), else "not run" with where to run it. The same rule picks each tile of the overview, and the words on both come from resultsStoreCore.js.
+ * Nothing is computed here: it reads, lays out and says what state each result is in (from Revit now, received earlier, not run yet). A result that rests on inputs nobody confirmed
+ * (deck capacity, snow zone ...) is shown as PRELIMINARY, with the inputs, never as a verdict.
  * The last results received are kept in localStorage so the tabs still show them when Revit is closed (the recordings then are not playable).
  */
 
 const RESULTS_CACHE_KEY = "sportify-analysis-results";
 const RESULTS_POLL_MS = 3000;
+const RESULTS_POLL_CLOSED_MS = 10000;
 
 // Where each analysis is in Revit's Sportify tab. The physical (Unity based) ones are in Simulation & Analytics, in drop-downs by kind; the rule-based ones have a panel of their own.
 const RUN_PATH_PHYSICAL = "Sportify ribbon → Simulation & Analytics → ";
@@ -46,7 +48,7 @@ const RESULT_SECTIONS = {
 
 /** The rail: id, caption, icon, heading and what the group shows. */
 const ANALYSIS_SUBTABS = [
-  { id: "overview", label: "Overview", icon: "ti-layout-grid", title: "Analysis tools", intro: "Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these." },
+  { id: "overview", label: "Overview", icon: "ti-layout-grid", title: "Analysis: the whole layout at a glance", intro: "One tile per analysis. Revit's full analysis when it has run on this layout, this app's quick estimate otherwise. Click a tile for the details." },
   {
     id: "garden", label: "Garden", icon: "ti-plant-2", title: "Garden: rain, wind and erosion",
     intro: "What rain, wind and the weather do to the green roofs: how much water each build-up keeps, whether a build-up would lift off or a tree blow over.",
@@ -87,6 +89,7 @@ const ANALYSIS_SUBTABS = [
 const resultsState = { payload: null, receivedAt: null, connected: null, cached: false, raw: null, lastRenderKey: null };
 let analysisSub = "overview";
 let resultsPollHandle = null;
+let resultsPollGen = 0;
 
 (function loadResultsCache() {
   try {
@@ -128,22 +131,36 @@ async function pollAnalysisResults() {
   if (changed) {
     renderAnalysisIfShowingResults();
     if (typeof updateRevitLayersUI === "function") updateRevitLayersUI();      // "results from Revit: n of 10" in Combine's layers panel
+    if (typeof activeMode !== "undefined" && activeMode === "combine" && typeof renderInspector === "function") renderInspector();      // the selected piece's "run in Revit" line
   }
+}
+
+/** While Revit answers, ask often; while it is closed, ask rarely (each question to a closed add-in is a refused connection the browser logs). */
+function scheduleResultsPoll() {
+  const gen = resultsPollGen;      // a stop then a start while a question is still out must not leave two chains asking
+  resultsPollHandle = setTimeout(async () => {
+    await pollAnalysisResults();
+    if (gen === resultsPollGen && resultsPollHandle) scheduleResultsPoll();
+  }, resultsState.connected === false ? RESULTS_POLL_CLOSED_MS : RESULTS_POLL_MS);
 }
 
 function startResultsPolling() {
   if (resultsPollHandle) return;
   pollAnalysisResults();
-  resultsPollHandle = setInterval(pollAnalysisResults, RESULTS_POLL_MS);
+  scheduleResultsPoll();
 }
 
 function stopResultsPolling() {
-  if (resultsPollHandle) clearInterval(resultsPollHandle);
+  if (resultsPollHandle) clearTimeout(resultsPollHandle);
   resultsPollHandle = null;
+  resultsPollGen++;
 }
 
 function renderAnalysisIfShowingResults() {
-  if (typeof activeMode !== "undefined" && activeMode === "analysis" && analysisSub !== "overview") renderAnalysisResultsView();
+  if (typeof activeMode !== "undefined" && activeMode === "analysis") {
+    if (analysisSub !== "overview") renderAnalysisResultsView();
+    else if (typeof renderAnalysisOverviewIfChanged === "function") renderAnalysisOverviewIfChanged();      // the overview's tiles show what Revit sent too (resultsStore.js)
+  }
   if (typeof renderPostAnalysisIfShowing === "function") renderPostAnalysisIfShowing();
 }
 
@@ -166,7 +183,7 @@ function setAnalysisSub(id) {
   document.querySelectorAll("#activity-bar .activity-icon").forEach(b => b.classList.toggle("active", b.dataset.sub === id));
   resultsState.lastRenderKey = null;
   if (typeof updateAnalysisUI === "function") updateAnalysisUI();
-  if (id === "overview") stopResultsPolling(); else startResultsPolling();
+  startResultsPolling();      // every group of the tab, the overview too, shows what Revit sent
 }
 
 // ---------------------------------------------------------------------------------------------------- small helpers
@@ -282,15 +299,31 @@ function resVideo(path) {
   return `<video class="res-video" controls preload="metadata" src="${resEsc(resVideoUrl(path))}"></video><div class="hint">${resEsc(name)}</div>`;
 }
 
+/** The line that says where a card's numbers come from: the same words as the overview's tile (resultsStoreCore.js). */
+function resSourceLine(source, freshness) {
+  const est = source === "estimate";
+  return `<div class="res-source ${est ? "estimate" : "revit"}" title="${resEsc((RESULT_SOURCES[source] || RESULT_SOURCES.none).title)}"><i class="ti ${est ? "ti-bolt" : "ti-building"}" aria-hidden="true"></i>${resEsc(resultSourceText({ source, freshness }))}</div>`;
+}
+
+/**
+ * One analysis's card. opts.key (or opts.section, the name Revit publishes it under) is the analysis: it gives the card its icon and its anchor (the overview's tile scrolls here) and, with
+ * opts.source "estimate", says the numbers are this app's own quick estimate.
+ */
 function resCard(opts) {
   const tone = opts.tone || "neutral";
+  const key = opts.key || opts.section || "";
   // a card that stands for something the add-in sent says whether it is about the layout on screen; the app's own estimates have no section
-  const f = opts.section && resSection(opts.section) ? resFreshness(opts.section) : { state: "current" };
+  const received = !!(opts.section && resSection(opts.section));
+  const f = received ? resFreshness(opts.section) : { state: "current" };
   const stale = f.state === "stale";
-  const iconHtml = opts.icon ? `<i class="ti ${escapeHtml(opts.icon)} res-title-icon" aria-hidden="true"></i>` : "";
-  return `<section class="res-card tone-${stale ? "warn" : tone}${stale ? " res-stale" : ""}">
+  const cat = key ? resultsCatalogueEntry(key) : null;
+  const icon = opts.icon || (cat ? cat.icon : "");
+  const iconHtml = icon ? `<i class="ti ${escapeHtml(icon)} res-title-icon" aria-hidden="true"></i>` : "";
+  const source = received ? resSourceLine("revit", f.state) : opts.source === "estimate" ? resSourceLine("estimate", "current") : "";
+  return `<section class="res-card tone-${stale ? "warn" : tone}${stale ? " res-stale" : ""}"${key ? ` id="res-${escapeHtml(key)}"` : ""}>
     <header class="res-head"><div><h3 class="res-title">${iconHtml}${resEsc(opts.title)}</h3>${opts.sub ? `<div class="res-sub">${resText(opts.sub)}</div>` : ""}</div>
       <span class="res-chip tone-${stale ? "warn" : tone}">${resEsc(stale ? "out of date" : opts.chip || "")}</span></header>
+    ${source}
     ${resFreshnessNote(f)}
     ${opts.prelim ? resPrelim(opts.prelim) : ""}
     ${opts.body || ""}
@@ -299,14 +332,28 @@ function resCard(opts) {
 
 function resNotRun(name) {
   const s = RESULT_SECTIONS[name];
-  return `<section class="res-card tone-neutral res-empty"><header class="res-head"><div><h3 class="res-title">${resEsc(s.title)}</h3><div class="res-sub">Not run for the layout on screen</div></div><span class="res-chip tone-neutral">no result</span></header>
+  const cat = resultsCatalogueEntry(name);
+  const icon = cat ? `<i class="ti ${escapeHtml(cat.icon)} res-title-icon" aria-hidden="true"></i>` : "";
+  return `<section class="res-card tone-neutral res-empty" id="res-${escapeHtml(name)}"><header class="res-head"><div><h3 class="res-title">${icon}${resEsc(s.title)}</h3><div class="res-sub">Not run for the layout on screen</div></div><span class="res-chip tone-neutral">not run</span></header>
     <p class="hint">${resEsc(s.run)}</p></section>`;
+}
+
+/**
+ * The one card of an analysis, whichever program computed it: Revit's full analysis when it has run, else this app's quick estimate (analysisController.js: only fire safety, accessibility, rain, wind and LCA
+ * have one), else "not run". The same rule as the overview's tile (pickResult in resultsStoreCore.js).
+ */
+function resultsCardHtml(key) {
+  const r = resSection(key);
+  if (r && REVIT_CARDS[key]) return REVIT_CARDS[key](r);
+  const cat = resultsCatalogueEntry(key);
+  if (cat && cat.estimate && typeof ESTIMATE_CARDS !== "undefined" && ESTIMATE_CARDS[cat.estimate]) return ESTIMATE_CARDS[cat.estimate]();
+  return resNotRun(key);
 }
 
 // ---------------------------------------------------------------------------------------------------- garden
 
 function soilCard(r) {
-  const tone = r.zones_saturated_in_cloudburst > 0 || r.zones_below_target > 0 ? "warn" : "ok";
+  const rv = revitSummary("soil_percolation", r), tone = rv.tone;
   const tiles = `<div class="res-tiles">
     ${resTile("Steady rain kept", resNum(r.steady_retained_percent, 0) + "%", "10 mm/h")}
     ${resTile("Heavy shower kept", resNum(r.heavy_shower_retained_percent, 0) + "%", "40 mm/h, peak cut " + resNum(r.heavy_shower_peak_reduction_percent, 0) + "%")}
@@ -320,13 +367,13 @@ function soilCard(r) {
       <td>${resNum(z.retained_steady_percent, 0)}%</td><td>${resNum(z.retained_heavy_shower_percent, 0)}%</td><td>${resNum(z.retained_cloudburst_percent, 0)}%</td></tr>`).join("")}</tbody></table>` : "";
   return resCard({
     section: "soil_percolation", title: RESULT_SECTIONS.soil_percolation.title, sub: r.case_study, tone,
-    chip: r.zones_saturated_in_cloudburst > 0 ? `${r.zones_saturated_in_cloudburst} fill up` : r.zones_below_target > 0 ? `${r.zones_below_target} under target` : "within target",
+    chip: rv.chip,
     body: tiles + zones + resFindings(r.findings) + resVideo(r.video_path) + resAssumptions(r.assumptions)
   });
 }
 
 function windCard(r) {
-  const tone = r.trees_failing > 0 || r.zones_uplift_flagged > 0 ? "bad" : r.trees_marginal > 0 ? "warn" : "ok";
+  const rv = revitSummary("wind_erosion", r), tone = rv.tone;
   const tiles = `<div class="res-tiles">
     ${resTile("Wind zone", resEsc(r.wind_zone || "—"), resText(r.wind_zone_source || ""))}
     ${resTile("Peak pressure", resNum(r.peak_pressure_pa, 0) + " Pa", "at " + resNum(r.roof_height_m, 1) + " m" + (r.roof_height_assumed ? " (assumed)" : ""))}
@@ -336,18 +383,13 @@ function windCard(r) {
   </div>`;
   return resCard({
     section: "wind_erosion", title: RESULT_SECTIONS.wind_erosion.title, sub: r.case_study, tone,
-    chip: r.trees_failing || r.zones_uplift_flagged ? "action needed" : r.trees_marginal ? "marginal" : "holds",
+    chip: rv.chip,
     body: tiles + resFindings(r.findings) + resVideo(r.video_path) + resAssumptions(r.assumptions)
   });
 }
 
 function renderGardenResults() {
-  const parts = ["soil_percolation", "wind_erosion"].map(n => {
-    const r = resSection(n);
-    if (!r) return resNotRun(n);
-    return n === "soil_percolation" ? soilCard(r) : windCard(r);
-  });
-  return parts.join("");
+  return ["soil_percolation", "wind_erosion"].map(resultsCardHtml).join("");
 }
 
 // ---------------------------------------------------------------------------------------------------- structure
@@ -391,7 +433,7 @@ function bayPlanSvg(bays, roofL, roofW, prelim) {
 
 function structuralCard(r) {
   const over = r.bays_over_capacity > 0, offBalance = r.balance_status && r.balance_status !== "balanced";
-  const tone = r.preliminary ? "prelim" : over ? "bad" : offBalance ? "warn" : "ok";
+  const rv = revitSummary("structural_loads", r), tone = rv.tone;
   const capNote = r.deck_capacity_assumed ? " (built-in)" : "";
   const tiles = `<div class="res-tiles">
     ${resTile("Most loaded bay", resEsc(r.worst_bay || "—"), resNum(r.peak_utilisation_percent, 0) + "% of " + resNum(r.deck_capacity_kn_m2, 1) + " kN/m²" + capNote, over ? "bad" : "")}
@@ -401,7 +443,7 @@ function structuralCard(r) {
     ${resTile("Columns high", String(r.columns_high), "of " + r.columns_checked + " take more than 1.5x the mean", r.columns_high > 0 ? "warn" : "")}
     ${resTile("People", resNum(r.expected_persons, 0), "expected on the roof at once")}
   </div>`;
-  const chip = r.preliminary ? "PRELIMINARY" : over ? `${r.bays_over_capacity} bays over` : offBalance ? "unbalanced" : "within capacity";
+  const chip = rv.chip;
   const plan = bayPlanSvg(r.bays, null, null, r.preliminary);
   const bayTable = Array.isArray(r.bays) && r.bays.length ? `<details class="res-details"><summary>All bays (${r.bays.length})</summary><table class="res-table"><thead><tr><th>Bay</th><th>Grid</th><th>kN/m²</th><th>% of capacity</th><th>People</th></tr></thead><tbody>
     ${r.bays.map(b => `<tr><td>${resEsc(b.label)}</td><td>${resEsc(b.grid_names || "")}</td><td>${resNum(b.load_kn_m2, 1)}</td><td>${resNum(b.utilisation_percent, 0)}%</td><td>${resNum(b.persons, 0)}</td></tr>`).join("")}</tbody></table></details>` : "";
@@ -413,7 +455,7 @@ function structuralCard(r) {
 }
 
 function dynamicCard(r) {
-  const tone = r.preliminary ? "prelim" : r.bays_exceeding_comfort > 0 || r.worst_case_utilisation_percent > 100 ? "bad" : "ok";
+  const rv = revitSummary("dynamic_analysis", r), tone = rv.tone;
   const cases = Array.isArray(r.cases) && r.cases.length
     ? `<div class="res-bars"><div class="res-bars-title">Busiest bay in each weather case, against the deck capacity of ${resNum(r.deck_capacity_kn_m2, 1)} kN/m²</div>
        ${r.cases.map(c => resBar(resText(c.name), c.peak_utilisation_percent, Math.max(130, ...r.cases.map(x => x.peak_utilisation_percent)), {
@@ -428,7 +470,7 @@ function dynamicCard(r) {
     ${resTile("Resonance", resNum(r.worst_acceleration_g, 3) + " g", (r.worst_resonance_bay ? resEsc(r.worst_resonance_bay) + ", " + resText(String(r.worst_resonance_activity || "").toLowerCase()) : "") + " · limit " + resNum(r.worst_limit_g, 2) + " g", r.bays_exceeding_comfort > 0 ? "bad" : "ok")}
     ${resTile("Bays above the comfort limit", String(r.bays_exceeding_comfort), "of " + r.bays_checked + " under some activity", r.bays_exceeding_comfort > 0 ? "bad" : "ok")}
   </div>`;
-  const chip = r.preliminary ? "PRELIMINARY" : r.bays_exceeding_comfort > 0 ? `${r.bays_exceeding_comfort} bays vibrate` : "within limits";
+  const chip = rv.chip;
   return resCard({
     section: "dynamic_analysis", title: RESULT_SECTIONS.dynamic_analysis.title, sub: r.case_study, tone, chip,
     prelim: r.preliminary ? r.preliminary_note : "",
@@ -462,10 +504,7 @@ function sunCard(r) {
   const gardens = zones.filter(z => z.kind === "garden");
   const sunnyNow = withEquipment ? r.people_zones_too_sunny_after : r.people_zones_too_sunny;
   const shadedNow = withEquipment ? r.garden_zones_too_shaded_after : r.garden_zones_too_shaded;
-  const tone = r.preliminary ? "prelim" : sunnyNow > 0 || shadedNow > 0 ? "warn" : "ok";
-  const chip = r.preliminary ? "PRELIMINARY"
-    : r.people_zones_too_sunny > 0 ? (withEquipment ? `${r.people_zones_too_sunny} too sunny, ${sunnyNow} after` : `${r.people_zones_too_sunny} too sunny`)
-    : r.garden_zones_too_shaded > 0 ? `${r.garden_zones_too_shaded} too shaded` : "balanced";
+  const rv = revitSummary("sun_and_shading", r), tone = rv.tone, chip = rv.chip;
   const arrow = (before, after) => withEquipment ? `${before} → ${after}` : String(before);
 
   const tiles = `<div class="res-tiles">
@@ -510,14 +549,14 @@ function sunCard(r) {
 }
 
 function renderSunResults() {
-  const r = resSection("sun_and_shading");
-  return r ? sunCard(r) : resNotRun("sun_and_shading");
+  // the sun path chart is this app's own drawing for the site: it has no Revit counterpart, so it sits under the analysis rather than in place of it
+  return resultsCardHtml("sun_and_shading") + (typeof sunPathSectionHtml === "function" ? `<div class="res-chart-card">${sunPathSectionHtml()}</div>` : "");
 }
 
 // ---------------------------------------------------------------------------------------------------- sport
 
 function ballCard(r) {
-  const tone = r.crossing_count > 0 || r.percent_leaving_roof > 0 ? "warn" : "ok";
+  const rv = revitSummary("ball_trajectory", r), tone = rv.tone;
   const fences = Array.isArray(r.fences) && r.fences.length ? `<table class="res-table"><thead><tr><th>Edge</th><th>From to (m)</th><th>Height</th><th>Stops</th></tr></thead><tbody>
     ${r.fences.map(f => `<tr><td>${resEsc(f.edge)}</td><td>${resNum(f.from_m, 1)} to ${resNum(f.to_m, 1)}</td><td>${resNum(f.height_m, 1)} m <span class="res-muted">(${resNum(f.full_height_m, 1)} m for all)</span></td><td>${resNum(f.stops_percent_of_exits, 0)}% of the exits</td></tr>`).join("")}</tbody></table>` : "";
   const tiles = `<div class="res-tiles">
@@ -528,89 +567,79 @@ function ballCard(r) {
   </div>`;
   return resCard({
     section: "ball_trajectory", title: RESULT_SECTIONS.ball_trajectory.title, sub: r.case_study, tone,
-    chip: r.percent_leaving_roof > 0 ? `${resNum(r.percent_leaving_roof, 0)}% leave the roof` : r.crossing_count > 0 ? `${r.crossing_count} crossings` : "contained",
+    chip: rv.chip,
     body: tiles + (fences ? `<div class="res-bars-title">Where fences would stop them</div>` + fences : "") + resVideo(r.video_path)
   });
 }
 
 function renderSportResults() {
-  const r = resSection("ball_trajectory");
-  return r ? ballCard(r) : resNotRun("ball_trajectory");
+  return resultsCardHtml("ball_trajectory");
 }
 
 // ---------------------------------------------------------------------------------------------------- safety
 
-/** Fire safety: Revit's figure when it has run, else the app's own routing (the Combine rules' engine) as an estimate. */
+/** Fire safety and accessibility: Revit's figure when it has run, else the app's own routing (the Combine rules' engine) as a quick estimate. */
+function fireCard(fs) {
+  const rv = revitSummary("fire_safety", fs), tone = rv.tone;
+  return resCard({
+    section: "fire_safety", title: RESULT_SECTIONS.fire_safety.title, tone, chip: rv.chip,
+    body: `<div class="res-bars">${resBar("Longest route to an entry", fs.max_dist_m, Math.max(fs.max_travel_distance_m * 1.3, fs.max_dist_m * 1.1), { ref: fs.max_travel_distance_m, tone: fs.within_limit ? "ok" : "bad", text: `${resNum(fs.max_dist_m, 1)} m <span class="res-muted">limit ${resNum(fs.max_travel_distance_m, 0)} m</span>` })}</div>
+      <div class="res-tiles">${resTile("Unreachable pieces", String(fs.unreachable_count), "no walkable route to any entry", fs.unreachable_count > 0 ? "bad" : "ok")}</div>`
+  });
+}
+
+function accessibilityCard(ac) {
+  const rv = revitSummary("accessibility", ac), tone = rv.tone;
+  return resCard({
+    section: "accessibility", title: RESULT_SECTIONS.accessibility.title, tone, chip: rv.chip,
+    body: `<div class="res-bars">${resBar("Circulation width", ac.current_width_m, Math.max(ac.min_width_m * 1.6, ac.current_width_m * 1.1), { ref: ac.min_width_m, tone: ac.width_ok ? "ok" : "bad", text: `${resNum(ac.current_width_m, 1)} m <span class="res-muted">wheelchair two-way ${resNum(ac.min_width_m, 1)} m</span>` })}</div>
+      <div class="res-tiles">${resTile("Every piece reachable from an entry", ac.reach_ok ? "yes" : "no", "", ac.reach_ok ? "ok" : "bad")}</div>`
+  });
+}
+
 function renderSafetyResults() {
-  let out = "";
-
-  const fs = resSection("fire_safety");
-  if (fs) {
-    const tone = fs.within_limit && fs.unreachable_count === 0 ? "ok" : "bad";
-    out += resCard({
-      section: "fire_safety", title: RESULT_SECTIONS.fire_safety.title, tone, chip: tone === "ok" ? "within the limit" : fs.unreachable_count ? `${fs.unreachable_count} unreachable` : "too far",
-      sub: "From Revit, on the layout it was run on",
-      body: `<div class="res-bars">${resBar("Longest route to an entry", fs.max_dist_m, Math.max(fs.max_travel_distance_m * 1.3, fs.max_dist_m * 1.1), { ref: fs.max_travel_distance_m, tone: fs.within_limit ? "ok" : "bad", text: `${resNum(fs.max_dist_m, 1)} m <span class="res-muted">limit ${resNum(fs.max_travel_distance_m, 0)} m</span>` })}</div>
-        <div class="res-tiles">${resTile("Unreachable pieces", String(fs.unreachable_count), "no walkable route to any entry", fs.unreachable_count > 0 ? "bad" : "ok")}</div>`
-    });
-  } else if (typeof analyzeFireSafety === "function") {
-    const a = analyzeFireSafety();
-    let body;
-    if (a.status === "empty") body = `<p class="hint">Push a sport, activity or garden piece to Combine to estimate this here.</p>`;
-    else if (a.status === "no-entries") body = `<p class="hint">Add an entry point on the Combine board to estimate this here.</p>`;
-    else if (a.status === "fail") body = `<div class="res-tiles">${resTile("Unreachable pieces", String(a.unreachableCount), "no walkable route to any entry", "bad")}</div>`;
-    else body = `<div class="res-bars">${resBar("Longest route to an entry", a.maxDist, Math.max(a.maxTravelDistance * 1.3, a.maxDist * 1.1), { ref: a.maxTravelDistance, tone: a.withinLimit ? "ok" : "bad", text: `${resNum(a.maxDist, 1)} m <span class="res-muted">limit ${resNum(a.maxTravelDistance, 0)} m</span>` })}</div>`;
-    out += resCard({ title: RESULT_SECTIONS.fire_safety.title, tone: "neutral", chip: "estimated in the app", sub: "The app's own routing, the same engine as the Combine rules. Revit's run is the reference.", body: body + `<p class="hint">${resEsc(RESULT_SECTIONS.fire_safety.run)}</p>` });
-  } else out += resNotRun("fire_safety");
-
-  const ac = resSection("accessibility");
-  if (ac) {
-    const tone = ac.width_ok && ac.reach_ok ? "ok" : "bad";
-    out += resCard({
-      section: "accessibility", title: RESULT_SECTIONS.accessibility.title, tone, chip: tone === "ok" ? "accessible" : !ac.width_ok ? "too narrow" : "not reachable", sub: "From Revit, on the layout it was run on",
-      body: `<div class="res-bars">${resBar("Circulation width", ac.current_width_m, Math.max(ac.min_width_m * 1.6, ac.current_width_m * 1.1), { ref: ac.min_width_m, tone: ac.width_ok ? "ok" : "bad", text: `${resNum(ac.current_width_m, 1)} m <span class="res-muted">wheelchair two-way ${resNum(ac.min_width_m, 1)} m</span>` })}</div>
-        <div class="res-tiles">${resTile("Every piece reachable from an entry", ac.reach_ok ? "yes" : "no", "", ac.reach_ok ? "ok" : "bad")}</div>`
-    });
-  } else if (typeof analyzeAccessibility === "function") {
-    const a = analyzeAccessibility();
-    const body = a.status === "empty" ? `<p class="hint">Push a piece to Combine to estimate this here.</p>`
-      : `<div class="res-bars">${resBar("Circulation width", a.currentWidth, Math.max(a.minWidth * 1.6, a.currentWidth * 1.1), { ref: a.minWidth, tone: a.widthOk ? "ok" : "bad", text: `${resNum(a.currentWidth, 1)} m <span class="res-muted">wheelchair two-way ${resNum(a.minWidth, 1)} m</span>` })}</div>
-         <div class="res-tiles">${resTile("Every piece reachable from an entry", a.reachOk ? "yes" : "no", "", a.reachOk ? "ok" : "bad")}</div>`;
-    out += resCard({ title: RESULT_SECTIONS.accessibility.title, tone: "neutral", chip: "estimated in the app", sub: "The app's own check. Revit's run is the reference.", body: body + `<p class="hint">${resEsc(RESULT_SECTIONS.accessibility.run)}</p>` });
-  } else out += resNotRun("accessibility");
-  return out;
+  return ["fire_safety", "accessibility"].map(resultsCardHtml).join("");
 }
 
 // ---------------------------------------------------------------------------------------------------- other
 
-function renderOtherResults() {
-  let out = "";
-  const lca = resSection("lca");
-  out += lca ? resCard({
-    section: "lca", title: RESULT_SECTIONS.lca.title, tone: lca.missing_count ? "warn" : "ok", chip: lca.missing_count ? `${lca.missing_count} pieces missing data` : "all pieces covered",
+function lcaCard(lca) {
+  const rv = revitSummary("lca", lca);
+  return resCard({
+    section: "lca", title: RESULT_SECTIONS.lca.title, tone: rv.tone, chip: rv.chip,
     sub: "Embodied carbon of the picked reference materials (A1 to A3), illustrative",
     body: `<div class="res-tiles">${resTile("Embodied carbon", "~" + resNum(lca.total_kg, 0) + " kg CO₂e", "")}${resTile("Pieces with a material", String(lca.covered_count), "of " + lca.total_count, lca.missing_count ? "warn" : "ok")}</div>`
-  }) : resNotRun("lca");
+  });
+}
 
-  const ci = resSection("carbon_impact");
-  out += ci ? resCard({
-    section: "carbon_impact", title: RESULT_SECTIONS.carbon_impact.title, tone: "neutral", chip: "illustrative",
+function carbonCard(ci) {
+  const rv = revitSummary("carbon_impact", ci);
+  return resCard({
+    section: "carbon_impact", title: RESULT_SECTIONS.carbon_impact.title, tone: rv.tone, chip: rv.chip,
     sub: "A ceiling for what piezoelectric flooring could harvest across the playing surface",
     body: `<div class="res-tiles">${resTile("Energy harvest", "~" + resNum(ci.estimated_daily_wh, 0) + " Wh/day", "over " + resNum(ci.active_surface_area_m2, 0) + " m² of active surface")}</div>`
-  }) : resNotRun("carbon_impact");
-  return out;
+  });
 }
+
+function renderOtherResults() {
+  return ["lca", "carbon_impact"].map(resultsCardHtml).join("");
+}
+
+/** The card of each analysis that Revit's section fills (resultsCardHtml picks it when Revit has run). */
+const REVIT_CARDS = {
+  soil_percolation: soilCard, wind_erosion: windCard, structural_loads: structuralCard, dynamic_analysis: dynamicCard,
+  sun_and_shading: sunCard, ball_trajectory: ballCard, fire_safety: fireCard, accessibility: accessibilityCard, lca: lcaCard, carbon_impact: carbonCard
+};
 
 // ---------------------------------------------------------------------------------------------------- the view
 
-function resultsStatusHtml() {
-  const t = resultsState.receivedAt ? new Date(resultsState.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : null;
-  if (resultsState.connected === true && !resultsState.cached && resultsState.payload)
-    return `<span class="res-dot live"></span> Live from Revit${t ? `, received ${t}` : ""}.`;
-  if (resultsState.connected === true) return `<span class="res-dot live"></span> Connected to Revit. Nothing has been analysed yet in this session.`;
-  if (resultsState.payload) return `<span class="res-dot stale"></span> Revit is not connected. Showing the last results received${t ? ` (${t}${resultsState.cached ? ", earlier session" : ""})` : ""}.`;
-  if (resultsState.connected === false) return `<span class="res-dot off"></span> Revit is not connected. Open this project in Revit and click Send All to Web App (Sportify ribbon, Simulation & Analytics panel): the results appear here.`;
-  return `<span class="res-dot"></span> Looking for Revit...`;
+function resultsStatusHtml(withHow) {
+  const t = resultsState.receivedAt ? new Date(resultsState.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+  const line = resultsRevitLine(resultsState.connected, !!resultsState.payload, resultsState.cached, t);
+  const dot = { live: "live", idle: "live", cached: "stale", closed: "off", looking: "" }[line.key];
+  // with nothing received and Revit closed, say how to get the full analyses; the words of Revit's state are the top bar's
+  const how = withHow && line.key === "closed" ? " Open this project in Revit and click Send All to Web App (Sportify ribbon, Simulation & Analytics panel): the results appear here." : "";
+  return `<span class="res-dot${dot ? " " + dot : ""}"></span> ${resEsc(line.text + how)}`;
 }
 
 function renderAnalysisResultsView() {
@@ -629,7 +658,7 @@ function renderAnalysisResultsView() {
   const panel = document.getElementById("analysisResultsSection");
   if (panel) {
     panel.style.display = "";
-    panel.innerHTML = (typeof wsRunPanelHtml === "function" ? wsRunPanelHtml() : "") + `<label>Results</label><p class="hint res-status">${resultsStatusHtml()}</p>
+    panel.innerHTML = (typeof wsRunPanelHtml === "function" ? wsRunPanelHtml() : "") + `<label>Results</label><p class="hint res-status">${resultsStatusHtml(true)}</p>
       <ul class="res-run-list">${tab.sections.map(n => {
         const got = !!resSection(n), stale = got && resFreshness(n).state === "stale";
         return `<li class="${got && !stale ? "done" : stale ? "stale" : ""}"><i class="ti ${stale ? "ti-history" : got ? "ti-circle-check" : "ti-circle-dashed"}" aria-hidden="true"></i>
@@ -650,6 +679,7 @@ function renderAnalysisResultsView() {
   if (typeof ensureCharts === "function" && tab.sections.length) ensureCharts();
   const content = document.getElementById("analysis-content");
   if (content) content.innerHTML = `<div class="res-wrap">${body}${charts}</div>`;
+  document.getElementById("btn-download-sunpath")?.addEventListener("click", downloadSunPathPng);      // the Sun group's own chart (analysisController.js)
 }
 
 /** Undoes what the results views changed in the left panel, for the overview. */
