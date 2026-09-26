@@ -97,8 +97,8 @@ function algoVisibleNames() {
   return new Set(algoListsForRoof().flatMap(l => l.names));
 }
 
+// Lifts / ramps / stairs are no longer placed here (the plan starts from the board's entry points); the sizes stay only so older saved files still load.
 const ALGO_BLOCK_SIZES ={ lift: [2.5, 2.5], ramp: [6.0, 1.5], stair: [4.0, 2.0] };
-const ALGO_BLOCK_LABELS = { lift: "Lift", ramp: "Ramp", stair: "Stair" };
 
 const algoState = {
   mode: "manual",                         // "manual" | "algo": what Combine shows; a per-viewer convenience, never saved in the layout
@@ -122,15 +122,10 @@ const algoState = {
       if (saved.qty) algoState.qty = saved.qty;
       if (saved.settings) Object.assign(algoState.settings, saved.settings);
       oldDefaultPath = !!saved.settings && saved.settings.pathW === 2 && saved.settings.minPathW === 2;
-      // the lifts / ramps / stairs placed on the site: without this a refresh mid-Algorithmic-placement (before ever pressing Apply) lost them, and every
-      // chosen quantity along with them - a plan search with no landing to build a network from finds nothing, so the choices looked deleted too.
-      if (Array.isArray(saved.blocks)) {
-        algoState.blocks = saved.blocks
-          .filter(b => b && ALGO_BLOCK_SIZES[b.kind] && [b.x, b.y, b.w, b.h].every(Number.isFinite))
-          .map(b => ({ id: algoNewBlockId(), kind: b.kind, x: b.x, y: b.y, w: b.w, h: b.h }));
-      }
+      // Lifts / ramps / stairs saved by older versions are ignored: the pathways now start from the entry points on the Manual board.
     }
   } catch (e) { /* storage blocked or corrupt: the defaults */ }
+  algoState.settings.ring = false;                                            // "landing on all sides of lifts / ramps" went with the lifts and ramps
   // settings saved before the 2 m rule may hold a narrower pathway or the old "big courts touch" exception: the rule wins
   algoState.settings.strictGap = true;
   if (oldDefaultPath) algoState.settings.pathW = 2.5;                         // settings saved before zoning held the old 2.0 m default: the primary path may now be 2.5 m
@@ -141,8 +136,7 @@ const algoState = {
 })();
 
 function algoSave() {
-  const blocks = algoState.blocks.map(b => ({ kind: b.kind, x: b.x, y: b.y, w: b.w, h: b.h }));
-  try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings, blocks })); } catch (e) { /* not kept */ }
+  try { localStorage.setItem(ALGO_STORAGE_KEY, JSON.stringify({ qty: algoState.qty, settings: algoState.settings })); } catch (e) { /* not kept */ }
 }
 
 const algoEsc = s => escapeHtml(s);
@@ -195,14 +189,55 @@ function algoKeepClearBoxes() {
   return boxes;
 }
 
-/** The stairs, lifts and ramps of the Revit model as blocks (their position is the model's; the size is a stand-in, edit it). */
-function algoRevitBlocks() {
-  const f = combineState.roofFeatures;
-  if (!f) return [];
-  const kindOf = { core: "lift", stair: "stair", ramp: "ramp" };
-  return (f.entries || []).filter(e => kindOf[e.kind]).map(e => {
-    const kind = kindOf[e.kind], [w, h] = ALGO_BLOCK_SIZES[kind];
-    return { kind, x: algoRound(e.x_m - w / 2), y: algoRound(e.y_m - h / 2), w, h };
+/**
+ * The entry points placed on the Manual board, as the packing engine's `entries`: where the pathway network starts. Lifts, ramps and stairs no longer take part:
+ * the whole imported footprint is usable, and the way onto it is the entrances drawn on its edge. Each entry becomes a short access strip one pathway wide,
+ * running from the door straight in across the garden band (square to the edge it stands on), so the landing the engine builds beside it lies where the usable
+ * area begins and the network grows from there.
+ */
+function algoEntryRects() {
+  const W = Math.max(ALGO_MIN_PATH_M, Number(algoState.settings.pathW) || ALGO_MIN_PATH_M);
+  const res = AlgoPlacement.RES || 0.1;
+  const sb = algoSetback();
+  const base = Math.max(0.5, Math.ceil(sb / res - 1e-6) * res);
+  const foot = algoFootprint();
+  const edges = foot.map((p, i) => [p, foot[(i + 1) % foot.length]]);
+  const distToEdges = (x, y) => Math.min(...edges.map(([a, b]) => {
+    // square round an edge's ends, as the engine's garden band (no rounded corners)
+    if (a[1] === b[1]) return Math.max(Math.abs(y - a[1]), Math.max(0, Math.min(a[0], b[0]) - x, x - Math.max(a[0], b[0])));
+    if (a[0] === b[0]) return Math.max(Math.abs(x - a[0]), Math.max(0, Math.min(a[1], b[1]) - y, y - Math.max(a[1], b[1])));
+    const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / l2)) : 0;
+    return Math.hypot(x - (a[0] + t * dx), y - (a[1] + t * dy));
+  }));
+  const inside = (x, y) => typeof pointInPolygon === "function" ? pointInPolygon(foot.map(p => ({ x: p[0], y: p[1] })), x, y) : true;
+  return (combineState.entryPoints || []).map(ep => {
+    const [nx, ny] = typeof entryInwardNormal === "function" ? entryInwardNormal(ep) : [0, 1];
+    const tx = -ny, ty = nx;
+    // The door's strip stays on the edge it stands on: near the end of a short edge (a small notch) it slides along, so it never pokes past the corner.
+    let cx = ep.x_m, cy = ep.y_m;
+    let near = null;
+    for (const [a, b] of edges) {
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+      if (len < 1e-9) continue;
+      const t = Math.max(0, Math.min(len, ((cx - a[0]) * dx + (cy - a[1]) * dy) / len));
+      const d = Math.hypot(cx - (a[0] + dx * t / len), cy - (a[1] + dy * t / len));
+      if (!near || d < near.d) near = { d, a, dx, dy, len, t };
+    }
+    if (near && near.len >= W) {
+      const t = Math.max(W / 2, Math.min(near.len - W / 2, near.t));
+      cx = near.a[0] + near.dx * t / near.len; cy = near.a[1] + near.dy * t / near.len;
+    }
+    // A point `along` across the door and `inward` from the edge.
+    const at = (along, inward) => [cx + tx * along + nx * inward, cy + ty * along + ny * inward];
+    // The landing the engine builds just inside the way in must lie in the usable area. Next to a corner of the roof the garden band is wider than the setback
+    // (it wraps round the corner), so the way in reaches deeper there, in steps of the grid, until the landing clears it.
+    const landingClear = d => [-W / 2, 0, W / 2].every(a => [d + 0.05, d + W / 2, d + W - 0.05].every(i => { const [x, y] = at(a, i); return inside(x, y) && distToEdges(x, y) >= sb - 0.05; }));
+    let depth = base;
+    for (let d = base; d <= base + 4 + 1e-9; d += res) { if (landingClear(d)) { depth = d; break; } }
+    const pts = [at(W / 2, 0), at(-W / 2, 0), at(W / 2, depth), at(-W / 2, depth)];
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    return [algoRound(Math.min(...xs)), algoRound(Math.min(...ys)), algoRound(Math.max(...xs)), algoRound(Math.max(...ys))];
   });
 }
 
@@ -230,7 +265,7 @@ function algoZoningOn() {
 
 function algoSiteKey() {
   const s = algoState.settings;
-  return JSON.stringify([algoZoningOn(), algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.ring, s.strictGap, algoState.blocks.map(b => [b.kind, b.x, b.y, b.w, b.h]), algoKeepClearBoxes(), algoGridLines(), AlgoPlacement.SPORTS.map(sp => [sp.long, sp.short])]);
+  return JSON.stringify([algoZoningOn(), algoFootprint(), algoSetback(), s.pathW, s.minPathW, s.strictGap, algoEntryRects(), algoKeepClearBoxes(), algoGridLines(), AlgoPlacement.SPORTS.map(sp => [sp.long, sp.short])]);
 }
 
 function algoInputKey() {
@@ -243,8 +278,8 @@ function algoBuildSite() {
   return AlgoPlacement.makeSite({
     zoning: algoZoningOn(),
     foot: algoFootprint(), setback: algoSetback(),
-    entries: algoState.blocks.map(b => [b.x, b.y, b.x + b.w, b.y + b.h]),
-    anchors: algoState.blocks.filter(b => b.kind !== "ramp").map(b => [b.x, b.y, b.x + b.w, b.y + b.h]),      // the service modules go to the roof corner nearest a lift or stair
+    entries: algoEntryRects(),
+    anchors: algoEntryRects(),      // the service modules go to the roof corner nearest an entrance
     keepClear: algoKeepClearBoxes()
   });
 }
@@ -298,7 +333,7 @@ function algoSportRow(sp, i) {
       <span class="algo-swatch" style="background:${escapeHtml(algoRgb(sp.color))}"></span>
       <span class="algo-sport-name">${algoEsc(sp.label)}</span>
       <span class="algo-qty"><button data-act="qty-" data-i="${i}" aria-label="One fewer ${algoEsc(sp.label)}">−</button><input type="number" min="0" max="30" step="1" data-qty="${i}" value="${escapeHtml(algoState.qty[sp.name] || 0)}" aria-label="How many ${algoEsc(sp.label)}"><button data-act="qty+" data-i="${i}" aria-label="One more ${algoEsc(sp.label)}">+</button></span>
-      <span class="algo-fit" data-fit="${i}"></span>
+      <span class="algo-dot" data-dot="${i}" title="Checking…"></span>
       <span class="algo-sport-meta">${algoSportMeta(sp)}</span>
     </div>`;
 }
@@ -312,8 +347,8 @@ function algoFilterSports(text) {
 
 /** The path rule in words: the zoning rules once the roof has a type, the plain 2 m rule before. */
 function algoRuleHintHtml() {
-  if (!algoZoningOn()) return `<strong>The rule: every court has a clear path of at least ${ALGO_MIN_PATH_M.toFixed(1)} m all around it, big courts included, so no two courts ever touch.</strong> Lifts, ramps and stairs get the same ${ALGO_MIN_PATH_M.toFixed(1)} m on their inside sides, and the main pathway never narrows below ${ALGO_MIN_PATH_M.toFixed(1)} m. A side that sits on the setback line borders the garden band instead of a path.`;
-  return `<strong>Zones:</strong> items of one zone (outdoor, indoor, garden) are placed close together, identical ones side by side and lined up. <strong>Paths, the widest that fits:</strong> 1.8 then 1.5 m inside a zone; 2.5 then 2.0 m for the primary paths outside the zones and between them (the two fields above); 2.5 m around lifts, stairs and ramps. <strong>Indoor items</strong> ignore the setback and may stand in the garden band; the indoor zone grows from the Locker corner. Outdoor and garden items keep to the setback line.`;
+  if (!algoZoningOn()) return `<strong>The rule: every court has a clear path of at least ${ALGO_MIN_PATH_M.toFixed(1)} m all around it, big courts included, so no two courts ever touch.</strong> Each entry point opens a ${ALGO_MIN_PATH_M.toFixed(1)} m or wider way in across the garden band, and the main pathway never narrows below ${ALGO_MIN_PATH_M.toFixed(1)} m. A side that sits on the setback line borders the garden band instead of a path.`;
+  return `<strong>Zones:</strong> items of one zone (outdoor, indoor, garden) are placed close together, identical ones side by side and lined up. <strong>Paths, the widest that fits:</strong> 1.8 then 1.5 m inside a zone; 2.5 then 2.0 m for the primary paths outside the zones and between them (the two fields above), starting from the entry points. <strong>Indoor items</strong> ignore the setback and may stand in the garden band; the indoor zone grows from the Locker corner. Outdoor and garden items keep to the setback line.`;
 }
 
 /** The list of items for the current roof type, grouped under the headings of ALGO_LISTS. */
@@ -356,13 +391,10 @@ function algoBuildPanel() {
     <div class="algo-body">
       <div class="algo-left">
         <section class="algo-card"><h3>1 · Site <small id="algo-site-note"></small></h3>
-          <p class="hint">Lifts, ramps and stairs are where the pathway network starts: it grows from each of them and joins them into one. Drag them on the preview, or type their position.</p>
+          <p class="hint">The whole roof footprint is available. The pathway network starts at the <strong>entry points</strong> you placed on the roof edge in Manual placement: it crosses the garden band from each door and joins them into one.</p>
           <div id="algo-blocks" class="algo-blocks"></div>
           <div class="algo-row-buttons">
-            <button class="btn-export" data-act="add-block" data-kind="lift"><i class="ti ti-plus" aria-hidden="true"></i>Lift</button>
-            <button class="btn-export" data-act="add-block" data-kind="ramp"><i class="ti ti-plus" aria-hidden="true"></i>Ramp</button>
-            <button class="btn-export" data-act="add-block" data-kind="stair"><i class="ti ti-plus" aria-hidden="true"></i>Stair</button>
-            <button class="btn-export" data-act="blocks-from-revit" id="algo-from-revit"><i class="ti ti-building" aria-hidden="true"></i>From Revit</button>
+            <button class="btn-export" data-act="back"><i class="ti ti-door-enter" aria-hidden="true"></i>Edit entry points in Manual placement</button>
           </div>
         </section>
         <section class="algo-card"><h3>2 · Settings</h3>
@@ -376,12 +408,12 @@ function algoBuildPanel() {
           <label class="algo-check"><input type="checkbox" id="algo-edge" ${s.edgeFirst ? "checked" : ""}> Courts hug the setback line first (then fill the middle)</label>
           <label class="algo-check"><input type="radio" name="algo-opt" value="1" ${s.leftoverPath ? "checked" : ""}> Option 1: garden only in the setback band; all leftover space is pathway</label>
           <label class="algo-check"><input type="radio" name="algo-opt" value="2" ${s.leftoverPath ? "" : "checked"}> Option 2: garden in the setback band and in the leftover pockets</label>
-          <label class="algo-check"><input type="checkbox" id="algo-ring" ${s.ring ? "checked" : ""}> Landing on ALL sides of lifts / ramps</label>
           <label class="algo-check" id="algo-keepclear-row"><input type="checkbox" id="algo-keepclear" ${s.keepClear ? "checked" : ""}> Keep clear of the openings and equipment from Revit <small id="algo-keepclear-n"></small></label>
           <p class="hint" id="algo-rule-hint">${algoRuleHintHtml()}</p>
-          <p class="hint"><strong>Services:</strong> the locker and bathroom modules go, together, in the roof corner nearest a lift or stair (a ramp does not count). <strong>Heavy items:</strong> anything with a dead load above ${AlgoPlacement.HEAVY_DEAD_LOAD_KN_M2.toFixed(1)} kN/m² is placed along the structural grid Revit gave for the roof, where it can be; otherwise it is placed anyway and the report says so. A court is only accepted if the live check can place it.</p>
+          <p class="hint"><strong>Services:</strong> the locker and bathroom modules go, together, in the roof corner nearest an entry point. <strong>Heavy items:</strong> anything with a dead load above ${AlgoPlacement.HEAVY_DEAD_LOAD_KN_M2.toFixed(1)} kN/m² is placed along the structural grid Revit gave for the roof, where it can be; otherwise it is placed anyway and the report says so. A court is only accepted if the live check can place it.</p>
         </section>
         <section class="algo-card"><h3>3 · How many of each court? <small>only courts that fit are accepted</small></h3>
+          <p class="algo-dot-legend"><span><i class="algo-dot sel"></i>selected</span><span><i class="algo-dot ok"></i>can be added</span><span><i class="algo-dot no"></i>cannot be added (space or a rule)</span><span><i class="algo-dot"></i>checking</span></p>
           <input type="search" id="algo-find" class="algo-find" placeholder="Find a court or activity ..." aria-label="Find a court or activity" autocomplete="off">
           <div class="algo-sports" id="algo-sports">${sportRows}</div>
         </section>
@@ -391,7 +423,11 @@ function algoBuildPanel() {
         <p class="algo-warn" id="algo-warn"></p>
         <p class="algo-summary" id="algo-summary"></p>
         <div class="algo-bar"><div id="algo-bar-fill"></div></div>
-        <pre class="algo-report" id="algo-report"></pre>
+        <div class="algo-info">
+          <section class="algo-info-box" id="algo-layout-box" aria-label="Layout check"></section>
+          <section class="algo-info-box" id="algo-load-box" aria-label="People and load"></section>
+        </div>
+        <details class="algo-report-full"><summary>Full report (text)</summary><pre class="algo-report" id="algo-report"></pre></details>
         <div class="algo-actions">
           <button class="btn-export primary" data-act="apply" id="algo-apply"><i class="ti ti-check" aria-hidden="true"></i>Apply to Combine</button>
           <button class="btn-export" data-act="shuffle" id="algo-shuffle"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i>Shuffle preview</button>
@@ -399,7 +435,6 @@ function algoBuildPanel() {
           <button class="btn-export" data-act="back"><i class="ti ti-hand-move" aria-hidden="true"></i>Back to manual</button>
         </div>
         <label class="algo-check"><input type="checkbox" id="algo-garden" ${s.gardenZones ? "checked" : ""}> Draw the garden (band and pockets) as green roof zones</label>
-        <label class="algo-check"><input type="checkbox" id="algo-entrypoints" ${s.entryPoints ? "checked" : ""}> Add an entry point at each lift / ramp / stair (snapped to the roof edge)</label>
       </div>
     </div>`;
   algoState.built = true;
@@ -418,11 +453,7 @@ function algoBindPanel(panel) {
       const sp = AlgoPlacement.SPORTS[Number(b.dataset.i)];
       algoState.qty[sp.name] = Math.max(0, Math.min(30, (algoState.qty[sp.name] || 0) + (act === "qty+" ? 1 : -1)));
       algoSyncQty(); algoChanged();
-    } else if (act === "add-block") algoAddBlock(b.dataset.kind);
-    else if (act === "rotate-block") algoRotateBlock(b.dataset.id);
-    else if (act === "del-block") { algoState.blocks = algoState.blocks.filter(x => x.id !== b.dataset.id); algoRefreshBlocks(); algoChanged(); }
-    else if (act === "blocks-from-revit") algoTakeRevitBlocks();
-    else if (act === "apply") algoApply();
+    } else if (act === "apply") algoApply();
     else if (act === "shuffle") algoShuffle();
     else if (act === "clear-applied") algoClearApplied(true);
     else if (act === "back") algoSetMode("manual");
@@ -433,13 +464,6 @@ function algoBindPanel(panel) {
     if (t.dataset.qty != null) {
       const sp = AlgoPlacement.SPORTS[Number(t.dataset.qty)];
       algoState.qty[sp.name] = Math.max(0, Math.min(30, Math.round(Number(t.value) || 0)));
-      algoChanged();
-    } else if (t.dataset.block) {
-      const blk = algoState.blocks.find(x => x.id === t.dataset.block);
-      if (!blk) return;
-      const v = Number(t.value);
-      if (t.dataset.f === "kind") blk.kind = t.value;
-      else if (Number.isFinite(v) && (t.dataset.f === "x" || t.dataset.f === "y" || v > 0.3)) blk[t.dataset.f] = v;
       algoChanged();
     }
   });
@@ -453,14 +477,11 @@ function algoBindPanel(panel) {
     else if (t.id === "algo-seed") num(t.id, "seed", 1, 999);
     else if (t.id === "algo-edge") algoState.settings.edgeFirst = t.checked;
     else if (t.name === "algo-opt") algoState.settings.leftoverPath = t.value === "1";
-    else if (t.id === "algo-ring") algoState.settings.ring = t.checked;
     else if (t.id === "algo-keepclear") algoState.settings.keepClear = t.checked;
     else if (t.id === "algo-garden") { algoState.settings.gardenZones = t.checked; algoSave(); return; }
-    else if (t.id === "algo-entrypoints") { algoState.settings.entryPoints = t.checked; algoSave(); return; }
     else return;
     algoChanged();
   });
-  algoBindDrag(document.getElementById("algo-preview"));
 }
 
 function algoSyncQty() {
@@ -479,63 +500,19 @@ function algoSchedulePreview(delay) {
   algoState.timer = setTimeout(() => { algoState.timer = null; algoPreview(); }, delay);
 }
 
-// ------------------------------------------------------------------------------------------------ lifts, ramps, stairs
+// ------------------------------------------------------------------------------------------------ the entry points (from the Manual board)
 
+/** Kept for the old saved-session format (combineController.js still reads `algo_blocks` from older files); nothing here uses blocks any more. */
 function algoNewBlockId() { return `blk_${Date.now()}_${algoState.blockCounter++}`; }
 
-function algoAddBlock(kind) {
-  const [w, h] = ALGO_BLOCK_SIZES[kind];
-  const b = algoBounds();
-  let x = algoRound(Math.round((b.x0 + Math.min(4, (b.x1 - b.x0) / 6)) * 2) / 2), y = algoRound(Math.round(((b.y0 + b.y1) / 2 - h / 2) * 2) / 2);
-  while (algoState.blocks.some(o => Math.abs(o.x - x) < w + 0.5 && Math.abs(o.y - y) < h + 0.5) && x < b.x1 - w - 2) x += w + 1.5;
-  algoState.blocks.push({ id: algoNewBlockId(), kind, x, y, w, h });
-  algoRefreshBlocks();
-  algoChanged();
-}
-
-/** Turns a lift, ramp or stair 90° about its centre (width and height swap) and keeps it inside the roof's bounds. */
-function algoRotateBlock(id) {
-  const blk = algoState.blocks.find(x => x.id === id);
-  if (!blk) return;
-  const b = algoBounds();
-  const cx = blk.x + blk.w / 2, cy = blk.y + blk.h / 2;
-  const w = blk.h, h = blk.w;
-  blk.w = w; blk.h = h;
-  blk.x = algoRound(Math.max(b.x0, Math.min(b.x1 - w, cx - w / 2)));
-  blk.y = algoRound(Math.max(b.y0, Math.min(b.y1 - h, cy - h / 2)));
-  algoRefreshBlocks();
-  algoChanged();
-}
-
-function algoTakeRevitBlocks() {
-  const found = algoRevitBlocks();
-  if (!found.length) { if (typeof showToast === "function") showToast("Nothing from Revit", "The Revit model has pushed no stairs, lifts or ramps for this roof yet (Push to Sportify, entries)."); return; }
-  algoState.blocks = found.map(b => Object.assign({ id: algoNewBlockId() }, b));
-  algoRefreshBlocks();
-  algoChanged();
-  if (typeof showToast === "function") showToast("Taken from Revit", `${found.length} stair / lift / ramp position${found.length === 1 ? "" : "s"}. Their size is a stand-in: edit it to match the model.`);
-}
-
-function algoBounds() {
-  const foot = algoFootprint();
-  const xs = foot.map(p => p[0]), ys = foot.map(p => p[1]);
-  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
-}
-
+/** How many entry points the plan starts from, or how to add the first one. Named for what it replaced; combineController.js calls it after a load. */
 function algoRefreshBlocks() {
   const box = document.getElementById("algo-blocks");
   if (!box) return;
-  box.innerHTML = algoState.blocks.length ? algoState.blocks.map(b => `<div class="algo-block" data-row="${escapeHtml(b.id)}">
-      <select data-block="${escapeHtml(b.id)}" data-f="kind" aria-label="Kind">${Object.keys(ALGO_BLOCK_LABELS).map(k => `<option value="${k}" ${k === b.kind ? "selected" : ""}>${ALGO_BLOCK_LABELS[k]}</option>`).join("")}</select>
-      <label>x<input type="number" step="0.5" data-block="${escapeHtml(b.id)}" data-f="x" value="${b.x}"></label>
-      <label>y<input type="number" step="0.5" data-block="${escapeHtml(b.id)}" data-f="y" value="${b.y}"></label>
-      <label>w<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="w" value="${b.w}"></label>
-      <label>h<input type="number" step="0.5" min="0.5" data-block="${escapeHtml(b.id)}" data-f="h" value="${b.h}"></label>
-      <button data-act="rotate-block" data-id="${escapeHtml(b.id)}" aria-label="Rotate ${escapeHtml(ALGO_BLOCK_LABELS[b.kind].toLowerCase())} 90 degrees" title="Rotate 90°: swaps width and height around the centre"><i class="ti ti-rotate-clockwise-2" aria-hidden="true"></i></button>
-      <button data-act="del-block" data-id="${escapeHtml(b.id)}" aria-label="Remove" title="Remove">×</button></div>`).join("")
-    : `<p class="algo-empty">No lift, ramp or stair yet. Add at least one: the pathways start from them.</p>`;
-  const fromRevit = document.getElementById("algo-from-revit");
-  if (fromRevit) { const n = algoRevitBlocks().length; fromRevit.disabled = n === 0; fromRevit.title = n ? `${n} from the Revit model` : "Nothing pushed from Revit yet"; }
+  const n = (combineState.entryPoints || []).length;
+  box.innerHTML = n
+    ? `<p class="algo-entries"><i class="ti ti-door-enter" aria-hidden="true"></i> ${n} entry point${n === 1 ? "" : "s"} on the roof edge, taken from Manual placement.</p>`
+    : `<p class="algo-empty">No entry point yet. Place at least one on the roof edge in Manual placement (Rules tab, ⚙, Add Entry Point): the pathways start from them.</p>`;
   const kc = document.getElementById("algo-keepclear-n");
   if (kc) { const n = combineState.roofFeatures ? (combineState.roofFeatures.openings || []).length + (combineState.roofFeatures.equipment || []).length : 0; kc.textContent = n ? `(${n} from Revit)` : "(none pushed)"; }
 }
@@ -547,10 +524,10 @@ async function algoPreview(msg) {
   if (algoAdoptSpecifiedSizes() && algoState.built) { algoState.plan = null; algoState.planKey = ""; algoState.fit = null; algoState.fitKey = ""; algoBuildPanel(); }   // the Sport panel changed a court's specification
   const token = ++algoState.token;
   algoState.msg = msg || "";
-  const ready = algoState.blocks.length > 0;
+  const ready = (combineState.entryPoints || []).length > 0;
   if (!ready) {
     algoState.plan = null; algoState.site = null; algoState.planKey = "";
-    algoState.status = "Add a lift, ramp or stair to begin.";
+    algoState.status = "Place an entry point on the roof edge in Manual placement to begin.";
     algoDrawPreview(); algoRefreshAll();
     return;
   }
@@ -638,7 +615,7 @@ function algoFit(site) {
   const key = algoSiteKey();
   if (algoState.fit && algoState.fitKey === key) return algoState.fit;
   const s = algoState.settings;
-  algoState.fit = AlgoPlacement.fitCheck(site, Math.max(ALGO_MIN_PATH_M, Math.min(s.minPathW, s.pathW)), s.ring, true, ALGO_MIN_PATH_M);
+  algoState.fit = AlgoPlacement.fitCheck(site, Math.max(ALGO_MIN_PATH_M, Math.min(s.minPathW, s.pathW)), s.ring, true, ALGO_MIN_PATH_M, { zoning: algoZoningOn() });
   algoState.fitKey = key;
   return algoState.fit;
 }
@@ -682,6 +659,7 @@ function algoRefreshProgress() {
 
 function algoRefreshSummary() {
   const sum = document.getElementById("algo-summary"), fill = document.getElementById("algo-bar-fill");
+  algoRenderLoadBox();
   if (!sum || !fill) return;
   const total = AlgoPlacement.SPORTS.reduce((s, sp) => s + (algoState.qty[sp.name] || 0) * sp.long * sp.short, 0);
   const count = AlgoPlacement.SPORTS.reduce((s, sp) => s + (algoState.qty[sp.name] || 0), 0);
@@ -700,20 +678,82 @@ function algoRefreshSummary() {
   }
 }
 
+/** The packing engine still speaks of lifts, stairs and ramps (its "entries"); on screen those are the entry points from the Manual board. */
+function algoEntryWords(text) {
+  return String(text || "")
+    .replace(/Vertical circulation #(\d+) has no free landing \(it sits on\/inside the garden band\)\. Try a smaller setback\./g,
+      "Entry point $1 has no way in: the area just inside the door is garden band (it is close to a corner of the roof). Move it along the edge, or use a smaller setback.")
+    .replace(/around lifts, stairs and ramps/g, "from the entry points")
+    .replace(/\ban? (lift|stair)\s*(\/|or)\s*(lift|stair)\b/gi, "an entry point")
+    .replace(/lifts?\s*(\/|,)\s*(ramps?|stairs?)(\s*(\/|,|and)\s*(stairs?|ramps?))?/gi, "entry points");
+}
+
+/**
+ * The dot beside every item: blue = already chosen; red = cannot be added (the fit check says it never fits this roof, or one more of it does not fit beside
+ * what is chosen now); green = one of it can be added to the current selection; grey = still being checked. The green/red for items not yet chosen come
+ * from algoProbeAvailability, which re-plans the current selection plus that one item, one item at a time, after every change.
+ */
+function algoRefreshDots() {
+  const fit = algoState.fit, av = algoState.avail || {};
+  AlgoPlacement.SPORTS.forEach((sp, i) => {
+    const el = document.querySelector(`[data-dot="${i}"]`);
+    if (!el) return;
+    let cls = "", tip = "Checking whether it can be added…";
+    if ((algoState.qty[sp.name] || 0) > 0) { cls = "sel"; tip = "Selected"; }
+    else if (fit && fit.sports[sp.name]) { cls = "no"; tip = "Cannot be added: " + algoEntryWords(fit.sports[sp.name]); }
+    else if (av[sp.name] && av[sp.name].key === algoState.probeKey) { cls = av[sp.name].ok ? "ok" : "no"; tip = av[sp.name].ok ? "Can be added to the current selection" : "Cannot be added: " + av[sp.name].why; }
+    el.className = "algo-dot" + (cls ? " " + cls : "");
+    el.title = tip;
+  });
+}
+
+/** Tests, one item at a time and in the background, whether one of each unchosen item fits beside the current selection (for algoRefreshDots). */
+async function algoProbeAvailability() {
+  if (algoState.mode !== "algo" || !algoState.site || !algoState.plan || algoState.busy) return;
+  const key = algoInputKey();
+  if (algoState.probeKey === key && algoState.probing) return;
+  algoState.probeKey = key; algoState.probing = true;
+  algoState.avail = algoState.avail || {};
+  const tok = (algoState.probeToken = (algoState.probeToken || 0) + 1);
+  const site = algoState.site, base = algoRequests(), fit = algoState.fit;
+  // the path may narrow down to the minimum, exactly as the preview would when the item is added
+  const settings = Object.assign({}, algoPlanSettings(), { pathW: algoState.plan.stats.pathW, timeLimit: 0.4 });
+  const visible = algoVisibleNames();
+  const total = AlgoPlacement.SPORTS.reduce((sum, s) => sum + (algoState.qty[s.name] || 0) * s.long * s.short, 0);
+  for (const sp of AlgoPlacement.SPORTS) {
+    if (!visible.has(sp.name) || (algoState.qty[sp.name] || 0) > 0 || (fit && fit.sports[sp.name])) continue;
+    const cached = algoState.avail[sp.name];
+    if (cached && cached.key === key) continue;
+    let ok = false, why = "";
+    if (total + sp.long * sp.short > AlgoPlacement.BUILT_LIMIT_PCT / 100 * site.usableArea) why = "the courts would cover more than " + AlgoPlacement.BUILT_LIMIT_PCT + "% of the sports area";
+    else {
+      try {
+        const plan = await AlgoPlacement.planLayout(site, base.concat([{ name: sp.name, w: sp.long, h: sp.short }]), settings);
+        ok = !plan.unplaced.length && !plan.issues.length;
+        if (!ok) why = plan.unplaced.length ? (base.length ? "no room left beside the items already chosen" : algoEntryWords(plan.unplaced[0].reason)) : algoEntryWords(plan.issues[0]);
+      } catch (e) { why = "could not be checked"; }
+    }
+    if (tok !== algoState.probeToken || algoInputKey() !== key) { algoState.probing = false; return; }        // the selection changed meanwhile: a newer check takes over
+    algoState.avail[sp.name] = { key, ok, why };
+    algoRefreshDots();
+    await new Promise(r => setTimeout(r, 0));                                                                 // let the page breathe between items
+  }
+  if (tok === algoState.probeToken) algoState.probing = false;
+}
+
 function algoRefreshFit() {
   const fit = algoState.fit;
   const lines = fit ? fit.notes.slice() : [];
   AlgoPlacement.SPORTS.forEach((sp, i) => {
-    const reason = fit ? fit.sports[sp.name] : "";
-    const el = document.querySelector(`[data-fit="${i}"]`);
-    if (el) el.textContent = reason ? "! won't fit" : "";
+    const reason = fit ? fit.sports[sp.name] : "";          // shown by the row's red dot (algoRefreshDots); only the warning box below still lists it for a chosen item
     if (reason && (algoState.qty[sp.name] || 0) > 0) lines.push(sp.label + ": " + reason);
   });
   const warn = document.getElementById("algo-warn");
   if (warn) {
     const block = lines.length ? "WARNING - these cannot be placed with the current settings:\n" + lines.join("\n") : "";
-    warn.textContent = [algoState.msg, block].filter(Boolean).join("\n");
+    warn.textContent = algoEntryWords([algoState.msg, block].filter(Boolean).join("\n"));
   }
+  algoRefreshDots();
 }
 
 function algoRefreshAll() {
@@ -722,20 +762,92 @@ function algoRefreshAll() {
   algoRefreshFit();
   const rep = document.getElementById("algo-report");
   if (rep) {
-    if (algoState.plan && algoState.site) rep.textContent = algoState.status + "\n" + AlgoPlacement.buildReport(algoState.plan, algoState.site);
-    else rep.textContent = algoState.status || "Pick the footprint and lifts/ramps to begin.";
+    if (algoState.plan && algoState.site) rep.textContent = algoEntryWords(algoState.status + "\n" + AlgoPlacement.buildReport(algoState.plan, algoState.site));
+    else rep.textContent = algoState.status || "Place an entry point on the roof edge in Manual placement to begin.";
   }
+  algoRenderLayoutBox();
+  algoRenderLoadBox();
   const apply = document.getElementById("algo-apply"), shuffle = document.getElementById("algo-shuffle");
   const can = !!(algoState.plan && algoState.plan.courts.length) && !algoState.busy;
   if (apply) apply.disabled = !can;
   if (shuffle) shuffle.disabled = !(algoState.plan && !algoState.busy);
   const sports = document.getElementById("algo-sports");
-  if (sports) sports.classList.toggle("disabled", !algoState.blocks.length);
+  if (sports) sports.classList.toggle("disabled", !(combineState.entryPoints || []).length);
+  algoRefreshBlocks();
   algoRefreshSiteNote();
   const inp = document.getElementById("algo-setback");
   if (inp && document.activeElement !== inp) inp.value = algoSetback();
   algoRefreshProgress();
   if (!algoState.busy) { const fill = document.getElementById("algo-bar-fill"); if (fill) fill.classList.remove("busy"); }
+  // once a layout for the current selection stands, find out (in the background) which items could still be added beside it: the list's green / red dots
+  if (!algoState.busy && algoState.plan && algoState.planKey === algoInputKey()) setTimeout(algoProbeAvailability, 50);
+}
+
+/** Left box under the plan: the layout check at a glance (tiles, check chips, one short line per rule), from the same plan the text report describes. */
+function algoRenderLayoutBox() {
+  const box = document.getElementById("algo-layout-box");
+  if (!box) return;
+  const plan = algoState.plan, site = algoState.site;
+  const head = `<h4><i class="ti ti-layout-grid" aria-hidden="true"></i>Layout check</h4>`;
+  if (!plan || !site) { box.innerHTML = head + `<p class="algo-info-empty">${algoEsc(algoState.status || "Place an entry point on the roof edge in Manual placement to begin.")}</p>`; return; }
+  const s = plan.stats, u = site.usableArea, lim = AlgoPlacement.BUILT_LIMIT_PCT;
+  const pct = 100 * s.courtArea / u;
+  const band = Math.max(0, site.footArea - u);
+  const garden = band + (s.leftoverPath ? 0 : s.pocketArea);
+  const tile = (label, value, sub, cls) => `<div class="algo-tile ${cls || ""}"><span class="algo-tile-label">${algoEsc(label)}</span><span class="algo-tile-value">${value}</span>${sub ? `<span class="algo-tile-sub">${sub}</span>` : ""}</div>`;
+  const meter = `<span class="algo-meter" title="Limit ${lim}%"><span style="width:${Math.min(100, pct / lim * 100).toFixed(0)}%"></span></span>`;
+  const tiles = [
+    tile("Courts placed", `${s.placed}<small> / ${s.requested}</small>`, s.placed < s.requested ? "some did not fit" : "all placed", s.placed < s.requested ? "bad" : "ok"),
+    tile("Sports area used", `${pct.toFixed(0)}<small>%</small>`, meter + `${s.courtArea.toFixed(0)} of ${u.toFixed(0)} m² · limit ${lim}%`, pct > lim ? "bad" : ""),
+    tile("Main path", `${s.pathW.toFixed(1)}<small> m</small>`, plan.narrowed ? `narrowed from ${plan.pathWReq.toFixed(1)} m` : "widest setting", plan.narrowed ? "warn" : ""),
+    tile("Paths", `${(s.pathArea + s.secArea).toFixed(0)}<small> m²</small>`, `primary ${s.pathArea.toFixed(0)} · in-zone ${s.secArea.toFixed(0)} m²`),
+    tile("Garden", `${garden.toFixed(0)}<small> m²</small>`, s.leftoverPath ? "setback band only" : `band ${band.toFixed(0)} + pockets ${s.pocketArea.toFixed(0)} m²`)
+  ].join("");
+  const zn = plan.zoning;
+  const chip = (ok, text) => `<span class="algo-chip ${ok ? "ok" : "bad"}"><i class="ti ti-${ok ? "check" : "x"}" aria-hidden="true"></i>${algoEsc(text)}</span>`;
+  let chips;
+  if (plan.issues.length) chips = plan.issues.map(i => chip(false, algoEntryWords(i))).join("");
+  else if (zn) chips = [chip(true, `${zn.zoneGapM.toFixed(1)} m in-zone paths`), chip(true, `${zn.crossGapM.toFixed(1)} m between zones`), chip(true, `${zn.entryGapM.toFixed(1)} m from entry points`), chip(true, "setback kept"), chip(true, "paths connected"),
+    `<span class="algo-chip ${plan.notAligned && plan.notAligned.length ? "warn" : "ok"}"><i class="ti ti-${plan.notAligned && plan.notAligned.length ? "alert-triangle" : "check"}" aria-hidden="true"></i>${plan.notAligned && plan.notAligned.length ? "not aligned: " + algoEsc(plan.notAligned.map(n => AlgoPlacement.labelOf(n)).join(", ")) : "items aligned"}</span>`].join("");
+  else chips = chip(true, "paths and gaps checked");
+  // the rule lines (services, heavy items, indoor zone) come from the text report, shortened
+  const text = AlgoPlacement.buildReport(plan, site).split("\n");
+  const pick = (prefix, icon) => text.filter(l => l.startsWith(prefix)).map(l => `<li><i class="ti ti-${icon}" aria-hidden="true"></i><span>${algoEsc(algoEntryWords(l))}</span></li>`).join("");
+  const rows = pick("Services:", "door") + pick("Heavy items", "weight") + pick("Indoor zone:", "home");
+  const bad = plan.unplaced.map(x => `<li class="bad"><i class="ti ti-circle-x" aria-hidden="true"></i><span>${algoEsc(AlgoPlacement.labelOf(x.name))}: ${algoEsc(algoEntryWords(x.reason))}</span></li>`).join("")
+    + plan.warnings.map(w => `<li class="warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span>${algoEsc(algoEntryWords(w))}</span></li>`).join("");
+  const status = algoState.busy ? `<p class="algo-info-status">${algoEsc(algoState.status)}</p>` : "";
+  box.innerHTML = head + status + `<div class="algo-tiles">${tiles}</div><div class="algo-chips">${chips}</div>` + (rows || bad ? `<ul class="algo-rule-rows">${bad}${rows}</ul>` : "");
+}
+
+/** Right box under the plan: who and what the current selection (the quantities chosen, live, placed or not) brings onto the roof. */
+function algoRenderLoadBox() {
+  const box = document.getElementById("algo-load-box");
+  if (!box) return;
+  const chosen = AlgoPlacement.SPORTS.filter(sp => (algoState.qty[sp.name] || 0) > 0);
+  const head = `<h4><i class="ti ti-users" aria-hidden="true"></i>People &amp; load <small>live, from the selection</small></h4>`;
+  if (!chosen.length) { box.innerHTML = head + `<p class="algo-info-empty">Choose courts on the left to see the headcount and dead load.</p>`; return; }
+  let people = 0, kn = 0, area = 0;
+  const noPeople = [], noLoad = [];
+  const rows = chosen.map(sp => {
+    const q = algoState.qty[sp.name], a = sp.long * sp.short * q;
+    area += a;
+    const p = sp.headcount != null ? sp.headcount * q : null;
+    const k = sp.deadLoad != null ? sp.deadLoad * a : null;
+    if (p != null) people += p; else if (!sp.service) noPeople.push(sp.label);
+    if (k != null) kn += k; else noLoad.push(sp.label);
+    return `<tr><td>${algoEsc(sp.label)}${q > 1 ? ` <small>× ${q}</small>` : ""}</td><td>${p != null ? p : `<span class="algo-na" title="${sp.service ? "services: no players of their own" : "not in the reference sheet"}">–</span>`}</td><td>${k != null ? k.toFixed(0) : `<span class="algo-na" title="not in the reference sheet">–</span>`}</td></tr>`;
+  }).join("");
+  const avg = area > 0 ? kn / area : 0;
+  const notes = [];
+  if (noPeople.length) notes.push(`Not counted (no headcount in the reference sheet): ${noPeople.join(", ")}.`);
+  if (noLoad.length) notes.push(`No dead load in the reference sheet: ${noLoad.join(", ")}.`);
+  box.innerHTML = head + `<div class="algo-tiles two">
+      <div class="algo-tile"><span class="algo-tile-label">Total headcount</span><span class="algo-tile-value">${people}<small> people</small></span><span class="algo-tile-sub">active at the same time</span></div>
+      <div class="algo-tile"><span class="algo-tile-label">Total dead load</span><span class="algo-tile-value">${kn.toFixed(0)}<small> kN</small></span><span class="algo-tile-sub">Σ Gk × footprint · avg ${avg.toFixed(2)} kN/m² over ${area.toFixed(0)} m²</span></div>
+    </div>
+    <table class="algo-load-table"><thead><tr><th>Item</th><th>People</th><th>Gk (kN)</th></tr></thead><tbody>${rows}</tbody></table>`
+    + (notes.length ? `<p class="algo-info-note">${algoEsc(notes.join(" "))}</p>` : "");
 }
 
 /** The roof under "1 · Site": its size, and what it is (Sports Core / Garden Core / Mixed, chosen in the Site tab) or a way to say so. */
@@ -754,7 +866,7 @@ function algoDrawPreview() {
   if (!host) return;
   const site = algoState.site, plan = algoState.plan;
   if (!site) {
-    host.innerHTML = `<div class="algo-preview-empty">${algoEsc(algoState.status || "Add a lift, ramp or stair to see the live preview.")}</div>`;
+    host.innerHTML = `<div class="algo-preview-empty">${algoEsc(algoState.status || "Place an entry point on the roof edge in Manual placement to see the live preview.")}</div>`;
     return;
   }
   const b = site.bbox, pad = Math.max(1, (b.x1 - b.x0) * 0.02);
@@ -790,9 +902,12 @@ function algoDrawPreview() {
     g += `<text x="${algoRound(z[0] + 0.5)}" y="${algoRound(z[1] - 0.4)}" font-size="${fs * 0.75}" font-weight="700" fill="${lineColor}">Indoor zone</text>`;
   }
   site.keepClear.forEach(r => { g += rect(r, "rgba(220,38,38,0.16)", 'stroke="#dc2626" stroke-width="0.12" stroke-dasharray="0.5 0.3"') + `<title>Kept clear (opening or equipment from Revit)</title>`; });
-  algoState.blocks.forEach(blk => {
-    g += `<g class="algo-block-svg" data-drag="${escapeHtml(blk.id)}" style="cursor:grab"><rect x="${algoRound(blk.x)}" y="${algoRound(blk.y)}" width="${blk.w}" height="${blk.h}" fill="${algoRgb(C.COLOR_VC)}" stroke="#7f1d1d" stroke-width="0.12"/>
-      <text x="${algoRound(blk.x + blk.w / 2)}" y="${algoRound(blk.y + blk.h / 2 + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#fff" pointer-events="none">${escapeHtml(ALGO_BLOCK_LABELS[blk.kind][0])}</text><title>${escapeHtml(ALGO_BLOCK_LABELS[blk.kind])}: drag to move</title></g>`;
+  // The entrances: each way in across the garden band as pathway, with the door's arrow on the roof edge (moved on the Manual board, not here).
+  site.entries.forEach(r => { g += rect(r, algoRgb(C.COLOR_PATH), 'shape-rendering="crispEdges" pointer-events="none"'); });
+  (combineState.entryPoints || []).forEach(ep => {
+    const [nx, ny] = typeof entryInwardNormal === "function" ? entryInwardNormal(ep) : [0, 1];
+    const tx = -ny, ty = nx, a = fs * 0.55;
+    g += `<g pointer-events="none"><path d="M${algoRound(ep.x_m - tx * a)},${algoRound(ep.y_m - ty * a)} L${algoRound(ep.x_m + nx * a * 1.6)},${algoRound(ep.y_m + ny * a * 1.6)} L${algoRound(ep.x_m + tx * a)},${algoRound(ep.y_m + ty * a)} Z" fill="#ffb300" stroke="#7a4f00" stroke-width="0.08"/><title>Entry point</title></g>`;
   });
   if (plan) plan.courts.forEach(c => {
     const sp = C.SPORTS.find(s => s.name === c.name), r = c.rect;
@@ -804,40 +919,6 @@ function algoDrawPreview() {
   });
   g += `<polygon points="${site.foot.map(p => p.join(",")).join(" ")}" fill="none" stroke="#3c3c3c" stroke-width="0.18" pointer-events="none"/>`;
   host.innerHTML = `<svg id="algo-svg" viewBox="${algoRound(vx)} ${algoRound(vy)} ${algoRound(vw)} ${algoRound(vh)}" preserveAspectRatio="xMidYMid meet" style="aspect-ratio:${algoRound(vw / vh)}" role="img" aria-label="Preview of the packed roof">${g}</svg>`;
-}
-
-// ------------------------------------------------------------------------------------------------ dragging a lift on the preview
-
-function algoBindDrag(host) {
-  if (!host) return;
-  let drag = null;
-  const toMetres = (svg, e) => { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const m = svg.getScreenCTM(); return m ? pt.matrixTransform(m.inverse()) : { x: 0, y: 0 }; };
-  host.addEventListener("pointerdown", e => {
-    const el = e.target.closest("[data-drag]");
-    const svg = host.querySelector("svg");
-    if (!el || !svg) return;
-    const blk = algoState.blocks.find(b => b.id === el.dataset.drag);
-    if (!blk) return;
-    const p = toMetres(svg, e);
-    drag = { blk, svg, el, dx: p.x - blk.x, dy: p.y - blk.y };
-    host.setPointerCapture(e.pointerId);
-    el.style.cursor = "grabbing";
-    e.preventDefault();
-  });
-  host.addEventListener("pointermove", e => {
-    if (!drag) return;
-    const p = toMetres(drag.svg, e), b = algoBounds();
-    drag.blk.x = algoRound(Math.max(b.x0, Math.min(b.x1 - drag.blk.w, Math.round((p.x - drag.dx) * 2) / 2)));
-    drag.blk.y = algoRound(Math.max(b.y0, Math.min(b.y1 - drag.blk.h, Math.round((p.y - drag.dy) * 2) / 2)));
-    const rect = drag.el.querySelector("rect"), text = drag.el.querySelector("text");
-    rect.setAttribute("x", drag.blk.x); rect.setAttribute("y", drag.blk.y);
-    text.setAttribute("x", algoRound(drag.blk.x + drag.blk.w / 2)); text.setAttribute("y", algoRound(drag.blk.y + drag.blk.h / 2 + parseFloat(text.getAttribute("font-size")) * 0.35));
-    const row = document.querySelector(`[data-row="${escapeHtml(drag.blk.id)}"]`);
-    if (row) { row.querySelector('[data-f="x"]').value = drag.blk.x; row.querySelector('[data-f="y"]').value = drag.blk.y; }
-  });
-  const end = () => { if (!drag) return; drag.el.style.cursor = "grab"; drag = null; algoChanged(); };
-  host.addEventListener("pointerup", end);
-  host.addEventListener("pointercancel", end);
 }
 
 // ------------------------------------------------------------------------------------------------ apply to Combine
@@ -959,15 +1040,7 @@ async function algoApply() {
     });
   }
 
-  let entryCount = 0;
-  if (algoState.settings.entryPoints && typeof nearestBoundaryPoint === "function") {
-    algoState.blocks.forEach((b, i) => {
-      const snap = nearestBoundaryPoint(combineState.roof, b.x + b.w / 2, b.y + b.h / 2);
-      if (combineState.entryPoints.some(p => Math.hypot(p.x_m - snap.x, p.y_m - snap.y) < 1.5)) return;
-      combineState.entryPoints.push({ id: `entry_algo_${stamp}_${i}`, edge: snap.edge, x_m: snap.x, y_m: snap.y, algorithmic: true });
-      entryCount++;
-    });
-  }
+  // The entry points are the ones already on the board (the plan started from them), so Apply adds none of its own.
 
   // The indoor zone's wall + door (algoPlacementCore.js: buildIndoorWall), so the Combine board shows the same real wall the algorithmic preview always
   // has — only the preview had it until now. Purely visual on the board (see combineState.walls above), so it needs no id per rect, just one entry for
@@ -980,7 +1053,7 @@ async function algoApply() {
   algoSetMode("manual");
   if (typeof resetCombineView === "function") resetCombineView();
   if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
-  if (typeof showToast === "function") showToast("Placed on the board", `${plan.courts.length} court${plan.courts.length === 1 ? "" : "s"}${zoneCount ? `, ${zoneCount} garden zone${zoneCount === 1 ? "" : "s"}` : ""}${entryCount ? `, ${entryCount} entry point${entryCount === 1 ? "" : "s"}` : ""}. Move any piece by hand; the pathways are the space between them.`);
+  if (typeof showToast === "function") showToast("Placed on the board", `${plan.courts.length} court${plan.courts.length === 1 ? "" : "s"}${zoneCount ? `, ${zoneCount} garden zone${zoneCount === 1 ? "" : "s"}` : ""}. Move any piece by hand; the pathways are the space between them.`);
   if (zoneCount && withoutBuildUp) algoWarnNoBuildUp();            // last, so it is the toast that stays on screen
 }
 

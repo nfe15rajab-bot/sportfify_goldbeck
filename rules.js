@@ -119,25 +119,60 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 /* ── Boundary snapping (entry points always sit on the site edge) ── */
 const ENTRY_NORMALS = { top: [0, 1], bottom: [0, -1], left: [1, 0], right: [-1, 0] };
 
+/** The Revit roof outline in the plan's own coordinates (x right, y down: Revit's y runs up), or null when only the plain rectangle is known. */
+function roofOutlinePlan(roof) {
+  if (!roof.boundary || roof.boundary.length < 3) return null;
+  return roof.boundary.map(p => ({ x: p.x_m, y: roof.width - p.y_m }));
+}
+
+function pointInPolygon(P, x, y) {
+  let inside = false;
+  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+    if ((P[i].y > y) !== (P[j].y > y) && x < (P[j].x - P[i].x) * (y - P[i].y) / (P[j].y - P[i].y) + P[i].x) inside = !inside;
+  }
+  return inside;
+}
+
+/** The old four-way edge label nearest an inward normal (kept on every entry point: exports and older readers go by it). */
+function edgeLabelForNormal(nx, ny) {
+  return Math.abs(nx) >= Math.abs(ny) ? (nx > 0 ? "left" : "right") : (ny > 0 ? "top" : "bottom");
+}
+
 /**
- * Projects an arbitrary click point (in roof-rectangle meters) onto the
- * nearest edge of the roof's bounding rectangle. Mirrors the convention
- * already used for item placement: even when a real Revit polygon is
- * drawn for reference, packing/placement works against the plain
- * (0,0)-(length,width) rectangle, so entry points snap to that same
- * rectangle rather than the visual polygon.
+ * Projects a point (plan metres) onto the nearest side of the roof: the real
+ * Revit outline when one was pushed, every side of it, notches included; the
+ * plain (0,0)-(length,width) rectangle otherwise. Returns { edge, x, y, nx, ny }
+ * where (nx, ny) is the unit normal of that side pointing INTO the roof, the
+ * way an entrance faces. `step` (optional) snaps the spot along the side in
+ * steps of that many metres, so a dragged entry never leaves the edge the way
+ * snapping x and y separately would on a slanted side.
  */
-function nearestBoundaryPoint(roof, xm, ym) {
-  const L = roof.length, W = roof.width;
-  const candidates = [
-    { edge: "top", x: clamp(xm, 0, L), y: 0 },
-    { edge: "bottom", x: clamp(xm, 0, L), y: W },
-    { edge: "left", x: 0, y: clamp(ym, 0, W) },
-    { edge: "right", x: L, y: clamp(ym, 0, W) },
+function nearestBoundaryPoint(roof, xm, ym, step) {
+  const P = roofOutlinePlan(roof) || [
+    { x: 0, y: 0 }, { x: roof.length, y: 0 }, { x: roof.length, y: roof.width }, { x: 0, y: roof.width }
   ];
-  candidates.forEach(c => { c.d = Math.hypot(c.x - xm, c.y - ym); });
-  candidates.sort((a, b) => a.d - b.d);
-  return candidates[0];
+  let best = null;
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], b = P[(i + 1) % P.length];
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+    if (len < 1e-9) continue;
+    let s = clamp(((xm - a.x) * dx + (ym - a.y) * dy) / len, 0, len);
+    if (step > 0) s = clamp(Math.round(s / step) * step, 0, len);
+    const x = a.x + dx * s / len, y = a.y + dy * s / len;
+    const d = Math.hypot(x - xm, y - ym);
+    if (!best || d < best.d - 1e-9) best = { x, y, d, ux: dx / len, uy: dy / len, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+  }
+  // Inward is whichever side of the edge the roof is on: test a point just off its middle.
+  let nx = -best.uy, ny = best.ux;
+  if (!pointInPolygon(P, best.mx + nx * 0.05, best.my + ny * 0.05)) { nx = -nx; ny = -ny; }
+  return { edge: edgeLabelForNormal(nx, ny), x: best.x, y: best.y, nx, ny };
+}
+
+/** The inward normal of an entry point: the one stored when it was placed, else found again from the outline (entries loaded from a file carry only x, y, edge). */
+function entryInwardNormal(ep, roof) {
+  if (Number.isFinite(ep.nx) && Number.isFinite(ep.ny)) return [ep.nx, ep.ny];
+  const s = nearestBoundaryPoint(roof || combineState.roof, ep.x_m, ep.y_m);
+  return [s.nx, s.ny];
 }
 
 /* ── Rule-based auto-arrange: sport cluster + garden cluster + seam ── */
@@ -271,7 +306,7 @@ function buildOccupancyGrid(roof, items, bufferM) {
 
 /** Walks inward from a boundary entry point until it finds free grid space. */
 function entryStartCell(ep, roof, grid) {
-  const [nx, ny] = ENTRY_NORMALS[ep.edge];
+  const [nx, ny] = entryInwardNormal(ep, roof);
   const maxStep = Math.max(roof.length, roof.width);
   for (let step = grid.cell * 0.5; step < maxStep; step += grid.cell) {
     const tx = clamp(ep.x_m + nx * step, 0.0001, roof.length - 0.0001);

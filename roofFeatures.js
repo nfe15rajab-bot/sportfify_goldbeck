@@ -129,7 +129,7 @@ function useRevitEntriesAsEntryPoints() {
     const snap = nearestBoundaryPoint(combineState.roof, e.x_m, e.y_m);
     const close = combineState.entryPoints.some(p => Math.hypot(p.x_m - snap.x, p.y_m - snap.y) < 1.5);
     if (close) return;
-    combineState.entryPoints.push({ id: `entry_${Date.now()}_r${i}`, edge: snap.edge, x_m: snap.x, y_m: snap.y });
+    combineState.entryPoints.push({ id: `entry_${Date.now()}_r${i}`, edge: snap.edge, x_m: snap.x, y_m: snap.y, nx: snap.nx, ny: snap.ny });
     added++;
   });
   if (typeof drawCombineCanvas === "function") drawCombineCanvas();

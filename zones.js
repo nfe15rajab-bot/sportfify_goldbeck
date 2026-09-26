@@ -250,20 +250,14 @@ function zonesSvg(scale, roofOx, roofOy) {
     const px = p => roofOx + p.x_m * scale;
     const py = p => roofOy + p.y_m * scale;
     const poly = z.points.map(p => `${px(p)},${py(p)}`).join(" ");
-    const cx = z.points.reduce((s, p) => s + px(p), 0) / z.points.length;
-    const cy = z.points.reduce((s, p) => s + py(p), 0) / z.points.length;
 
     out += `
       <polygon data-zone-id="${escapeHtml(z.id)}" points="${poly}"
             fill="${escapeHtml(kind.color)}" fill-opacity="${selected ? 0.5 : 0.35}"
             stroke="${bad ? "#ef4444" : escapeHtml(kind.color)}" stroke-width="${selected ? 2.5 : bad ? 2 : 1}"
             stroke-dasharray="${bad ? "4,2" : "none"}"
-            style="cursor:${isPlanner ? "move" : "pointer"}"/>
-      <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10"
-            font-family="'Titillium Web', Arial, sans-serif" fill="${typeof canvasLabelFill === "function" ? canvasLabelFill() : "#f4f4f2"}"
-            pointer-events="none" opacity="0.9">
-        ${escapeHtml(kind.short)} · ${zoneAreaM2(z).toFixed(0)} m²${bad ? " ⚠" : ""}
-      </text>`;
+            style="cursor:${isPlanner ? "move" : "pointer"}"/>`;
+      // No name on the zone itself: its G-number badge and the legend say what it is (combineField.js).
 
     if (selected && isPlanner) {
       // A handle per vertex, dragging that vertex alone — a bed is not a
