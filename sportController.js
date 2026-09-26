@@ -29,17 +29,21 @@ const FIELD_SPORTS = {
 };
 
 /**
- * The two Outdoor buckets below Indoor: Courts (this catalog's own
+ * The three Outdoor buckets below Indoor: Courts (this catalog's own
  * "court" category — the 8 outdoor games actually played on a marked
- * court) and Miscellaneous (everything else: wellness, fitness rigs,
- * playground equipment, service modules — 16 entries with nothing in
- * common except "not a court"). Whichever category list an activity
- * isn't matched by neither falls into Miscellaneous, so a future
- * category not yet listed here still shows up instead of silently
+ * court), Facilities (named by id, not category: Activitiesdata.js splits
+ * these across "service" and "leisure", but a designer thinking "where do
+ * people change/wash/sit down" doesn't care which — lockers, bathroom,
+ * rest area belong together regardless), and Miscellaneous (whatever's
+ * left: wellness, fitness rigs, playground equipment — 13 entries with
+ * nothing in common except "none of the above"). A group with an empty
+ * `categories` AND no `ids` is the catch-all, matched last, so a future
+ * category not listed here still shows up instead of silently
  * disappearing.
  */
 const OUTDOOR_GROUPS = [
   { label: "Courts", categories: ["court"] },
+  { label: "Facilities", ids: ["locker_module", "bathroom_module", "rest_area"] },
   { label: "Miscellaneous", categories: [] }, // catch-all — filled below
 ];
 
@@ -52,10 +56,9 @@ function activityIconHtml(kind, id, activeId, item) {
 
 /* ── Activity bars ──
  * Grouped Indoor (the six DIN/FIBA/IHF court sports, as the reference
- * norms define them — not reordered) / Courts / Miscellaneous (every
- * fixed-footprint ACTIVITIES entry that isn't a court) — the latter two
- * each sorted smallest-footprint-first so "what fits in this leftover
- * 6x4m corner" is a scan, not a hunt through 24 flat icons.
+ * norms define them — not reordered) / Courts / Facilities / Miscellaneous
+ * — the outdoor groups each sorted smallest-footprint-first so "what fits
+ * in this leftover 6x4m corner" is a scan, not a hunt through 24 flat icons.
  */
 function buildActivityBar() {
   const bar = document.getElementById("activity-bar");
@@ -66,7 +69,7 @@ function buildActivityBar() {
 
   const byGroup = OUTDOOR_GROUPS.map(() => []);
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
-    const group = OUTDOOR_GROUPS.findIndex(g => g.categories.includes(a.category));
+    const group = OUTDOOR_GROUPS.findIndex(g => (g.ids && g.ids.includes(id)) || (g.categories && g.categories.includes(a.category)));
     byGroup[group < 0 ? OUTDOOR_GROUPS.length - 1 : group].push([id, a]);
   });
   OUTDOOR_GROUPS.forEach((group, i) => {
