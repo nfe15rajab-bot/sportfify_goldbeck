@@ -28,6 +28,7 @@ function tourStart() {
   tourState.startMode = typeof activeMode !== "undefined" ? activeMode : "guide";
   tourState.active = true;
   tourState.index = 0;
+  if (typeof roofProgramOnTourStart === "function") roofProgramOnTourStart();      // a "What is this roof?" already on screen steps aside until the tour ends (roofProgram.js)
   const overlay = tourEl("tourOverlay");
   if (overlay) overlay.style.display = "block";
   tourShow(0);
@@ -107,6 +108,7 @@ function tourEnd(completed) {
   if (overlay) { overlay.style.display = "none"; overlay.classList.remove("tour-dim"); }
   if (typeof setMode === "function" && typeof activeMode !== "undefined" && activeMode !== tourState.startMode) setMode(tourState.startMode);
   if (completed && typeof showToast === "function") showToast("That was the tour", "Take it again any time from the Overview or the Profile tab.");
+  if (typeof roofProgramAfterTour === "function") roofProgramAfterTour();      // "What is this roof?" waits for the tour to end (roofProgram.js)
 }
 
 function tourInit() {

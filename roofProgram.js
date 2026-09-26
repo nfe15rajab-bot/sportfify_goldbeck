@@ -59,9 +59,40 @@ function updateRoofSetupUI() {
   if (typeof algoApplyRoofType === "function") algoApplyRoofType();
 }
 
-/** The roof type must be known once Combine opens: ask for it unless the session already has one. */
+/**
+ * The guided tour opens Combine only to point at it. The question "What is this roof?" must not come up in the middle of it: it would sit under the tour's dimmed screen, which
+ * cannot be clicked, and the tour could go neither on nor off. So while the tour runs the question waits: when it is Combine being opened it is simply asked the next time the
+ * person opens Combine for real; when it is a roof that arrived (from Revit, or typed in) it is asked as soon as the tour ends (roofProgramAfterTour).
+ */
+let roofPromptWaiting = null;
+let roofPromptDetail = "";      // what the question that is on screen was told (the size that arrived), for asking it again
+
+/** Is the guided tour running (tour.js)? */
+function roofTourRunning() {
+  try { return tourState.active === true; } catch (_) { return false; }      // tour.js not loaded (yet): no tour
+}
+
+/** The roof type must be known once Combine opens: ask for it unless the session already has one (or the tour is only passing through). */
 function roofProgramOnCombineOpen() {
+  if (roofTourRunning()) return;
   if (!combineState.roof.program && !document.getElementById("roof-program-prompt")) openRoofProgramPrompt("");
+}
+
+/**
+ * Called by the tour as it starts: a question already on screen (the quiz's "Apply and show me around" can land in Combine, which asks it) steps aside and is asked again when the
+ * tour ends. Only the first question of a roof: changing a type that is already set is something the person is doing, and the tour cannot start over it.
+ */
+function roofProgramOnTourStart() {
+  if (combineState.roof.program || !document.getElementById("roof-program-prompt")) return;
+  closeRoofProgramPrompt();
+  roofPromptWaiting = { detail: roofPromptDetail };
+}
+
+/** Called by the tour when it ends: a question that had to wait for it is asked now, unless the roof has a type by then. */
+function roofProgramAfterTour() {
+  const waiting = roofPromptWaiting;
+  roofPromptWaiting = null;
+  if (waiting && !combineState.roof.program && !document.getElementById("roof-program-prompt")) openRoofProgramPrompt(waiting.detail);
 }
 
 function setRoofProgram(key) {
@@ -77,7 +108,9 @@ function roofProgramOnFootprint(source, detail) {
   combineState.roof.source = source;
   roofSetupView = source;
   updateRoofSetupUI();
-  if (!combineState.roof.program) openRoofProgramPrompt(detail);
+  if (combineState.roof.program) return;
+  if (roofTourRunning()) roofPromptWaiting = { detail };
+  else openRoofProgramPrompt(detail);
 }
 
 /** After a session was loaded: show its way of defining the roof and its type (no dialog: an older session may simply have none). */
@@ -94,6 +127,7 @@ function closeRoofProgramPrompt() {
 
 function openRoofProgramPrompt(detail) {
   closeRoofProgramPrompt();
+  roofPromptDetail = detail || "";
   const el = document.createElement("div");
   el.className = "session-gate roof-prompt";
   el.id = "roof-program-prompt";
