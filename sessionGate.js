@@ -104,7 +104,7 @@ gateNextBtn?.addEventListener("click", showSplitStep);
 gateSplitBackBtn?.addEventListener("click", showPreviewStep);
 gateOnboardBtn?.addEventListener("click", () => {
   leaveSessionGate();
-  // an explicit ask, unlike quizMaybeOpen elsewhere: opens even for someone the quiz has already met
+  // an explicit ask, unlike gateNewBtn's automatic offer below: opens even for someone the quiz has already met
   setTimeout(() => { if (typeof quizOpen === "function") quizOpen(null); }, 300);
 });
 gateReturningBtn?.addEventListener("click", showReturningActions);

@@ -93,15 +93,17 @@ check("the scripts load in this order: profileCore, profile, quizCore, quiz, the
 check("the quiz's core never touches the page or the network", !/document\.|window\.|fetch\(|localStorage|XMLHttpRequest/.test(read("quizCore.js")));
 check("the page has the quiz's overlay and card (a dialog), the Profile tab's answers section and the Overview's next-step card", /id="quizOverlay"[^>]*role="dialog"[^>]*aria-modal="true"/.test(html) && html.includes('id="quizCard"') && html.includes('id="profile-quiz"') && html.includes('id="overviewNext"'));
 check("the welcome screen opens on the person's landing tab and offers a new person the quiz; main.js wires the quiz", /profileLandingMode\(\)/.test(read("sessionGate.js")) && /quizMaybeOpen/.test(read("sessionGate.js")) && /quizInit\(\)/.test(read("main.js")));
-check("the quiz is offered ONLY by 'Start a New Session': one call in the welcome screen, inside that button's handler, none for resume, file, preset or page load", (() => {
+check("the quiz opens itself automatically only from 'Start a New Session' (quizMaybeOpen, which then still refuses a second time or an already-set-up profile) — the landing's own explicit 'New to Sportify' calls quizOpen directly instead, an actual ask that always opens it; nowhere else calls either one unconditionally", (() => {
   const gate = read("sessionGate.js");
-  const calls = gate.match(/quizMaybeOpen/g) || [];
+  const calls = gate.match(/quizMaybeOpen/g) || [];        // the identifier appears twice inside gateNewBtn's own handler (a typeof check, then the call) — comments must not name it, or this count drifts
   const handler = /gateNewBtn\.addEventListener\("click", \(\) => \{[\s\S]*?\}\);/.exec(gate);
+  const onboardHandler = /gateOnboardBtn\?\.addEventListener\("click", \(\) => \{[\s\S]*?\}\);/.exec(gate);
   const main = read("main.js");
   const cardHandler = /getElementById\("overviewFeatures"\)\?\.addEventListener\("click"[\s\S]*?\n\}\);/.exec(main);
   const explicit = main.match(/quizOpen\(/g) || [];      // "Take the quiz" on the Overview: the person asked for it
   return !!handler && calls.length > 0 && calls.length === (handler[0].match(/quizMaybeOpen/g) || []).length
-    && !/quizMaybeOpen/.test(main) && explicit.length === 1 && !!cardHandler && /quizOpen\(/.test(cardHandler[0]);
+    && !/quizMaybeOpen/.test(main) && explicit.length === 1 && !!cardHandler && /quizOpen\(/.test(cardHandler[0])
+    && !!onboardHandler && /quizOpen\(null\)/.test(onboardHandler[0]) && (gate.match(/quizOpen\(/g) || []).length === 1;
 })());
 {
   const overview = (/<div id="guide-content"[\s\S]*?<div id="deliverables-content"/.exec(html) || [""])[0];
