@@ -224,9 +224,9 @@ const run = async (s, settings, siteExtra) => {
   // the court library: the reference-sheet items, the courts that are not in the sheet, and (2026-09-26) the Sport tab's Football and outdoor Badminton and the outdoor Ping Pong table, so
   // every sport the Sport tab offers can be placed; the Multi Sport Court is the Sport tab's Polyvalent court and takes the sheet's multipurpose figures
   const lib = A.SPORTS;
-  check("the library has 32 entries with unique names", lib.length === 32 && new Set(lib.map(s => s.name)).size === 32, lib.length + " entries");
+  check("the library has 35 entries with unique names", lib.length === 35 && new Set(lib.map(s => s.name)).size === 35, lib.length + " entries");
   check("every entry has a label, a known group and a colour", lib.every(s => s.label && A.GROUPS.includes(s.group) && Array.isArray(s.color) && s.color.length === 3));
-  check("only the four courts outside the reference sheet have no dead load", lib.filter(s => s.deadLoad == null).map(s => s.name).sort().join("|") === "Basketball Court|Football|Handball|Volleyball");
+  check("only the four courts outside the reference sheet and the Garden tab's blocks have no dead load", lib.filter(s => s.deadLoad == null).map(s => s.name).sort().join("|") === "Basketball Court|Football|Handball|Park Bench and Table|Planter S|Planter T|Volleyball");
   const sheet = { "Sprint Lane": [63.77, 1.22, 77.8, 1, 0.20], "Padel Tennis Court": [20, 10, 200, 4, 0.80], "Bocce Court": [18, 3, 54, 4, 2.50], "Multipurpose Sport Area": [22, 12, 264, 12, 0.35], "Sandpit": [4, 4, 16, null, 1.50] };
   for (const [n, [l, s, area, people, gk]] of Object.entries(sheet)) {
     const e = sport(n);
