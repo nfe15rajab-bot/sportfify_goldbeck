@@ -90,7 +90,10 @@ function showPreviewStep() {
   landingSplitEl.hidden = true;
   gateShowMainActions(false);
   gateCardEl.classList.add("session-gate-landing");
-  if (!gatePrefersReducedMotion) landingCarouselStart();
+  // landingPreview3dCheck decides between the two: it starts the carousel itself (respecting gatePrefersReducedMotion)
+  // when Revit isn't connected with a pushed roof, and stops it (showing the live 3D view instead) when it is.
+  if (typeof landingPreview3dCheck === "function") landingPreview3dCheck();
+  else if (!gatePrefersReducedMotion) landingCarouselStart();
 }
 function showSplitStep() {
   landingPreviewStepEl.hidden = true;
@@ -98,6 +101,7 @@ function showSplitStep() {
   gateShowMainActions(false);
   gateCardEl.classList.add("session-gate-landing");
   landingCarouselStop();
+  if (typeof landingPreview3dStop === "function") landingPreview3dStop();
 }
 /** The returning-user's practical actions (Resume/Start new/Preset) — the slideshow stops rather than keep advancing off-screen. */
 function showReturningActions() {
@@ -106,6 +110,7 @@ function showReturningActions() {
   gateShowMainActions(true);
   gateCardEl.classList.remove("session-gate-landing");
   landingCarouselStop();
+  if (typeof landingPreview3dStop === "function") landingPreview3dStop();
 }
 if (gateHasHistory()) showReturningActions(); else showPreviewStep();
 

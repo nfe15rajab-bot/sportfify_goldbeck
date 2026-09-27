@@ -65,6 +65,7 @@ function workspaceChanged() {
   if (typeof activeMode !== "undefined" && activeMode === "deliverables") renderDeliverables();
   if (typeof renderAnalysisIfShowingResults === "function") renderAnalysisIfShowingResults();
   if (typeof updateRevitLayersUI === "function") updateRevitLayersUI();
+  if (typeof landingPreview3dCheck === "function") landingPreview3dCheck();      // connected/disconnected: the landing page's live 3D preview vs. its slideshow
 }
 
 async function workspaceRefresh() {
@@ -80,7 +81,7 @@ async function workspaceRefresh() {
     workspaceState.kinds = ws.json.kinds || [];
   }
   const nextFiles = files.ok && files.json ? files.json.files || [] : [];
-  if (ws.ok) { pullRevitConfig(); if (typeof profileSyncWithRevit === "function") profileSyncWithRevit(); }      // the PROFILE (profile.js): the newer copy of Revit's and this page's wins
+  if (ws.ok) { pullRevitConfig(); pullAcceptedPrimary(); if (typeof profileSyncWithRevit === "function") profileSyncWithRevit(); }      // the PROFILE (profile.js): the newer copy of Revit's and this page's wins
   else if (typeof profileRevitClosed === "function") profileRevitClosed();
   const changed = was !== ws.ok || JSON.stringify(nextFiles) !== JSON.stringify(workspaceState.files) || JSON.stringify(ws.json && ws.json.kinds) !== JSON.stringify(workspaceState.kinds);
   workspaceState.files = nextFiles;
@@ -120,6 +121,22 @@ async function pullRevitConfig() {
   if (typeof updateAssumptionsUI === "function") updateAssumptionsUI();
   if (typeof updateStructureStatus === "function") updateStructureStatus();
   if (typeof showToast === "function") showToast("Settings from Revit", `${applied} input${applied === 1 ? "" : "s"} you set in Revit's assumptions window ${applied === 1 ? "is" : "are"} now in the app.`);
+}
+
+let lastAcceptedPrimaryKey = "";
+
+/**
+ * Revit's "Accept as Primary" (SwitchIterationCommand's "Show Iteration" dialog): polls GET /iterations/primary and, once
+ * per newly-accepted primary (guarded by accepted_at, the same once-per-change pattern pullRevitConfig uses above),
+ * hands it to compareController.js's acceptPrimaryIteration to archive the other saved iterations in the Compare tab.
+ */
+async function pullAcceptedPrimary() {
+  const r = await localApi("/iterations/primary");
+  if (!r.ok || !r.json) return;
+  const key = r.json.accepted_at || "";
+  if (!key || key === lastAcceptedPrimaryKey) return;
+  lastAcceptedPrimaryKey = key;
+  if (typeof acceptPrimaryIteration === "function") acceptPrimaryIteration(r.json);
 }
 
 // ------------------------------------------------------------------------------------------------ the layout, kept up to date
