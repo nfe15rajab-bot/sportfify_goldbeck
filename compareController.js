@@ -108,11 +108,20 @@ let savedCompareConfigs = [];
 function saveConfigToCompare(payload) {
   const sportCount = payload.placements.filter(pl => pl.category === "field" || pl.category === "activity").length;
   const gardenCount = payload.placements.filter(pl => pl.category === "garden").length;
+  const defaultName = `Saved Layout ${savedCompareConfigs.length + 1}`;
+  // A name of their own, not just a running number that looks the same across sessions once the oldest is
+  // replaced (three "Saved Layout 4"-ish cards in a row told nothing apart at a glance). Cancelling keeps the
+  // default rather than blocking the save — naming is a nicety, not a requirement.
+  const typed = typeof window !== "undefined" && typeof window.prompt === "function" ? window.prompt("Name this saved layout:", defaultName) : null;
+  const name = typed && typed.trim() ? typed.trim() : defaultName;
   const entry = {
     id: `saved_${Date.now()}`,
-    name: `Saved Layout ${savedCompareConfigs.length + 1}`,
+    name,
     tagline: `Saved from Combine — ${sportCount} sport, ${gardenCount} garden piece(s) on ${payload.roof_context.length_m}×${payload.roof_context.width_m} m.`,
     payload,
+    // Which of Manual/Algorithmic placement was open when this was saved — restored on load (below) instead of
+    // always landing back on Manual, so an iteration built by the algorithm still shows its own panel afterward.
+    mode: typeof algoState !== "undefined" && algoState.mode === "algo" ? "algo" : "manual",
   };
   savedCompareConfigs.push(entry);
   if (savedCompareConfigs.length > 3) savedCompareConfigs.shift();
@@ -199,6 +208,7 @@ document.addEventListener("click", e => {
   try {
     applySessionSnapshot(entry.payload);
     if (activeMode === "combine") {
+      if (typeof algoSetMode === "function") algoSetMode(entry.mode === "algo" ? "algo" : "manual");
       if (typeof setWizardStep === "function") setWizardStep(2);
       showToast(entry.name, "Loaded into Combine — Tools tab.");
     } else if (activeMode === "analysis" && typeof updateAnalysisUI === "function") {

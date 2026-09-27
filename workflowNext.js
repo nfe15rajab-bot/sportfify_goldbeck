@@ -31,15 +31,37 @@ function workflowNextMode(mode) {
 function workflowNextUpdate(mode) {
   const btn = document.getElementById("workflowNextBtn");
   const labelEl = document.getElementById("workflowNextLabel");
-  if (!btn || !labelEl) return;
-  const next = workflowNextMode(mode);
-  if (!next) { btn.hidden = true; return; }
-  const info = typeof PROFILE_MODES !== "undefined" && PROFILE_MODES[next];
-  labelEl.textContent = "Next: " + (info ? info.label : next);
-  btn.hidden = false;
+  if (btn && labelEl) {
+    const next = workflowNextMode(mode);
+    if (!next) btn.hidden = true;
+    else {
+      const info = typeof PROFILE_MODES !== "undefined" && PROFILE_MODES[next];
+      labelEl.textContent = "Next: " + (info ? info.label : next);
+      btn.hidden = false;
+    }
+  }
+  workflowShortcutsUpdate(mode);
 }
 
 document.getElementById("workflowNextBtn")?.addEventListener("click", () => {
   const next = typeof activeMode !== "undefined" ? workflowNextMode(activeMode) : null;
   if (next && typeof setMode === "function") setMode(next);
 });
+
+/**
+ * "Sync with Revit" (applies the algorithm's preview to the board — Apply to Combine's own button — the step
+ * before a layout can be sent on to Revit; shown in Combine regardless of which of Manual/Algorithmic placement
+ * is open right now, so switching between them never hides the shortcut) and "Save for Compare" (anywhere in
+ * Combine) beside the main Next button: real shortcuts, not a second copy of what each does — each just clicks
+ * its real button in the Design panel, so there is exactly one place that ever needs to change.
+ */
+function workflowShortcutsUpdate(mode) {
+  const applyBtn = document.getElementById("workflowApplyBtn");
+  const saveBtn = document.getElementById("workflowSaveCompareBtn");
+  const inCombine = (mode || (typeof activeMode !== "undefined" ? activeMode : null)) === "combine";
+  if (applyBtn) applyBtn.hidden = !inCombine;
+  if (saveBtn) saveBtn.hidden = !(inCombine && document.getElementById("btn-save-compare"));
+}
+
+document.getElementById("workflowApplyBtn")?.addEventListener("click", () => document.getElementById("algo-apply")?.click());
+document.getElementById("workflowSaveCompareBtn")?.addEventListener("click", () => document.getElementById("btn-save-compare")?.click());
