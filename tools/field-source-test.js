@@ -1,7 +1,7 @@
 // Tests that the sports' dimensions come from the database once the API answers (data.js: applyFieldVariants, loadFieldVariantsFromApi). Run: node tools/field-source-test.js
 //
 // FIELDS in data.js is the offline table; the API's FieldVariants are the source. The seed and the table agreeing is checked in the Revit/API repository (Tools/SourceParity, which
-// starts the real API); this pins what the app does with the API's answer: a change made in the Data tab reaches the Sport tab, a bad row does not spoil the table, an API that
+// starts the real API); this pins what the app does with the API's answer: a change made in the Catalogue tab reaches the Sport tab, a bad row does not spoil the table, an API that
 // is not there leaves it alone.
 const fs = require("fs");
 const path = require("path");
@@ -32,7 +32,7 @@ const variant = (name, v, l, w, runoff, h, norm) => ({ variant: v, lengthM: l, w
   ];
   answer = { ok: true, body: sports };
   const applied = await get("loadFieldVariantsFromApi")();
-  check("a variant the Data tab changed is what FIELDS says now (30 x 16, run-off 2.5, 7.5 m high, its norm)", applied === 2 && get("FIELDS.basketball.standard.l") === 30 && get("FIELDS.basketball.standard.w") === 16 && get("FIELDS.basketball.standard.runoff") === 2.5 && get("FIELDS.basketball.standard.h") === 7.5 && get("FIELDS.basketball.standard.norm") === "FIBA test");
+  check("a variant the Catalogue tab changed is what FIELDS says now (30 x 16, run-off 2.5, 7.5 m high, its norm)", applied === 2 && get("FIELDS.basketball.standard.l") === 30 && get("FIELDS.basketball.standard.w") === 16 && get("FIELDS.basketball.standard.runoff") === 2.5 && get("FIELDS.basketball.standard.h") === 7.5 && get("FIELDS.basketball.standard.norm") === "FIBA test");
   check("...and the ones it did not change are as they were", get("FIELDS.basketball.competition.l") === 34 && get("FIELDS.volleyball.competition.h") === 12.5);
   check("a row with a size that is not a positive number leaves the table's entry alone", get("FIELDS.football.standard.l") === 35);
   check("a sport the table has no key for is ignored, not added", get("typeof FIELDS.curling") === "undefined");

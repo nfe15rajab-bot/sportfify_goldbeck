@@ -184,7 +184,7 @@ async function sendIterationsToRevit() {
     if (!res.ok) throw new Error("the add-in refused the request");
     showToast("Sent to Revit", `${savedCompareConfigs.length} iteration${savedCompareConfigs.length === 1 ? "" : "s"} sent — run "Import Iterations as Design Options" (BIM & Documentation panel) in Revit to build them.`);
   } catch (err) {
-    showToast("Not connected to Revit", "Open the project in Revit with Sportify running, then try again.");
+    showToast("Revit not open", "Open the project in Revit with Sportify running, then try again.");
   } finally {
     if (btn) { btn.disabled = savedCompareConfigs.length === 0; btn.innerHTML = `<i class="ti ti-stack-2" aria-hidden="true"></i>Send to Revit as Design Options`; }
   }
@@ -283,7 +283,7 @@ function compareWaterManagement(state) {
   return { totalAreaM2, avgDepthCm, retentionPercent };
 }
 
-/** Quality/Cost: area-weighted over each item's own quality tier (the app's existing Economy/Standard/Premium tiers double as the only cost signal in the reference database — no separate price table exists yet, matching how the Analysis tab's LCA card also declines to invent numbers it doesn't have). Sustainability: real water-retention formula (identical to analysisController.js's) blended with green-coverage ratio. Accessibility: real circulation reachability + longest route, blended with the same wheelchair-width reference the Analysis tab checks. */
+/** Quality/Cost: area-weighted over each item's own quality tier (the app's existing Economy/Standard/Premium tiers double as the only cost signal in the reference database — no separate price table exists yet, matching how the Results tab's LCA card also declines to invent numbers it doesn't have). Sustainability: real water-retention formula (identical to analysisController.js's) blended with green-coverage ratio. Accessibility: real circulation reachability + longest route, blended with the same wheelchair-width reference the Results tab checks. */
 function computeAxisScores(state) {
   let totalArea = 0, qWeighted = 0, cWeighted = 0;
   state.items.forEach(it => {
@@ -311,7 +311,7 @@ function computeAxisScores(state) {
   // WHEELCHAIR_MIN_WIDTH_M used to be a bare constant here; analysisController.js
   // now sources it from the AnalysisParameter database table (falling back to
   // the same 1.5 default offline) via getAnalysisParam() — reused directly so
-  // Compare's accessibility check never disagrees with the Analysis tab's.
+  // Compare's accessibility check never disagrees with the Results tab's.
   const widthOk = DESIGN_RULES.circulationWidth_m >= getAnalysisParam("Accessibility", "min_circulation_width_m");
   const distScore = clamp(100 - maxDist * 4, 15, 100);
   const accessibility = reachOk ? Math.round(distScore * 0.6 + (widthOk ? 100 : 50) * 0.4) : 20;

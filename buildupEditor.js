@@ -1,7 +1,7 @@
 /**
  * buildupEditor.js — editing a roof build-up
  *
- * The Data tab's existing form asks "what kind of record?" and then shows a
+ * The Catalogue tab's existing form asks "what kind of record?" and then shows a
  * handful of text boxes. That works for a material or a provider, which are
  * flat rows that all look alike. It does not work here, for two reasons:
  *

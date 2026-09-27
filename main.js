@@ -87,6 +87,20 @@ document.getElementById("overviewWorkflow")?.addEventListener("click", e => {
   if (btn) setMode(btn.dataset.goto);
 });
 
+/* The Overview's "What's new" cards: the profile, the quiz, the two ways of placing (manual and algorithmic, both in Combine) and the results. */
+document.getElementById("overviewFeatures")?.addEventListener("click", e => {
+  const card = e.target.closest("[data-feature]");
+  if (!card) return;
+  const feature = card.dataset.feature;
+  if (feature === "profile") setMode("profile");
+  else if (feature === "quiz") { if (typeof quizOpen === "function") quizOpen(undefined); }
+  else if (feature === "results") setMode("analysis");
+  else if (feature === "manual" || feature === "algo") {
+    setMode("combine");
+    if (typeof algoSetMode === "function") algoSetMode(feature);
+  }
+});
+
 function wireDeliverable(overviewId, realId) {
   document.getElementById(overviewId)?.addEventListener("click", () => document.getElementById(realId)?.click());
 }
@@ -122,14 +136,15 @@ function setMode(mode) {
   if (isGarden) updateActivityBarForMode("garden");
   else if (isSport) buildActivityBar();
   else if (isGardenBlocks && typeof buildPlanterBar === "function") buildPlanterBar();
-  else if (isAnalysis && typeof buildAnalysisRail === "function") buildAnalysisRail();   // Analysis's own rail: Overview, Garden, Structure, Sun, Sport, Safety, Other
-  else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Post Analysis's own rail: Dynamic Families, Recommendations
+  else if (isAnalysis && typeof buildAnalysisRail === "function") buildAnalysisRail();   // Analysis's own rail: Overview, then a group per kind of analysis
+  else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Improve's own rail: Dynamic Families, Recommendations
 
-  // Revit's analysis results are only polled while an Analysis group that shows them (or Post Analysis, which always
-  // needs the live payload) is open.
+  // Revit's analysis results are only polled while the Results tab (its overview shows them too) or Improve is open. Combine asks once
+  // when it opens, so the results shown for a selected piece are not older than the visit.
   if (typeof startResultsPolling === "function") {
-    if (isPostAnalysis || (isAnalysis && typeof analysisSub !== "undefined" && analysisSub !== "overview")) startResultsPolling();
+    if (isPostAnalysis || isAnalysis) startResultsPolling();
     else stopResultsPolling();
+    if (isCombine && typeof pollAnalysisResults === "function") pollAnalysisResults();
   }
 
   // Warm accent for Sport (energetic court sports), green for Garden
@@ -183,7 +198,7 @@ function setMode(mode) {
   if (isDeliverables && typeof renderDeliverables === "function") { renderDeliverables(); if (typeof workspaceRefresh === "function") workspaceRefresh(); }
   document.getElementById("session-content").style.display = isSession ? "block" : "none";
   document.getElementById("profile-content").style.display = isProfile ? "block" : "none";
-  if (isProfile && typeof profileRender === "function") profileRender();
+  if (isProfile && typeof profileRender === "function") { profileRender(); if (typeof profileOnTabOpen === "function") profileOnTabOpen(); }
 
   document.getElementById("modeGuide").classList.toggle("active", isGuide);
   document.getElementById("modeDeliverables").classList.toggle("active", isDeliverables);
@@ -333,6 +348,9 @@ if(typeof initCombineInteractions === "function") initCombineInteractions();
 if(typeof initTrayDragInteractions === "function") initTrayDragInteractions();
 if(typeof updateSiteUI === "function") updateSiteUI();
 if (typeof profileInit === "function") profileInit();      // the PROFILE (profile.js): view, role and theme as the person left them
+if (typeof quizInit === "function") quizInit();            // the start-up quiz (quiz.js): wired now, opened by the welcome screen for a new person
+if (typeof tourInit === "function") tourInit();            // the rundgang (tour.js): offered after the quiz, from the Overview and from the Profile tab
+if (typeof whereInit === "function") whereInit();          // what runs where (where.js): the status of Revit in the top bar, the badges, the Overview's card
 startRevitPolling();
 // restoreAutosaveIfAny() is no longer called automatically here — the
 // session gate (sessionGate.js, shown on top of whatever setMode("guide")

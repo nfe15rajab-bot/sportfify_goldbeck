@@ -7,7 +7,7 @@
  *   the API was given one           (Api:WriteKey) it is not handed out: the person who runs the API knows it, and is asked for it once per browser tab (kept in sessionStorage)
  *
  *   apiWrite(url, init)   fetch for a write, with the key; a 401 (a new key after the API restarted, or a wrong one typed) asks again once
- *   apiCapabilities()     what the API allows (GET /api/Admin/capabilities): today whether the SQL import exists, so the Data tab does not offer what would be refused
+ *   apiCapabilities()     what the API allows (GET /api/Admin/capabilities): today whether the SQL import exists, so the Catalogue tab does not offer what would be refused
  */
 
 const API_SESSION_URL = "http://localhost:5107/api/session";

@@ -1,7 +1,7 @@
 /**
- * kineticsPostAnalysis.js — the Post Analysis tab.
+ * kineticsPostAnalysis.js — the Improve tab.
  *
- * The professor's note: the Analysis tab's results rail got "what happens where" flat and confusing, and she wants the
+ * The professor's note: the Results tab's results rail got "what happens where" flat and confusing, and she wants the
  * design's own response to the analysis in a closed loop, not just numbers. This tab is that loop's visible half:
  *
  *   Graphic recommendations   areas of improvement, ranked by priority (Sun / Wind & Erosion / Structural) — reads
@@ -14,7 +14,7 @@
  *
  * Reuses analysisResults.js's helpers (resSection, resTile, resVideo, resPrelim, resEsc, resNum, resText) and its
  * polling (resultsState/pollAnalysisResults) rather than duplicating either — this tab reads the exact same
- * /analysis-results payload the Analysis tab does, just interprets it differently.
+ * /analysis-results payload the Results tab does, just interprets it differently.
  */
 
 let postAnalysisPriority = "sun"; // "sun" | "wind_erosion" | "structural"
@@ -39,7 +39,7 @@ function setPostAnalysisPriority(key) {
   renderPostAnalysisView();
 }
 
-/** Fills the second rail (the one Sport/Analysis reuse for their own sub-tabs) with Post Analysis's two components. Called from main.js's setMode, same spot buildAnalysisRail() is. */
+/** Fills the second rail (the one Sport/Analysis reuse for their own sub-tabs) with Improve's two components. Called from main.js's setMode, same spot buildAnalysisRail() is. */
 function buildPostAnalysisRail() {
   const bar = document.getElementById("activity-bar");
   if (!bar) return;
@@ -57,12 +57,12 @@ function setPostAnalysisSub(id) {
   renderPostAnalysisView();
 }
 
-/** Called from main.js's setMode when Post Analysis is (re)entered. */
+/** Called from main.js's setMode when Improve is (re)entered. */
 function updatePostAnalysisUI() {
   renderPostAnalysisView();
 }
 
-/** Called from analysisResults.js's poll loop, the same way it refreshes the Analysis tab. */
+/** Called from analysisResults.js's poll loop, the same way it refreshes the Results tab. */
 function renderPostAnalysisIfShowing() {
   if (typeof activeMode !== "undefined" && activeMode === "postAnalysis") renderPostAnalysisView();
 }
@@ -82,7 +82,7 @@ function renderGraphicRecommendations() {
     <label><i class="ti ti-target-arrow" aria-hidden="true"></i> Graphic recommendations — ${resEsc(label)}</label>
     <p class="hint">Areas of improvement from the last Revit analysis results, ranked for this priority — nothing is computed here, this reads what Revit already published.</p>
     ${items.length ? `<div class="res-tiles">${items.map(it => resTile(it.label, it.value, it.sub, it.tone)).join("")}</div>`
-                    : `<p class="hint">No ${resEsc(label.toLowerCase())} result published yet. Run it from Revit (or the Analysis tab's own early checks).</p>`}
+                    : `<p class="hint">No ${resEsc(label.toLowerCase())} result published yet. Run it from Revit; the Results tab shows the quick estimates meanwhile.</p>`}
   </div>`;
 }
 

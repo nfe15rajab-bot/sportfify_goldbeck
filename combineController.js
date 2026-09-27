@@ -544,6 +544,8 @@ function buildCombinedPayload() {
     ...(typeof structurePayload === "function" && structurePayload() ? { structure: structurePayload() } : {}),
     // Which built-in assumptions of the structural analyses the designer accepted, and the comfort limits they set (assumptions.js).
     ...(typeof analysisAssumptionsPayload === "function" && analysisAssumptionsPayload() ? { analysis_assumptions: analysisAssumptionsPayload() } : {}),
+    // The names of the session and of the iteration the files are called after (sessionNames.js). In a saved or exported file only: the layout sent to the add-in as it changes leaves them out.
+    ...(typeof sessionNamesPayload === "function" && sessionNamesPayload() ? { session: sessionNamesPayload() } : {}),
     placements
   };
 
@@ -650,6 +652,7 @@ function applySessionSnapshot(payload, opts = {}) {
   }
   activeGoldbeckPresetId = opts.goldbeckPresetId || null;
   updateGoldbeckShuffleVisibility();
+  if (typeof sessionNamesApply === "function") sessionNamesApply(payload.session);
   combineState.tray = []; // a loaded session only ever describes placed pieces — any leftover tray items wouldn't belong to this session
   if (typeof resetCombineView === "function") resetCombineView();
 

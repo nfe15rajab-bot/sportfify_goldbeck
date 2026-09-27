@@ -67,7 +67,7 @@ const BASKETBALL = {
 
 /* ── The choices that are genuinely a choice ─────────────────────────────────
    Products, so they live in the database — same as padel's, in the same table.
-   Adding a surface or a different basket mounting is a row in the Data tab.
+   Adding a surface or a different basket mounting is a row in the Catalogue tab.
 
    No fallback: a built-in copy that stands in when the API is down means two
    catalogs that drift, and a court specified from the stale one. */

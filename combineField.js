@@ -34,7 +34,7 @@ const KIND_COLORS = {
   // Plants read as a crown outline rather than a solid block — a tree occupies
   // its canopy, but you can still see the ground it is standing on.
   vegetation: { stroke: "#2f7a43", fill: "rgba(47,122,67,0.22)" },
-  // Pieces pushed from the Revit Families tab — the user's own loaded
+  // Pieces pushed from the Revit families tab — the user's own loaded
   // content rather than one of the app's built-in presets. Its own colour
   // so a designer can see at a glance which pieces came from their model.
   revit:    { stroke: "#d97706", fill: "rgba(217,119,6,0.32)" },
@@ -674,11 +674,13 @@ function drawCombineCanvas() {
   if (typeof renderDesignPanel === "function") renderDesignPanel(circulation);
   // What is selected, and a record of the change — both read the state the
   // redraw just finished producing, so neither needs telling separately.
-  if (typeof renderInspector === "function") renderInspector();
+  if (typeof renderInspector === "function") renderInspector(circulation);
   if (typeof recordCombineHistory === "function") recordCombineHistory();
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);
+  // The 3D view (preview.js) follows the board: it rebuilds its scene from this state, but only while it is showing.
+  if (typeof combinePreviewRefresh === "function") combinePreviewRefresh();
 }
 
 /**

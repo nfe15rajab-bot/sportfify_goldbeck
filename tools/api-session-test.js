@@ -84,7 +84,7 @@ const reset = () => { vm.runInContext("apiSession.key = null; apiSession.pending
   }
   check("no script writes with a bare fetch: every POST, PUT, PATCH and DELETE goes through apiWrite (or localFetch, for the add-in)", offenders.length === 0, offenders.join(", "));
   const html = fs.readFileSync(path.join(web, "index.html"), "utf8");
-  check("index.html loads apiSession.js before the Data tab and the build-up editor", html.indexOf("apiSession.js") > 0 && html.indexOf("apiSession.js") < html.indexOf("dataTab.js") && html.indexOf("apiSession.js") < html.indexOf("buildupEditor.js"));
+  check("index.html loads apiSession.js before the Catalogue tab and the build-up editor", html.indexOf("apiSession.js") > 0 && html.indexOf("apiSession.js") < html.indexOf("dataTab.js") && html.indexOf("apiSession.js") < html.indexOf("buildupEditor.js"));
 
   console.log(fails === 0 ? "\nALL API SESSION CHECKS PASSED" : "\n" + fails + " CHECK(S) FAILED");
   process.exit(fails ? 1 : 0);
