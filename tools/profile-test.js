@@ -354,6 +354,17 @@ function harness({ stored = null, elements = {} } = {}) {
     try { h.run("profileInit()"); h.run('profileChange({ view: "simple" }, "")'); } catch (e) { ok = false; }
     check("blocked browser storage does not break the page; the profile still applies for this visit", ok && h.get("profileState.profile.view") === "simple");
   }
+  {
+    // The Profile tab renders inside .canvas-wrap (overflow:hidden, for the roof canvas/map it usually holds), same
+    // as the Analysis/Data/Compare tabs before it — without its own overflow-y:auto it was silently unreachable
+    // past whatever fit the window (a short/narrow one, a phone): "Where your profile is kept" and its Export/Import
+    // buttons, near the bottom, were the first casualty. tools/csp-test.js and escape-audit.js don't look at style.css
+    // for this, so this is the one place it is pinned.
+    const css = read("style.css");
+    const rule = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].find(m => m[1].split(",").map(s => s.trim()).includes("#profile-content"));
+    check("the Profile tab's content can scroll (the same fix #analysis-content/#data-content/#compare-content already have, not just centered-and-clipped by .canvas-wrap)",
+      !!rule && /overflow-y:\s*auto/.test(rule[2]) && /height:\s*100%/.test(rule[2]));
+  }
 
   console.log(fails === 0 ? "\nPROFILE OK" : `\n${fails} check(s) failed`);
   process.exit(fails === 0 ? 0 : 1);
