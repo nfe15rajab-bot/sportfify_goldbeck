@@ -1,6 +1,6 @@
-// Tests for sessionGate.js: the landing's three steps (preview / split / returning actions), the sample video
-// (autoplay, its title-card skip, the play/pause toggle staying in sync with the real video), and "Link a Revit
-// file" (browsing remembers a name only; picking the newest export fetches/filters/sorts/loads it).
+// Tests for sessionGate.js: the landing's three steps (preview / split / returning actions), the analysis-screenshot
+// slideshow (autoplay, looping through the real slides, the play/pause toggle, stopping when off-screen), and "Link
+// a Revit file" (browsing remembers a name only; picking the newest export fetches/filters/sorts/loads it).
 // Run: node tools/session-gate-test.js
 const fs = require("fs");
 const path = require("path");
@@ -22,36 +22,20 @@ function fakeElement() {
   return e;
 }
 
-/** A stand-in <video>: play()/pause() actually flip .paused and fire the same "play"/"pause" events a real one would, so gateSetVideoToggleIcon's own listeners (not just its two direct callers) are exercised the same way a browser would. The `once` option is not modelled — every test that needs loadedmetadata to fire only once already only fires it once itself. */
-function fakeVideo(readyState) {
-  const v = {
-    _paused: true, currentTime: 0, duration: 24.5, readyState: readyState, handlers: {},
-    addEventListener(t, fn) { (v.handlers[t] = v.handlers[t] || []).push(fn); },
-    play() { v._paused = false; (v.handlers.play || []).slice().forEach(fn => fn()); return Promise.resolve(); },
-    pause() { v._paused = true; (v.handlers.pause || []).slice().forEach(fn => fn()); },
-    fireTimeupdate() { (v.handlers.timeupdate || []).slice().forEach(fn => fn()); },
-    fireLoadedMetadata() { (v.handlers.loadedmetadata || []).slice().forEach(fn => fn()); },
-  };
-  Object.defineProperty(v, "paused", { get() { return v._paused; } });
-  return v;
-}
-
-function page({ autosave = null, profile = null, reducedMotion = false, videoReadyState = 4, fetchImpl = null } = {}) {
+function page({ autosave = null, profile = null, reducedMotion = false, fetchImpl = null } = {}) {
   const els = {};
   // gateRevitBrowseMode's real markup carries no `hidden` attribute (it is the default panel) — gateSetRevitMode only
   // ever runs from a click, so this element's starting visibility is not sessionGate.js's own doing to fake here.
   els.gateRevitBrowseMode = fakeElement(); els.gateRevitBrowseMode.hidden = false;
-  const video = fakeVideo(videoReadyState);
   const store = new Map();
   if (autosave) store.set("sportify-autosave", JSON.stringify(autosave));
   const goldbeck = { demo: { id: "demo", title: "Demo", tagline: "A stand-in preset for the test.", generate: () => ({ placements: [], entry_points: [] }) } };
   const calls = { applySessionSnapshot: [], showToast: [], setMode: [], localApi: [] };
-  const idOf = { landingVideo: video };
   const sandbox = {
-    console, JSON, Date, Number, Object, Array, Math, String, Promise, Map, Set, RegExp, Error, setTimeout, clearTimeout,
+    console, JSON, Date, Number, Object, Array, Math, String, Promise, Map, Set, RegExp, Error, setTimeout, clearTimeout, setInterval, clearInterval,
     escapeHtml: s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])),
     document: {
-      getElementById: id => idOf[id] || (els[id] = els[id] || fakeElement()),
+      getElementById: id => (els[id] = els[id] || fakeElement()),
       querySelector: sel => (sel === ".session-gate-card" ? (els.__card = els.__card || fakeElement()) : null),
     },
     window: { matchMedia: () => ({ matches: reducedMotion }) },
@@ -67,7 +51,7 @@ function page({ autosave = null, profile = null, reducedMotion = false, videoRea
   };
   vm.createContext(sandbox);
   vm.runInContext(read("sessionGate.js"), sandbox, { filename: "sessionGate.js" });
-  return { run: e => vm.runInContext(e, sandbox), els, video, calls, card: els.__card };
+  return { run: e => vm.runInContext(e, sandbox), els, calls, card: els.__card };
 }
 
 (async () => {
@@ -81,7 +65,7 @@ function page({ autosave = null, profile = null, reducedMotion = false, videoRea
     check("the split's 'Back' returns to the preview", p.els.landingPreviewStep.hidden === false && p.els.landingSplit.hidden === true);
     p.els["btn-gate-next"].click();
     p.els["btn-gate-returning"].click();
-    check("'I've used Sportify before' opens the actions, narrowed back down, and pauses the video (nothing to lose, it has no audio)", p.els.landingSplit.hidden === true && p.els.sessionGateMainActions.hidden === false && !p.card.classes.has("session-gate-landing") && p.video.paused === true);
+    check("'I've used Sportify before' opens the actions, narrowed back down, and stops the slideshow (nothing on-screen to see it advance)", p.els.landingSplit.hidden === true && p.els.sessionGateMainActions.hidden === false && !p.card.classes.has("session-gate-landing") && p.run("landingSlideTimer") === null);
     p.els["btn-gate-returning-back"].click();
     check("the actions' 'Back' returns to the split (one step, not all the way to the preview)", p.els.landingSplit.hidden === false && p.els.landingPreviewStep.hidden === true);
   }
@@ -115,37 +99,46 @@ function page({ autosave = null, profile = null, reducedMotion = false, videoRea
     check("'New to Sportify' leaves the gate and opens the quiz directly (not the conditional quizMaybeOpen) — an explicit ask, so it opens even for a profile the quiz has already met", p.run("leftGate") === true && p.run("quizOpened") === true);
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- the sample video
+  // ---------------------------------------------------------------------------------------------------------------- the landing slideshow
   {
-    const p = page({ videoReadyState: 4 });   // metadata already there (HAVE_METADATA) before the script even runs
-    check("with metadata already loaded, the title card is skipped immediately (no need to wait for loadedmetadata)", p.video.currentTime === 2);
-    check("autoplay is attempted (no prefers-reduced-motion) and the toggle icon reflects it playing", p.video.paused === false && p.els["btn-landing-video-toggle"].innerHTML.includes("pause-filled"));
-  }
-  {
-    const p = page({ videoReadyState: 0 });   // metadata not loaded yet — the listener path
-    check("nothing seeked yet — still waiting for loadedmetadata", p.video.currentTime === 0);
-    p.video.fireLoadedMetadata();
-    check("once metadata arrives, the title card is skipped the same way", p.video.currentTime === 2);
+    const p = page();
+    await new Promise(r => setTimeout(r, 260));   // the crossfade's own 220ms setTimeout before the first slide's src actually lands
+    check("opens on the first slide with its own caption, not left blank", p.els.landingCarouselImg.src === "samples/landing-shot-combine.jpg" && p.els.landingCarouselCaption.textContent.length > 0);
+    check("autoplay is running (no prefers-reduced-motion) and the toggle icon reflects it playing", p.run("landingSlideTimer") !== null && p.els["btn-landing-carousel-toggle"].innerHTML.includes("pause-filled"));
   }
   {
     const p = page({ reducedMotion: true });
-    check("prefers-reduced-motion: the video is paused, not autoplayed, and the toggle says so", p.video.paused === true && p.els["btn-landing-video-toggle"].innerHTML.includes("play-filled"));
-    p.els["btn-landing-video-toggle"].click();
-    check("the toggle button still starts it on request", p.video.paused === false);
+    await new Promise(r => setTimeout(r, 260));
+    check("prefers-reduced-motion: the slideshow does not start on its own, and the toggle says so", p.run("landingSlideTimer") === null && p.els["btn-landing-carousel-toggle"].innerHTML.includes("play-filled"));
+    p.els["btn-landing-carousel-toggle"].click();
+    await new Promise(r => setTimeout(r, 260));
+    check("the toggle still starts it on request, advancing to the next slide right away rather than waiting out a full interval first", p.run("landingSlideTimer") !== null && p.els.landingCarouselImg.src === "samples/landing-shot-results.jpg");
+  }
+  {
+    const p = page();      // auto-started already (no reduced motion)
+    p.els["btn-landing-carousel-toggle"].click();
+    check("the toggle pauses a running slideshow on request", p.run("landingSlideTimer") === null && p.els["btn-landing-carousel-toggle"].innerHTML.includes("play-filled"));
+    p.els["btn-landing-carousel-toggle"].click();
+    check("...and resumes it the same way", p.run("landingSlideTimer") !== null && p.els["btn-landing-carousel-toggle"].innerHTML.includes("pause-filled"));
   }
   {
     const p = page();
-    // simulate the native `loop` attribute restarting playback at 0 partway through
-    p.video.currentTime = 10; p.video.fireTimeupdate();
-    p.video.currentTime = 0; p.video.fireTimeupdate();      // a loop just restarted
-    check("a loop restart (currentTime jumping backwards) skips the title card again, not just on the very first play", p.video.currentTime === 2);
+    p.run("landingSlideNext()");
+    await new Promise(r => setTimeout(r, 260));
+    check("advancing moves through the real slides in order, each with its own caption", p.els.landingCarouselImg.src === "samples/landing-shot-results.jpg" && /quick estimate/.test(p.els.landingCarouselCaption.textContent));
+    p.run("landingSlideNext()");
+    await new Promise(r => setTimeout(r, 260));
+    check("...then the third", p.els.landingCarouselImg.src === "samples/landing-shot-safety.jpg");
+    p.run("landingSlideNext()");
+    await new Promise(r => setTimeout(r, 260));
+    check("...and loops back to the first after the last, rather than stopping", p.els.landingCarouselImg.src === "samples/landing-shot-combine.jpg");
   }
   {
     const p = page();
-    p.video.pause();      // simulate the browser silently blocking/stopping autoplay on its own, not through the toggle button
-    check("the toggle reflects a pause that did not come from either of its own two triggers (the video's own event, not a stale assumption)", p.els["btn-landing-video-toggle"].innerHTML.includes("play-filled"));
-    p.video.play();
-    check("...and a resume the same way", p.els["btn-landing-video-toggle"].innerHTML.includes("pause-filled"));
+    p.els["btn-gate-next"].click(); p.els["btn-gate-returning"].click();
+    check("stepping past the preview into the split/actions stops the slideshow — nothing on-screen to see it advance", p.run("landingSlideTimer") === null);
+    p.els["btn-gate-returning-back"].click(); p.els["btn-gate-split-back"].click();
+    check("...and 'Back' to the preview restarts it", p.run("landingSlideTimer") !== null);
   }
 
   // ---------------------------------------------------------------------------------------------------------------- Link a Revit file
