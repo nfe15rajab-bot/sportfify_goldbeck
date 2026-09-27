@@ -58,7 +58,7 @@ const ZONE_KINDS = {
   green_roof: {
     label: "Green roof",
     short: "Green roof",
-    color: "#4a9c5d",
+    color: "#7fa046",          // a warmer, moss green (user, 2026-09-27; was #4a9c5d)
     hint: "The roof build-up itself. Extensive or intensive is chosen by the system below.",
     assemblyCategories: ["extensive", "intensive"],
   },

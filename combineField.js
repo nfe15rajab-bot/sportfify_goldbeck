@@ -379,9 +379,23 @@ let combineLegendFolded = false;
  * on the board does. `st` carries the rule results drawCombineCanvas already
  * computed, so nothing is checked twice.
  */
+/**
+ * The legend's top lines up with the top of the Manual / Algorithmic placement switch above the board (user, 2026-09-27), wherever the layout puts
+ * that switch: measured, not a fixed offset. The legend stays inside the board box, so this is a (negative) top relative to it.
+ */
+function alignCombineLegend() {
+  const box = document.getElementById("combine-legend"), wrap = box && box.parentElement;
+  const bar = document.querySelector(".placement-switch-bar");
+  if (!box || !wrap || !bar || !bar.offsetParent) { if (box) box.style.top = ""; return; }
+  const top = Math.round(bar.getBoundingClientRect().top - wrap.getBoundingClientRect().top);
+  box.style.top = top + "px";
+}
+window.addEventListener("resize", () => alignCombineLegend());
+
 function renderCombineLegend(st) {
   const box = document.getElementById("combine-legend");
   if (!box) return;
+  alignCombineLegend();
   const items = combineState.items, zones = combineState.zones || [];
   const count = items.length + zones.length;
   box.hidden = count === 0;
