@@ -182,18 +182,19 @@ function basketballPlayArea(state = basketballState) {
       ? { length_m: 14, width_m: 15, insetX_m: 3, insetY_m: 2, half: true }
       : { length_m: 28, width_m: 15, insetX_m: 3, insetY_m: 2, half: false };
   }
+  // mini / standard: the court with the variant's run-off all round (competition's 34 x 19 already is the court plus its free zone)
+  const r = d.runoff_m || 0;
   return half
-    ? { length_m: d.length_m / 2, width_m: d.width_m, insetX_m: 0, insetY_m: 0, half: true }
-    : { length_m: d.length_m, width_m: d.width_m, insetX_m: 0, insetY_m: 0, half: false };
+    ? { length_m: d.length_m / 2, width_m: d.width_m, insetX_m: r, insetY_m: r, half: true }
+    : { length_m: d.length_m, width_m: d.width_m, insetX_m: r, insetY_m: r, half: false };
 }
 
-/** The footprint a half court actually takes on the roof. */
+/** The footprint the court takes on the roof: the playing court (a half court is half) plus its run-off / free zone all round. */
 function basketballFootprint(state = basketballState) {
-  const d = basketballDims(state);
   const play = basketballPlayArea(state);
   return {
     length_m: play.length_m + play.insetX_m * 2,
-    width_m: d.width_m,
+    width_m: play.width_m + play.insetY_m * 2,
   };
 }
 
@@ -409,7 +410,13 @@ function drawBasketballPreview(svg, isDark) {
   svg.innerHTML = `
     ${basketballCourtSvg(ox, oy, fw, fh, basketballState, "full", isDark)}
     ${typeof archDimSvg === "function" ? archDimSvg("top", ox, ox + fw, oy, 12, `${d.length_m} m`, dim) + archDimSvg("left", oy, oy + fh, ox, 12, `${d.width_m} m`, dim) : ""}
-    <text x="${ox + fw / 2}" y="${Math.min(vh - 6, oy + fh + 22)}" text-anchor="middle" font-size="10" fill="${dim}"
+    ${(() => {                     // the court inside its run-off: its own dimensions on the bottom and right, as the other courts show them
+      const p = basketballPlayArea(), s = fw / d.length_m;
+      if (typeof archDimSvg !== "function" || !(p.insetX_m > 0)) return "";
+      const cx0 = ox + p.insetX_m * s, cx1 = cx0 + p.length_m * s, cy0 = oy + p.insetY_m * s, cy1 = cy0 + p.width_m * s;
+      return archDimSvg("bottom", cx0, cx1, oy + fh, 12, `court ${p.length_m} m`, dim) + archDimSvg("right", cy0, cy1, ox + fw, 12, `${p.width_m} m`, dim);
+    })()}
+    <text x="${ox + fw / 2}" y="${Math.min(vh - 4, oy + fh + (basketballPlayArea().insetX_m > 0 ? 40 : 22))}" text-anchor="middle" font-size="10" fill="${dim}"
           font-family="'Titillium Web', Arial, sans-serif">
       ${Math.round(w.total_kg).toLocaleString("en-US")} kg on the deck · ${w.hoopCount} basket${w.hoopCount > 1 ? "s" : ""}
     </text>`;

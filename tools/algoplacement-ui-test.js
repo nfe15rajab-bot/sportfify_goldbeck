@@ -149,18 +149,18 @@ async function planFor(qty) {
   {
     freshBoard(); catalogueUp();
     await planFor({ "Basketball Court": 1 });
-    get("basketballState.hoops = 'one'");                                   // a half court: 11 m along its own length, 13 across
+    get("basketballState.hoops = 'one'");                                   // a half court, mini tier: court 11 x 13, plus its 2 m run-off all round (Sukriti, 2026-09-27) = 15 x 17
     await get("algoApply()");
     check("Apply refuses, throws the stale plan away and says why", sandbox.combineState.items.length === 0 && S.plan === null && toasts.some(t => /sizes changed/i.test(t)), toasts.join(" // "));
     const b = sport("Basketball Court");
-    check("the packer now reserves the half court (13 x 11) and knows its own length runs the short way", near(b.long, 13) && near(b.short, 11) && b.swap === true, `${b.long} x ${b.short} swap=${b.swap}`);
+    check("the packer now reserves the half court WITH its run-off (17 x 15) and knows its own length runs the short way", near(b.long, 17) && near(b.short, 15) && b.swap === true, `${b.long} x ${b.short} swap=${b.swap}`);
 
     const plan = await planFor({ "Basketball Court": 1 });
     await get("algoApply()");
     const item = sandbox.combineState.items[0], c = plan.courts[0];
     const turned = item.rotation === 90, w = turned ? item.width_m : item.length_m, h = turned ? item.length_m : item.width_m;
-    check("a half court is created in the specification's orientation (11 long, 13 wide) and turned onto the packer's rectangle",
-      near(item.length_m, 11) && near(item.width_m, 13) && near(w, c.rect[2] - c.rect[0], 0.06) && near(h, c.rect[3] - c.rect[1], 0.06), `${item.length_m} x ${item.width_m} rotation ${item.rotation} on ${(c.rect[2] - c.rect[0]).toFixed(1)} x ${(c.rect[3] - c.rect[1]).toFixed(1)}`);
+    check("a half court is created in the specification's orientation (envelope 15 long, 17 wide: the court plus its run-off) and turned onto the packer's rectangle",
+      near(item.length_m, 15) && near(item.width_m, 17) && near(w, c.rect[2] - c.rect[0], 0.06) && near(h, c.rect[3] - c.rect[1], 0.06), `${item.length_m} x ${item.width_m} rotation ${item.rotation} on ${(c.rect[2] - c.rect[0]).toFixed(1)} x ${(c.rect[3] - c.rect[1]).toFixed(1)}`);
     get("basketballState.hoops = 'two'");
   }
 
