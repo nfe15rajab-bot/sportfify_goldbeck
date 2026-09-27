@@ -12,6 +12,9 @@
  * the setback line of the roof's longest edge. Green roof beds in the setback band along every roof edge of 6 m or more that has no entry point, and a
  * 4 x 4 m green roof bed in each of the two corners at the ends of the longest edge, inside the setback lines.
  * More rules to come from the user.
+ *
+ * Preset 2, SOCIAL GARDEN (user, 2026-09-27): the Quiet Garden with Planter T no. 1, 3, 4 and 6 of the middle row (counted along the row) replaced by the
+ * Garden tab's Park Bench and Table, each centred where its Planter T would stand; everything else the same.
  */
 
 const GARDEN_BED_MIN_EDGE_M = 6;       // a roof edge shorter than this gets no green bed in the setback
@@ -40,6 +43,12 @@ const GARDEN_PRESETS = {
     cornerBeds: 4.0                 // a square green roof bed (m) in each corner at the ends of the longest edge, inside the setback lines
   }
 };
+
+// Social Garden: the Quiet Garden with Park Bench and Table in place of Planter T no. 1, 3, 4, 6 (`swap`: the row's pieces, by index, that are a bench instead)
+GARDEN_PRESETS.social_garden = Object.assign({}, GARDEN_PRESETS.quiet_garden, {
+  label: "Social Garden",
+  rows: GARDEN_PRESETS.quiet_garden.rows.map(r => r.side === 0 ? Object.assign({}, r, { swap: [0, 2, 3, 5] }) : r)
+});
 
 /** The roof outline in board metres (x right, y down), as the board draws it. */
 function gardenPresetFootprint() {
@@ -104,6 +113,19 @@ function applyGardenPreset(key) {
     for (let i = 0; i < r.count; i++) {
       const along = (i - (r.count - 1) / 2) * pitch;           // the piece's centre, from the centre point along the longest side
       const cxm = ax.alongX ? ax.cx + along : ax.cx + across, cym = ax.alongX ? ax.cy + across : ax.cy + along;
+      if (r.swap && r.swap.includes(i) && typeof GARDEN_BENCH !== "undefined") {
+        // a Park Bench and Table here instead, centred where the planter would stand (as Push to Combine gives it: its family is still to come)
+        const bl = GARDEN_BENCH.length / 1000, bw = GARDEN_BENCH.width / 1000, bLabel = GARDEN_BENCH.label;
+        const bW = ax.alongX ? bl : bw, bH = ax.alongX ? bw : bl;
+        combineState.items.push({
+          id: `preset_${key}_${stamp}_${n++}`, kind: "gardenBlock", label: bLabel,
+          length_m: bl, width_m: bw, rotation: ax.alongX ? 0 : 90,
+          x_m: Math.round((cxm - bW / 2) * 100) / 100, y_m: Math.round((cym - bH / 2) * 100) / 100,
+          preset: key,
+          sourceJson: { version: "1.0", generator: "Sportify-Garden-Preset", preset: key, gardenBlock: { type: GARDEN_BENCH.id, label: bLabel, family: null, length_mm: GARDEN_BENCH.length, width_mm: GARDEN_BENCH.width } }
+        });
+        continue;
+      }
       const w = ax.alongX ? sz.len : sz.wid, h = ax.alongX ? sz.wid : sz.len;   // its footprint on the board
       const params = r.seatCapFrom != null && i % 2 === r.seatCapFrom ? Object.assign({}, sz.p, { seatCap: true }) : sz.p;
       combineState.items.push({
@@ -217,6 +239,9 @@ function syncGardenPresetButtons() {
   const show = !!(program && program.key === "garden");
   box.style.display = show ? "flex" : "none";
   box.parentElement.classList.toggle("has-garden-presets", show);   // the legend then stops above the buttons (style.css)
+  // how much room the legend leaves at the bottom: the buttons' own height, their offset from the bottom, and a gap
+  if (show) box.parentElement.style.setProperty("--garden-presets-room", (box.offsetHeight + 22 + 14) + "px");
 }
 
 document.getElementById("btn-preset-quiet-garden")?.addEventListener("click", () => applyGardenPreset("quiet_garden"));
+document.getElementById("btn-preset-social-garden")?.addEventListener("click", () => applyGardenPreset("social_garden"));

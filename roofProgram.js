@@ -100,6 +100,9 @@ function setRoofProgram(key) {
   combineState.roof.program = key;
   closeRoofProgramPrompt();
   updateRoofSetupUI();
+  // Garden Core: only Calisthenics and Yoga from the Sport tab (sportController.js) - others leave the board, and the Push buttons follow
+  if (key === "garden" && typeof removeNonGardenSportPieces === "function") removeNonGardenSportPieces();
+  if (typeof syncSportPushButtons === "function") syncSportPushButtons();
   if (typeof showToast === "function") showToast("Roof type set", `${roofEsc(ROOF_PROGRAMS[key].label)}. It is saved with the session.`);
 }
 

@@ -516,6 +516,19 @@ function drawCombineCanvas() {
       return;
     }
 
+    // The Garden tab's blocks draw what they are (planters.js gardenBlockBoardSvg): a planter's rim, soil, seat cap and tree as its own
+    // options say, the Park Bench and Table as a table between two benches. Drawn in the board footprint, so no rotation is needed.
+    if (item.kind === "gardenBlock" && typeof gardenBlockBoardSvg === "function") {
+      el += `<g>${gardenBlockBoardSvg(x, y, w, h, item)}
+          <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
+                fill="transparent" stroke="${strokeColor}"
+                stroke-width="${selected ? 2.5 : 1.2}"
+                stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
+                style="cursor:${isPlanner ? "grab" : "pointer"}"/>
+        </g>`;
+      return;
+    }
+
     // Volleyball's free zone is part of the court, so the footprint drawn here
     // is the whole facility — which is the point: it is what has to fit.
     if (typeof isVolleyballItem === "function" && isVolleyballItem(item)) {

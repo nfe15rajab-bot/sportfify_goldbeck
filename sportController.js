@@ -170,6 +170,54 @@ function updateUI() {
   document.getElementById("field-label").textContent = `${sportLabel} — ${variantLabel}`;
   document.getElementById("norm-badge").textContent  = d.norm;
   if(typeof drawField === "function") drawField(state.sport, state.variant, state.capacity, isDarkMode());
+  syncSportPushButtons();
+}
+
+/* ── Garden Core roof: only Calisthenics and Yoga from the Sport tab (user, 2026-09-27) ── */
+const GARDEN_CORE_SPORT_TAB_OK = ["calisthenics", "yoga_deck", "locker_module", "bathroom_module"];   // + the locker and bathroom modules (user, same day)
+
+function isGardenCoreRoof() {
+  const p = typeof getRoofProgram === "function" ? getRoofProgram() : null;
+  return !!(p && p.key === "garden");
+}
+
+/** A piece that comes from the Sport tab's library (a court, or any activity / facility) and is not Calisthenics or Yoga. */
+function isNonGardenSportPiece(item) {
+  if (!item) return false;
+  if (item.kind === "field") return true;
+  if (item.kind !== "activity") return false;
+  const id = item.sourceJson && item.sourceJson.activity && item.sourceJson.activity.type_id;
+  return !GARDEN_CORE_SPORT_TAB_OK.includes(id);
+}
+
+/** The Push buttons: on a Garden Core roof a court cannot be pushed, and of the activities only Calisthenics and Yoga can. */
+function syncSportPushButtons() {
+  const garden = isGardenCoreRoof();
+  const set = (btnId, blocked) => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = blocked;
+    btn.title = blocked ? "This roof is Garden Core: only Calisthenics, Yoga, lockers and bathrooms can be pushed to Combine." : "";
+    let note = document.getElementById(btnId + "-note");
+    if (!note) { note = document.createElement("p"); note.id = btnId + "-note"; note.className = "hint"; btn.insertAdjacentElement("afterend", note); }
+    note.textContent = blocked ? "This roof is Garden Core: only Calisthenics, Yoga, lockers and bathrooms can be pushed to Combine." : "";
+    note.hidden = !blocked;
+  };
+  set("btn-push-sport", garden);
+  set("btn-push-activity", garden && !GARDEN_CORE_SPORT_TAB_OK.includes(state.activityId));
+}
+
+/** The roof became Garden Core: every Sport-tab piece that is not Calisthenics or Yoga leaves the board and the tray. */
+function removeNonGardenSportPieces() {
+  const gone = combineState.items.filter(isNonGardenSportPiece).concat((combineState.tray || []).filter(isNonGardenSportPiece));
+  if (!gone.length) return;
+  combineState.items = combineState.items.filter(i => !isNonGardenSportPiece(i));
+  combineState.tray = (combineState.tray || []).filter(i => !isNonGardenSportPiece(i));
+  if (gone.some(i => i.id === combineState.selectedId)) { combineState.selectedId = null; combineState.selectedKind = null; }
+  if (typeof renderCombineTray === "function") renderCombineTray();
+  if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  const names = [...new Set(gone.map(i => i.label))].join(", ");
+  if (typeof showToast === "function") showToast("Sports removed", `The roof is Garden Core now, so ${gone.length} piece${gone.length === 1 ? "" : "s"} that ${gone.length === 1 ? "is" : "are"} not Calisthenics, Yoga, lockers or bathrooms ${gone.length === 1 ? "was" : "were"} removed: ${names}.`);
 }
 
 function updateActivityUI() {
@@ -181,6 +229,7 @@ function updateActivityUI() {
   document.getElementById("field-label").textContent = `${a.label}${tierV && activityTierKeys(state.activityId).length > 1 ? " — " + sportTierLabel(state.activityTier) : ""}${qtyLabel}`;
   document.getElementById("norm-badge").textContent = tierV ? tierV.norm : a.norm;
   if(typeof drawActivity === "function") drawActivity(state.activityId, { length: state.activityLength, width: state.activityWidth }, isDarkMode());
+  syncSportPushButtons();
 }
 
 /* ── Sport Listeners & Exports ── */
@@ -400,6 +449,7 @@ document.getElementById("activityLength").addEventListener("input", e => { state
 document.getElementById("activityWidth").addEventListener("input", e => { state.activityWidth = Number(e.target.value) || ACTIVITIES[state.activityId].width; updateActivityUI(); });
 document.getElementById("activityQuantity").addEventListener("input", e => { state.activityQuantity = Number(e.target.value); document.getElementById("qty-val").textContent = state.activityQuantity; updateActivityUI(); });
 document.getElementById("btn-push-activity").addEventListener("click", () => {
+  if (isGardenCoreRoof() && !GARDEN_CORE_SPORT_TAB_OK.includes(state.activityId)) return;   // Garden Core: Calisthenics and Yoga only
   const a = ACTIVITIES[state.activityId];
   for (let i = 0; i < Math.max(1, state.activityQuantity); i++) {
     // We pass the full built payload into sourceJson so Combine can export it later
@@ -410,6 +460,7 @@ document.getElementById("btn-push-activity").addEventListener("click", () => {
 });
 
 document.getElementById("btn-push-sport").addEventListener("click", () => {
+  if (isGardenCoreRoof()) return;                                                            // Garden Core: no courts
   // A sport that specifies itself works out its own footprint. Volleyball's
   // free zone is 6.5 m at the ends for FIVB events and 5 m at the sides, which
   // the single `runoff` figure cannot express — and the piece on the roof has

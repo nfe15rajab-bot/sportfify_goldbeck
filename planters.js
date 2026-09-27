@@ -197,6 +197,54 @@ function drawBench() {
     + `<text x="${VW / 2}" y="${VH - 8}" text-anchor="middle" font-size="10" fill="${dim}" ${font}>Placeholder — the Park Bench and Table family is still to come · sizes in mm</text>`;
 }
 
+/**
+ * A garden block on the Combine board, in its board footprint (x, y, w, h in px): a planter as the Garden tab draws it in plan - rim, soil, the
+ * seat cap ring when its Seat Cap is on, the centre row, a tree crown when its Tree is on - and the Park Bench and Table as a table between two
+ * benches along the longer side. What is drawn is the piece's own values (sourceJson), i.e. what Revit gets.
+ */
+function gardenBlockBoardSvg(x, y, w, h, item) {
+  const gb = (item.sourceJson && item.sourceJson.gardenBlock) || {};
+  const dark = typeof isDarkMode === "function" && isDarkMode();
+  const ink = dark ? "#c9cbe0" : "#5a4630", wood = dark ? "#9c8a6a" : "#d8c3a0";
+  const k = Math.min(w, h);
+  if (gb.type === (typeof GARDEN_BENCH !== "undefined" ? GARDEN_BENCH.id : "park_bench_table")) {
+    // benches along the longer side (a square piece: along x), table between them - the Garden tab's placeholder, to scale
+    const alongX = w >= h, L = alongX ? w : h, S = alongX ? h : w;
+    const r = (a, b, c, d) => alongX ? { x: x + a, y: y + b, w: c, h: d } : { x: x + b, y: y + a, w: d, h: c };
+    const parts = [[0.05 * L, 0.05 * S, 0.9 * L, 0.2 * S, 0.7], [0.05 * L, 0.3 * S, 0.9 * L, 0.4 * S, 1], [0.05 * L, 0.75 * S, 0.9 * L, 0.2 * S, 0.7]];
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${dark ? "#2a2f3a" : "#f4efe6"}"/>` + parts.map(([a, b, c, d, o]) => {
+      const q = r(a, b, c, d);
+      return `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" rx="${Math.max(0.5, k * 0.03)}" fill="${wood}" fill-opacity="${o}" stroke="${ink}" stroke-width="0.6"/>`;
+    }).join("");
+  }
+  const p = gb.params || {};
+  const lenM = Math.max(item.length_m, item.width_m) || 1, px = Math.max(w, h) / lenM;        // px per metre
+  const wall = Math.max(1, 0.06 * px);
+  if (p.seatCap && gb.type === "planter_s") {
+    // a Planter S with its seat cap on reads as a bench: the cap's wood over the whole top, boards along its length, no planting shown (user)
+    const alongX = w >= h, n = 4;
+    let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="${wood}" stroke="${ink}" stroke-width="0.6"/>`;
+    for (let i = 1; i < n; i++) s += alongX ? `<line x1="${x + 1}" y1="${y + (h * i) / n}" x2="${x + w - 1}" y2="${y + (h * i) / n}" stroke="${ink}" stroke-width="0.4" stroke-opacity="0.5"/>`
+                                             : `<line x1="${x + (w * i) / n}" y1="${y + 1}" x2="${x + (w * i) / n}" y2="${y + h - 1}" stroke="${ink}" stroke-width="0.4" stroke-opacity="0.5"/>`;
+    return s;
+  }
+  let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="${dark ? "#5b4a3a" : "#b99d7e"}"/>`
+    + `<rect x="${x + wall}" y="${y + wall}" width="${Math.max(0, w - 2 * wall)}" height="${Math.max(0, h - 2 * wall)}" fill="${dark ? "#3f5a2f" : "#8cbf6a"}"/>`;
+  if (p.seatCap) s += `<path fill-rule="evenodd" d="M${x},${y}h${w}v${h}h${-w}Z M${x + wall * 1.8},${y + wall * 1.8}v${h - wall * 3.6}h${w - wall * 3.6}v${-(h - wall * 3.6)}Z" fill="${wood}" stroke="${ink}" stroke-width="0.5"/>`;
+  if (p.centreRow) {
+    const hor = w >= h;
+    s += hor ? `<line x1="${x + wall * 2}" y1="${y + h / 2}" x2="${x + w - wall * 2}" y2="${y + h / 2}" stroke="${dark ? "#8fcf6f" : "#4f8a35"}" stroke-width="0.8" stroke-dasharray="2 1.5"/>`
+             : `<line x1="${x + w / 2}" y1="${y + wall * 2}" x2="${x + w / 2}" y2="${y + h - wall * 2}" stroke="${dark ? "#8fcf6f" : "#4f8a35"}" stroke-width="0.8" stroke-dasharray="2 1.5"/>`;
+  }
+  if (p.tree) {
+    // the crown, kept inside the planter's outline so it never hides a neighbour or a board number
+    const cr = k * 0.48, cx = x + w / 2, cy = y + h / 2;
+    s += `<circle cx="${cx}" cy="${cy}" r="${cr}" fill="${dark ? "#2f6b2a" : "#5d9e3f"}" fill-opacity="0.55" stroke="${dark ? "#8fcf6f" : "#2f5d22"}" stroke-width="0.7"/>`
+      + `<circle cx="${cx}" cy="${cy}" r="${Math.max(0.8, k * 0.06)}" fill="${dark ? "#8a7560" : "#6d4c2f"}"/>`;
+  }
+  return s;
+}
+
 /** The item on screen goes to the Combine tray (one per click), carrying what Revit will need to build it. */
 function pushGardenItemToCombine() {
   if (typeof addCombineItem !== "function") return;
