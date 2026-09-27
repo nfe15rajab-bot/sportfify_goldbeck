@@ -133,6 +133,10 @@ function landingShowSlide(i) {
   if (!landingCarouselImgEl || !slide) return;
   landingCarouselImgEl.style.opacity = "0";
   setTimeout(() => {
+    // A transition already in flight (this very call included — the unconditional landingShowSlide(0) below fires
+    // before the first workspace poll can possibly answer) must not clobber the caption after landingPreview3d.js
+    // has since switched to the live 3D view: it owns the caption while showing, same as it owns the canvas/wrap swap.
+    if (typeof landingPreview3d !== "undefined" && landingPreview3d.showing) return;
     landingCarouselImgEl.src = slide.src;
     if (landingCarouselCaptionEl) landingCarouselCaptionEl.textContent = slide.caption;
     landingCarouselImgEl.style.opacity = "1";
