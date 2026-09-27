@@ -533,6 +533,14 @@ html[data-role="client"] .planner-only { display: none !important; }
 .toast-title { font-weight: 700; font-size: 12px; color: var(--text-success); display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
 .toast-body { color: var(--text-secondary); line-height: 1.4; }
 
+/* ── One step through the design workflow (workflowNext.js) — fixed on the page, not built into any one tab's own
+   (very different) markup, so it appears the same way in all of them; clear of .combine-zoom-controls (top-right,
+   inside the canvas) and .toast-container (top-right, the viewport) since this sits at the opposite corner. ── */
+.workflow-next-btn { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; align-items: center; gap: 7px; padding: 11px 18px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--fill-accent), var(--violet)); color: #fff; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 26px rgba(61,111,255,0.35); transition: transform 0.12s ease; }
+.workflow-next-btn:hover { transform: translateY(-1px); }
+.workflow-next-btn[hidden] { display: none; }
+.workflow-next-btn i { font-size: 14px; }
+
 /* ── Activity bar ── */
 /* VS Code-style: a persistent, always-visible rail for Sport/Garden/Combine
    specifically (Data/Guide/Analysis/Compare stay in the top .mode-toggle) —

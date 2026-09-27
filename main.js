@@ -243,6 +243,7 @@ function setMode(mode) {
   }
 
   activeMode = mode;
+  if (typeof workflowNextUpdate === "function") workflowNextUpdate(mode);
 }
 
 /* ── Role toggle (Planner / Client) ──
