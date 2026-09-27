@@ -251,9 +251,11 @@ function findSetbackViolations(items, roof, rules) {
  * populated by algoApply — see algoPlacementUI.js), drawn the same way
  * algoDrawPreview already draws it in the Algorithmic placement preview so
  * the board doesn't make a different claim about the zone than the panel
- * that produced it. Purely visual: pointer-events none, not part of
- * combineState.items, so it is never selectable/draggable and never enters
- * the clearance/setback/overlap checks.
+ * that produced it. Not part of combineState.items, so it never enters the
+ * clearance/setback/overlap checks and cannot be dragged; it CAN be selected
+ * (click the wall or its door: the whole wall, kind "wall") and removed with
+ * Remove selected / Delete. It also goes when the Locker or Bathroom module is
+ * removed, or with Clear all (combineController.js). (user, 2026-09-27)
  */
 function combineWallSvg(walls, scale, roofOx, roofOy) {
   if (!walls || !walls.length) return "";
@@ -264,16 +266,20 @@ function combineWallSvg(walls, scale, roofOx, roofOy) {
   const wallColor = "#ffffff", lineColor = "#2b2f38";
   let svg = "";
   walls.forEach(w => {
-    svg += `<g pointer-events="none">` + w.rects.map(r => {
+    const sel = combineState.selectedKind === "wall" && combineState.selectedId === w.id;
+    const stroke = sel ? "#2563eb" : lineColor, wid = escapeHtml(w.id);
+    svg += `<g data-wall-id="${wid}" style="cursor:pointer"><title>Wall of the indoor zone — click to select, then Remove selected</title>` + w.rects.map(r => {
       const x = roofOx + r[0] * scale, y = roofOy + r[1] * scale;
       const rw = (r[2] - r[0]) * scale, rh = (r[3] - r[1]) * scale;
-      return `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="${wallColor}" stroke="${lineColor}" stroke-width="1.5"/>`;
-    }).join("") + `</g>`;
+      return `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="${sel ? "#dbeafe" : wallColor}" stroke="${stroke}" stroke-width="${sel ? 2.5 : 1.5}"/>`;
+    }).join("");
     if (w.door) {
       const d = w.door;
       const x1 = roofOx + d.x0 * scale, y1 = roofOy + d.y0 * scale, x2 = roofOx + d.x1 * scale, y2 = roofOy + d.y1 * scale;
-      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lineColor}" stroke-width="2" stroke-dasharray="4,3" pointer-events="none"/>`;
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="2" stroke-dasharray="4,3"/>`
+        + `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="transparent" stroke-width="10"/>`;   // an easier target than the thin dashed door
     }
+    svg += `</g>`;
   });
   return svg;
 }
@@ -419,6 +425,7 @@ document.getElementById("combine-legend")?.addEventListener("click", e => {
 function drawCombineCanvas() {
   const svg = document.getElementById("combine-canvas");
   if (!svg) return;
+  if (typeof syncGardenPresetButtons === "function") syncGardenPresetButtons();   // the Garden Core presets show only on a Garden Core roof
   const roof = combineState.roof;
   const items = combineState.items;
   const entries = combineState.entryPoints;
@@ -1137,6 +1144,15 @@ function initCombineInteractions() {
     const ghostEl = e.target.closest("[data-suggestion-index]");
     if (ghostEl) {
       if (typeof applySuggestion === "function") applySuggestion(Number(ghostEl.dataset.suggestionIndex));
+      return;
+    }
+
+    // the indoor zone's wall (from Apply): the whole wall is selected, so Remove selected / Delete can take it away
+    const wallEl = e.target.closest("[data-wall-id]");
+    if (wallEl) {
+      combineState.selectedKind = "wall";
+      combineState.selectedId = wallEl.dataset.wallId;
+      if (typeof refreshSuggestions === "function") refreshSuggestions(); else drawCombineCanvas();
       return;
     }
 

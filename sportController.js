@@ -93,17 +93,40 @@ function buildActivityBar() {
   });
 }
 
+/**
+ * The court and its run-off as the chosen sport really has them (lengths in m; run-off at the ends and at the sides). Basketball and volleyball specify
+ * themselves: a volleyball court is always 18 x 9 inside its free zone, and basketball's competition 34 x 19 is the 28 x 15 court plus its free zone.
+ */
+function sportCourtAndRunoff() {
+  const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
+  if (state.sport === "volleyball" && typeof volleyballCourt === "function") {
+    const vs = Object.assign({}, volleyballState, { variant: state.variant }), c = volleyballCourt(vs), z = volleyballFreeZone(vs);
+    return { court_l: c.length_m, court_w: c.width_m, run_ends: z.ends_m, run_sides: z.sides_m };
+  }
+  if (state.sport === "basketball" && typeof basketballPlayArea === "function") {
+    const p = basketballPlayArea(Object.assign({}, basketballState, { variant: state.variant }));
+    return { court_l: p.length_m, court_w: p.width_m, run_ends: p.insetX_m, run_sides: p.insetY_m };
+  }
+  return { court_l: d.l, court_w: d.w, run_ends: d.runoff, run_sides: d.runoff };
+}
+
+/** What the court takes on the roof: the court plus its run-off all round. */
+function sportFootprint() {
+  const c = sportCourtAndRunoff();
+  return { length_m: c.court_l + c.run_ends * 2, width_m: c.court_w + c.run_sides * 2 };
+}
+
 /* ── UI Syncing ── */
 function updateUI() {
   const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
-  document.getElementById("d-l").textContent = d.l;
-  document.getElementById("d-w").textContent = d.w;
-  document.getElementById("d-run").textContent = d.runoff;
-  document.getElementById("d-h").textContent = d.h;
-  // the footprint the court really takes (as Push to Combine places it): a volleyball court works out its own free zone
-  const fp = (state.sport === "volleyball" && typeof volleyballFootprint === "function") ? volleyballFootprint()
-    : { length_m: d.l + d.runoff * 2, width_m: d.w + d.runoff * 2 };
+  const c = sportCourtAndRunoff();
   const r2 = v => Math.round(v * 100) / 100;
+  document.getElementById("d-l").textContent = r2(c.court_l);
+  document.getElementById("d-w").textContent = r2(c.court_w);
+  document.getElementById("d-run").textContent = c.run_ends === c.run_sides ? c.run_sides : `${c.run_ends} / ${c.run_sides}`;
+  document.getElementById("d-h").textContent = d.h;
+  // the footprint the court really takes (as Push to Combine places it)
+  const fp = sportFootprint();
   document.getElementById("d-total").textContent = `${r2(fp.length_m)} × ${r2(fp.width_m)}`;
 
   const sportLabel = FIELD_SPORTS[state.sport]?.label.replace(/\s*\(.*\)/, "") || state.sport;
@@ -191,10 +214,11 @@ function buildSportPayload() {
   const referenceMaterial = readReferenceSelection(document.getElementById("sportMaterialSelect"), document.getElementById("sportMaterialManual"), sportMaterialRefOptions)
     || QUALITY_REFERENCE_MATERIAL[state.quality] || null;
   const referenceProvider = readReferenceSelection(document.getElementById("sportProviderSelect"), document.getElementById("sportProviderManual"), sportProviderRefOptions);
+  const c = sportCourtAndRunoff();    // the court itself and its run-off (ends / sides), so court + run-off = the piece's footprint
   return {
     version: "1.0", generator: "Sportify",
     quality_key: typeof getQualityKey === "function" ? getQualityKey(state.sport, state.variant, state.quality) : "",
-    field: { sport: state.sport, variant: state.variant, norm: d.norm, dimensions: { length_m: d.l, width_m: d.w, runoff_m: d.runoff, min_height_m: d.h }, capacity: { seats: state.capacity, side_stands: state.capacity > 0 } },
+    field: { sport: state.sport, variant: state.variant, norm: d.norm, dimensions: { length_m: c.court_l, width_m: c.court_w, runoff_m: c.run_sides, runoff_ends_m: c.run_ends, min_height_m: d.h }, capacity: { seats: state.capacity, side_stands: state.capacity > 0 } },
     materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: state.quality, reference_material: referenceMaterial, reference_provider: referenceProvider },
     // A specified sport carries its own choices, so a placed court keeps the
     // surface and mounting it was configured with rather than re-reading
@@ -350,15 +374,12 @@ document.getElementById("btn-push-activity").addEventListener("click", () => {
 });
 
 document.getElementById("btn-push-sport").addEventListener("click", () => {
-  const d = FIELDS[state.sport]?.[state.variant] || FIELDS.polyvalent.mini;
-
   // A sport that specifies itself works out its own footprint. Volleyball's
   // free zone is 6.5 m at the ends for FIVB events and 5 m at the sides, which
   // the single `runoff` figure cannot express — and the piece on the roof has
   // to be the same size as the thing the panel just drew.
-  const fp = (state.sport === "volleyball" && typeof volleyballFootprint === "function")
-    ? volleyballFootprint()
-    : { length_m: d.l + d.runoff * 2, width_m: d.w + d.runoff * 2 };
+  // (basketball likewise: its competition area already includes the free zone, so the run-off is not added twice)
+  const fp = sportFootprint();
 
   addCombineItem({
     kind: "field", label: `${state.sport} (${state.variant})`,

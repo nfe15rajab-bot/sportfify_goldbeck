@@ -256,14 +256,25 @@ function deleteSelectedEntity() {
     // points, not in combineState.items) was falling through to the items filter below and
     // never actually being removed.
     if (typeof removeZone === "function") removeZone(combineState.selectedId);
+  } else if (combineState.selectedKind === "wall") {
+    combineState.walls = (combineState.walls || []).filter(w => w.id !== combineState.selectedId);
   } else {
+    // the indoor zone's wall stands round the Locker and Bathroom modules: removing either takes the wall with it (user, 2026-09-27)
+    const gone = combineState.items.find(i => i.id === combineState.selectedId);
     combineState.items = combineState.items.filter(i => i.id !== combineState.selectedId);
+    if (gone && isServiceModuleItem(gone)) combineState.walls = [];
   }
   combineState.selectedId = null;
   combineState.selectedKind = null;
   if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas();
 }
 document.getElementById("btn-remove-selected").addEventListener("click", deleteSelectedEntity);
+
+/** Is this board piece the Locker & Dressing Room or the Bathroom & Shower module (the ones the indoor zone's wall stands round)? */
+function isServiceModuleItem(item) {
+  const id = item && item.sourceJson && item.sourceJson.activity && item.sourceJson.activity.type_id;
+  return id === "locker_module" || id === "bathroom_module";
+}
 
 /**
  * Delete/Backspace removes whatever's currently selected on the Combine
@@ -280,7 +291,7 @@ document.addEventListener("keydown", e => {
   e.preventDefault();
   deleteSelectedEntity();
 });
-document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.tray = []; combineState.selectedId = null; combineState.selectedKind = null; activeGoldbeckPresetId = null; updateGoldbeckShuffleVisibility(); if(typeof resetCombineView === "function") resetCombineView(); if(typeof renderCombineTray === "function") renderCombineTray(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.tray = []; combineState.walls = []; combineState.selectedId = null; combineState.selectedKind = null; activeGoldbeckPresetId = null; updateGoldbeckShuffleVisibility(); if(typeof resetCombineView === "function") resetCombineView(); if(typeof renderCombineTray === "function") renderCombineTray(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 function autoPlace(direction) {
   if (combineState.selectedKind !== "item") return;
@@ -714,7 +725,7 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.walls = Array.isArray(payload.walls)
     ? payload.walls
         .filter(w => w && Array.isArray(w.rects_m) && w.door)
-        .map(w => ({ thicknessM: w.thickness_m, rects: w.rects_m, door: w.door, algorithmic: true }))
+        .map((w, i) => ({ id: `wall_loaded_${Date.now()}_${i}`, thicknessM: w.thickness_m, rects: w.rects_m, door: w.door, algorithmic: true }))   // an id, so the wall can be selected and removed
     : [];
 
   // Algorithmic placement's own lifts / ramps / stairs - a plan-in-progress that never reached Apply is otherwise lost by a save/resume.

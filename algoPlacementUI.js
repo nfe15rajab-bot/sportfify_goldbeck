@@ -186,8 +186,9 @@ function algoTierOf(name) {
  */
 function algoAdoptSpecifiedSizes() {
   let changed = false;
-  // every item sized in tiers takes the playing area of the tier chosen in the Sport tab (the run-off is not added yet); the specified sports below then
-  // replace theirs with what their own module works out for that tier
+  // every item sized in tiers takes the tier chosen in the Sport tab: a field sport its court PLUS the tier's run-off all round (user, 2026-09-27: every
+  // element carries its run-off), an activity its tier size; the specified sports below then replace theirs with what their own module works out for that
+  // tier (volleyball: court + free zone, basketball: court + run-off)
   // (an activity with one size takes the Sport tab's footprint too, so the two lists never disagree - e.g. pickleball's court with its run-off)
   for (const [name, cat] of Object.entries(ALGO_CATALOGUE)) {
     const sp = AlgoPlacement.SPORTS.find(s => s.name === name), tier = algoTierOf(name);
@@ -197,7 +198,8 @@ function algoAdoptSpecifiedSizes() {
     const d = cat.kind === "field" ? (typeof FIELDS !== "undefined" && FIELDS[cat.sport] && FIELDS[cat.sport][tier])
                                    : act && (tier ? act.variants && act.variants[tier] : { l: act.length, w: act.width });
     if (!d) continue;
-    const long = algoRound(Math.max(d.l, d.w)), short = algoRound(Math.min(d.l, d.w));
+    const run = cat.kind === "field" ? (d.runoff || 0) * 2 : 0;
+    const long = algoRound(Math.max(d.l, d.w) + run), short = algoRound(Math.min(d.l, d.w) + run);
     if (sp.long !== long || sp.short !== short) { sp.long = long; sp.short = short; changed = true; }
   }
   for (const name of Object.keys(ALGO_SPECIFIED)) {
@@ -971,8 +973,12 @@ function algoCourtMarkings(c, sp) {
     if (c.name === "Basketball Court" && typeof basketballCourtSvg === "function") inner = basketballCourtSvg(0, 0, L, S, algoSpecifiedState(c.name) || basketballState, "full", false);
     else if (c.name === "Volleyball" && typeof volleyballCourtSvg === "function") inner = volleyballCourtSvg(0, 0, L, S, algoSpecifiedState(c.name) || volleyballState, "full", false);
     else if (c.name === "Padel Tennis Court" && typeof padelCourtSvg === "function" && Math.abs(L / S - 2) < 0.05) inner = padelCourtSvg(0, 0, L, S, padelState, "full", false);
-    else if (cat && cat.kind === "field" && typeof getFieldLines === "function")
-      inner = `<rect x="0" y="0" width="${L}" height="${S}" fill="#ffcc9e"/>${getFieldLines(cat.sport, 0, 0, L, S, false)}`;
+    else if (cat && cat.kind === "field" && typeof getFieldLines === "function") {
+      // the court inside its run-off band, as the Sport tab draws it
+      const run = algoFieldRunoff(c.name), rx = run.ends * K, ry = run.sides * K;
+      inner = `<rect x="0" y="0" width="${L}" height="${S}" fill="#f3dcc4"/><rect x="${rx}" y="${ry}" width="${L - 2 * rx}" height="${S - 2 * ry}" fill="#ffcc9e"/>`
+        + `<rect x="${rx}" y="${ry}" width="${L - 2 * rx}" height="${S - 2 * ry}" fill="none" stroke="#b07a4a" stroke-width="1" stroke-dasharray="6 4"/>${getFieldLines(cat.sport, rx, ry, L - 2 * rx, S - 2 * ry, false)}`;
+    }
     else if (cat && cat.kind === "activity" && typeof ACTIVITIES !== "undefined" && ACTIVITIES[cat.id] && ACTIVITIES[cat.id].play && typeof activityCourtSvg === "function") {
       const a = ACTIVITIES[cat.id];
       inner = `<rect x="0" y="0" width="${L}" height="${S}" fill="#fbfaf7"/>` + activityCourtSvg(Object.assign({}, a, { length: L / K, width: S / K }), 0, 0, L, S, false).svg;
@@ -1103,6 +1109,17 @@ function algoItemFrame(sp) {
   return sp.swap ? { length_m: sp.short, width_m: sp.long } : { length_m: sp.long, width_m: sp.short };
 }
 
+/** A field sport's run-off in the plan (m, at the ends and at the sides), as the Sport tab has it for the chosen tier: volleyball and basketball from their modules. */
+function algoFieldRunoff(name) {
+  const cat = ALGO_CATALOGUE[name], tier = algoTierOf(name) || "mini";
+  if (!cat || cat.kind !== "field") return { ends: 0, sides: 0 };
+  const st = ALGO_SPECIFIED[name] ? algoSpecifiedState(name) : null;
+  if (name === "Volleyball" && st && typeof volleyballFreeZone === "function") { const z = volleyballFreeZone(st); return { ends: z.ends_m, sides: z.sides_m }; }
+  if (name === "Basketball Court" && st && typeof basketballPlayArea === "function") { const p = basketballPlayArea(st); return { ends: p.insetX_m, sides: p.insetY_m }; }
+  const d = typeof FIELDS !== "undefined" && FIELDS[cat.sport] && FIELDS[cat.sport][tier];
+  return { ends: d ? d.runoff || 0 : 0, sides: d ? d.runoff || 0 : 0 };
+}
+
 /** A Garden tab block's size in metres, { l, w }, as the Garden tab has it now; null if planters.js is not loaded. */
 function algoGardenBlockSize(id) {
   if (typeof GARDEN_BENCH !== "undefined" && id === GARDEN_BENCH.id) return { l: GARDEN_BENCH.length / 1000, w: GARDEN_BENCH.width / 1000 };
@@ -1126,11 +1143,13 @@ function algoCatalogueSource(name, sp) {
     const d = FIELDS[cat.sport][variant] || Object.values(FIELDS[cat.sport])[0];
     const mat = typeof MATERIALS !== "undefined" ? MATERIALS[quality] : { floor: "", marking: "", gradin: "" };
     const frame = algoItemFrame(sp);
+    // the packing tool's sizes are FINAL envelopes (court + run-off), so the court is the envelope less the run-off - as the Sport tab's Push sends it
+    // (a specified sport's own payload below says the same for basketball / volleyball)
+    const run = algoFieldRunoff(name);
     const src = {
       version: "1.0", generator: "Sportify-Algorithmic-Placement",
       quality_key: typeof getQualityKey === "function" ? getQualityKey(cat.sport, variant, quality) : "",
-      // the packing tool's sizes are FINAL envelopes (run-off included), so the run-off is not added again
-      field: { sport: cat.sport, variant, norm: d.norm, dimensions: { length_m: frame.length_m, width_m: frame.width_m, runoff_m: 0, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
+      field: { sport: cat.sport, variant, norm: d.norm, dimensions: { length_m: algoRound(frame.length_m - run.ends * 2), width_m: algoRound(frame.width_m - run.sides * 2), runoff_m: run.sides, runoff_ends_m: run.ends, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
       materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: quality, reference_material: null, reference_provider: null },
       layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"]
     };
