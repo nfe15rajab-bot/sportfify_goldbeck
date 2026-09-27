@@ -28,6 +28,20 @@ const gatePresetsEl = document.getElementById("sessionGatePresets");
 const gatePresetsBackBtn = document.getElementById("btn-gate-presets-back");
 const presetCardsEl = document.getElementById("presetCards");
 
+// ── Landing: logo, sample video, feature preview, New to Sportify / I've used Sportify before ──
+const gateNextBtn = document.getElementById("btn-gate-next");
+const gateSplitBackBtn = document.getElementById("btn-gate-split-back");
+const gateOnboardBtn = document.getElementById("btn-gate-onboard");
+const gateReturningBtn = document.getElementById("btn-gate-returning");
+const gateReturningBackBtn = document.getElementById("btn-gate-returning-back");
+const landingPreviewStepEl = document.getElementById("landingPreviewStep");
+const landingSplitEl = document.getElementById("landingSplit");
+const landingVideoEl = document.getElementById("landingVideo");
+const landingVideoToggleBtn = document.getElementById("btn-landing-video-toggle");
+// Declared here (not beside the rest of the video wiring below) because showPreviewStep — defined next, and called
+// as soon as gateHasHistory() is checked, before the video block runs — already needs to read it.
+const gatePrefersReducedMotion = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 let gateAutosave = null;
 try {
   const raw = localStorage.getItem("sportify-autosave");
@@ -39,6 +53,186 @@ if (gatePieceCount > 0) {
   gateLoadLabel.textContent = `Resume Last Session (${gatePieceCount} piece${gatePieceCount === 1 ? "" : "s"})`;
   gateFileLink.style.display = "inline";
 }
+
+/**
+ * Whether this browser has been through Sportify before: an autosave to resume, or a profile that has already been
+ * set up (by the quiz or by hand). Decides which of the landing's three steps opens by default — the marketing
+ * preview for a genuinely first visit, straight to the practical choices otherwise — without asking either time:
+ * someone who wants the other one is one click away ("Back", at every step).
+ *
+ * The three steps, in order: 1 preview (logo, sample video, what Sportify does — ends in "Next"), 2 the split
+ * (New to Sportify / I've used it before), 3 the practical actions (Resume/Start new/Preset). A history browser
+ * skips straight to 3; reopenSessionGate() (mid-session) does too, for the same reason.
+ */
+function gateHasHistory() {
+  return gatePieceCount > 0 || (typeof profileState !== "undefined" && !!profileState.profile && !!profileState.profile.onboarded);
+}
+
+// gatePresetsBtn (below) sets gateMainActionsEl.style.display directly (an inline style, which would otherwise beat
+// the plain `hidden` property forever after — an inline style always wins over both the [hidden] rule and the
+// .session-gate-actions class rule, whichever was set last): every step change clears it first, so `.hidden` alone
+// keeps deciding this element's visibility, same as landingPreviewStepEl/landingSplitEl.
+function gateShowMainActions(show) {
+  gateMainActionsEl.style.display = "";
+  gateMainActionsEl.hidden = !show;
+}
+function showPreviewStep() {
+  landingPreviewStepEl.hidden = false;
+  landingSplitEl.hidden = true;
+  gateShowMainActions(false);
+  gateCardEl.classList.add("session-gate-landing");
+  if (!gatePrefersReducedMotion) landingVideoEl?.play().catch(() => {});
+}
+function showSplitStep() {
+  landingPreviewStepEl.hidden = true;
+  landingSplitEl.hidden = false;
+  gateShowMainActions(false);
+  gateCardEl.classList.add("session-gate-landing");
+  landingVideoEl?.pause();
+}
+/** The returning-user's practical actions (Resume/Start new/Preset) — the video pauses rather than keep decoding off-screen (it has no audio to lose). */
+function showReturningActions() {
+  landingPreviewStepEl.hidden = true;
+  landingSplitEl.hidden = true;
+  gateShowMainActions(true);
+  gateCardEl.classList.remove("session-gate-landing");
+  landingVideoEl?.pause();
+}
+if (gateHasHistory()) showReturningActions(); else showPreviewStep();
+
+gateNextBtn?.addEventListener("click", showSplitStep);
+gateSplitBackBtn?.addEventListener("click", showPreviewStep);
+gateOnboardBtn?.addEventListener("click", () => {
+  leaveSessionGate();
+  // an explicit ask, unlike quizMaybeOpen elsewhere: opens even for someone the quiz has already met
+  setTimeout(() => { if (typeof quizOpen === "function") quizOpen(null); }, 300);
+});
+gateReturningBtn?.addEventListener("click", showReturningActions);
+gateReturningBackBtn?.addEventListener("click", showSplitStep);      // back from the actions goes to the split, one step, not all the way to the preview
+
+// The sample video: muted (so autoplay is allowed at all) and looping — a glance, not something to listen to. Respects
+// prefers-reduced-motion (paused, with the toggle still there to start it on request, gatePrefersReducedMotion
+// above) and a browser that blocks autoplay regardless (Safari's stricter heuristics, say) the same way: the toggle
+// button is the fallback either way.
+function gateSetVideoToggleIcon(playing) {
+  if (!landingVideoToggleBtn) return;
+  landingVideoToggleBtn.innerHTML = playing ? '<i class="ti ti-player-pause-filled" aria-hidden="true"></i>' : '<i class="ti ti-player-play-filled" aria-hidden="true"></i>';
+  const label = playing ? "Pause the sample" : "Play the sample";
+  landingVideoToggleBtn.title = label;
+  landingVideoToggleBtn.setAttribute("aria-label", label);
+}
+if (landingVideoEl) {
+  // The video's own play/pause events, not just the two spots here that ask for one — a browser that silently stops
+  // autoplay a moment in (throttling a background/newly-opened tab, say) or a native media key otherwise leaves the
+  // button's icon claiming the opposite of what is actually happening.
+  landingVideoEl.addEventListener("play", () => gateSetVideoToggleIcon(true));
+  landingVideoEl.addEventListener("pause", () => gateSetVideoToggleIcon(false));
+
+  // The sample opens on a title card (what the mechanism is, its numbers) for its own good reason elsewhere (the
+  // analysis report it is really made for), but a couple of seconds of still text is a poor first thing to show on
+  // a landing page. Skipped on first play and again on every loop (the native `loop` attribute restarts at 0, not
+  // here, so this listens for that restart itself: currentTime jumping backwards means a new loop just began).
+  const LANDING_VIDEO_SKIP_S = 2;
+  let landingVideoLastT = 0;
+  if (landingVideoEl.readyState >= 1) landingVideoEl.currentTime = LANDING_VIDEO_SKIP_S;    // metadata (readyState HAVE_METADATA) may already be there before this script runs
+  else landingVideoEl.addEventListener("loadedmetadata", () => { landingVideoEl.currentTime = LANDING_VIDEO_SKIP_S; }, { once: true });
+  landingVideoEl.addEventListener("timeupdate", () => {
+    if (landingVideoEl.currentTime < landingVideoLastT - 0.5) landingVideoEl.currentTime = LANDING_VIDEO_SKIP_S;
+    landingVideoLastT = landingVideoEl.currentTime;
+  });
+
+  if (gatePrefersReducedMotion) landingVideoEl.pause();
+  else landingVideoEl.play().catch(() => {});
+  landingVideoToggleBtn?.addEventListener("click", () => {
+    if (landingVideoEl.paused) landingVideoEl.play().catch(() => {});
+    else landingVideoEl.pause();
+  });
+}
+
+// ── Link a Revit file: two ways, a toggle between them ──
+// "Browse" remembers a picked .rvt file's NAME only (and its size) as a label for this workspace — no browser gives
+// a page the file's real location, in any of them, for the same reason a page cannot silently read your disk.
+// "Pick the newest export" is the web side of what Import Configuration does in Revit: the newest
+// sportify_combined_revit*.json the add-in's Layouts folder has, loaded the same way any other session file is.
+const gateRevitModeBrowseBtn = document.getElementById("btn-gate-revit-mode-browse");
+const gateRevitModeNewestBtn = document.getElementById("btn-gate-revit-mode-newest");
+const gateRevitBrowseModeEl = document.getElementById("gateRevitBrowseMode");
+const gateRevitNewestModeEl = document.getElementById("gateRevitNewestMode");
+const gateLinkRevitBtn = document.getElementById("btn-gate-link-revit");
+const gateRevitFileInput = document.getElementById("gate-revit-file");
+const gateRevitLinkStatusEl = document.getElementById("sessionGateRevitLinkStatus");
+const gateLoadNewestExportBtn = document.getElementById("btn-gate-load-newest-export");
+const gateNewestExportStatusEl = document.getElementById("sessionGateNewestExportStatus");
+const REVIT_LINK_KEY = "sportify-linked-revit-file";
+
+function gateSetRevitMode(mode) {
+  const browse = mode === "browse";
+  gateRevitModeBrowseBtn.classList.toggle("active", browse);
+  gateRevitModeBrowseBtn.setAttribute("aria-selected", String(browse));
+  gateRevitModeNewestBtn.classList.toggle("active", !browse);
+  gateRevitModeNewestBtn.setAttribute("aria-selected", String(!browse));
+  gateRevitBrowseModeEl.hidden = !browse;
+  gateRevitNewestModeEl.hidden = browse;
+}
+gateRevitModeBrowseBtn?.addEventListener("click", () => gateSetRevitMode("browse"));
+gateRevitModeNewestBtn?.addEventListener("click", () => gateSetRevitMode("newest"));
+
+/** The file linked last time, from localStorage: { name, size, linkedAt }, or null. */
+function gateLinkedRevitFile() {
+  try {
+    const raw = localStorage.getItem(REVIT_LINK_KEY);
+    const link = raw ? JSON.parse(raw) : null;
+    return link && typeof link.name === "string" ? link : null;
+  } catch (e) { return null; }
+}
+function gateRefreshRevitLinkStatus() {
+  const link = gateLinkedRevitFile();
+  if (link) {
+    const mb = Number(link.size) > 0 ? ` (${(link.size / 1048576).toFixed(1)} MB)` : "";
+    gateRevitLinkStatusEl.textContent = `Linked: ${link.name}${mb} — remembered by name only; browsers never give a page a file's real location.`;
+    gateRevitLinkStatusEl.hidden = false;
+    gateLinkRevitBtn.innerHTML = '<i class="ti ti-link" aria-hidden="true"></i> Change the linked Revit file';
+  } else {
+    gateRevitLinkStatusEl.hidden = true;
+    gateLinkRevitBtn.innerHTML = '<i class="ti ti-link" aria-hidden="true"></i> Link a Revit file';
+  }
+}
+gateRefreshRevitLinkStatus();
+
+gateLinkRevitBtn?.addEventListener("click", () => gateRevitFileInput.click());
+gateRevitFileInput?.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (file) {
+    try { localStorage.setItem(REVIT_LINK_KEY, JSON.stringify({ name: file.name, size: file.size, linkedAt: new Date().toISOString() })); }
+    catch (err) { /* private window or storage full: the picker still worked, just nothing is remembered for next time */ }
+    gateRefreshRevitLinkStatus();
+  }
+  e.target.value = "";
+});
+
+/** Newest sportify_combined_revit*.json in the add-in's Layouts folder (GET /deliverables), or null with why not. */
+async function gateNewestExport() {
+  const list = await localApi("/deliverables");
+  if (!list.ok) return { file: null, reason: "Revit not open: open a project in Revit with the Sportify add-in loaded, then try again." };
+  const layouts = ((list.json && list.json.files) || []).filter(f => f.kind === "layouts" && /^sportify_combined_revit.*\.json$/i.test(f.name));
+  if (layouts.length === 0) return { file: null, reason: "No export in the Layouts folder yet — use Export Combined JSON in Revit first." };
+  layouts.sort((a, b) => new Date(b.modified_utc) - new Date(a.modified_utc));
+  return { file: layouts[0], reason: "" };
+}
+gateLoadNewestExportBtn?.addEventListener("click", async () => {
+  gateNewestExportStatusEl.textContent = "Looking for the newest export…";
+  const { file, reason } = await gateNewestExport();
+  if (!file) { gateNewestExportStatusEl.textContent = reason; return; }
+  const got = await localApi(file.url);
+  if (!got.ok || !got.json) { gateNewestExportStatusEl.textContent = `Couldn't read ${file.name}: ${got.error || "not a valid session"}.`; return; }
+  try {
+    applySessionSnapshot(got.json);
+    showToast("Session loaded", `${file.name} (${combineState.items.length} piece(s) restored).`);
+    leaveSessionGate();
+  } catch (err) {
+    gateNewestExportStatusEl.textContent = `Load failed: ${err.message}`;
+  }
+});
 
 function leaveSessionGate() {
   sessionGateEl.classList.add("session-gate-hidden");
@@ -52,6 +246,7 @@ function leaveSessionGate() {
  * preset/Load a file — so leaving the current work is a choice made there, not something this button does by itself.
  */
 function reopenSessionGate() {
+  showReturningActions();      // already using Sportify right now, so straight to the practical choices — not the first-run marketing preview
   sessionGateEl.style.display = "flex";
   sessionGateEl.getBoundingClientRect(); // force layout so the class change below transitions in rather than snapping
   sessionGateEl.classList.remove("session-gate-hidden");

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-27-sukriti-quietgarden"></script>
+  <script src="themeInit.js?v=2026-09-27-landing-fix2"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -14,7 +14,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org https://archive-api.open-meteo.com; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-27-sukriti-quietgarden" />
+  <link rel="stylesheet" href="style.css?v=2026-09-27-landing-fix2" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -24,11 +24,50 @@
     <div id="toast-container" class="toast-container"></div>
 
     <div id="sessionGate" class="session-gate">
-      <div class="session-gate-card">
-        <div class="session-gate-icon"><i class="ti ti-building-stadium" aria-hidden="true"></i></div>
-        <h1>Welcome to Sportify</h1>
-        <p class="hint">Pick up where you left off, or start a fresh roof layout.</p>
-        <div class="session-gate-actions" id="sessionGateMainActions">
+      <div class="session-gate-card session-gate-landing" id="sessionGateCard">
+        <div class="landing-logo">
+          <div class="landing-logo-badge"><i class="ti ti-building-stadium" aria-hidden="true"></i></div>
+          <div class="landing-logo-word">Sportify</div>
+        </div>
+        <p class="hint landing-tagline">Design a roof's sports and garden layout, push it into Revit, and see it analysed for structure, wind, rain, sun and use — all in one app.</p>
+
+        <div id="landingPreviewStep">
+          <div class="landing-preview" id="landingPreview">
+            <div class="landing-video-wrap">
+              <video class="landing-video" id="landingVideo" muted loop playsinline preload="auto">
+                <source src="samples/landing-sample.mp4" type="video/mp4" />
+              </video>
+              <button type="button" class="landing-video-toggle" id="btn-landing-video-toggle"><i class="ti ti-player-pause-filled" aria-hidden="true"></i></button>
+            </div>
+            <p class="hint landing-video-caption">A sail on movable masts — one of five kinetic shading families Sportify can design, build in Revit and simulate.</p>
+          </div>
+
+          <div class="landing-features" id="landingFeatures">
+            <div class="landing-feature"><i class="ti ti-hand-move" aria-hidden="true"></i><span>Place sports and garden pieces by hand, or let the algorithm pack them for you</span></div>
+            <div class="landing-feature"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span>Structure, wind, rain, sun and dynamic analyses — Revit's own, or a quick estimate here</span></div>
+            <div class="landing-feature"><i class="ti ti-building-arch" aria-hidden="true"></i><span>Pushes straight into Revit: the real roof in, the layout back out</span></div>
+            <div class="landing-feature"><i class="ti ti-plant-2" aria-hidden="true"></i><span>Garden zones, planters and kinetic shading, adaptive to the roof you actually have</span></div>
+          </div>
+
+          <button type="button" class="btn-export accent landing-next" id="btn-gate-next">Next<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+        </div>
+
+        <div class="landing-split" id="landingSplit" hidden>
+          <button class="session-gate-link session-gate-back" id="btn-gate-split-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
+          <button type="button" class="landing-choice" id="btn-gate-onboard">
+            <i class="ti ti-sparkles" aria-hidden="true"></i>
+            <span class="landing-choice-title">New to Sportify</span>
+            <span class="landing-choice-sub">Make a profile and answer four short questions — about a minute, and every answer can change later.</span>
+          </button>
+          <button type="button" class="landing-choice landing-choice-secondary" id="btn-gate-returning">
+            <i class="ti ti-user-check" aria-hidden="true"></i>
+            <span class="landing-choice-title">I've used Sportify before</span>
+            <span class="landing-choice-sub">Skip straight to resuming your last session, starting fresh, or a prebuilt layout.</span>
+          </button>
+        </div>
+
+        <div class="session-gate-actions" id="sessionGateMainActions" hidden>
+          <button class="session-gate-link session-gate-back" id="btn-gate-returning-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
           <button class="btn-export accent" id="btn-gate-load">
             <i class="ti ti-upload" aria-hidden="true"></i><span id="btn-gate-load-label">Load a Session</span>
           </button>
@@ -50,6 +89,21 @@
         </div>
         <button class="session-gate-link" id="btn-gate-load-file" style="display:none">Or load from a file instead</button>
         <input type="file" id="gate-load-file" accept=".json" style="display:none" />
+        <div class="session-gate-revit-link">
+          <div class="session-gate-revit-toggle" role="tablist" aria-label="Link a Revit file">
+            <button type="button" class="session-gate-revit-tab active" id="btn-gate-revit-mode-browse" role="tab" aria-selected="true">Browse to a .rvt file</button>
+            <button type="button" class="session-gate-revit-tab" id="btn-gate-revit-mode-newest" role="tab" aria-selected="false">Pick the newest export</button>
+          </div>
+          <div id="gateRevitBrowseMode">
+            <button type="button" class="session-gate-link" id="btn-gate-link-revit"><i class="ti ti-link" aria-hidden="true"></i> Link a Revit file</button>
+            <p class="hint" id="sessionGateRevitLinkStatus" hidden></p>
+          </div>
+          <div id="gateRevitNewestMode" hidden>
+            <button type="button" class="session-gate-link" id="btn-gate-load-newest-export"><i class="ti ti-file-import" aria-hidden="true"></i> Load the newest export from Revit</button>
+            <p class="hint" id="sessionGateNewestExportStatus"></p>
+          </div>
+        </div>
+        <input type="file" id="gate-revit-file" accept=".rvt" style="display:none" />
         <p class="hint" id="sessionGateStatus"></p>
       </div>
     </div>
@@ -1210,74 +1264,74 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="apiSession.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="data.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="carbon.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="activitiesData.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="vegetation.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="furnitureElevation.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="furniture.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="canvasFlyouts.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="zones.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="roofFinish.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="assumptions.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="roofFeatures.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="structure.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="assemblies.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="gardenData.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="prebuiltSessions.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="rules.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="sunPosition.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="balls.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="field.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="basketballCourt.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="volleyballCourt.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="activityField.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="planters.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="gardenPresets.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="padelCourt.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="gardenField.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="combineField.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="previewCore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="preview.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="siteField.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="siteWeather.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="buildupEditor.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="dataTab.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="localSession.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="revitBridge.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="sportController.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="gardenController.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="windZones.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="siteController.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="combineController.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="resultsStoreCore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="analysisController.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="analysisResults.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="resultsStore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="siteTabs.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="roofProgram.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="workspaceBridge.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="sessionNames.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="algoPlacementCore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="algoPlacementUI.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="revitLayers.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="compareController.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="designPanel.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="inspector.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="combineHistory.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="profileCore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="profile.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="quizCore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="quiz.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="tourCore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="tour.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="whereCore.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="where.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="sessionGate.js?v=2026-09-27-sukriti-quietgarden"></script>
-  <script src="main.js?v=2026-09-27-sukriti-quietgarden"></script>
+  <script src="escape.js?v=2026-09-27-landing-fix2"></script>
+  <script src="apiSession.js?v=2026-09-27-landing-fix2"></script>
+  <script src="data.js?v=2026-09-27-landing-fix2"></script>
+  <script src="carbon.js?v=2026-09-27-landing-fix2"></script>
+  <script src="activitiesData.js?v=2026-09-27-landing-fix2"></script>
+  <script src="vegetation.js?v=2026-09-27-landing-fix2"></script>
+  <script src="furnitureElevation.js?v=2026-09-27-landing-fix2"></script>
+  <script src="furniture.js?v=2026-09-27-landing-fix2"></script>
+  <script src="canvasFlyouts.js?v=2026-09-27-landing-fix2"></script>
+  <script src="zones.js?v=2026-09-27-landing-fix2"></script>
+  <script src="roofFinish.js?v=2026-09-27-landing-fix2"></script>
+  <script src="assumptions.js?v=2026-09-27-landing-fix2"></script>
+  <script src="roofFeatures.js?v=2026-09-27-landing-fix2"></script>
+  <script src="structure.js?v=2026-09-27-landing-fix2"></script>
+  <script src="assemblies.js?v=2026-09-27-landing-fix2"></script>
+  <script src="gardenData.js?v=2026-09-27-landing-fix2"></script>
+  <script src="prebuiltSessions.js?v=2026-09-27-landing-fix2"></script>
+  <script src="rules.js?v=2026-09-27-landing-fix2"></script>
+  <script src="sunPosition.js?v=2026-09-27-landing-fix2"></script>
+  <script src="balls.js?v=2026-09-27-landing-fix2"></script>
+  <script src="field.js?v=2026-09-27-landing-fix2"></script>
+  <script src="basketballCourt.js?v=2026-09-27-landing-fix2"></script>
+  <script src="volleyballCourt.js?v=2026-09-27-landing-fix2"></script>
+  <script src="activityField.js?v=2026-09-27-landing-fix2"></script>
+  <script src="planters.js?v=2026-09-27-landing-fix2"></script>
+  <script src="gardenPresets.js?v=2026-09-27-landing-fix2"></script>
+  <script src="padelCourt.js?v=2026-09-27-landing-fix2"></script>
+  <script src="gardenField.js?v=2026-09-27-landing-fix2"></script>
+  <script src="combineField.js?v=2026-09-27-landing-fix2"></script>
+  <script src="previewCore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="preview.js?v=2026-09-27-landing-fix2"></script>
+  <script src="siteField.js?v=2026-09-27-landing-fix2"></script>
+  <script src="siteWeather.js?v=2026-09-27-landing-fix2"></script>
+  <script src="buildupEditor.js?v=2026-09-27-landing-fix2"></script>
+  <script src="dataTab.js?v=2026-09-27-landing-fix2"></script>
+  <script src="localSession.js?v=2026-09-27-landing-fix2"></script>
+  <script src="revitBridge.js?v=2026-09-27-landing-fix2"></script>
+  <script src="sportController.js?v=2026-09-27-landing-fix2"></script>
+  <script src="gardenController.js?v=2026-09-27-landing-fix2"></script>
+  <script src="windZones.js?v=2026-09-27-landing-fix2"></script>
+  <script src="siteController.js?v=2026-09-27-landing-fix2"></script>
+  <script src="combineController.js?v=2026-09-27-landing-fix2"></script>
+  <script src="resultsStoreCore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="analysisController.js?v=2026-09-27-landing-fix2"></script>
+  <script src="analysisResults.js?v=2026-09-27-landing-fix2"></script>
+  <script src="resultsStore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-27-landing-fix2"></script>
+  <script src="siteTabs.js?v=2026-09-27-landing-fix2"></script>
+  <script src="roofProgram.js?v=2026-09-27-landing-fix2"></script>
+  <script src="workspaceBridge.js?v=2026-09-27-landing-fix2"></script>
+  <script src="sessionNames.js?v=2026-09-27-landing-fix2"></script>
+  <script src="algoPlacementCore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="algoPlacementUI.js?v=2026-09-27-landing-fix2"></script>
+  <script src="revitLayers.js?v=2026-09-27-landing-fix2"></script>
+  <script src="compareController.js?v=2026-09-27-landing-fix2"></script>
+  <script src="designPanel.js?v=2026-09-27-landing-fix2"></script>
+  <script src="inspector.js?v=2026-09-27-landing-fix2"></script>
+  <script src="combineHistory.js?v=2026-09-27-landing-fix2"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-27-landing-fix2"></script>
+  <script src="profileCore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="profile.js?v=2026-09-27-landing-fix2"></script>
+  <script src="quizCore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="quiz.js?v=2026-09-27-landing-fix2"></script>
+  <script src="tourCore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="tour.js?v=2026-09-27-landing-fix2"></script>
+  <script src="whereCore.js?v=2026-09-27-landing-fix2"></script>
+  <script src="where.js?v=2026-09-27-landing-fix2"></script>
+  <script src="sessionGate.js?v=2026-09-27-landing-fix2"></script>
+  <script src="main.js?v=2026-09-27-landing-fix2"></script>
 </body>
 </html>

@@ -696,14 +696,57 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Session gate ── */
 .session-gate { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(8,9,20,0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.25s ease; }
 .session-gate.session-gate-hidden { opacity: 0; pointer-events: none; }
-.session-gate-card { width: min(400px, 90vw); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 30px 26px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.4); transition: width 0.2s ease; }
+/* max-height + overflow-y:auto, not just centered by the flex parent above: a tall card (the landing's video/features/split
+   together) would otherwise have its top clipped off-screen with no way to reach it on a short window, the same "adaptive"
+   bug the Profile tab had — see sportify-hardening notes. */
+.session-gate-card { width: min(400px, 90vw); max-height: 90vh; overflow-y: auto; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 30px 26px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.4); transition: width 0.2s ease; }
 .session-gate-card.session-gate-wide { width: min(460px, 92vw); }
+.session-gate-card.session-gate-landing { width: min(640px, 94vw); }
 .session-gate-icon { font-size: 32px; color: var(--text-accent); margin-bottom: 8px; }
 .session-gate-card h1 { font-size: 19px; font-weight: 700; color: var(--text-primary); }
 .session-gate-card > .hint { font-size: 12px; margin: 6px 0 20px; }
 .session-gate-actions { display: flex; flex-direction: column; gap: 8px; }
+.session-gate-actions[hidden] { display: none; }
 .session-gate-link { display: block; margin: 12px auto 0; background: none; border: none; color: var(--text-accent); font-size: 11px; cursor: pointer; text-decoration: underline; font-family: var(--font-sans); }
 .session-gate-link:hover { color: var(--text-primary); }
+
+/* ── Landing (the session gate's first-run content: logo, a sample video, what Sportify does, New/Returning) ── */
+.landing-logo { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 6px; }
+.landing-logo-badge { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: calc(var(--radius) * 1.6); background: linear-gradient(135deg, var(--fill-accent), var(--violet)); color: #fff; font-size: 26px; box-shadow: 0 8px 20px rgba(61,111,255,0.35); }
+.landing-logo-word { font-size: 22px; font-weight: 800; letter-spacing: 0.01em; color: var(--text-primary); font-family: var(--font-sans); }
+.landing-tagline { font-size: 12.5px; line-height: 1.5; max-width: 46em; margin: 0 auto 18px; }
+
+.landing-preview { margin-bottom: 18px; }
+.landing-video-wrap { position: relative; border-radius: calc(var(--radius) * 1.4); overflow: hidden; background: #0b0c14; line-height: 0; }
+.landing-video { width: 100%; max-height: 220px; display: block; object-fit: cover; }
+.landing-video-toggle { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: none; background: rgba(8,9,20,0.55); color: #fff; font-size: 13px; cursor: pointer; backdrop-filter: blur(2px); }
+.landing-video-toggle:hover { background: rgba(8,9,20,0.8); }
+.landing-video-caption { font-size: 10.5px; margin: 6px 2px 0; text-align: left; }
+
+.landing-features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.landing-feature { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; text-align: left; font-size: 11px; line-height: 1.4; color: var(--text-secondary); background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); }
+.landing-feature i { flex-shrink: 0; font-size: 15px; color: var(--text-accent); margin-top: 1px; }
+@media (max-width: 560px) { .landing-features { grid-template-columns: 1fr; } }
+
+.landing-split { display: flex; gap: 10px; margin-bottom: 4px; }
+.landing-choice { flex: 1 1 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 16px 15px; border-radius: calc(var(--radius) * 1.4); border: 1px solid var(--border-accent); background: var(--bg-accent); color: var(--text-primary); font-family: var(--font-sans); cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; }
+.landing-choice:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0,0,0,0.18); }
+.landing-choice i { font-size: 20px; color: var(--text-accent); }
+.landing-choice-secondary { border-color: var(--border-strong); background: var(--surface-1); }
+.landing-choice-secondary i { color: var(--text-muted); }
+.landing-choice-title { font-size: 13.5px; font-weight: 700; }
+.landing-choice-sub { font-size: 10.5px; color: var(--text-muted); line-height: 1.4; font-weight: 400; }
+@media (max-width: 560px) { .landing-split { flex-direction: column; } }
+.landing-split .session-gate-back { width: 100%; margin: 0 0 2px; }
+.landing-next { width: 100%; margin-top: 4px; justify-content: center; }
+
+/* ── Link a Revit file (session gate): a file's name only — no browser gives a page a real file-system path ── */
+.session-gate-revit-link { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid var(--border-strong); }
+.session-gate-revit-toggle { display: flex; justify-content: center; gap: 4px; margin-bottom: 6px; }
+.session-gate-revit-tab { font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-muted); cursor: pointer; font-family: var(--font-sans); }
+.session-gate-revit-tab.active { background: var(--bg-accent); border-color: var(--border-accent); color: var(--text-accent); }
+.session-gate-revit-link .session-gate-link { margin-top: 0; }
+#sessionGateRevitLinkStatus, #sessionGateNewestExportStatus { font-size: 10.5px; margin: 4px 0 0; }
 
 /* ── Site: how the roof is defined, and what it is (roofProgram.js) ── */
 .roof-source { display: flex; flex-direction: column; gap: 6px; }
