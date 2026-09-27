@@ -305,6 +305,12 @@ document.getElementById("btn-add-entry").addEventListener("click", () => {
   combineState.tool = combineState.tool === "addEntry" ? null : "addEntry";
   syncAddEntryTool();
 });
+// Same toggle, reached from the on-canvas call-to-action (index.html's
+// #combine-entry-cta) instead of the Rules tab — one source of truth for
+// what "Add Entry Point" actually does.
+document.getElementById("btn-add-entry-cta")?.addEventListener("click", () => {
+  document.getElementById("btn-add-entry").click();
+});
 
 /* ── Design rules panel — planner tunes the thresholds, client sees them applied (inputs disabled via setRole) ── */
 function bindRuleInput(id, key, parse) {
