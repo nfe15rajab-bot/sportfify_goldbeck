@@ -53,7 +53,7 @@ const AlgoPlacement = (function () {
   // Pickleball (2026-09-26): with its run-off (18.3 x 9.1 m) it is a big court too, so it always takes the setback line, shuffled or not
   const BIG_COURTS = ["Multi Sport Court", "Basketball Court", "Handball", "Volleyball", "3x3 Streetbasketball", "Padel Tennis Court", "Multipurpose Sport Area", "Football", "Pickleball Court"];
 
-  const GROUPS = ["Courts", "Fitness & wellness", "Playground & leisure", "Services"];
+  const GROUPS = ["Courts", "Fitness & wellness", "Playground & leisure", "Services", "Garden"];
 
   // name (the stable key the solver, the tests and saved quantities use), label (what a person sees), group, long side (m), short side (m), colour -> FINAL envelopes (run-off included).
   // headcount = active people at once (null + headcountNote when the sheet gives no number), deadLoad = Gk in kN/m², assumed = the reference sheet marks that dead load "(Assumed)".
@@ -93,15 +93,19 @@ const AlgoPlacement = (function () {
     // Sportify places its ping pong tables outside (user, 2026-09-26); "Ping Pong" above stays the indoor one the zoning tests are built on
     { name: "Ping Pong Outdoor", label: "Ping Pong Station", group: "Courts", long: 5.7, short: 3.5, color: [255, 214, 0], headcount: 4, deadLoad: 0.30 },
     // two outdoor tables planned as one item, long edge to long edge (planLayout); never offered on its own, its size follows the table's
-    { name: "Ping Pong Pair", label: "Ping Pong Station (2 side by side)", group: "Courts", long: 7.0, short: 5.7, color: [255, 214, 0], headcount: 8, deadLoad: 0.30 }
+    { name: "Ping Pong Pair", label: "Ping Pong Station (2 side by side)", group: "Courts", long: 7.0, short: 5.7, color: [255, 214, 0], headcount: 8, deadLoad: 0.30 },
+    // the Garden tab's blocks (user, 2026-09-27): sizes follow the Garden tab (algoPlacementUI adopts them); no headcount / dead load given yet
+    { name: "Planter S", label: "Planter S", group: "Garden", long: 2.4, short: 1.0, color: [138, 90, 43], headcount: null, deadLoad: null },
+    { name: "Planter T", label: "Planter T", group: "Garden", long: 2.4, short: 2.4, color: [138, 90, 43], headcount: null, deadLoad: null },
+    { name: "Park Bench and Table", label: "Park Bench and Table", group: "Garden", long: 2.0, short: 2.0, color: [138, 90, 43], headcount: null, deadLoad: null }
   ];
   const PING_PONG_TABLE = "Ping Pong Outdoor", PING_PONG_PAIR = "Ping Pong Pair";
   const labelOf = name => { const s = SPORTS.find(x => x.name === name); return s ? s.label : name; };
 
   // ── zones (used only when a plan is made with `zoning`) ──
-  // indoor (walls around, ignores the setback, grows from the Locker corner), garden (Yoga, Calisthenics: respects the setback like outdoor) and outdoor (everything else)
+  // indoor (walls around, ignores the setback, grows from the Locker corner), garden (Yoga, Calisthenics, the Garden tab's blocks: respects the setback like outdoor) and outdoor (everything else)
   const INDOOR_NAMES = new Set(["Ping Pong", "Bouldering Wall", "Badminton", "Locker & Dressing Room Module", "Bathroom & Shower Module", "Rest / Hydration Area"]);
-  const GARDEN_NAMES = new Set(["Yoga", "Calisthenics"]);
+  const GARDEN_NAMES = new Set(["Yoga", "Calisthenics", "Planter S", "Planter T", "Park Bench and Table"]);
   const NO_CLUSTER = new Set(["Rest / Hydration Area"]);         // indoor, but not part of the cluster that grows from the Locker corner
   const zoneOf = name => INDOOR_NAMES.has(name) ? "indoor" : GARDEN_NAMES.has(name) ? "garden" : "outdoor";
   // only the service modules have walls around them, so only they ignore the setback: every sport (indoor ones included) respects it

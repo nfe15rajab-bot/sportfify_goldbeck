@@ -50,6 +50,14 @@ const PLANTER_VARIANTS = {
   planter_t: { label: "Planter T", short: "Planter T", size: { length: 2400, width: 2400, rimHeight: 900 } }
 };
 
+/** Park Bench and Table (user, 2026-09-27): its own Revit family, still to come from colleagues. Only the overall footprint is fixed, 2000 x 2000 mm; the
+ * panel shows a placeholder until the family arrives. */
+const GARDEN_BENCH = { id: "park_bench_table", label: "Park Bench and Table", short: "Bench & Table", length: 2000, width: 2000 };
+
+/** Everything the Garden tab offers, in rail order. */
+const GARDEN_ITEM_IDS = Object.keys(PLANTER_VARIANTS).concat(GARDEN_BENCH.id);
+const gardenItemLabel = id => id === GARDEN_BENCH.id ? GARDEN_BENCH.label : PLANTER_VARIANTS[id].label;
+
 const PLANTER_STORAGE_KEY = "sportify-planters";
 
 const planterState = (() => {
@@ -58,7 +66,7 @@ const planterState = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem(PLANTER_STORAGE_KEY) || "null");
     if (saved && saved.values) Object.keys(st.values).forEach(id => { if (saved.values[id]) Object.assign(st.values[id], saved.values[id]); });
-    if (saved && PLANTER_VARIANTS[saved.active]) st.active = saved.active;
+    if (saved && GARDEN_ITEM_IDS.includes(saved.active)) st.active = saved.active;
   } catch (e) { /* the defaults */ }
   return st;
 })();
@@ -78,8 +86,9 @@ function planterParams(id) {
 
 function buildPlanterBar() {
   const bar = document.getElementById("activity-bar");
-  bar.innerHTML = `<div class="rail-cat-header">GARDEN</div>` + Object.entries(PLANTER_VARIANTS).map(([id, v]) =>
-    `<button class="activity-icon${id === planterState.active ? " active" : ""}" data-planter="${id}" title="${escapeHtml(v.label)}"><i class="ti ti-plant-2"></i><span class="activity-icon-label">${escapeHtml(v.short)}</span></button>`).join("");
+  const items = Object.entries(PLANTER_VARIANTS).map(([id, v]) => [id, v, "ti-plant-2"]).concat([[GARDEN_BENCH.id, GARDEN_BENCH, "ti-armchair"]]);
+  bar.innerHTML = `<div class="rail-cat-header">GARDEN</div>` + items.map(([id, v, icon]) =>
+    `<button class="activity-icon${id === planterState.active ? " active" : ""}" data-planter="${id}" title="${escapeHtml(v.label)}"><i class="ti ${icon}"></i><span class="activity-icon-label">${escapeHtml(v.short)}</span></button>`).join("");
   bar.querySelectorAll("[data-planter]").forEach(btn => btn.addEventListener("click", () => {
     planterState.active = btn.dataset.planter; planterSave();
     buildPlanterBar(); updatePlanterUI();
@@ -87,6 +96,7 @@ function buildPlanterBar() {
 }
 
 function updatePlanterUI() {
+  if (planterState.active === GARDEN_BENCH.id) { updateBenchUI(); return; }
   const id = planterState.active, v = PLANTER_VARIANTS[id], p = planterParams(id);
   document.getElementById("field-label").textContent = `${v.label} — ${p.length} × ${p.width} × ${p.rimHeight} mm`;
   document.getElementById("norm-badge").textContent = "Revit family: Planter";
@@ -102,10 +112,7 @@ function planterPanelHtml(id, p) {
   const group = g => PLANTER_INPUTS.filter(i => i[2] === g).map(input).join("");
   const warn = p.freeboard < 0 ? `<p class="planter-warn">The substrate rises ${-p.freeboard} mm above the rim: lower the Substrate Depth or raise the Rim Height.</p>` : "";
   return `
-    <div class="section">
-      <label>Planter</label>
-      <div class="planter-switch">${Object.entries(PLANTER_VARIANTS).map(([vid, pv]) => `<button type="button" data-planter-pick="${vid}" class="${vid === id ? "on" : ""}">${escapeHtml(pv.label)}</button>`).join("")}</div>
-    </div>
+    ${gardenSwitchHtml(id)}
     <div class="section">
       <label>Size (L × W × H)</label>
       <div class="dims">
@@ -132,7 +139,78 @@ function planterPanelHtml(id, p) {
         </tbody>
       </table>
       <button type="button" class="btn-link" data-planter-reset>Reset ${escapeHtml(v.label)} to its defaults</button>
+    </div>
+    ${gardenPushHtml()}`;
+}
+
+/** The planter switch at the top of a planter's panel: Planter S / Planter T only (the bench is picked on the rail). */
+function gardenSwitchHtml(id) {
+  return `<div class="section">
+      <label>Planter</label>
+      <div class="planter-switch">${Object.keys(PLANTER_VARIANTS).map(gid => `<button type="button" data-planter-pick="${gid}" class="${gid === id ? "on" : ""}">${escapeHtml(gardenItemLabel(gid))}</button>`).join("")}</div>
     </div>`;
+}
+
+/** Push to Combine, as the Sport tab has it: the item on screen, one per click, lands in the Combine tray. */
+function gardenPushHtml() {
+  return `<div class="export-area">
+      <button type="button" class="btn-export accent" data-garden-push><i class="ti ti-arrow-bar-to-right" aria-hidden="true"></i>Push to Combine</button>
+    </div>`;
+}
+
+// ------------------------------------------------------------------------------------------------ Park Bench and Table (placeholder until its family arrives)
+
+function updateBenchUI() {
+  const b = GARDEN_BENCH;
+  document.getElementById("field-label").textContent = `${b.label} — ${b.length} × ${b.width} mm`;
+  document.getElementById("norm-badge").textContent = "Revit family: to come";
+  const host = document.getElementById("planter-panel");
+  if (host) host.innerHTML = `
+    <div class="section">
+      <label>Footprint (L × W)</label>
+      <div class="dims">
+        <div class="dim-card"><div class="val">${escapeHtml(b.length)}</div><div class="lbl">Length (mm)</div></div>
+        <div class="dim-card"><div class="val">${escapeHtml(b.width)}</div><div class="lbl">Width (mm)</div></div>
+      </div>
+      <p class="hint">Family to come — the sizes will follow the Revit family when it arrives. Until then only the overall footprint is fixed.</p>
+    </div>
+    ${gardenPushHtml()}`;
+  drawBench();
+}
+
+/** The bench's footprint in plan, with a placeholder table and a bench on two sides. */
+function drawBench() {
+  const svg = document.getElementById("planter-field");
+  if (!svg) return;
+  const b = GARDEN_BENCH, dark = typeof isDarkMode === "function" && isDarkMode();
+  const ink = dark ? "#c9cbe0" : "#3a3f4b", dim = dark ? "#aaa" : "#666", font = `font-family="'Titillium Web', Arial, sans-serif"`;
+  const VW = 600, VH = 400, s = 250 / Math.max(b.length, b.width);
+  const w = b.length * s, h = b.width * s, x = (VW - w) / 2, y = 80;
+  const wood = dark ? "#9c8a6a" : "#d8c3a0", mm = v => v * s;
+  let g = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${ink}" stroke-width="1.2" stroke-dasharray="6 4"/>`;
+  // placeholder only: a 1.8 x 0.8 m table in the middle, a 1.8 x 0.4 m bench on each long side
+  g += `<rect x="${x + mm(100)}" y="${y + mm(600)}" width="${mm(1800)}" height="${mm(800)}" rx="3" fill="${wood}" stroke="${ink}" stroke-width="1"/>`;
+  [100, 1500].forEach(o => { g += `<rect x="${x + mm(100)}" y="${y + mm(o)}" width="${mm(1800)}" height="${mm(400)}" rx="3" fill="${wood}" fill-opacity="0.7" stroke="${ink}" stroke-width="0.8"/>`; });
+  if (typeof archDimSvg === "function") g += archDimSvg("top", x, x + w, y, 14, `${b.length}`, dim, 10.5) + archDimSvg("left", y, y + h, x, 14, `${b.width}`, dim, 10.5);
+  svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
+  svg.innerHTML = `<text x="${VW / 2}" y="${y - 40}" text-anchor="middle" font-size="12" font-weight="700" fill="${ink}" ${font}>Plan</text>` + g
+    + `<text x="${VW / 2}" y="${VH - 8}" text-anchor="middle" font-size="10" fill="${dim}" ${font}>Placeholder — the Park Bench and Table family is still to come · sizes in mm</text>`;
+}
+
+/** The item on screen goes to the Combine tray (one per click), carrying what Revit will need to build it. */
+function pushGardenItemToCombine() {
+  if (typeof addCombineItem !== "function") return;
+  const id = planterState.active;
+  if (id === GARDEN_BENCH.id) {
+    const b = GARDEN_BENCH;
+    addCombineItem({ kind: "gardenBlock", label: b.label, length_m: b.length / 1000, width_m: b.width / 1000,
+      sourceJson: { version: "1.0", generator: "Sportify", gardenBlock: { type: b.id, label: b.label, family: null, length_mm: b.length, width_mm: b.width } } });
+  } else {
+    const p = planterParams(id), v = PLANTER_VARIANTS[id];
+    addCombineItem({ kind: "gardenBlock", label: v.label, length_m: p.length / 1000, width_m: p.width / 1000,
+      sourceJson: { version: "1.0", generator: "Sportify", gardenBlock: { type: id, label: v.label, family: "Planter", params: p } } });
+  }
+  if (typeof setMode === "function") setMode("combine");
 }
 
 document.addEventListener("change", e => {
@@ -145,6 +223,7 @@ document.addEventListener("change", e => {
 document.addEventListener("click", e => {
   const pick = e.target.closest && e.target.closest("[data-planter-pick]");
   if (pick) { planterState.active = pick.dataset.planterPick; planterSave(); buildPlanterBar(); updatePlanterUI(); return; }
+  if (e.target.closest && e.target.closest("[data-garden-push]")) { pushGardenItemToCombine(); return; }
   const tg = e.target.closest && e.target.closest("[data-planter-toggle]");
   if (tg) { planterState.values[planterState.active][tg.dataset.planterToggle] = tg.dataset.val === "1"; planterSave(); updatePlanterUI(); return; }
   if (e.target.closest && e.target.closest("[data-planter-reset]")) {

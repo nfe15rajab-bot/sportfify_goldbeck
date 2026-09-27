@@ -38,6 +38,8 @@ const KIND_COLORS = {
   // content rather than one of the app's built-in presets. Its own colour
   // so a designer can see at a glance which pieces came from their model.
   revit:    { stroke: "#d97706", fill: "rgba(217,119,6,0.32)" },
+  // The Garden tab's blocks (Planter S / T, Park Bench and Table): earthy brown, so they don't read as green roof zones.
+  gardenBlock: { stroke: "#8a5a2b", fill: "rgba(138,90,43,0.35)" },
 };
 
 /** Returns the on-canvas (possibly rotated) footprint size in meters. */
