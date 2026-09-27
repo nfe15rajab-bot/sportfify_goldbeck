@@ -28,22 +28,58 @@ const FIELD_SPORTS = {
   football:   { label: "Football (indoor)", short: "Football", icon: "ti-square-rounded" },
 };
 
-/* ── Activity bars ── */
+/**
+ * The three Outdoor buckets below Indoor: Courts (this catalog's own
+ * "court" category — the 8 outdoor games actually played on a marked
+ * court), Facilities (named by id, not category: Activitiesdata.js splits
+ * these across "service" and "leisure", but a designer thinking "where do
+ * people change/wash/sit down" doesn't care which — lockers, bathroom,
+ * rest area belong together regardless), and Miscellaneous (whatever's
+ * left: wellness, fitness rigs, playground equipment — 13 entries with
+ * nothing in common except "none of the above"). A group with an empty
+ * `categories` AND no `ids` is the catch-all, matched last, so a future
+ * category not listed here still shows up instead of silently
+ * disappearing.
+ */
+const OUTDOOR_GROUPS = [
+  { label: "Courts", categories: ["court"] },
+  { label: "Facilities", ids: ["locker_module", "bathroom_module", "rest_area"] },
+  { label: "Miscellaneous", categories: [] }, // catch-all — filled below
+];
+
+/** One activity-bar button, field or activity — the two data shapes share label/short/icon, so one template covers both. */
+function activityIconHtml(kind, id, activeId, item) {
+  return `<button class="activity-icon${id === activeId ? " active" : ""}" data-kind="${kind}" data-id="${id}" title="${escapeHtml(item.label)}">
+            <i class="ti ${item.icon}"></i><span class="activity-icon-label short">${escapeHtml(item.short)}</span><span class="activity-icon-label full">${escapeHtml(item.label)}</span>
+          </button>`;
+}
+
+/* ── Activity bars ──
+ * Grouped Indoor (the six DIN/FIBA/IHF court sports, as the reference
+ * norms define them — not reordered) / Courts / Facilities / Miscellaneous
+ * — the outdoor groups each sorted smallest-footprint-first so "what fits
+ * in this leftover 6x4m corner" is a scan, not a hunt through 24 flat icons.
+ */
 function buildActivityBar() {
   const bar = document.getElementById("activity-bar");
-  let html = "";
+  let html = `<div class="rail-cat-header">INDOOR</div>`;
   Object.entries(FIELD_SPORTS).forEach(([id, f]) => {
     if (f.hidden) return;
-    html += `<button class="activity-icon${id === state.sport ? " active" : ""}" data-kind="field" data-id="${id}" title="${escapeHtml(f.label)}">
-               <i class="ti ${f.icon}"></i><span class="activity-icon-label">${escapeHtml(f.short)}</span>
-             </button>`;
+    html += activityIconHtml("field", id, state.sport, f);
   });
-  html += `<div class="activity-bar-divider"></div>`;
+
+  const byGroup = OUTDOOR_GROUPS.map(() => []);
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
     if (a.hidden) return;
-    html += `<button class="activity-icon${id === state.activityId ? " active" : ""}" data-kind="activity" data-id="${id}" title="${escapeHtml(a.label)}">
-               <i class="ti ${a.icon}"></i><span class="activity-icon-label">${escapeHtml(a.short)}</span>
-             </button>`;
+    const group = OUTDOOR_GROUPS.findIndex(g => (g.ids && g.ids.includes(id)) || (g.categories && g.categories.includes(a.category)));
+    byGroup[group < 0 ? OUTDOOR_GROUPS.length - 1 : group].push([id, a]);
+  });
+  OUTDOOR_GROUPS.forEach((group, i) => {
+    if (byGroup[i].length === 0) return;
+    html += `<div class="activity-bar-divider"></div><div class="rail-cat-header">${escapeHtml(group.label.toUpperCase())}</div>`;
+    byGroup[i]
+      .sort((a, b) => (a[1].length * a[1].width) - (b[1].length * b[1].width))
+      .forEach(([id, a]) => { html += activityIconHtml("activity", id, state.activityId, a); });
   });
   bar.innerHTML = html;
 

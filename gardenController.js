@@ -26,14 +26,14 @@ function updateActivityBarForMode(mode) {
   Object.entries(GARDEN_ITEMS).forEach(([id, item]) => {
     if (item.category !== "functional") return;
     html += `<button class="activity-icon${id === gardenState.activeItemId ? " active" : ""}" data-garden-id="${id}" title="${escapeHtml(item.label)}">
-               <i class="ti ${item.icon}"></i><span class="activity-icon-label">${escapeHtml(item.short)}</span>
+               <i class="ti ${item.icon}"></i><span class="activity-icon-label short">${escapeHtml(item.short)}</span><span class="activity-icon-label full">${escapeHtml(item.label)}</span>
              </button>`;
   });
   html += `<div class="activity-bar-divider"></div><div class="rail-cat-header">VEG</div>`;
   Object.entries(GARDEN_ITEMS).forEach(([id, item]) => {
     if (item.category !== "vegetation") return;
     html += `<button class="activity-icon${id === gardenState.activeItemId ? " active" : ""}" data-garden-id="${id}" title="${escapeHtml(item.label)}">
-               <i class="ti ${item.icon}"></i><span class="activity-icon-label">${escapeHtml(item.short)}</span>
+               <i class="ti ${item.icon}"></i><span class="activity-icon-label short">${escapeHtml(item.short)}</span><span class="activity-icon-label full">${escapeHtml(item.label)}</span>
              </button>`;
   });
   bar.innerHTML = html;
