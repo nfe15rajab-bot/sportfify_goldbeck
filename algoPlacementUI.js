@@ -47,7 +47,11 @@ const ALGO_CATALOGUE = {
   "Balance Logs": { kind: "activity", id: "balance_logs" },
   "Locker & Dressing Room Module": { kind: "activity", id: "locker_module" },
   "Bathroom & Shower Module": { kind: "activity", id: "bathroom_module" },
-  "Rest / Hydration Area": { kind: "activity", id: "rest_area" }
+  "Rest / Hydration Area": { kind: "activity", id: "rest_area" },
+  // the Garden tab's blocks (planters.js): sized there, and on the board the same brown garden blocks Push to Combine makes
+  "Planter S": { kind: "gardenBlock", id: "planter_s" },
+  "Planter T": { kind: "gardenBlock", id: "planter_t" },
+  "Park Bench and Table": { kind: "gardenBlock", id: "park_bench_table" }
 };
 
 /**
@@ -86,10 +90,11 @@ const ALGO_PRIMARY_MAX_M = 2.5;
 const ALGO_LISTS = [
   { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
-  { heading: "Garden activities", names: ["Yoga", "Calisthenics"] }
+  { heading: "Garden activities", names: ["Yoga", "Calisthenics"] },
+  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] }
 ];
-/** Which headings each roof type shows. Garden Core keeps only the garden activities; Mixed and a roof with no type yet show everything. */
-const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services"], garden: ["Garden activities"] };
+/** Which headings each roof type shows. Garden Core keeps only the garden activities and blocks; Mixed and a roof with no type yet show everything. */
+const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services"], garden: ["Garden activities", "Garden blocks"] };
 
 /** The lists the current roof type offers: [{ heading, names }]. */
 function algoListsForRoof() {
@@ -166,7 +171,7 @@ function algoSpecifiedState(name) {
 /** The size tier chosen in the Sport tab for an item of this list (activitiesData.js getSportTier); null for an item that has one size. */
 function algoTierKey(name) {
   const cat = ALGO_CATALOGUE[name];
-  if (!cat) return null;
+  if (!cat || cat.kind === "gardenBlock") return null;
   return cat.kind === "field" ? cat.sport : "act:" + cat.id;
 }
 function algoTierOf(name) {
@@ -202,6 +207,13 @@ function algoAdoptSpecifiedSizes() {
     const long = algoRound(Math.max(fp.length_m, fp.width_m)), short = algoRound(Math.min(fp.length_m, fp.width_m));
     const swap = fp.length_m < fp.width_m;
     if (sp.long !== long || sp.short !== short || sp.swap !== swap) { sp.long = long; sp.short = short; sp.swap = swap; changed = true; }
+  }
+  // the Garden tab's blocks take the size set there (a planter's Length x Width, the bench's fixed footprint), in metres
+  for (const [name, cat] of Object.entries(ALGO_CATALOGUE)) {
+    const sp = AlgoPlacement.SPORTS.find(s => s.name === name), fp = cat.kind === "gardenBlock" ? algoGardenBlockSize(cat.id) : null;
+    if (!sp || !fp) continue;
+    const long = algoRound(Math.max(fp.l, fp.w)), short = algoRound(Math.min(fp.l, fp.w));
+    if (sp.long !== long || sp.short !== short) { sp.long = long; sp.short = short; changed = true; }
   }
   return changed;
 }
@@ -481,7 +493,7 @@ function algoBuildPanel() {
       </div>
     </div>`;
   algoState.built = true;
-  algoBindPanel(panel);
+  if (!panel.dataset.bound) { panel.dataset.bound = "1"; algoBindPanel(panel); }   // the panel box survives a rebuild, so its listeners are set once (else each rebuild adds another and "+" counts many)
   algoRefreshBlocks();
 }
 
@@ -1091,9 +1103,24 @@ function algoItemFrame(sp) {
   return sp.swap ? { length_m: sp.short, width_m: sp.long } : { length_m: sp.long, width_m: sp.short };
 }
 
+/** A Garden tab block's size in metres, { l, w }, as the Garden tab has it now; null if planters.js is not loaded. */
+function algoGardenBlockSize(id) {
+  if (typeof GARDEN_BENCH !== "undefined" && id === GARDEN_BENCH.id) return { l: GARDEN_BENCH.length / 1000, w: GARDEN_BENCH.width / 1000 };
+  if (typeof planterParams !== "function" || typeof PLANTER_VARIANTS === "undefined" || !PLANTER_VARIANTS[id]) return null;
+  const p = planterParams(id);
+  return { l: p.length / 1000, w: p.width / 1000 };
+}
+
 function algoCatalogueSource(name, sp) {
   const cat = ALGO_CATALOGUE[name];
   const quality = "medium";
+  if (cat.kind === "gardenBlock") {        // the same source Push to Combine gives it (planters.js pushGardenItemToCombine)
+    const bench = typeof GARDEN_BENCH !== "undefined" && cat.id === GARDEN_BENCH.id;
+    const params = !bench && typeof planterParams === "function" ? planterParams(cat.id) : null;
+    return { version: "1.0", generator: "Sportify-Algorithmic-Placement",
+      gardenBlock: bench ? { type: cat.id, label: sp.label, family: null, length_mm: GARDEN_BENCH.length, width_mm: GARDEN_BENCH.width }
+                         : { type: cat.id, label: sp.label, family: "Planter", params } };
+  }
   if (cat.kind === "field" && typeof FIELDS !== "undefined" && FIELDS[cat.sport]) {
     const variant = algoTierOf(name) || "mini";
     const d = FIELDS[cat.sport][variant] || Object.values(FIELDS[cat.sport])[0];
