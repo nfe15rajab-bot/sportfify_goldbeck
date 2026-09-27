@@ -42,7 +42,6 @@ function applyTheme(mode) {
   }
   if (activeMode === "sport") updateUI();
   else if (activeMode === "garden") updateGardenUI();
-  else if (activeMode === "gardenBlocks" && typeof updatePlanterUI === "function") updatePlanterUI();
 }
 
 function setTheme(mode) {
@@ -67,7 +66,7 @@ document.getElementById("modeSite").addEventListener("click", () => setMode("sit
 document.getElementById("modeStructure").addEventListener("click", () => setMode("structure"));
 document.getElementById("modeConditions").addEventListener("click", () => setMode("conditions"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
-document.getElementById("modeGardenBlocks").addEventListener("click", () => setMode("gardenBlocks"));
+document.getElementById("modeFacilities")?.addEventListener("click", () => setMode("facilities"));
 // Garden is no longer a workspace — planting is drawn as a zone in Combine.
 document.getElementById("modeCombine").addEventListener("click", () => setMode("combine"));
 document.getElementById("modeData").addEventListener("click", () => setMode("data"));
@@ -117,8 +116,11 @@ function setMode(mode) {
     return;
   }
   const isGarden = mode === "garden";
-  const isGardenBlocks = mode === "gardenBlocks";
-  const isSport = mode === "sport";
+  // Facilities shares the Sport workspace — the same configurator, the same
+  // canvas, the same push — because a locker room is an activity underneath.
+  // Only the bar differs, so the two modes travel together from here on.
+  const isFacilities = mode === "facilities";
+  const isSport = mode === "sport" || isFacilities;
   const isCombine = mode === "combine";
   const isData = mode === "data";
   const isAnalysis = mode === "analysis";
@@ -134,8 +136,7 @@ function setMode(mode) {
   const isFamilies = mode === "families";
 
   if (isGarden) updateActivityBarForMode("garden");
-  else if (isSport) buildActivityBar();
-  else if (isGardenBlocks && typeof buildPlanterBar === "function") buildPlanterBar();
+  else if (isSport) buildActivityBar(isFacilities ? "facilities" : "sport");
   else if (isAnalysis && typeof buildAnalysisRail === "function") buildAnalysisRail();   // Analysis's own rail: Overview, then a group per kind of analysis
   else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Improve's own rail: Dynamic Families, Recommendations
 
@@ -170,7 +171,6 @@ function setMode(mode) {
   document.getElementById("conditionsConfigurator").style.display = isConditions ? "block" : "none";
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
   document.getElementById("gardenConfigurator").style.display = isGarden ? "block" : "none";
-  document.getElementById("gardenBlocksConfigurator").style.display = isGardenBlocks ? "block" : "none";
   // combineConfigurator is itself a flex row (roof pane + step pane) now,
   // so it needs "flex" rather than "block" to lay its children out
   // correctly whenever it's re-shown.
@@ -182,7 +182,6 @@ function setMode(mode) {
 
   document.getElementById("field").style.display = isSport ? "block" : "none";
   document.getElementById("garden-field").style.display = isGarden ? "block" : "none";
-  document.getElementById("planter-field").style.display = isGardenBlocks ? "block" : "none";
   // #combine-canvas is nested inside #combineConfigurator now, so toggling
   // that parent already shows/hides it — no separate toggle needed here.
   document.getElementById("site-content").style.display = isSite ? "block" : "none";
@@ -207,8 +206,8 @@ function setMode(mode) {
   document.getElementById("modeSite").classList.toggle("active", isSite);
   document.getElementById("modeStructure").classList.toggle("active", isStructure);
   document.getElementById("modeConditions").classList.toggle("active", isConditions);
-  document.getElementById("modeSport").classList.toggle("active", isSport);
-  document.getElementById("modeGardenBlocks").classList.toggle("active", isGardenBlocks);
+  document.getElementById("modeSport").classList.toggle("active", isSport && !isFacilities);
+  document.getElementById("modeFacilities")?.classList.toggle("active", isFacilities);
   document.getElementById("modeGarden")?.classList.toggle("active", isGarden);
   document.getElementById("modeCombine").classList.toggle("active", isCombine);
   document.getElementById("modeFamilies").classList.toggle("active", isFamilies);
@@ -224,7 +223,6 @@ function setMode(mode) {
   // siteController.js/siteField.js) except for the map, which needs an
   // explicit (re)init once its container is actually visible/sized.
   if (isGarden) updateGardenUI();
-  else if (isGardenBlocks && typeof updatePlanterUI === "function") updatePlanterUI();
   else if (isSport) updateUI();
   else if (isCombine) updateCombineUI();
   else if (isData && typeof updateDataUI === "function") updateDataUI();

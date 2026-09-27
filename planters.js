@@ -84,25 +84,15 @@ function planterParams(id) {
 
 // ------------------------------------------------------------------------------------------------ the item bar and the panel
 
-function buildPlanterBar() {
-  const bar = document.getElementById("activity-bar");
-  const items = Object.entries(PLANTER_VARIANTS).map(([id, v]) => [id, v, "ti-plant-2"]).concat([[GARDEN_BENCH.id, GARDEN_BENCH, "ti-armchair"]]);
-  bar.innerHTML = `<div class="rail-cat-header">GARDEN</div>` + items.map(([id, v, icon]) =>
-    `<button class="activity-icon${id === planterState.active ? " active" : ""}" data-planter="${id}" title="${escapeHtml(v.label)}"><i class="ti ${icon}"></i><span class="activity-icon-label">${escapeHtml(v.short)}</span></button>`).join("");
-  bar.querySelectorAll("[data-planter]").forEach(btn => btn.addEventListener("click", () => {
-    planterState.active = btn.dataset.planter; planterSave();
-    buildPlanterBar(); updatePlanterUI();
-  }));
-}
-
-function updatePlanterUI() {
-  if (planterState.active === GARDEN_BENCH.id) { updateBenchUI(); return; }
-  const id = planterState.active, v = PLANTER_VARIANTS[id], p = planterParams(id);
-  document.getElementById("field-label").textContent = `${v.label} — ${p.length} × ${p.width} × ${p.rimHeight} mm`;
-  document.getElementById("norm-badge").textContent = "Revit family: Planter";
-  const host = document.getElementById("planter-panel");
-  if (host) host.innerHTML = planterPanelHtml(id, p);
-  drawPlanter(p);
+/**
+ * A parameter changed. The panel that is showing the editor redraws itself; the
+ * planter's own plan-and-section drawing redraws in place.
+ *
+ * There is no workspace to update any more — the editor lives inside the
+ * Components panel, over the roof, so you never leave what you are designing.
+ */
+function planterRefresh() {
+  if (typeof renderComponentsPanel === "function") renderComponentsPanel();
 }
 
 function planterPanelHtml(id, p) {
@@ -158,44 +148,9 @@ function gardenPushHtml() {
     </div>`;
 }
 
-// ------------------------------------------------------------------------------------------------ Park Bench and Table (placeholder until its family arrives)
-
-function updateBenchUI() {
-  const b = GARDEN_BENCH;
-  document.getElementById("field-label").textContent = `${b.label} — ${b.length} × ${b.width} mm`;
-  document.getElementById("norm-badge").textContent = "Revit family: to come";
-  const host = document.getElementById("planter-panel");
-  if (host) host.innerHTML = `
-    <div class="section">
-      <label>Footprint (L × W)</label>
-      <div class="dims">
-        <div class="dim-card"><div class="val">${escapeHtml(b.length)}</div><div class="lbl">Length (mm)</div></div>
-        <div class="dim-card"><div class="val">${escapeHtml(b.width)}</div><div class="lbl">Width (mm)</div></div>
-      </div>
-      <p class="hint">Family to come — the sizes will follow the Revit family when it arrives. Until then only the overall footprint is fixed.</p>
-    </div>
-    ${gardenPushHtml()}`;
-  drawBench();
-}
-
-/** The bench's footprint in plan, with a placeholder table and a bench on two sides. */
-function drawBench() {
-  const svg = document.getElementById("planter-field");
-  if (!svg) return;
-  const b = GARDEN_BENCH, dark = typeof isDarkMode === "function" && isDarkMode();
-  const ink = dark ? "#c9cbe0" : "#3a3f4b", dim = dark ? "#aaa" : "#666", font = `font-family="'Titillium Web', Arial, sans-serif"`;
-  const VW = 600, VH = 400, s = 250 / Math.max(b.length, b.width);
-  const w = b.length * s, h = b.width * s, x = (VW - w) / 2, y = 80;
-  const wood = dark ? "#9c8a6a" : "#d8c3a0", mm = v => v * s;
-  let g = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${ink}" stroke-width="1.2" stroke-dasharray="6 4"/>`;
-  // placeholder only: a 1.8 x 0.8 m table in the middle, a 1.8 x 0.4 m bench on each long side
-  g += `<rect x="${x + mm(100)}" y="${y + mm(600)}" width="${mm(1800)}" height="${mm(800)}" rx="3" fill="${wood}" stroke="${ink}" stroke-width="1"/>`;
-  [100, 1500].forEach(o => { g += `<rect x="${x + mm(100)}" y="${y + mm(o)}" width="${mm(1800)}" height="${mm(400)}" rx="3" fill="${wood}" fill-opacity="0.7" stroke="${ink}" stroke-width="0.8"/>`; });
-  if (typeof archDimSvg === "function") g += archDimSvg("top", x, x + w, y, 14, `${b.length}`, dim, 10.5) + archDimSvg("left", y, y + h, x, 14, `${b.width}`, dim, 10.5);
-  svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
-  svg.innerHTML = `<text x="${VW / 2}" y="${y - 40}" text-anchor="middle" font-size="12" font-weight="700" fill="${ink}" ${font}>Plan</text>` + g
-    + `<text x="${VW / 2}" y="${VH - 8}" text-anchor="middle" font-size="10" fill="${dim}" ${font}>Placeholder — the Park Bench and Table family is still to come · sizes in mm</text>`;
-}
+/* The Park Bench and Table has no parameters to edit until its family arrives,
+   so it has no editor here: the Components panel shows its footprint and lets
+   you place it. */
 
 /** The item on screen goes to the Combine tray (one per click), carrying what Revit will need to build it. */
 function pushGardenItemToCombine() {
@@ -218,18 +173,18 @@ document.addEventListener("change", e => {
   if (!t.dataset || t.dataset.planterParam == null) return;
   const n = Math.round(Number(t.value));
   if (Number.isFinite(n) && n >= 0) planterState.values[planterState.active][t.dataset.planterParam] = n;
-  planterSave(); updatePlanterUI();
+  planterSave(); planterRefresh();
 });
 document.addEventListener("click", e => {
   const pick = e.target.closest && e.target.closest("[data-planter-pick]");
-  if (pick) { planterState.active = pick.dataset.planterPick; planterSave(); buildPlanterBar(); updatePlanterUI(); return; }
+  if (pick) { planterState.active = pick.dataset.planterPick; planterSave(); planterRefresh(); return; }
   if (e.target.closest && e.target.closest("[data-garden-push]")) { pushGardenItemToCombine(); return; }
   const tg = e.target.closest && e.target.closest("[data-planter-toggle]");
-  if (tg) { planterState.values[planterState.active][tg.dataset.planterToggle] = tg.dataset.val === "1"; planterSave(); updatePlanterUI(); return; }
+  if (tg) { planterState.values[planterState.active][tg.dataset.planterToggle] = tg.dataset.val === "1"; planterSave(); planterRefresh(); return; }
   if (e.target.closest && e.target.closest("[data-planter-reset]")) {
     const id = planterState.active;
     planterState.values[id] = Object.assign({}, PLANTER_FAMILY_DEFAULTS, PLANTER_VARIANTS[id].size);
-    planterSave(); updatePlanterUI();
+    planterSave(); planterRefresh();
   }
 });
 

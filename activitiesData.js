@@ -190,12 +190,22 @@ const ACTIVITIES = {
     norm: "Reference sheet",
   },
   locker_module: {
-    label: "Locker & Dressing Room Module",
+    label: "Locker Bank",
     short: "Lockers",
-    icon: "ti-square-rounded",
-    length: 10.00, width: 5.00,
+    icon: "ti-lock",
+    // A placeholder size only: the real footprint comes from the family's own
+    // Column_Count and Module_Width (facilityFamilies.js).
+    length: 0.80, width: 0.70,
     category: "service",
-    norm: "Reference sheet",
+    norm: "Revit family — Locker Bank",
+  },
+  dressing_cabin: {
+    label: "Dressing Cabin",
+    short: "Cabin",
+    icon: "ti-door-enter",
+    length: 2.10, width: 1.80,
+    category: "service",
+    norm: "Revit family — Dressing_Cabin",
   },
   bathroom_module: {
     label: "Bathroom & Shower Module",
