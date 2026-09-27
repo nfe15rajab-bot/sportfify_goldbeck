@@ -58,16 +58,19 @@ function combinePreviewSnapshot() {
 }
 
 /**
- * The sun at the view's own time of day, on the Site tab's date and place: null without a place (or before SunCalc has loaded). The hour is local SOLAR time at the site (the clock minus the
- * longitude's offset from UTC, 15 degrees an hour), so that noon is when the sun stands highest whatever time zone this computer is in. (The Site tab's own sun compass reads its time as this
- * computer's clock time, so the two agree only where the computer is in the site's zone.)
+ * The sun at the view's own time of day, on the Site tab's date and place: null without a place (or before SunCalc has loaded). The hour is local SOLAR time at the site (solarTimeToInstant,
+ * sunPosition.js — the same conversion the Site tab's own sun compass and sunrise/sunset now read the typed time by), so that noon is when the sun stands highest whatever time zone this
+ * computer is in, and the two always agree.
  */
 function combinePreviewSun() {
   if (typeof siteState === "undefined" || siteState.lat == null || siteState.lng == null || typeof SunCalc === "undefined") return null;
   const hour = combinePreview.hour == null ? combinePreviewSiteHour() : combinePreview.hour;
   const iso = siteState.date || (typeof todayIsoDate === "function" ? todayIsoDate() : new Date().toISOString().slice(0, 10));
   const [y, m, d] = iso.split("-").map(Number);
-  const when = new Date(Date.UTC(y, m - 1, d, 0, 0) + (hour - siteState.lng / 15) * 3600000);
+  const hh = Math.floor(hour), mm = Math.round((hour - hh) * 60);
+  const when = typeof solarTimeToInstant === "function"
+    ? solarTimeToInstant(y, m, d, hh, mm, siteState.lng)
+    : new Date(Date.UTC(y, m - 1, d, 0, 0) + (hour - siteState.lng / 15) * 3600000);
   const pos = SunCalc.getPosition(when, siteState.lat, siteState.lng);
   return pos && Number.isFinite(pos.azimuth) && Number.isFinite(pos.altitude) ? { azimuthDeg: pos.azimuth, altitudeDeg: pos.altitude } : null;
 }

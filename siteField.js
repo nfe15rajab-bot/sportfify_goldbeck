@@ -20,10 +20,20 @@ function initSiteMap() {
   if (!el || typeof L === "undefined") return;
 
   siteMap = L.map(el).setView([48.8566, 2.3522], 5);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(siteMap);
+  // Two more free, key-less base layers Leaflet can just switch between (a plain tile URL, same as the streets one
+  // above — no separate library or account): satellite imagery to see what is really built or planted on and around
+  // a roof, and a topographic layer for the ground's shape and height, which the wind and rain analyses care about.
+  const satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19, attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+  });
+  const terrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+    maxZoom: 17, attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+  });
+  L.control.layers({ Streets: streets, Satellite: satellite, Terrain: terrain }, {}, { position: "topright" }).addTo(siteMap);
   siteMap.on("click", e => setSiteLocation(e.latlng.lat, e.latlng.lng));
   requestAnimationFrame(() => siteMap.invalidateSize());
   siteEnsureMarker(true);      // a location that is already known (sent by the quiz, or from a loaded session) is on the map the first time it is drawn

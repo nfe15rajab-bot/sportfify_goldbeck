@@ -50,6 +50,40 @@ function effectiveRoofHeight() {
 let regionRequestId = 0;
 let regionTimer = null;
 
+// The annual weather overview (siteWeather.js): fetched, not typed, so it lives here rather than in siteState
+// (which a saved session round-trips whole) — it is always looked up again for wherever the site turns out to be.
+let weatherRequestId = 0;
+let siteWeatherSummary = null;
+
+/**
+ * Looks up the last completed year's monthly weather at the site (siteWeather.js's fetchAnnualWeather), debounced
+ * like resolveSiteRegion and sharing its trigger (called from the same place, right below): dragging the marker or
+ * clicking around asks once, for where it stopped, not on every intermediate pixel.
+ */
+function resolveAnnualWeather() {
+  if (siteState.lat == null) return;
+  const id = ++weatherRequestId;
+  const statusEl = document.getElementById("site-weather-status");
+  if (statusEl) statusEl.textContent = "Looking up the annual weather…";
+  Promise.resolve(typeof fetchAnnualWeather === "function" ? fetchAnnualWeather(siteState.lat, siteState.lng) : Promise.reject(new Error("not available")))
+    .then(summary => { if (id === weatherRequestId) { siteWeatherSummary = summary; updateWeatherUI(); } })
+    .catch(() => { if (id === weatherRequestId) { siteWeatherSummary = null; updateWeatherUI("Couldn't be looked up (no connection?). The rain and sun assumptions keep their own defaults."); } });
+}
+
+function updateWeatherUI(note) {
+  const statusEl = document.getElementById("site-weather-status");
+  const chartEl = document.getElementById("site-weather-chart");
+  if (statusEl) {
+    statusEl.textContent = siteWeatherSummary
+      ? `${siteWeatherSummary.year}, the last full year on record — monthly mean temperature and total rainfall near the site (about 9 km resolution: a regional picture, not a reading on the roof).`
+      : (note || "Set a site location to see its annual weather.");
+  }
+  if (chartEl) {
+    const svg = siteWeatherSummary && typeof buildAnnualWeatherSvg === "function" ? buildAnnualWeatherSvg(siteWeatherSummary) : null;
+    chartEl.innerHTML = svg || "";
+  }
+}
+
 /**
  * Looks up the state, Landkreis and Gemeinde of the site through Nominatim (the geocoder the Site tab already uses,
  * and only for a chosen location, never per keystroke), then the wind zone from them. Debounced: dragging the marker
@@ -60,6 +94,7 @@ function resolveSiteRegion() {
   if (siteState.lat == null) return;
   const id = ++regionRequestId;
   regionTimer = setTimeout(async () => {
+    resolveAnnualWeather();      // same debounce as the region/wind-zone lookup below (its own request, its own status line): dragging the marker asks once, for where it stopped
     const statusEl = document.getElementById("site-region-status");
     if (statusEl) statusEl.textContent = "Looking up the region…";
     try {
@@ -123,13 +158,22 @@ function updateSiteUI() {
       summaryEl.textContent = "Set a site location to see sun position and shading guidance.";
     } else {
       const times = typeof getSunTimes === "function" ? getSunTimes(siteState) : null;
-      const fmt = t => t ? t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
+      // In solar time at the site (solarTimeLabel), the same convention the typed date/time is read in — not the
+      // viewer's own time zone, which could be nowhere near the roof and made this read backwards (sunrise after
+      // sunset) whenever it differed.
+      const fmt = t => typeof solarTimeLabel === "function" ? solarTimeLabel(t, siteState.lng) : (t ? t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
       summaryEl.textContent = sun.altitudeDeg > 0
         ? `Sun at ${Math.round(sun.azimuthDeg)}° azimuth, ${Math.round(sun.altitudeDeg)}° above horizon. Sunrise ${fmt(times?.sunrise)}, sunset ${fmt(times?.sunset)}.`
         : `Sun is below the horizon at this time. Sunrise ${fmt(times?.sunrise)}, sunset ${fmt(times?.sunset)}.`;
     }
   }
   if (typeof drawSunCompass === "function") drawSunCompass(siteState);
+  if (typeof updateSiteNowStatus === "function") updateSiteNowStatus();      // the site now has (or lost) a longitude: the "right now" line reads it in a different clock
+  const pathEl = document.getElementById("site-sun-path");
+  if (pathEl) {
+    const svg = typeof buildSunPathSvg === "function" ? buildSunPathSvg({ width: 280, height: 160, svgId: "site-sun-path-svg", markNow: true }) : null;
+    pathEl.innerHTML = svg || `<p class="hint">Set a site location to see the day's sun path.</p>`;
+  }
   updateWindAndHeightUI();
   if (typeof updateStructureUI === "function") updateStructureUI();
   if (typeof updateRoofFeaturesUI === "function") updateRoofFeaturesUI();
@@ -165,6 +209,31 @@ function siteApplyNorth(deg) {
 
 document.getElementById("siteDate").addEventListener("input", e => { siteState.date = e.target.value; updateSiteUI(); });
 document.getElementById("siteTime").addEventListener("input", e => { siteState.time = e.target.value; updateSiteUI(); });
+
+/** "Now" button: sets the date/time fields to this instant, read as solar time at the site (or the browser's own clock with no site yet) — a shortcut into the reading solarTimeLabel already gives sunrise/sunset in. */
+document.getElementById("btn-site-now").addEventListener("click", () => {
+  const now = typeof solarNow === "function" ? solarNow(siteState.lng) : null;
+  if (!now) return;
+  siteState.date = now.date;
+  siteState.time = now.time;
+  document.getElementById("siteDate").value = now.date;
+  document.getElementById("siteTime").value = now.time;
+  updateSiteUI();
+});
+
+/** The live "it is X right now" line under the date/time fields — ticks on its own (updateSiteUI does not run every minute by itself) so it stays a real clock, not a snapshot from whenever the tab was last touched. */
+function updateSiteNowStatus() {
+  const el = document.getElementById("site-now-status");
+  if (!el || typeof solarNow !== "function") return;
+  const now = solarNow(siteState.lng);
+  const [y, m, d] = now.date.split("-").map(Number);
+  const nice = new Date(y, m - 1, d).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
+  el.textContent = siteState.lng == null
+    ? `Right now, this computer's clock: ${now.time}, ${nice}. Set a site to read it in solar time there instead.`
+    : `Right now at the site: ${now.time}, ${nice} (solar time).`;
+}
+updateSiteNowStatus();
+setInterval(updateSiteNowStatus, 20000);
 
 function doSiteAddressSearch() {
   const q = document.getElementById("siteAddressSearch").value.trim();

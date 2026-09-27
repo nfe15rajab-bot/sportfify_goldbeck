@@ -250,11 +250,20 @@ function sampleSunPathToday() {
   return samples;
 }
 
-function buildSunPathSvg() {
+/**
+ * @param opts.width, opts.height — the report's export size by default (640x300); the Site tab embeds a smaller
+ *   copy of the same chart, sized for its sidebar.
+ * @param opts.svgId — element id, so the Site tab's copy and the Analysis tab's exportable one never collide (only
+ *   the default id, "sunPathSvg", is what downloadSunPathPng looks up).
+ * @param opts.markNow — also marks the typed date/time's own point on the curve (a small ring), so glancing at the
+ *   Site tab shows at once where "now" (or whatever was typed) sits in the day.
+ */
+function buildSunPathSvg(opts) {
+  const { width: W = 640, height: H = 300, svgId = "sunPathSvg", markNow = false } = opts || {};
   const samples = sampleSunPathToday();
   if (samples.length === 0) return null;
 
-  const W = 640, H = 300, PAD_L = 42, PAD_R = 16, PAD_T = 16, PAD_B = 30;
+  const PAD_L = 42, PAD_R = 16, PAD_T = 16, PAD_B = 30;
   const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
   const minMin = samples[0].minutes, maxMin = samples[samples.length - 1].minutes;
   const altitudes = samples.map(s => s.altitudeDeg);
@@ -278,11 +287,22 @@ function buildSunPathSvg() {
   const pathD = samples.map((s, i) => `${i === 0 ? "M" : "L"}${xFor(s.minutes).toFixed(1)},${yFor(s.altitudeDeg).toFixed(1)}`).join(" ");
   const horizonY = yFor(0).toFixed(1);
 
-  return `<svg id="sunPathSvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:${W}px;height:auto;display:block;background:#ffffff;border-radius:8px;">
+  let nowSvg = "";
+  if (markNow && typeof siteState !== "undefined") {
+    const m = /^(\d{1,2}):(\d{2})/.exec(siteState.time || "");
+    if (m) {
+      const nowMin = Math.min(maxMin, Math.max(minMin, Number(m[1]) * 60 + Number(m[2])));
+      const sun = typeof getSunPosition === "function" ? getSunPosition(siteState) : null;
+      if (sun) nowSvg = `<circle cx="${xFor(nowMin).toFixed(1)}" cy="${yFor(sun.altitudeDeg).toFixed(1)}" r="5" fill="#ffffff" stroke="#e0664a" stroke-width="2.5"/>`;
+    }
+  }
+
+  return `<svg id="${svgId}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:${W}px;height:auto;display:block;background:#ffffff;border-radius:8px;">
     ${gridSvg}
     <line x1="${PAD_L}" y1="${horizonY}" x2="${PAD_L + plotW}" y2="${horizonY}" stroke="#e0664a" stroke-width="1.5" stroke-dasharray="5,3"/>
     <text x="${(PAD_L + plotW - 4).toFixed(1)}" y="${(Number(horizonY) - 6).toFixed(1)}" font-size="10" fill="#e0664a" text-anchor="end" font-family="Arial,sans-serif">horizon</text>
     <path d="${pathD}" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+    ${nowSvg}
   </svg>`;
 }
 

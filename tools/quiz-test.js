@@ -360,6 +360,7 @@ const tick = (ms = 15) => new Promise(r => setTimeout(r, ms));
     let geocoder = () => ({ ok: true, status: 200, json: async () => [] });
     const sandbox = {
       console, JSON, Date, Number, Object, Array, Math, String, Promise, Map, Set, RegExp, Error, encodeURIComponent, setTimeout, clearTimeout,
+      setInterval: () => 0, clearInterval: () => {},
       document: { getElementById: id => (sandbox.__els[id] = sandbox.__els[id] || fakeElement()), createElement: () => fakeElement(), querySelectorAll: () => [] },
       __els: {}, requestAnimationFrame: fn => fn(),
       lookupWindZone: r => ({ zone: r && r.state === "Nordrhein-Westfalen" ? 2 : null, confidence: "auto", basis: "test" }),
@@ -367,7 +368,8 @@ const tick = (ms = 15) => new Promise(r => setTimeout(r, ms));
       L: {
         map: () => ({ setView(c, z) { map.views.push([c, z]); return this; }, on() {}, invalidateSize() {} }),
         tileLayer: () => ({ addTo() {} }),
-        marker: ll => { const m = { ll, on() {}, addTo() { return m; }, setLatLng(x) { m.ll = x; }, getLatLng: () => ({ lat: m.ll[0], lng: m.ll[1] }) }; map.markers.push(m); return m; }
+        marker: ll => { const m = { ll, on() {}, addTo() { return m; }, setLatLng(x) { m.ll = x; }, getLatLng: () => ({ lat: m.ll[0], lng: m.ll[1] }) }; map.markers.push(m); return m; },
+        control: { layers: () => ({ addTo() {} }) }
       }
     };
     sandbox.window = sandbox;
