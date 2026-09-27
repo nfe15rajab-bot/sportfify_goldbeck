@@ -51,7 +51,13 @@ const ALGO_CATALOGUE = {
   // the Garden tab's blocks (planters.js): sized there, and on the board the same brown garden blocks Push to Combine makes
   "Planter S": { kind: "gardenBlock", id: "planter_s" },
   "Planter T": { kind: "gardenBlock", id: "planter_t" },
-  "Park Bench and Table": { kind: "gardenBlock", id: "park_bench_table" }
+  "Park Bench and Table": { kind: "gardenBlock", id: "park_bench_table" },
+  // Freestanding kinetic elements (kineticsCatalog.js's KINETICS): sized once there, no tiers — see algoTierKey()'s "kinetics" exclusion below.
+  "Overhead Louvre (Pergola)": { kind: "kinetics", id: "overhead_louvre" },
+  "Tensile Sail (Movable Pillars)": { kind: "kinetics", id: "shade_sail" },
+  "Solar-Tracking PV Canopy": { kind: "kinetics", id: "pv_canopy" },
+  "Retractable Membrane Roof": { kind: "kinetics", id: "membrane_roof" },
+  "Kinetic Green Screen": { kind: "kinetics", id: "green_screen" }
 };
 
 /**
@@ -91,10 +97,11 @@ const ALGO_LISTS = [
   { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] },
-  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] }
+  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] },
+  { heading: "Kinetic elements", names: ["Overhead Louvre (Pergola)", "Tensile Sail (Movable Pillars)", "Solar-Tracking PV Canopy", "Retractable Membrane Roof", "Kinetic Green Screen"] }
 ];
-/** Which headings each roof type shows. Garden Core keeps only the garden activities and blocks; Mixed and a roof with no type yet show everything. */
-const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services"], garden: ["Garden activities", "Garden blocks"] };
+/** Which headings each roof type shows. Garden Core keeps only the garden activities and blocks; Mixed and a roof with no type yet show everything. Kinetic elements (shade/PV/screening) are relevant to both. */
+const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services", "Kinetic elements"], garden: ["Garden activities", "Garden blocks", "Kinetic elements"] };
 
 /** The lists the current roof type offers: [{ heading, names }]. */
 function algoListsForRoof() {
@@ -171,7 +178,7 @@ function algoSpecifiedState(name) {
 /** The size tier chosen in the Sport tab for an item of this list (activitiesData.js getSportTier); null for an item that has one size. */
 function algoTierKey(name) {
   const cat = ALGO_CATALOGUE[name];
-  if (!cat || cat.kind === "gardenBlock") return null;
+  if (!cat || cat.kind === "gardenBlock" || cat.kind === "kinetics") return null;
   return cat.kind === "field" ? cat.sport : "act:" + cat.id;
 }
 function algoTierOf(name) {
@@ -1131,6 +1138,14 @@ function algoGardenBlockSize(id) {
 function algoCatalogueSource(name, sp) {
   const cat = ALGO_CATALOGUE[name];
   const quality = "medium";
+  if (cat.kind === "kinetics") {            // the same source Push to Combine gives it (kineticsCombine.js pushKineticsToCombine)
+    const k = typeof KINETICS !== "undefined" ? KINETICS[cat.id] : null;
+    // The algorithmic panel has no size picker of its own yet — it always places the "standard" build size,
+    // the same figure algoPlacementCore.js's SPORTS table carries for this name (kineticsCatalog.js documents why).
+    const std = k?.variants?.standard;
+    return { version: "1.0", generator: "Sportify-Algorithmic-Placement",
+      kinetics: { kinetic_kind: k ? k.kineticKind : cat.id, label: sp.label, built: k ? k.built : false, build_size: "standard", build_size_note: std?.note || "" } };
+  }
   if (cat.kind === "gardenBlock") {        // the same source Push to Combine gives it (planters.js pushGardenItemToCombine)
     const bench = typeof GARDEN_BENCH !== "undefined" && cat.id === GARDEN_BENCH.id;
     const params = !bench && typeof planterParams === "function" ? planterParams(cat.id) : null;

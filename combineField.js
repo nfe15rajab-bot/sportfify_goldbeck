@@ -40,6 +40,8 @@ const KIND_COLORS = {
   revit:    { stroke: "#d97706", fill: "rgba(217,119,6,0.32)" },
   // The Garden tab's blocks (Planter S / T, Park Bench and Table): earthy brown, so they don't read as green roof zones.
   gardenBlock: { stroke: "#8a5a2b", fill: "rgba(138,90,43,0.35)" },
+  // Louvre pergolas, sails, screens, fences: its own teal, distinct from every static category — these are the pieces Revit's Kinetics ribbon can put in motion.
+  kinetics: { stroke: "#0891b2", fill: "rgba(8,145,178,0.32)" },
 };
 
 /** Returns the on-canvas (possibly rotated) footprint size in meters. */

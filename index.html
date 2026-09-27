@@ -157,6 +157,7 @@
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
       <button id="btn-vegetation-toggle" class="activity-icon" title="Vegetation — trees, shrubs, planting"><i class="ti ti-tree" aria-hidden="true"></i><span class="activity-icon-label">Plants</span></button>
       <button id="btn-furniture-toggle" class="activity-icon" title="Furniture — benches, tables, bins, bollards, lights"><i class="ti ti-armchair" aria-hidden="true"></i><span class="activity-icon-label">Furniture</span></button>
+      <button id="btn-kinetics-toggle" class="activity-icon" title="Kinetics — louvre pergolas, sails, screens, fences: place them by hand or let Algorithmic placement place them by quantity"><i class="ti ti-wind" aria-hidden="true"></i><span class="activity-icon-label">Kinetics</span></button>
       <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeAnalysis" class="activity-icon" title="Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Results</span></button>
@@ -1044,6 +1045,14 @@
                 <div id="furniture-panel"></div>
               </aside>
 
+              <aside class="zone-flyout" id="kinetics-flyout" hidden>
+                <div class="zone-flyout-header">
+                  <span><i class="ti ti-wind" aria-hidden="true"></i> Kinetics</span>
+                  <button id="btn-kinetics-close" title="Close">&times;</button>
+                </div>
+                <div id="kinetics-panel"></div>
+              </aside>
+
               <aside class="zone-flyout" id="zone-flyout" hidden>
                 <div class="zone-flyout-header">
                   <span><i class="ti ti-topology-star-3" aria-hidden="true"></i> Ground zones</span>
@@ -1272,6 +1281,8 @@
   <script src="vegetation.js?v=2026-09-27-landing-fix2"></script>
   <script src="furnitureElevation.js?v=2026-09-27-landing-fix2"></script>
   <script src="furniture.js?v=2026-09-27-landing-fix2"></script>
+  <script src="kineticsCatalog.js?v=2026-09-27-landing-fix2"></script>
+  <script src="kineticsCombine.js?v=2026-09-27-landing-fix2"></script>
   <script src="canvasFlyouts.js?v=2026-09-27-landing-fix2"></script>
   <script src="zones.js?v=2026-09-27-landing-fix2"></script>
   <script src="roofFinish.js?v=2026-09-27-landing-fix2"></script>
