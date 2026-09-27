@@ -298,6 +298,8 @@ function buildActivityPayload() {
     // whatever the panel happens to show later.
     padel: (state.activityId === "padel_court" && typeof padelPlacementPayload === "function")
       ? padelPlacementPayload() : undefined,
+    ping_pong: (state.activityId === "ping_pong" && typeof pingPongPlacementPayload === "function")
+      ? pingPongPlacementPayload() : undefined,
     // A family the design team authored carries the values set on it, so Revit
     // can place THEIR family configured rather than build one of ours.
     familyInstance:

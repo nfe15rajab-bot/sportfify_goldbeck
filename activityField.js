@@ -124,6 +124,12 @@ function drawActivity(activityId, dims, isDark) {
     if (typeof drawActivityFamilyPreview === "function") { drawActivityFamilyPreview(svg, activityId, isDark); return; }
   }
 
+  // Table tennis: the table is fixed, so what it configures is the room round it.
+  if (typeof syncPingPongPanel === "function" && syncPingPongPanel(activityId)) {
+    if (typeof pingPongApplyFootprint === "function") pingPongApplyFootprint();
+    if (typeof drawPingPongPreview === "function") { drawPingPongPreview(svg, isDark); return; }
+  }
+
   if (typeof syncClimbingTowerPanel === "function" && syncClimbingTowerPanel(activityId)) {
     if (typeof towerApplyFootprint === "function") towerApplyFootprint();
     if (typeof drawClimbingTowerPreview === "function") { drawClimbingTowerPreview(svg, isDark); return; }
