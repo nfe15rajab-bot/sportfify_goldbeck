@@ -53,7 +53,7 @@ const AlgoPlacement = (function () {
   // Pickleball (2026-09-26): with its run-off (18.3 x 9.1 m) it is a big court too, so it always takes the setback line, shuffled or not
   const BIG_COURTS = ["Multi Sport Court", "Basketball Court", "Handball", "Volleyball", "3x3 Streetbasketball", "Padel Tennis Court", "Multipurpose Sport Area", "Football", "Pickleball Court"];
 
-  const GROUPS = ["Courts", "Fitness & wellness", "Playground & leisure", "Services", "Garden"];
+  const GROUPS = ["Courts", "Fitness & wellness", "Playground & leisure", "Services", "Garden", "Kinetic Elements"];
 
   // name (the stable key the solver, the tests and saved quantities use), label (what a person sees), group, long side (m), short side (m), colour -> FINAL envelopes (run-off included).
   // headcount = active people at once (null + headcountNote when the sheet gives no number), deadLoad = Gk in kN/m², assumed = the reference sheet marks that dead load "(Assumed)".
@@ -97,7 +97,14 @@ const AlgoPlacement = (function () {
     // the Garden tab's blocks (user, 2026-09-27): sizes follow the Garden tab (algoPlacementUI adopts them); no headcount / dead load given yet
     { name: "Planter S", label: "Planter S", group: "Garden", long: 2.4, short: 1.0, color: [138, 90, 43], headcount: null, deadLoad: null },
     { name: "Planter T", label: "Planter T", group: "Garden", long: 2.4, short: 2.4, color: [138, 90, 43], headcount: null, deadLoad: null },
-    { name: "Park Bench and Table", label: "Park Bench and Table", group: "Garden", long: 2.0, short: 2.0, color: [138, 90, 43], headcount: null, deadLoad: null }
+    { name: "Park Bench and Table", label: "Park Bench and Table", group: "Garden", long: 2.0, short: 2.0, color: [138, 90, 43], headcount: null, deadLoad: null },
+    // Freestanding kinetic elements (kineticsCatalog.js): footprints packed into open area like a court. Edge-anchored kinds (roller fence, acoustic
+    // screen, divider net, wind-break) are not offered here — they belong on a specific edge, not floating in open area, so they stay manual-only.
+    { name: "Overhead Louvre (Pergola)", label: "Overhead Louvre (Pergola)", group: "Kinetic Elements", long: 6.0, short: 4.0, color: [8, 145, 178], headcount: null, deadLoad: 0.35, assumed: true },
+    { name: "Tensile Sail (Movable Pillars)", label: "Tensile Sail (Movable Pillars)", group: "Kinetic Elements", long: 8.0, short: 6.0, color: [14, 165, 164], headcount: null, deadLoad: 0.15, assumed: true },
+    { name: "Solar-Tracking PV Canopy", label: "Solar-Tracking PV Canopy", group: "Kinetic Elements", long: 6.0, short: 4.0, color: [3, 105, 161], headcount: null, deadLoad: 0.40, assumed: true },
+    { name: "Retractable Membrane Roof", label: "Retractable Membrane Roof", group: "Kinetic Elements", long: 12.0, short: 8.0, color: [20, 184, 166], headcount: null, deadLoad: 0.30, assumed: true },
+    { name: "Kinetic Green Screen", label: "Kinetic Green Screen", group: "Kinetic Elements", long: 4.0, short: 0.5, color: [22, 163, 74], headcount: null, deadLoad: 0.50, assumed: true }
   ];
   const PING_PONG_TABLE = "Ping Pong Outdoor", PING_PONG_PAIR = "Ping Pong Pair";
   const labelOf = name => { const s = SPORTS.find(x => x.name === name); return s ? s.label : name; };

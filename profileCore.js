@@ -2,12 +2,14 @@
  * profileCore.js — the PROFILE: what a person chose about how Sportify looks and behaves for them, as a plain object that can be saved, reloaded, sent to Revit and
  * carried to another machine. No DOM and no network in this file (profile.js does those), so tools/profile-test.js can run it as it is.
  *
- *   view    "simple" or "advanced". A VIEW, not a lock: Simple hides the tabs of the deeper work (structure, site conditions, compare, post analysis, data, families) and
- *           leaves the main path (Overview, Site, Sport, Combine, Analysis, Deliverables); Advanced shows everything. Switching is one click in the Profile tab.
+ *   view    "simple" or "advanced". A VIEW, not a lock: Simple hides the tabs of the deeper work (structure inputs, site conditions, compare, improve, catalogue, revit families) and
+ *           leaves the main path (Overview, Site, Sport, Combine, Results, Documents); Advanced shows everything. Switching is one click in the Profile tab.
  *   role    "planner" or "client": the existing role of the app (the top right switch).
  *   theme   "dark", "light", or null (follow the operating system).
  *   quiz    what the start-up quiz learned (goal, analyses wanted, site data at hand, experience), or null until it has been taken. It only ever sets defaults.
  *   person  who this is: a name and a photo (a small JPEG, PNG or WebP as a data URL, made by profile.js from whatever picture the person chose). Both optional.
+ *   extras  what the person added to the Simple view (PROFILE_EXTRAS); landing: the workspace to start in (or null: the Overview); onboarded: the start-up quiz was taken or skipped,
+ *           so it is not asked again.
  *
  * The file the Revit add-in keeps (settings.json, key "profile") holds the same object, so the ribbon and the web app agree. Whatever arrives from a file, from the
  * add-in or from the browser's storage goes through normalizeProfile(): it never throws and always returns something the app can apply.
@@ -18,41 +20,62 @@ const PROFILE_NAME = "PROFILE";
 const PROFILE_FILE_KIND = "sportify-profile";
 const PROFILE_STORAGE_KEY = "sportify-profile";
 
-/** Every workspace of the app, by the name main.js's setMode() uses, with the button that opens it and the words a person knows it by. */
+/**
+ * Every workspace of the app, by the name main.js's setMode() uses (these ids stay: code, saved profiles and the add-in know them), with the button that opens it, the words a person knows it by
+ * (`label`: on the button and everywhere the app names the tab) and what it is for (`title`: the button's tooltip). tools/names-test.js checks the page against this table, and that no
+ * text of the app still calls a tab by an older name.
+ */
 const PROFILE_MODES = {
-  guide:        { button: "modeGuide",        label: "Overview" },
-  site:         { button: "modeSite",         label: "Site" },
-  structure:    { button: "modeStructure",    label: "Structure" },
-  conditions:   { button: "modeConditions",   label: "Conditions" },
-  sport:        { button: "modeSport",        label: "Sport" },
-  gardenBlocks: { button: "modeGardenBlocks", label: "Garden" },
-  combine:      { button: "modeCombine",      label: "Combine" },
-  analysis:     { button: "modeAnalysis",     label: "Analysis" },
-  compare:      { button: "modeCompare",      label: "Compare" },
-  postAnalysis: { button: "modePostAnalysis", label: "Post Analysis" },
-  data:         { button: "modeData",         label: "Data" },
-  families:     { button: "modeFamilies",     label: "Families" },
-  deliverables: { button: "modeDeliverables", label: "Deliverables" },
-  session:      { button: "modeSession",      label: "Save Session" },
-  profile:      { button: "modeProfile",      label: "Profile" }
+  guide:        { button: "modeGuide",        label: "Overview",        title: "" },
+  site:         { button: "modeSite",         label: "Site",            title: "Site" },
+  structure:    { button: "modeStructure",    label: "Structure inputs", title: "Structure inputs — grid, columns, deck capacity, natural frequency" },
+  conditions:   { button: "modeConditions",   label: "Site conditions", title: "Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)" },
+  sport:        { button: "modeSport",        label: "Sport",           title: "Sport" },
+  gardenBlocks: { button: "modeGardenBlocks", label: "Garden",           title: "Garden — planters and garden blocks" },
+  combine:      { button: "modeCombine",      label: "Combine",         title: "Combine" },
+  analysis:     { button: "modeAnalysis",     label: "Results",         title: "Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate" },
+  compare:      { button: "modeCompare",      label: "Compare",         title: "Compare" },
+  postAnalysis: { button: "modePostAnalysis", label: "Improve",         title: "Improve — what to change first, ranked, and the moving parts that answer the analysis" },
+  data:         { button: "modeData",         label: "Catalogue",       title: "Catalogue — the reference data the app and Revit read: sports, materials, analysis figures" },
+  families:     { button: "modeFamilies",     label: "Revit families",  title: "Revit families — what your Revit project has loaded, to place in Combine" },
+  deliverables: { button: "modeDeliverables", label: "Documents",       title: "Documents & files — layouts, charts, reports and schedules, kept in your Sportify folder" },
+  session:      { button: "modeSession",      label: "Save Session",    title: "" },
+  profile:      { button: "modeProfile",      label: "Profile",         title: "Your PROFILE — Simple or Advanced view, role and theme; saved and reloaded every time" }
 };
 
 /**
  * What each view shows. The Simple list is the main path the Overview lays out (Site, Sport/Garden, Combine, Analysis) plus the tabs that are always there
- * (Overview, Deliverables, Save Session, Profile). It is the ONE place to change what Simple means; tools/profile-test.js checks it against the page.
+ * (Overview, Documents, Save Session, Profile). It is the ONE place to change what Simple means; tools/profile-test.js checks it against the page.
  */
 const PROFILE_VIEWS = {
   simple: {
     title: "Simple",
-    tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take the deliverables.",
+    tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take your documents.",
     modes: ["guide", "site", "sport", "gardenBlocks", "combine", "analysis", "deliverables", "session", "profile"]
   },
   advanced: {
     title: "Advanced",
-    tagline: "Everything: also the structure and site-condition inputs, comparing variants, the post-analysis of the dynamic families, the data tables and the Revit families.",
+    tagline: "Everything: also the structure inputs and site conditions, comparing variants, Improve (what to change first, the moving shading), the Catalogue and the Revit families.",
     modes: Object.keys(PROFILE_MODES)
   }
 };
+
+/**
+ * What a person can ADD to the Simple view (the start-up quiz picks them from the analyses the person cares about): each brings back the tab(s) of the web app it names and, in the Revit
+ * add-in, its buttons (RibbonVisibility.ExtraButtons, the same keys; tools/ReleaseCheck compares the two lists). Safety and carbon have no tab of their own: their results are in the
+ * Results tab, only their Revit buttons come back.
+ */
+const PROFILE_EXTRAS = {
+  structure:    { label: "Structure inputs",                modes: ["structure"] },
+  conditions:   { label: "Site conditions",                 modes: ["conditions"] },
+  compare:      { label: "Comparing variants",              modes: ["compare"] },
+  postAnalysis: { label: "Improve (recommendations, moving shading)", modes: ["postAnalysis"] },
+  safety:       { label: "Safety checks",                   modes: [] },
+  carbon:       { label: "Carbon and materials",            modes: [] }
+};
+
+/** The workspaces a person can start in. */
+const PROFILE_LANDINGS = ["guide", "site", "sport", "combine", "analysis", "deliverables"];
 
 const PROFILE_ROLES = ["planner", "client"];
 const PROFILE_THEMES = ["dark", "light"];
@@ -64,19 +87,29 @@ const PROFILE_PHOTO_PATTERN = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]
 
 function profileDefaults() {
   // Advanced is the default until the start-up quiz has said otherwise: nothing a person already knew disappears by itself.
-  return { schema: PROFILE_SCHEMA, name: PROFILE_NAME, updated: null, view: "advanced", role: "planner", theme: null, quiz: null, person: { name: "", photo: null } };
+  return { schema: PROFILE_SCHEMA, name: PROFILE_NAME, updated: null, view: "advanced", role: "planner", theme: null, quiz: null, extras: [], landing: null, onboarded: false, person: { name: "", photo: null } };
 }
 
-/** Is this workspace shown in this view? An unknown view counts as Advanced; an unknown workspace is never hidden (it is not one of ours to judge). */
-function profileModeVisible(view, mode) {
+/**
+ * Is this workspace shown in this view? An unknown view counts as Advanced; an unknown workspace is never hidden (it is not one of ours to judge). The Simple view also shows the
+ * workspaces of the extras the person added (PROFILE_EXTRAS); Advanced shows everything anyway.
+ */
+function profileModeVisible(view, mode, extras) {
   if (!PROFILE_MODES[mode]) return true;
   const v = PROFILE_VIEWS[view] || PROFILE_VIEWS.advanced;
-  return v.modes.includes(mode);
+  if (v.modes.includes(mode)) return true;
+  return view === "simple" && Array.isArray(extras) && extras.some(e => PROFILE_EXTRAS[e] && PROFILE_EXTRAS[e].modes.includes(mode));
 }
 
-/** The workspaces a view hides, in the order of the tabs: what the Profile tab tells the person before they switch. */
-function profileHiddenModes(view) {
-  return Object.keys(PROFILE_MODES).filter(m => !profileModeVisible(view, m));
+/** The workspaces a view (with the person's extras) hides, in the order of the tabs: what the Profile tab tells the person before they switch. */
+function profileHiddenModes(view, extras) {
+  return Object.keys(PROFILE_MODES).filter(m => !profileModeVisible(view, m, extras));
+}
+
+/** The extras, cleaned: only the ones that exist, each once, in the order of PROFILE_EXTRAS. */
+function normalizeExtras(v) {
+  const wanted = Array.isArray(v) ? v : [];
+  return Object.keys(PROFILE_EXTRAS).filter(k => wanted.includes(k));
 }
 
 /**
@@ -140,6 +173,9 @@ function normalizeProfile(raw) {
   if (typeof o.name === "string" && o.name.trim()) p.name = o.name.trim().slice(0, 40);
   if (typeof o.updated === "string" && Number.isFinite(Date.parse(o.updated))) p.updated = new Date(o.updated).toISOString();
   p.quiz = normalizeQuiz(o.quiz);
+  p.extras = normalizeExtras(o.extras);
+  if (PROFILE_LANDINGS.includes(o.landing)) p.landing = o.landing;
+  p.onboarded = o.onboarded === true;
   p.person = normalizePerson(o.person);
   return p;
 }
@@ -162,6 +198,44 @@ function profileSame(a, b) {
   return strip(a) === strip(b);
 }
 
+// ------------------------------------------------------------------------------------------------------------------------ this computer
+
+/**
+ * What the Profile tab says about this computer, from the Revit add-in's GET /capabilities answer (null when the add-in is not reachable: nothing can be known without it).
+ * One row per thing: { key, label, state: "ok" | "missing" | "unknown", text (the add-in's own sentence), affects (what it means for the person) }. Nobody is asked whether they
+ * have Unity or SOLIDWORKS: the add-in looks.
+ */
+function profileMachineRows(caps) {
+  if (!caps || typeof caps !== "object" || Array.isArray(caps)) {
+    return [{ key: "revit", label: "Revit add-in", state: "unknown", text: "Revit not open. Open a project in Revit with the Sportify add-in and this page can tell what this computer has. The web app works without it.", affects: "" }];
+  }
+  const sentence = t => (t && typeof t.note === "string" ? t.note.slice(0, 300) : "");
+  const found = t => !!(t && t.found === true);
+  const unity = caps.unity, sw = caps.solidworks, chrome = caps.chrome;
+  return [
+    { key: "revit", label: "Revit add-in", state: "ok", text: "Connected.", affects: "" },
+    {
+      key: "unity", label: "Unity", state: found(unity) ? "ok" : "missing", text: sentence(unity),
+      affects: found(unity) ? "3D videos of the analyses, Ball Trajectory Simulation and Record Isolated Video are available."
+        : "No 3D videos here: the analyses give their charts as a PDF instead, and the buttons that need Unity are hidden in Revit."
+    },
+    {
+      key: "solidworks", label: "SOLIDWORKS", state: found(sw) ? "ok" : "missing", text: sentence(sw),
+      affects: found(sw) ? "Simulate (SOLIDWORKS) can build a dynamic unit as a mechanical assembly." : "Simulate (SOLIDWORKS) is hidden in Revit: the dynamic units are still placed, only not built as an assembly."
+    },
+    {
+      key: "chrome", label: "Chrome", state: found(chrome) ? "ok" : "missing", text: sentence(chrome),
+      affects: found(chrome) ? "The Sportify web app opens in Chrome." : "The Sportify web app opens in your default browser instead."
+    }
+  ];
+}
+
+/** The words of the buttons the Sportify tab in Revit hides at the moment (from the same answer), as short texts; [] when none or unknown. */
+function profileHiddenButtons(caps) {
+  const list = caps && Array.isArray(caps.ribbon_hidden) ? caps.ribbon_hidden : [];
+  return list.map(h => (h && typeof h.text === "string" ? h.text.trim().slice(0, 60) : "")).filter(Boolean).slice(0, 60);
+}
+
 // ------------------------------------------------------------------------------------------------------------------------ the file
 
 /** The text of a profile file (Sportify-PROFILE.json): the profile in an envelope that says what it is, so a session file is not mistaken for it. */
@@ -182,8 +256,9 @@ function profileFromFileText(text) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     PROFILE_SCHEMA, PROFILE_NAME, PROFILE_FILE_KIND, PROFILE_STORAGE_KEY, PROFILE_MODES, PROFILE_VIEWS, PROFILE_ROLES, PROFILE_THEMES,
+    PROFILE_EXTRAS, PROFILE_LANDINGS, normalizeExtras,
     PROFILE_PHOTO_MAX_CHARS, PROFILE_PERSON_NAME_MAX, normalizePhoto, normalizePerson,
     profileDefaults, profileModeVisible, profileHiddenModes, profileRailLayout, normalizeQuiz, normalizeProfile, profileStamped, profileIsNewer, profileSame,
-    profileToFileText, profileFromFileText
+    profileToFileText, profileFromFileText, profileMachineRows, profileHiddenButtons
   };
 }

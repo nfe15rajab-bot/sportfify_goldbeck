@@ -180,6 +180,121 @@ html[data-role="client"] .planner-only { display: none !important; }
 .profile-row { display: flex; gap: 48px; flex-wrap: wrap; }
 .profile-segment { display: inline-flex; }
 .profile-note { font-size: 12.5px; color: var(--text-secondary); margin-top: 10px; max-width: 700px; line-height: 1.5; }
+.profile-machine { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-width: 760px; }
+.profile-machine-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 1.5); }
+.profile-machine-row > i { font-size: 20px; margin-top: 1px; flex-shrink: 0; color: var(--text-muted); }
+.profile-machine-ok > i { color: var(--text-success); }
+.profile-machine-missing > i { color: var(--text-warning, var(--text-secondary)); }
+.profile-machine-title { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--text-primary); }
+.profile-machine-state { font-size: 11px; color: var(--text-secondary); }
+.profile-machine-text { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.45; }
+.profile-machine-affects { font-size: 12px; color: var(--text-primary); margin-top: 3px; line-height: 1.45; }
+/* ── What runs where (where.js): Revit's status in the top bar, the badge on an action that needs Revit, the Overview's card. Grey is a normal state, not an error. ── */
+.where-pill { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; font-size: 11.5px; font-weight: 600; font-family: var(--font-sans); color: var(--text-secondary); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; white-space: nowrap; transition: border-color 0.15s, color 0.15s; }
+.where-pill:hover { color: var(--text-primary); border-color: var(--border-accent); }
+.where-dot { display: inline-block; width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--text-muted); }
+.where-connected .where-dot, .where-status-connected .where-dot, .where-status-found .where-dot { background: #22c55e; }
+.where-looking .where-dot, .where-status-looking .where-dot { background: #f59e0b; }
+/* The tab bar is centred and the controls sit at the right: with the label the pill needs the screen to be about 1240 px wide, as a dot about 1000. Narrower (the docked pane in Revit): the Overview's card has the status. */
+@media (max-width: 1240px) { .where-pill { padding: 0 9px; } .where-pill #whereRevitLabel { display: none; } }
+@media (max-width: 1000px) { .where-pill { display: none; } }
+.where-chip { display: inline-block; flex-shrink: 0; margin-left: 8px; padding: 1px 7px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 10px; color: var(--text-accent); background: var(--bg-accent); border: 0.5px solid var(--border-accent); }
+.where-chip-off { color: var(--text-muted); background: transparent; border-color: var(--border-strong); }
+.deliverable-item .where-chip, .ws-run-btn .where-chip { margin-left: auto; }
+.where-card { margin-top: 14px; padding: 16px 18px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: calc(var(--radius) * 1.5); }
+.where-rule { margin: 0 0 12px; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.where-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.where-col { padding: 12px 14px; background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); }
+.where-col-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.where-col-head i { font-size: 18px; color: var(--text-accent); }
+.where-col-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+.where-col-tag { margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-accent); }
+.where-col ul { margin: 0; padding-left: 16px; }
+.where-col li { font-size: 12px; line-height: 1.5; color: var(--text-secondary); margin-bottom: 4px; }
+.where-status { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.where-status-chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; font-size: 11.5px; color: var(--text-secondary); border: 0.5px solid var(--border-strong); border-radius: 12px; }
+.where-same { margin: 10px 0 0; font-size: 11.5px; }
+@media (max-width: 900px) { .where-cols { grid-template-columns: 1fr; } }
+
+/* ── The rundgang (tour.js): the page dimmed around the element being explained, and a card beside it ── */
+.tour-overlay { position: fixed; inset: 0; z-index: 70; display: none; }     /* catches clicks: the page behind cannot be used while the tour runs */
+.tour-overlay.tour-dim { background: rgba(8,9,20,0.66); }
+.tour-spot { position: fixed; border-radius: 10px; pointer-events: none; box-shadow: 0 0 0 100vmax rgba(8,9,20,0.66), 0 0 0 2px var(--fill-accent); transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease; }
+.tour-card { position: fixed; width: min(360px, 92vw); padding: 16px 18px 14px; background: var(--surface-2); border: 0.5px solid var(--border-accent); border-radius: calc(var(--radius) * 1.5); box-shadow: 0 16px 48px rgba(0,0,0,0.45); visibility: hidden; }
+.tour-progress { font-size: 10.5px; font-weight: 700; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.05em; }
+.tour-card h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 3px 0 6px; }
+.tour-card p { font-size: 12.5px; line-height: 1.55; color: var(--text-secondary); margin: 0; }
+.tour-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; }
+.tour-nav .session-gate-link { margin: 0; font-size: 11.5px; }
+.tour-buttons { display: inline-flex; gap: 6px; }
+.tour-buttons .btn-export { width: auto; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px; }
+.tour-buttons .btn-export[disabled] { opacity: 0.4; cursor: not-allowed; }
+.tour-offer { margin-top: 14px; }
+.tour-offer .btn-export, .profile-tour-row .btn-export { width: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; }
+.tour-offer-time { font-size: 11px; font-weight: 400; color: var(--text-secondary); }
+.profile-tour-row { margin-top: 12px; }
+
+/* ── The start-up quiz (quiz.js) and "Your next step" on the Overview ── */
+.quiz-overlay { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; background: rgba(8,9,20,0.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.2s ease; }
+.quiz-overlay.quiz-shown { opacity: 1; }
+.quiz-card { width: min(580px, 94vw); max-height: 92vh; overflow-y: auto; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 24px 28px 22px; box-shadow: 0 24px 64px rgba(0,0,0,0.4); }
+.quiz-dots { display: flex; gap: 6px; margin-bottom: 14px; }
+.quiz-dot { height: 4px; flex: 1; border-radius: 2px; background: var(--border-strong); }
+.quiz-dot-done { background: var(--fill-accent); opacity: 0.55; }
+.quiz-dot-now { background: var(--fill-accent); }
+.quiz-progress { font-size: 11px; font-weight: 700; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.05em; }
+.quiz-card h2 { font-size: 19px; font-weight: 700; color: var(--text-primary); margin: 4px 0 0; }
+.quiz-card .hint { font-size: 12.5px; margin-top: 6px; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.quiz-option { display: flex; gap: 12px; align-items: center; text-align: left; padding: 10px 14px; background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; font-family: var(--font-sans); color: var(--text-secondary); transition: border-color 0.15s, background 0.15s; }
+.quiz-option:hover { border-color: var(--border-accent); }
+.quiz-option.quiz-selected { border-color: var(--border-accent); background: var(--bg-accent); }
+.quiz-mark { width: 20px; height: 20px; flex-shrink: 0; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; }
+.quiz-mark-round { border-radius: 50%; }
+.quiz-mark-square { border-radius: 5px; }
+.quiz-mark i { font-size: 13px; opacity: 0; color: var(--on-accent); }
+.quiz-selected .quiz-mark { background: var(--fill-accent); border-color: var(--fill-accent); }
+.quiz-selected .quiz-mark i { opacity: 1; }
+.quiz-option-text { display: flex; flex-direction: column; gap: 2px; }
+.quiz-option-text strong { font-size: 13px; color: var(--text-primary); }
+.quiz-option-text small { font-size: 11.5px; line-height: 1.4; }
+.quiz-card { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+/* the buttons stay in view whatever the height of the window: the options scroll, the navigation does not */
+.quiz-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px -28px -22px; padding: 14px 28px; position: sticky; bottom: -22px; background: var(--surface-2); border-top: 0.5px solid var(--border-strong); }
+@media (max-height: 820px) { .quiz-options { gap: 6px; margin-top: 12px; } .quiz-option { padding: 7px 12px; } .quiz-card { padding-top: 18px; } }
+.quiz-nav .btn-export { width: auto; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; }
+.quiz-nav .btn-export[disabled] { opacity: 0.45; cursor: not-allowed; }
+.quiz-nav .session-gate-link { margin: 0; font-size: 12px; }
+.quiz-nav-right { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.quiz-details { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--border-strong); }
+.quiz-detail label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.quiz-detail-hint { font-size: 11.5px; font-weight: 400; color: var(--text-secondary); margin-top: 4px; }
+.quiz-detail label .quiz-detail-hint { margin: 0 0 0 6px; }
+.quiz-search-row { display: flex; gap: 8px; }
+.quiz-search-row input { flex: 1; min-width: 0; padding: 8px 10px; font-size: 13px; background: var(--surface-1); color: var(--text-primary); border: 0.5px solid var(--border-strong); border-radius: var(--radius); font-family: var(--font-sans); }
+.quiz-search-row input:focus { outline: none; border-color: var(--border-accent); }
+.quiz-search-row input[type="number"] { flex: 0 0 140px; }
+.quiz-search-row .btn-export { width: auto; padding: 7px 14px; display: inline-flex; align-items: center; gap: 6px; }
+.quiz-results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.quiz-result { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 8px 12px; background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; font-family: var(--font-sans); font-size: 12.5px; line-height: 1.4; color: var(--text-primary); }
+.quiz-result:hover, .quiz-result:focus { border-color: var(--border-accent); background: var(--bg-accent); outline: none; }
+.quiz-result i, .quiz-chosen i { color: var(--text-accent); margin-top: 1px; flex-shrink: 0; }
+.quiz-chosen { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; padding: 8px 12px; background: var(--bg-accent); border: 0.5px solid var(--border-accent); border-radius: var(--radius); font-size: 12.5px; color: var(--text-primary); }
+.quiz-chosen span { flex: 1; }
+.quiz-chosen .session-gate-link { margin: 0; flex-shrink: 0; }
+.quiz-summary { margin: 14px 0 6px 18px; font-size: 13.5px; line-height: 1.65; color: var(--text-primary); }
+.quiz-answers { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; max-width: 700px; }
+.quiz-answer-row { display: flex; gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 0.5px solid var(--border-strong); font-size: 12.5px; }
+.quiz-answer-title { flex: 0 0 200px; color: var(--text-secondary); }
+.quiz-answer-text { flex: 1; color: var(--text-primary); }
+.quiz-answer-row .session-gate-link { margin: 0; flex-shrink: 0; }
+.quiz-foot { margin-top: 12px; }
+.next-step { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 12px 16px; background: var(--bg-accent); border: 0.5px solid var(--border-accent); border-radius: calc(var(--radius) * 1.5); }
+.next-step > i { font-size: 22px; color: var(--text-accent); flex-shrink: 0; }
+.next-step-body { flex: 1; min-width: 0; }
+.next-step-title { font-size: 10.5px; font-weight: 700; color: var(--text-accent); text-transform: uppercase; letter-spacing: 0.05em; }
+.next-step-text { font-size: 13px; color: var(--text-primary); margin-top: 2px; line-height: 1.45; }
+.next-step .btn-export { width: auto; padding: 8px 14px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; }
 .profile-actions { flex-wrap: wrap; }
 .profile-actions .overview-action-btn { flex: 1 1 calc(50% - 10px); }
 .session-gate-profile { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; }
@@ -245,12 +360,14 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Data tab: reuses Combine's .step-grid/.section card layout ── */
 #data-content { width: 100%; height: 100%; overflow-y: auto; padding: 20px; }
 
-/* ── Analysis/Compare/Deliverables/Save Session: same "scroll, don't clip"
-   fix as Data/Guide above — .canvas-wrap itself is overflow:hidden (so its
-   centering doesn't get fought by a tall child), so each content div needs
-   its own overflow-y:auto or anything taller than the viewport (e.g. the
-   Sun Path chart below) is unreachable rather than just scrollable. ── */
-#analysis-content, #compare-content { width: 100%; height: 100%; overflow-y: auto; padding: 20px; }
+/* ── Analysis/Compare/Revit families/Profile: same "scroll, don't clip" fix as Data/Guide above — .canvas-wrap
+   itself is overflow:hidden (so its centering doesn't get fought by a tall child), so each content div needs its
+   own overflow-y:auto or anything taller than the viewport (the Sun Path chart below, or just a narrow/short
+   window — a phone, a small pane) is unreachable rather than just scrollable. Site's own #site-content is
+   deliberately the one exception: it holds only the map, sized to fit its box, never text to scroll past. ── */
+#analysis-content, #compare-content, #families-content, #profile-content { width: 100%; height: 100%; overflow-y: auto; padding: 20px; }
+/* Structure inputs/Site conditions use .res-wrap for their own padding (same reasoning as Deliverables/Save Session below) — an outer padding here would just double it up. */
+#structure-content, #conditions-content { width: 100%; height: 100%; overflow-y: auto; }
 /* Deliverables/Save Session use .guide-wrap for their own padding (same as
    #guide-content/Overview) — an outer padding here would just double it up. */
 #deliverables-content, #session-content { width: 100%; height: 100%; overflow-y: auto; }
@@ -398,36 +515,6 @@ html[data-role="client"] .planner-only { display: none !important; }
 .step-enter { animation: step-fade-in 0.25s ease; }
 @keyframes step-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── Analysis tab: per-component explorer (left list + right detail) ── */
-.analysis-components-heading { display: flex; align-items: center; gap: 8px; padding: 4px 16px 8px; margin-top: 6px; border-top: 0.5px solid var(--border); }
-.analysis-components-heading i { color: var(--text-accent); font-size: 15px; }
-.analysis-components-heading span:not(.hint) { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-.analysis-components-heading .hint { margin-left: auto; }
-
-.analysis-components { display: flex; gap: 10px; padding: 0 16px 16px; align-items: flex-start; }
-.analysis-component-list { display: flex; flex-direction: column; gap: 6px; width: 220px; flex-shrink: 0; }
-.analysis-component-item { display: flex; align-items: center; gap: 8px; text-align: left; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
-.analysis-component-item:hover { border-color: var(--border-strong); }
-.analysis-component-item.active { background: var(--bg-accent); border-color: var(--border-accent); }
-.analysis-component-item i { font-size: 16px; color: var(--text-accent); flex-shrink: 0; }
-.analysis-component-item-text { display: flex; flex-direction: column; min-width: 0; }
-.analysis-component-item-label { font-size: 11.5px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.analysis-component-item-dims { font-size: 10px; color: var(--text-muted); }
-
-.analysis-component-detail { flex: 1; min-width: 0; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
-.analysis-component-detail-head { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 0.5px solid var(--border); }
-.analysis-component-detail-head > i { font-size: 22px; color: var(--text-accent); margin-top: 2px; }
-.analysis-component-detail-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-
-.analysis-detail-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.analysis-detail-section { background: var(--surface-0); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
-.analysis-detail-section-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.analysis-detail-section-head i { font-size: 14px; color: var(--text-accent); }
-.analysis-detail-section-head label { font-size: 10.5px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-.analysis-detail-section-head .mode-status { margin-left: auto; }
-.analysis-detail-section .hint { margin: 3px 0 0; }
-.analysis-detail-section .dims { display: grid; gap: 6px; margin-top: 4px; }
-
 .rule-explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 .rule-explain { padding: 8px; border-radius: var(--radius); background: var(--surface-0); border: 0.5px solid var(--border); }
 .rule-explain-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
@@ -446,6 +533,14 @@ html[data-role="client"] .planner-only { display: none !important; }
 .toast-title { font-weight: 700; font-size: 12px; color: var(--text-success); display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
 .toast-body { color: var(--text-secondary); line-height: 1.4; }
 
+/* ── One step through the design workflow (workflowNext.js) — fixed on the page, not built into any one tab's own
+   (very different) markup, so it appears the same way in all of them; clear of .combine-zoom-controls (top-right,
+   inside the canvas) and .toast-container (top-right, the viewport) since this sits at the opposite corner. ── */
+.workflow-next-btn { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; align-items: center; gap: 7px; padding: 11px 18px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--fill-accent), var(--violet)); color: #fff; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 26px rgba(61,111,255,0.35); transition: transform 0.12s ease; }
+.workflow-next-btn:hover { transform: translateY(-1px); }
+.workflow-next-btn[hidden] { display: none; }
+.workflow-next-btn i { font-size: 14px; }
+
 /* ── Activity bar ── */
 /* VS Code-style: a persistent, always-visible rail for Sport/Garden/Combine
    specifically (Data/Guide/Analysis/Compare stay in the top .mode-toggle) —
@@ -457,8 +552,21 @@ html[data-role="client"] .planner-only { display: none !important; }
 .activity-bar { width: 48px; min-width: 48px; background: #1e1e1e; display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 2px; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 2; flex-shrink: 0; }
 .activity-bar::-webkit-scrollbar { width: 4px; }
 .activity-bar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
-.activity-icon { width: 48px; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px 2px; background: transparent; border: none; border-left: 2px solid transparent; color: rgba(255,255,255,0.55); cursor: pointer; font-size: 16px; flex-shrink: 0; transition: color 0.12s, background 0.12s; }
-.activity-icon .activity-icon-label { font-size: 8px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.1; text-align: center; color: inherit; max-width: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* width:100% (not a fixed px) so a button fills whatever width its bar
+   currently has — 48px by default, wider once #activityBarResizer drags
+   .activity-bar out (see makeResizable's onResize in main.js, which also
+   toggles .wide past ~90px: below that, a name like "3x3 Street
+   Basketball" has no useful room and the curated short caption reads
+   better anyway; past it, showing the truncated short caption instead of
+   the full one it now has room for would just be a wasted drag). */
+.activity-icon { width: 100%; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px 2px; background: transparent; border: none; border-left: 2px solid transparent; color: rgba(255,255,255,0.55); cursor: pointer; font-size: 16px; flex-shrink: 0; transition: color 0.12s, background 0.12s; }
+/* Two lines, not a single truncated one: the renamed tabs' short captions run longer than the old ones did. */
+.activity-icon .activity-icon-label { font-size: 8px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.1; text-align: center; color: inherit; max-width: 44px; max-height: 2.25em; overflow: hidden; overflow-wrap: break-word; }
+/* The full-name span (see sportController.js/gardenController.js) only ever shows in .wide — hidden here so a bar that never gets dragged renders exactly as before. */
+.activity-icon .activity-icon-label.full { display: none; }
+.activity-bar.wide .activity-icon { flex-direction: row; justify-content: flex-start; text-align: left; gap: 8px; padding: 6px 10px; min-height: 32px; }
+.activity-bar.wide .activity-icon-label.short { display: none; }
+.activity-bar.wide .activity-icon-label.full { display: block; flex: 1; min-width: 0; max-width: none; overflow: visible; text-overflow: clip; white-space: normal; word-break: break-word; text-align: left; }
 .activity-icon:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.06); }
 .activity-icon.active { color: #ffffff; border-left-color: var(--fill-accent); background: rgba(255,255,255,0.08); }
 .activity-bar-divider { width: 28px; height: 1px; background: rgba(255,255,255,0.15); margin: 6px 0; flex-shrink: 0; }
@@ -528,18 +636,16 @@ html[data-role="client"] .planner-only { display: none !important; }
 .mode-status.available { background: var(--bg-success); color: var(--text-success); border: 0.5px solid var(--border-success); }
 .mode-status.vision { background: var(--violet-tint); color: var(--violet); border: 0.5px solid var(--violet); }
 
-/* Fixed height (not aspect-ratio-driven auto) so the 3 philosophy cards
-   stay visually aligned regardless of each diagram's own viewBox aspect —
-   the SVG's own preserveAspectRatio (default xMidYMid meet) fits the
-   artwork inside without distortion either way. */
-.philosophy-diagram { width: 100%; height: 130px; margin: 8px 0; display: block; }
-.guide-grid.step-grid { align-items: stretch; }
-.guide-grid.step-grid .section { display: flex; flex-direction: column; }
-.philosophy-diagram.grid rect { fill: var(--fill-accent); opacity: 0.75; }
-.philosophy-diagram.fractal .diagram-outline { fill: none; stroke: var(--border-strong); stroke-width: 1.5; }
-.philosophy-diagram.fractal .diagram-path { fill: none; stroke: var(--violet); stroke-width: 2; stroke-dasharray: 4,3; stroke-linecap: round; stroke-linejoin: round; }
-.philosophy-diagram.organic .diagram-blob { fill: var(--bg-success); stroke: var(--text-success); stroke-width: 1.5; }
-.philosophy-diagram.organic .diagram-dot { fill: var(--text-success); opacity: 0.8; }
+/* The Overview's "What's new": four cards (Profile, the quiz, manual and algorithmic placement), each with a button that goes there */
+.feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+.feature-card { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: var(--surface-2); border: 0.5px solid var(--border); border-radius: calc(var(--radius) * 1.5); transition: border-color 0.15s, box-shadow 0.15s; }
+.feature-card:hover { border-color: var(--border-strong); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.feature-head { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.feature-head i { font-size: 22px; color: var(--text-accent); }
+.feature-card .hint { flex: 1; font-size: 12px; line-height: 1.5; margin: 0; }
+.feature-card .btn-export { align-self: flex-start; width: auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; }
+.feature-grid > .feature-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (max-width: 720px) { .feature-grid { grid-template-columns: 1fr; } }
 
 /* ── Smarter-rules advisory (Combine's Rules step) ── */
 .smart-rule-advisory { margin-top: 8px; padding: 8px; border-radius: var(--radius); background: var(--violet-tint); border: 0.5px solid var(--violet); font-size: 10.5px; line-height: 1.4; color: var(--text-primary); }
@@ -598,14 +704,57 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Session gate ── */
 .session-gate { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(8,9,20,0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.25s ease; }
 .session-gate.session-gate-hidden { opacity: 0; pointer-events: none; }
-.session-gate-card { width: min(400px, 90vw); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 30px 26px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.4); transition: width 0.2s ease; }
+/* max-height + overflow-y:auto, not just centered by the flex parent above: a tall card (the landing's video/features/split
+   together) would otherwise have its top clipped off-screen with no way to reach it on a short window, the same "adaptive"
+   bug the Profile tab had — see sportify-hardening notes. */
+.session-gate-card { width: min(400px, 90vw); max-height: 90vh; overflow-y: auto; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: calc(var(--radius) * 2); padding: 30px 26px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.4); transition: width 0.2s ease; }
 .session-gate-card.session-gate-wide { width: min(460px, 92vw); }
+.session-gate-card.session-gate-landing { width: min(640px, 94vw); }
 .session-gate-icon { font-size: 32px; color: var(--text-accent); margin-bottom: 8px; }
 .session-gate-card h1 { font-size: 19px; font-weight: 700; color: var(--text-primary); }
 .session-gate-card > .hint { font-size: 12px; margin: 6px 0 20px; }
 .session-gate-actions { display: flex; flex-direction: column; gap: 8px; }
+.session-gate-actions[hidden] { display: none; }
 .session-gate-link { display: block; margin: 12px auto 0; background: none; border: none; color: var(--text-accent); font-size: 11px; cursor: pointer; text-decoration: underline; font-family: var(--font-sans); }
 .session-gate-link:hover { color: var(--text-primary); }
+
+/* ── Landing (the session gate's first-run content: logo, a sample video, what Sportify does, New/Returning) ── */
+.landing-logo { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 6px; }
+.landing-logo-badge { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: calc(var(--radius) * 1.6); background: linear-gradient(135deg, var(--fill-accent), var(--violet)); color: #fff; font-size: 26px; box-shadow: 0 8px 20px rgba(61,111,255,0.35); }
+.landing-logo-word { font-size: 22px; font-weight: 800; letter-spacing: 0.01em; color: var(--text-primary); font-family: var(--font-sans); }
+.landing-tagline { font-size: 12.5px; line-height: 1.5; max-width: 46em; margin: 0 auto 18px; }
+
+.landing-preview { margin-bottom: 18px; }
+.landing-carousel-wrap { position: relative; border-radius: calc(var(--radius) * 1.4); overflow: hidden; background: #0b0c14; line-height: 0; }
+.landing-carousel-img { width: 100%; height: 220px; display: block; object-fit: cover; transition: opacity 0.25s ease; }
+.landing-carousel-toggle { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: none; background: rgba(8,9,20,0.55); color: #fff; font-size: 13px; cursor: pointer; backdrop-filter: blur(2px); }
+.landing-carousel-toggle:hover { background: rgba(8,9,20,0.8); }
+.landing-carousel-caption { font-size: 10.5px; margin: 6px 2px 0; text-align: left; }
+
+.landing-features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.landing-feature { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; text-align: left; font-size: 11px; line-height: 1.4; color: var(--text-secondary); background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); }
+.landing-feature i { flex-shrink: 0; font-size: 15px; color: var(--text-accent); margin-top: 1px; }
+@media (max-width: 560px) { .landing-features { grid-template-columns: 1fr; } }
+
+.landing-split { display: flex; gap: 10px; margin-bottom: 4px; }
+.landing-choice { flex: 1 1 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 16px 15px; border-radius: calc(var(--radius) * 1.4); border: 1px solid var(--border-accent); background: var(--bg-accent); color: var(--text-primary); font-family: var(--font-sans); cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; }
+.landing-choice:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0,0,0,0.18); }
+.landing-choice i { font-size: 20px; color: var(--text-accent); }
+.landing-choice-secondary { border-color: var(--border-strong); background: var(--surface-1); }
+.landing-choice-secondary i { color: var(--text-muted); }
+.landing-choice-title { font-size: 13.5px; font-weight: 700; }
+.landing-choice-sub { font-size: 10.5px; color: var(--text-muted); line-height: 1.4; font-weight: 400; }
+@media (max-width: 560px) { .landing-split { flex-direction: column; } }
+.landing-split .session-gate-back { width: 100%; margin: 0 0 2px; }
+.landing-next { width: 100%; margin-top: 4px; justify-content: center; }
+
+/* ── Link a Revit file (session gate): a file's name only — no browser gives a page a real file-system path ── */
+.session-gate-revit-link { margin-top: 14px; padding-top: 12px; border-top: 0.5px solid var(--border-strong); }
+.session-gate-revit-toggle { display: flex; justify-content: center; gap: 4px; margin-bottom: 6px; }
+.session-gate-revit-tab { font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-muted); cursor: pointer; font-family: var(--font-sans); }
+.session-gate-revit-tab.active { background: var(--bg-accent); border-color: var(--border-accent); color: var(--text-accent); }
+.session-gate-revit-link .session-gate-link { margin-top: 0; }
+#sessionGateRevitLinkStatus, #sessionGateNewestExportStatus { font-size: 10.5px; margin: 4px 0 0; }
 
 /* ── Site: how the roof is defined, and what it is (roofProgram.js) ── */
 .roof-source { display: flex; flex-direction: column; gap: 6px; }
@@ -768,7 +917,7 @@ html[data-mode="dark"] .assump-badge.state-unconfirmed { color: #fbbf24; }
 .res-card.tone-bad { border-left-color: #ef4444; }
 .res-card.tone-prelim { border-left-color: #f59e0b; border-left-style: dashed; }
 .res-card.res-empty { opacity: 0.75; border-left-style: dashed; }
-.res-card.res-stale > :not(.res-head):not(.res-stale-note) { opacity: 0.55; }
+.res-card.res-stale > :not(.res-head):not(.res-stale-note):not(.res-source) { opacity: 0.55; }
 .res-stale-note { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.45; padding: 8px 10px; border-radius: var(--radius); background: rgba(245,158,11,0.12); border: 0.5px solid rgba(245,158,11,0.5); color: var(--text-primary); }
 .res-stale-note i { font-size: 16px; color: #b45309; margin-top: 1px; }
 .res-stale-note.unknown { background: var(--surface-1); border-color: var(--border-strong); }
@@ -835,6 +984,64 @@ html[data-mode="dark"] .res-pill.state-unconfirmed { color: #fbbf24; }
 .res-run-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; color: var(--text-secondary); }
 .res-run-list li i { font-size: 16px; margin-top: 1px; color: var(--text-muted); }
 .res-run-list li.done i { color: var(--text-success); }
+
+/* ── One store of results (resultsStore.js): the Analysis tab's overview of tiles, the source line of a card, and Combine's per-piece strip ── */
+.results-overview-head { display: flex; flex-direction: column; gap: 4px; }
+.results-overview-head h3 { margin: 0; font-size: 15px; color: var(--text-primary); }
+.results-overview-head .hint, .results-overview-head .res-status { margin: 0; font-size: 12px; line-height: 1.45; color: var(--text-secondary); }
+.results-overview-counts { margin: 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.results-group-title { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+.results-group-title i { color: var(--text-accent); font-size: 15px; }
+.results-tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.result-tile { display: flex; align-items: flex-start; gap: 10px; text-align: left; font: inherit; color: inherit; cursor: pointer; background: var(--surface-2); border: 0.5px solid var(--border); border-left: 3px solid var(--border-strong); border-radius: var(--radius); padding: 10px 12px; transition: border-color 0.15s, background 0.15s; }
+.result-tile:hover { border-color: var(--border-strong); background: var(--surface-1); }
+.result-tile:focus-visible, .piece-res-icon:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 2px; }
+.result-tile.tone-ok { border-left-color: #22c55e; }
+.result-tile.tone-warn, .result-tile.is-stale { border-left-color: #f59e0b; }
+.result-tile.tone-bad { border-left-color: #ef4444; }
+.result-tile.tone-prelim { border-left-color: #f59e0b; border-left-style: dashed; }
+.result-tile.tone-none { border-left-style: dashed; }
+.result-tile.src-none { opacity: 0.8; }
+.result-tile-icon { font-size: 22px; line-height: 1; color: var(--text-accent); margin-top: 1px; }
+.result-tile-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.result-tile-title { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
+.result-tile-headline { font-size: 12px; color: var(--text-primary); overflow-wrap: anywhere; }
+.result-tile-source { font-size: 10.5px; color: var(--text-muted); }
+.result-tile-source.revit { color: var(--text-accent); }
+.result-tile-chip { align-self: flex-start; }
+.results-piece-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); background: var(--surface-2); border: 0.5px dashed var(--border-strong); border-radius: var(--radius); padding: 10px 12px; }
+.results-piece-note > i { font-size: 18px; color: var(--text-accent); }
+.results-piece-note > div { flex: 1; min-width: 200px; }
+.res-source { display: flex; align-items: center; gap: 6px; margin-top: -6px; font-size: 11px; color: var(--text-muted); }
+.res-source.revit i { color: var(--text-accent); }
+.res-source.estimate i { color: #d97706; }
+.res-flash { animation: res-flash 1.8s ease-out; }
+@keyframes res-flash { 0% { box-shadow: 0 0 0 4px var(--border-accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.res-chart-card { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 4px 16px 16px; }
+.res-chart-card .section { border: 0; padding: 12px 0 0; background: none; box-shadow: none; }
+
+.piece-results { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
+.piece-results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.piece-results-head strong { font-size: 11.5px; color: var(--text-primary); }
+.piece-results-strip { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.piece-res-icon { position: relative; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-secondary); background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 8px; cursor: pointer; padding: 0; }
+.piece-res-icon:hover { border-color: var(--border-strong); }
+.piece-res-icon.is-open { color: var(--text-accent); background: var(--bg-accent); border-color: var(--border-accent); }
+.piece-res-icon::after { content: ""; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--border-strong); border: 1.5px solid var(--surface-2); }
+.piece-res-icon.tone-ok::after { background: #22c55e; }
+.piece-res-icon.tone-warn::after, .piece-res-icon.tone-prelim::after { background: #f59e0b; }
+.piece-res-icon.tone-bad::after { background: #ef4444; }
+.piece-results-detail { background: var(--surface-1); border: 0.5px solid var(--border); border-left: 3px solid var(--border-strong); border-radius: var(--radius); padding: 8px 9px; }
+.piece-results-detail.tone-ok { border-left-color: #22c55e; }
+.piece-results-detail.tone-warn, .piece-results-detail.tone-prelim { border-left-color: #f59e0b; }
+.piece-results-detail.tone-bad { border-left-color: #ef4444; }
+.piece-res-row-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
+.piece-res-name { font-size: 11.5px; font-weight: 700; color: var(--text-primary); }
+.piece-results-detail .hint { margin: 0; }
+.piece-res-source, .piece-res-revit { margin: 5px 0 0; font-size: 10px; color: var(--text-muted); }
+.piece-res-source i { color: #d97706; margin-right: 3px; }
+.piece-res-analysis { margin-top: 6px; padding: 0; background: none; border: 0; font: inherit; font-size: 10.5px; color: var(--text-accent); text-decoration: underline; cursor: pointer; }
+
 .res-run-list li.stale i { color: #b45309; }
 html[data-mode="dark"] .res-run-list li.stale i { color: #fbbf24; }
 .revit-layers-stale { color: #b45309; font-weight: 600; }
@@ -870,6 +1077,18 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .ws-chart-svg { background: #fff; border: 0.5px solid var(--border); border-radius: 6px; padding: 6px; overflow: hidden; }
 .ws-chart-svg svg { width: 100%; height: 100%; display: block; }
 .ws-chart figcaption { font-size: 10.5px; color: var(--text-secondary); }
+
+/* The one thing a fresh session actually needs before anything else works
+   (circulation has nowhere to start without it) — sits front-and-center on
+   the roof itself so it's the first thing seen, not something only the
+   Rules tab (⚙) would reveal. Hidden the moment one entry point exists
+   (drawCombineCanvas), not just once the rule stops complaining. */
+.combine-entry-cta { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; max-width: calc(100% - 24px); background: var(--surface-2); border: 1px solid var(--fill-accent); border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0,0,0,0.18); padding: 8px 10px 8px 14px; font-size: 12px; color: var(--text-primary); }
+.combine-entry-cta[hidden] { display: none; }
+.combine-entry-cta i:first-child { color: var(--text-accent); font-size: 16px; flex-shrink: 0; }
+.combine-entry-cta span { min-width: 0; }
+.combine-entry-cta button { flex-shrink: 0; white-space: nowrap; }
+.combine-entry-cta button.active { filter: brightness(1.15); }
 
 .revit-layers { position: absolute; top: 6px; left: 6px; z-index: 5; width: 250px; max-width: calc(100% - 60px); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0,0,0,0.12); font-size: 11px; }
 .revit-layers-master { display: flex; align-items: center; gap: 7px; padding: 7px 9px; cursor: pointer; font-weight: 600; color: var(--text-primary); }
@@ -912,6 +1131,35 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .placement-switch button i { font-size: 14px; }
 .placement-switch button:hover { color: var(--text-primary); }
 .placement-switch button.active { background: var(--fill-accent); color: var(--on-accent); }
+.placement-switch button:disabled { opacity: 0.45; cursor: not-allowed; }
+/* ── The 3D view of the roof (preview.js): the Plan / 3D switch above the board, and the stage that replaces the plan ── */
+.combine-view-bar { display: flex; align-items: center; gap: 10px; min-height: 30px; }
+.combine-view-hint { font-size: 11px; color: var(--text-secondary); min-width: 0; }
+.combine-3d { position: absolute; inset: 0; border-radius: var(--radius); overflow: hidden; background: var(--surface-1); border: 0.5px solid var(--border); }
+.combine-3d[hidden] { display: none; }
+.combine-3d canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
+.combine-3d canvas:active { cursor: grabbing; }
+.combine-3d canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--text-accent); }
+.combine-canvas-wrap[data-view="3d"] #combine-canvas, .combine-canvas-wrap[data-view="3d"] .combine-zoom-controls, .combine-canvas-wrap[data-view="3d"] .revit-layers { display: none; }
+.combine-canvas-wrap:has(.combine-legend.open) .combine-3d { right: 242px; }
+.combine-3d-tip { position: absolute; z-index: 3; pointer-events: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.18); white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.combine-3d-tip[hidden] { display: none; }
+.combine-canvas-wrap .combine-3d-compass { position: absolute; top: 8px; left: 8px; width: 44px; height: 44px; color: var(--text-secondary); pointer-events: none; }
+.combine-3d-bar { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 6px 8px; border-radius: var(--radius); background: var(--surface-2); border: 0.5px solid var(--border-strong); box-shadow: 0 2px 10px rgba(0,0,0,0.12); font-size: 11px; color: var(--text-secondary); }
+.combine-3d-bar .pv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.combine-3d-bar .pv-group { display: inline-flex; gap: 2px; }
+.combine-3d-bar .pv-group button { border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-primary); font: 600 11px var(--font-sans); padding: 3px 9px; border-radius: 6px; cursor: pointer; }
+.combine-3d-bar .pv-group button:hover { background: var(--surface-0); color: var(--text-accent); }
+.combine-3d-bar .pv-check, .combine-3d-bar .pv-time { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.combine-3d-bar .pv-time input[type="range"] { width: 120px; }
+.combine-3d-bar output { min-width: 34px; font-variant-numeric: tabular-nums; color: var(--text-primary); font-weight: 600; }
+.combine-3d-bar input:disabled { opacity: 0.5; cursor: not-allowed; }
+.combine-3d-bar .pv-stats { margin-left: auto; color: var(--text-muted); }
+.combine-3d-bar .pv-note { margin: 5px 0 0; line-height: 1.35; max-height: 7.5em; overflow-y: auto; }
+.combine-3d-bar .pv-note:empty, .combine-3d-bar .pv-note[hidden] { display: none; }
+.combine-3d-bar .pv-info { border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-secondary); font: 600 10.5px var(--font-sans); padding: 2px 8px; border-radius: 999px; cursor: pointer; }
+.combine-3d-bar .pv-info:hover, .combine-3d-bar .pv-info[aria-expanded="true"] { color: var(--text-accent); border-color: var(--text-accent); }
+.combine-3d-bar .pv-info[hidden] { display: none; }
 .algo-placement { position: absolute; inset: 0; z-index: 30; background: var(--surface-0); display: flex; flex-direction: column; overflow: hidden; }
 .algo-placement[hidden] { display: none; }
 .algo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 16px 20px 10px; border-bottom: 0.5px solid var(--border); }
@@ -1244,3 +1492,14 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .planter-switch { display: grid; grid-template-columns: 1fr 1fr; border: 0.5px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; margin-top: 4px; }
 .planter-switch button { border: 0; background: var(--surface-2); padding: 7px 8px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-secondary); }
 .planter-switch button.on { background: var(--fill-accent); color: var(--on-accent); }
+
+/* ── The session's and the iteration's name, for the files (sessionNames.js, the Documents tab) ── */
+.session-names { margin: 0 0 14px; padding: 12px 14px; border: 0.5px solid var(--border-strong); border-radius: var(--radius); background: var(--surface-2); }
+.session-names .deliverable-group-title { margin-bottom: 4px; }
+.session-names .hint { font-size: 12px; line-height: 1.45; color: var(--text-secondary); margin: 2px 0 6px; max-width: none; }
+.session-names-row { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; margin: 8px 0 4px; }
+.session-names-row label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; font-weight: 600; color: var(--text-secondary); min-width: 0; }
+.session-names-row input { font: 12px var(--font-sans); padding: 6px 8px; border-radius: 6px; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-primary); min-width: 0; }
+.session-names-row input:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 1px; }
+.session-names-preview { margin: 4px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .session-names-row { grid-template-columns: 1fr; } }

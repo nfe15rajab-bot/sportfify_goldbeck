@@ -21,10 +21,12 @@ const profileState = {
   source: "default",      // where the profile in force came from: "default", "browser", "file" or "revit"
   shared: null,           // null = not asked yet; true = Revit has this profile; false = Revit is not open (it gets the profile when both are); "error" = Revit refused it
   file: "",               // where the add-in wrote Sportify-PROFILE.json in the Sportify folder (its answer to the last POST /profile), "" until it has
+  machine: null,          // the add-in's answer to GET /capabilities (what this computer has, what its ribbon hides), null while Revit is not reachable
   note: ""                // the last thing that happened, in words (shown in the tab)
 };
 let profileApplying = false;
 let profileSyncing = false;
+let profileMachineLoading = false;
 let profileNameTimer = null;
 
 // ------------------------------------------------------------------------------------------------ the browser's copy
@@ -51,25 +53,31 @@ function profileTidy(container, separatorSelector) {
 }
 
 /** Is this workspace part of the view in force? (main.js asks before it opens one.) */
-function profileModeAllowed(mode) { return profileModeVisible(profileState.profile.view, mode); }
+function profileModeAllowed(mode) { return profileModeVisible(profileState.profile.view, mode, profileState.profile.extras); }
 
-function profileApplyView(view) {
+/** Where Sportify opens: the workspace the person's answers chose (the quiz), when the view shows it; else the Overview. main.js asks after the welcome screen. */
+function profileLandingMode() {
+  const p = profileState.profile;
+  return p.landing && profileModeVisible(p.view, p.landing, p.extras) ? p.landing : "guide";
+}
+
+function profileApplyView(view, extras) {
   Object.keys(PROFILE_MODES).forEach(mode => {
     const el = document.getElementById(PROFILE_MODES[mode].button);
-    if (el) el.classList.toggle("view-hidden", !profileModeVisible(view, mode));
+    if (el) el.classList.toggle("view-hidden", !profileModeVisible(view, mode, extras));
   });
   const rail = document.getElementById("modeRail");
   if (rail) profileTidy(rail, ".activity-bar-divider");
   const row = document.getElementById("overviewWorkflow");
   if (row) {
-    row.querySelectorAll(".workflow-step[data-goto]").forEach(step => step.classList.toggle("view-hidden", !profileModeVisible(view, step.dataset.goto)));
+    row.querySelectorAll(".workflow-step[data-goto]").forEach(step => step.classList.toggle("view-hidden", !profileModeVisible(view, step.dataset.goto, extras)));
     let n = 0;
     row.querySelectorAll(".workflow-step:not(.view-hidden) .workflow-num").forEach(num => { num.textContent = String(++n); });
     profileTidy(row, ".workflow-arrow");
   }
   document.documentElement.dataset.view = view;
   // a workspace the new view hides must not stay open
-  if (typeof activeMode !== "undefined" && !profileModeVisible(view, activeMode) && typeof setMode === "function") setMode("guide");
+  if (typeof activeMode !== "undefined" && !profileModeVisible(view, activeMode, extras) && typeof setMode === "function") setMode("guide");
 }
 
 /** Puts a profile in force: the view, the role, the theme, and what the Profile tab and the welcome screen say. Does not save (see profileChange). */
@@ -79,7 +87,7 @@ function profileApply(p, source) {
   if (source) profileState.source = source;
   profileApplying = true;
   try {
-    profileApplyView(prof.view);
+    profileApplyView(prof.view, prof.extras);
     if (document.documentElement.dataset.role !== prof.role && typeof setRole === "function") setRole(prof.role, true);
     if (prof.theme && document.documentElement.dataset.mode !== prof.theme && typeof setTheme === "function") setTheme(prof.theme);
   } finally {
@@ -115,6 +123,26 @@ async function profilePushToRevit(p) {
   if (r.ok && r.json && typeof r.json.file === "string") profileState.file = r.json.file;
   if (profileState.shared === "error") profileState.note = "Revit did not take the profile: " + (r.error || "no reason given");
   profileRenderStatus();
+  if (r.ok) profileLoadMachine(false);      // the ribbon follows the view, so what it hides has changed
+}
+
+/** What this computer has, and what the Sportify tab in Revit hides because of it and of the view: asked of the add-in (which looks; nobody is asked). */
+async function profileLoadMachine(refresh) {
+  if (typeof localApi !== "function" || (profileMachineLoading && !refresh)) return;      // one plain question at a time; an explicit refresh always goes through
+  profileMachineLoading = true;
+  try {
+    const r = await localApi("/capabilities" + (refresh ? "?refresh=1" : ""));
+    profileState.machine = r.ok && r.json ? r.json : null;
+  } finally {
+    profileMachineLoading = false;
+  }
+  profileRenderMachine();
+  if (typeof whereRender === "function") whereRender();      // Unity and SOLIDWORKS in the Overview's card and on the badges
+}
+
+/** main.js: the Profile tab was opened. Look at the computer again (Unity may have been installed since Revit started). */
+function profileOnTabOpen() {
+  if (profileState.shared !== false) profileLoadMachine(true);
 }
 
 /** Called by workspaceBridge.js on every answer of the add-in: whichever copy is newer wins, and a copy the other lacks is sent to it. */
@@ -135,6 +163,7 @@ async function profileSyncWithRevit() {
       await profilePushToRevit(local);
     }
     if (profileState.shared !== "error") profileState.shared = true;
+    if (!profileState.machine) profileLoadMachine(false);      // first contact with the add-in: what this computer has
   } finally {
     profileSyncing = false;
   }
@@ -145,7 +174,10 @@ async function profileSyncWithRevit() {
 function profileRevitClosed() {
   if (profileState.shared === false) return;
   profileState.shared = false;
+  profileState.machine = null;
   profileRenderStatus();
+  profileRenderMachine();
+  if (typeof whereRender === "function") whereRender();
 }
 
 // ------------------------------------------------------------------------------------------------ the buttons of the tab
@@ -258,7 +290,7 @@ function profileImportFile(file) {
 
 function profileReset() {
   const d = profileDefaults();
-  profileChange({ view: d.view, role: d.role, quiz: null }, "Back to the defaults: Advanced view, planner. Your name, photo and the theme stay as they are.");
+  profileChange({ view: d.view, role: d.role, quiz: null, extras: [], landing: null }, "Back to the defaults: Advanced view, planner, no quiz answers. Your name, photo and the theme stay as they are.");
 }
 
 // ------------------------------------------------------------------------------------------------ what the tab and the welcome screen say
@@ -277,10 +309,11 @@ function profileRenderChoices() {
   }
   const noteEl = document.getElementById("profile-view-note");
   if (noteEl) {
-    const hidden = profileHiddenModes(p.view).map(m => PROFILE_MODES[m].label);
-    noteEl.textContent = hidden.length
+    const hidden = profileHiddenModes(p.view, p.extras).map(m => PROFILE_MODES[m].label);
+    const added = p.view === "simple" && p.extras.length ? "Added to it because of your answers: " + p.extras.map(k => PROFILE_EXTRAS[k].label).join(", ") + ". " : "";
+    noteEl.textContent = added + (hidden.length
       ? "Hidden in the " + PROFILE_VIEWS[p.view].title + " view: " + hidden.join(", ") + ". They are one click away in Advanced; nothing is deleted."
-      : "Nothing is hidden: every tab is shown.";
+      : "Nothing is hidden: every tab is shown.");
   }
   document.querySelectorAll("[data-profile-role]").forEach(b => b.classList.toggle("active", b.dataset.profileRole === p.role));
   document.querySelectorAll("[data-profile-theme]").forEach(b => b.classList.toggle("active", b.dataset.profileTheme === (p.theme || document.documentElement.dataset.mode)));
@@ -323,7 +356,7 @@ function profileStatusText() {
   const stamp = new Date(p.updated).toLocaleString();
   if (profileState.shared === true) return "Saved " + stamp + " in this browser, in Revit's settings file and as Sportify-PROFILE.json in the Profile folder of your Sportify folder" + (profileState.file ? " (" + profileState.file + ")" : "") + ", so the Sportify tab in Revit and this page agree.";
   if (profileState.shared === "error") return "Saved " + stamp + " in this browser. Revit did not take it.";
-  return "Saved " + stamp + " in this browser. Revit is not open: it gets the profile the next time both are open.";
+  return "Saved " + stamp + " in this browser. Revit not open: it gets the profile the next time both are open.";
 }
 
 function profileRenderStatus() {
@@ -339,8 +372,36 @@ function profileRenderGateLine() {
   el.textContent = (p.person.name ? "Welcome back, " + p.person.name + ". " : "") + "PROFILE: " + PROFILE_VIEWS[p.view].title + " view, " + p.role + (p.updated ? "" : " (defaults)") + ". Change it in the Profile tab.";
 }
 
+/** "This computer": what the add-in found (Unity, SOLIDWORKS, Chrome), what that means, and which Revit buttons are hidden. Every word from the add-in goes through escapeHtml. */
+function profileRenderMachine() {
+  const el = document.getElementById("profile-machine");
+  if (el) {
+    const words = { ok: "found", missing: "not found", unknown: "unknown" };
+    const icons = { ok: "ti-circle-check", missing: "ti-circle-x", unknown: "ti-help-circle" };
+    el.innerHTML = profileMachineRows(profileState.machine).map(row => `
+      <div class="profile-machine-row profile-machine-${escapeHtml(row.state)}">
+        <i class="ti ${icons[row.state] || icons.unknown}" aria-hidden="true"></i>
+        <div class="profile-machine-body">
+          <div class="profile-machine-title"><strong>${escapeHtml(row.label)}</strong><span class="profile-machine-state">${escapeHtml(words[row.state] || words.unknown)}</span></div>
+          ${row.text ? `<div class="profile-machine-text">${escapeHtml(row.text)}</div>` : ""}
+          ${row.affects ? `<div class="profile-machine-affects">${escapeHtml(row.affects)}</div>` : ""}
+        </div>
+      </div>`).join("");
+  }
+  const hiddenEl = document.getElementById("profile-machine-hidden");
+  if (hiddenEl) {
+    const hidden = profileHiddenButtons(profileState.machine);
+    hiddenEl.textContent = !profileState.machine ? ""
+      : hidden.length ? "Hidden in the Sportify tab of Revit (because of your view and this computer): " + hidden.join(", ") + ". Choose Advanced to show what your view hides; what needs a tool that is not installed comes back once the tool is."
+      : "Nothing is hidden in the Sportify tab of Revit.";
+  }
+}
+
 function profileRender() {
   profileRenderPerson();
+  profileRenderMachine();
+  if (typeof quizRenderProfileSection === "function") quizRenderProfileSection();      // quiz.js: the answers and the buttons to take the quiz again
+  if (typeof quizRenderNextStep === "function") quizRenderNextStep();                  // quiz.js: "Your next step" on the Overview
   profileRenderChoices();
   profileRenderStatus();
   profileRenderGateLine();

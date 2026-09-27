@@ -34,12 +34,14 @@ const KIND_COLORS = {
   // Plants read as a crown outline rather than a solid block — a tree occupies
   // its canopy, but you can still see the ground it is standing on.
   vegetation: { stroke: "#2f7a43", fill: "rgba(47,122,67,0.22)" },
-  // Pieces pushed from the Revit Families tab — the user's own loaded
+  // Pieces pushed from the Revit families tab — the user's own loaded
   // content rather than one of the app's built-in presets. Its own colour
   // so a designer can see at a glance which pieces came from their model.
   revit:    { stroke: "#d97706", fill: "rgba(217,119,6,0.32)" },
   // The Garden tab's blocks (Planter S / T, Park Bench and Table): earthy brown, so they don't read as green roof zones.
   gardenBlock: { stroke: "#8a5a2b", fill: "rgba(138,90,43,0.35)" },
+  // Louvre pergolas, sails, screens, fences: its own teal, distinct from every static category — these are the pieces Revit's Kinetics ribbon can put in motion.
+  kinetics: { stroke: "#0891b2", fill: "rgba(8,145,178,0.32)" },
 };
 
 /** Returns the on-canvas (possibly rotated) footprint size in meters. */
@@ -303,6 +305,19 @@ function syncAddEntryTool() {
   const active = combineState.tool === "addEntry";
   btn.classList.toggle("active", active);
   hint.style.display = active ? "block" : "none";
+
+  // The on-canvas call-to-action (index.html's #combine-entry-cta) mirrors
+  // the same active state and swaps to the same "click the edge" wording,
+  // since it's the copy this button's own toggle is reached through most
+  // of the time — see the click wiring in combineController.js.
+  const ctaBtn = document.getElementById("btn-add-entry-cta");
+  const ctaText = document.getElementById("combine-entry-cta-text");
+  if (ctaBtn) ctaBtn.classList.toggle("active", active);
+  if (ctaText) {
+    ctaText.textContent = active
+      ? "Tool active — click near the site edge to drop one pin (click the button again to cancel)."
+      : "Add an entry point so pathways have somewhere to start.";
+  }
 }
 
 /** Snaps a click (plan metres) onto the nearest side of the real roof outline and stores it as a new entry point, facing into the roof. */
@@ -430,6 +445,9 @@ function drawCombineCanvas() {
   const items = combineState.items;
   const entries = combineState.entryPoints;
   const { scale, roofPxW, roofPxH, roofOx, roofOy } = combineLayout();
+
+  const entryCta = document.getElementById("combine-entry-cta");
+  if (entryCta) entryCta.hidden = entries.length > 0;
 
   let el = `
     <text x="${CVW / 2}" y="24" text-anchor="middle" font-size="12"
@@ -665,11 +683,13 @@ function drawCombineCanvas() {
   if (typeof renderDesignPanel === "function") renderDesignPanel(circulation);
   // What is selected, and a record of the change — both read the state the
   // redraw just finished producing, so neither needs telling separately.
-  if (typeof renderInspector === "function") renderInspector();
+  if (typeof renderInspector === "function") renderInspector(circulation);
   if (typeof recordCombineHistory === "function") recordCombineHistory();
   renderSmartRuleAdvisory();
   const selectedItem = combineState.selectedKind === "item" ? items.find(it => it.id === combineState.selectedId) : null;
   renderSuggestions(selectedItem, combineState.suggestions);
+  // The 3D view (preview.js) follows the board: it rebuilds its scene from this state, but only while it is showing.
+  if (typeof combinePreviewRefresh === "function") combinePreviewRefresh();
 }
 
 /**

@@ -166,7 +166,8 @@ function describeZone(z) {
 
 /* ── Rendering ───────────────────────────────────────────────────────────── */
 
-function renderInspector() {
+/** `circulation` is the routing drawCombineCanvas has just computed for the redraw, so the piece's results do not run it a second time on every drag; without it (a click on the strip) it is computed here. */
+function renderInspector(circulation) {
   const host = inspectorHost();
   if (!host) return;
 
@@ -196,5 +197,7 @@ function renderInspector() {
     ${inspectorTable(d.rows)}
     ${d.material ? `<p class="hint">${escapeHtml(d.material)}</p>` : ""}
     ${d.source ? `<p class="hint"><a href="${safeUrl(d.source)}" target="_blank" rel="noopener">${escapeHtml(d.sourceName || "Source")}</a></p>` : ""}
+    ${sel.kind === "item" && typeof resultsPieceHtml === "function" ? resultsPieceHtml(sel.obj, circulation) : ""}
     <p class="hint">Click an empty part of the roof to clear the selection.</p>`;
+  if (sel.kind === "item" && typeof resultsPieceWire === "function") resultsPieceWire(host);
 }

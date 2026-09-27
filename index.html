@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-27-greennotpath"></script>
+  <script src="themeInit.js?v=2026-09-27-merge-master"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
   <!--
     Content Security Policy: scripts only from this site (no inline script, no eval), nothing loaded from another site except the map tiles and photographs (images)
-    and the addresses the app talks to: the Revit add-in (5679), the API (5107, 5108 for the presentation copy) and the address lookup (Nominatim). Styles may be inline:
+    and the addresses the app talks to: the Revit add-in (5679), the API (5107, 5108 for the presentation copy), the address lookup (Nominatim) and the annual weather overview (Open-Meteo's
+    archive API, no key). Styles may be inline:
     the app sets style attributes throughout. Leaflet, SunCalc, the icon font and Titillium Web are served from vendor/ (see vendor/README.md), not from a CDN.
     tools/csp-test.js checks that this stays true.
   -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org https://archive-api.open-meteo.com; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-27-greennotpath" />
+  <link rel="stylesheet" href="style.css?v=2026-09-27-merge-master" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -23,11 +24,48 @@
     <div id="toast-container" class="toast-container"></div>
 
     <div id="sessionGate" class="session-gate">
-      <div class="session-gate-card">
-        <div class="session-gate-icon"><i class="ti ti-building-stadium" aria-hidden="true"></i></div>
-        <h1>Welcome to Sportify</h1>
-        <p class="hint">Pick up where you left off, or start a fresh roof layout.</p>
-        <div class="session-gate-actions" id="sessionGateMainActions">
+      <div class="session-gate-card session-gate-landing" id="sessionGateCard">
+        <div class="landing-logo">
+          <div class="landing-logo-badge"><i class="ti ti-building-stadium" aria-hidden="true"></i></div>
+          <div class="landing-logo-word">Sportify</div>
+        </div>
+        <p class="hint landing-tagline">Design a roof's sports and garden layout, push it into Revit, and see it analysed for structure, wind, rain, sun and use — all in one app.</p>
+
+        <div id="landingPreviewStep">
+          <div class="landing-preview" id="landingPreview">
+            <div class="landing-carousel-wrap">
+              <img class="landing-carousel-img" id="landingCarouselImg" src="samples/landing-shot-combine.jpg" alt="A Sportify analysis screen" />
+              <button type="button" class="landing-carousel-toggle" id="btn-landing-carousel-toggle"><i class="ti ti-player-pause-filled" aria-hidden="true"></i></button>
+            </div>
+            <p class="hint landing-carousel-caption" id="landingCarouselCaption">Several courts placed and priced on a real roof, in Combine.</p>
+          </div>
+
+          <div class="landing-features" id="landingFeatures">
+            <div class="landing-feature"><i class="ti ti-hand-move" aria-hidden="true"></i><span>Place sports and garden pieces by hand, or let the algorithm pack them for you</span></div>
+            <div class="landing-feature"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span>Structure, wind, rain, sun and dynamic analyses — Revit's own, or a quick estimate here</span></div>
+            <div class="landing-feature"><i class="ti ti-building-arch" aria-hidden="true"></i><span>Pushes straight into Revit: the real roof in, the layout back out</span></div>
+            <div class="landing-feature"><i class="ti ti-plant-2" aria-hidden="true"></i><span>Garden zones, planters and kinetic shading, adaptive to the roof you actually have</span></div>
+          </div>
+
+          <button type="button" class="btn-export accent landing-next" id="btn-gate-next">Next<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+        </div>
+
+        <div class="landing-split" id="landingSplit" hidden>
+          <button class="session-gate-link session-gate-back" id="btn-gate-split-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
+          <button type="button" class="landing-choice" id="btn-gate-onboard">
+            <i class="ti ti-sparkles" aria-hidden="true"></i>
+            <span class="landing-choice-title">New to Sportify</span>
+            <span class="landing-choice-sub">Make a profile and answer four short questions — about a minute, and every answer can change later.</span>
+          </button>
+          <button type="button" class="landing-choice landing-choice-secondary" id="btn-gate-returning">
+            <i class="ti ti-user-check" aria-hidden="true"></i>
+            <span class="landing-choice-title">I've used Sportify before</span>
+            <span class="landing-choice-sub">Skip straight to resuming your last session, starting fresh, or a prebuilt layout.</span>
+          </button>
+        </div>
+
+        <div class="session-gate-actions" id="sessionGateMainActions" hidden>
+          <button class="session-gate-link session-gate-back" id="btn-gate-returning-back"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back</button>
           <button class="btn-export accent" id="btn-gate-load">
             <i class="ti ti-upload" aria-hidden="true"></i><span id="btn-gate-load-label">Load a Session</span>
           </button>
@@ -49,13 +87,42 @@
         </div>
         <button class="session-gate-link" id="btn-gate-load-file" style="display:none">Or load from a file instead</button>
         <input type="file" id="gate-load-file" accept=".json" style="display:none" />
+        <div class="session-gate-revit-link">
+          <div class="session-gate-revit-toggle" role="tablist" aria-label="Link a Revit file">
+            <button type="button" class="session-gate-revit-tab active" id="btn-gate-revit-mode-browse" role="tab" aria-selected="true">Browse to a .rvt file</button>
+            <button type="button" class="session-gate-revit-tab" id="btn-gate-revit-mode-newest" role="tab" aria-selected="false">Pick the newest export</button>
+          </div>
+          <div id="gateRevitBrowseMode">
+            <button type="button" class="session-gate-link" id="btn-gate-link-revit"><i class="ti ti-link" aria-hidden="true"></i> Link a Revit file</button>
+            <p class="hint" id="sessionGateRevitLinkStatus" hidden></p>
+          </div>
+          <div id="gateRevitNewestMode" hidden>
+            <button type="button" class="session-gate-link" id="btn-gate-load-newest-export"><i class="ti ti-file-import" aria-hidden="true"></i> Load the newest export from Revit</button>
+            <p class="hint" id="sessionGateNewestExportStatus"></p>
+          </div>
+        </div>
+        <input type="file" id="gate-revit-file" accept=".rvt" style="display:none" />
         <p class="hint" id="sessionGateStatus"></p>
       </div>
     </div>
 
+    <!-- The start-up quiz (quiz.js): four questions and what they set; opens once for a new person, and from the Profile tab -->
+    <div id="quizOverlay" class="quiz-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
+      <div class="quiz-card" id="quizCard"></div>
+    </div>
+
+    <!-- The rundgang (tour.js): a spotlight on the real element and a card that says what it is for; offered after the quiz, from the Overview and from the Profile tab -->
+    <div id="tourOverlay" class="tour-overlay" style="display:none">
+      <div class="tour-spot" id="tourSpot" style="display:none"></div>
+      <div class="tour-card" id="tourCard" role="dialog" aria-labelledby="tourTitle" aria-live="polite"></div>
+    </div>
+
+    <!-- One step through the design workflow (Site through Revit families); workflowNext.js shows/hides/labels it for whatever tab is on screen -->
+    <button type="button" class="workflow-next-btn" id="workflowNextBtn" hidden><span id="workflowNextLabel"></span><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+
     <div class="mode-toggle">
       <button id="modeGuide" class="mode-btn active">Overview</button>
-      <button id="modeDeliverables" class="mode-btn">Deliverables</button>
+      <button id="modeDeliverables" class="mode-btn" title="Documents & files — layouts, charts, reports and schedules, kept in your Sportify folder">Documents</button>
       <button id="modeSession" class="mode-btn">Save Session</button>
       <button id="btn-new-session" class="mode-btn" title="Reopen the welcome picker — resume, start fresh, load a preset or a file">New Session</button>
       <button id="modeProfile" class="mode-btn" title="Your PROFILE — Simple or Advanced view, role and theme; saved and reloaded every time">Profile</button>
@@ -63,6 +130,9 @@
 
     <div class="top-right-controls">
       <input type="file" id="load-session-file-global" accept=".json" style="display:none" />
+
+      <!-- Is Revit open with the Sportify add-in? Grey when it is not: 2D work goes on. Click for what runs where (where.js). -->
+      <button type="button" id="whereRevit" class="where-pill where-looking" title="Asking whether Revit is open with the Sportify add-in."><span class="where-dot" aria-hidden="true"></span><span id="whereRevitLabel">Looking for Revit…</span></button>
 
       <button id="themeToggle" class="theme-toggle-btn" title="Switch to light mode">
         <i class="ti ti-moon" aria-hidden="true"></i>
@@ -80,32 +150,35 @@
 
     <nav class="mode-rail" id="modeRail" title="Sportify workspaces">
       <button id="modeSite" class="activity-icon" title="Site"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="activity-icon-label">Site</span></button>
-      <button id="modeStructure" class="activity-icon" title="Structure — grid, columns, deck capacity, natural frequency"><i class="ti ti-building" aria-hidden="true"></i><span class="activity-icon-label">Structure</span></button>
-      <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Conditions</span></button>
+      <button id="modeStructure" class="activity-icon" title="Structure inputs — grid, columns, deck capacity, natural frequency"><i class="ti ti-building" aria-hidden="true"></i><span class="activity-icon-label">Structure inputs</span></button>
+      <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Site conditions</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
       <button id="modeGardenBlocks" class="activity-icon" title="Garden — planters and garden blocks"><i class="ti ti-plant" aria-hidden="true"></i><span class="activity-icon-label">Garden</span></button>
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
       <button id="btn-vegetation-toggle" class="activity-icon" title="Vegetation — trees, shrubs, planting"><i class="ti ti-tree" aria-hidden="true"></i><span class="activity-icon-label">Plants</span></button>
       <button id="btn-furniture-toggle" class="activity-icon" title="Furniture — benches, tables, bins, bollards, lights"><i class="ti ti-armchair" aria-hidden="true"></i><span class="activity-icon-label">Furniture</span></button>
+      <button id="btn-kinetics-toggle" class="activity-icon" title="Kinetics — louvre pergolas, sails, screens, fences: place them by hand or let Algorithmic placement place them by quantity"><i class="ti ti-wind" aria-hidden="true"></i><span class="activity-icon-label">Kinetics</span></button>
       <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
       <div class="activity-bar-divider"></div>
-      <button id="modeAnalysis" class="activity-icon" title="Analysis"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Analysis</span></button>
+      <button id="modeAnalysis" class="activity-icon" title="Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Results</span></button>
       <button id="modeCompare" class="activity-icon" title="Compare"><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="activity-icon-label">Compare</span></button>
-      <button id="modePostAnalysis" class="activity-icon" title="Post Analysis — dynamic families and where to improve the design next"><i class="ti ti-transform" aria-hidden="true"></i><span class="activity-icon-label">Post Analysis</span></button>
+      <button id="modePostAnalysis" class="activity-icon" title="Improve — what to change first, ranked, and the moving parts that answer the analysis"><i class="ti ti-transform" aria-hidden="true"></i><span class="activity-icon-label">Improve</span></button>
       <div class="activity-bar-divider"></div>
-      <button id="modeData" class="activity-icon" title="Data"><i class="ti ti-database" aria-hidden="true"></i><span class="activity-icon-label">Data</span></button>
+      <button id="modeData" class="activity-icon" title="Catalogue — the reference data the app and Revit read: sports, materials, analysis figures"><i class="ti ti-database" aria-hidden="true"></i><span class="activity-icon-label">Catalogue</span></button>
       <div class="activity-bar-divider"></div>
-      <button id="modeFamilies" class="activity-icon" title="Revit Families"><i class="ti ti-box-multiple" aria-hidden="true"></i><span class="activity-icon-label">Families</span></button>
+      <button id="modeFamilies" class="activity-icon" title="Revit families — what your Revit project has loaded, to place in Combine"><i class="ti ti-box-multiple" aria-hidden="true"></i><span class="activity-icon-label">Revit families</span></button>
     </nav>
 
     <nav class="activity-bar" id="activity-bar"></nav>
+
+    <div class="panel-resizer" id="activityBarResizer" title="Drag to resize — widen to see full names"></div>
 
     <aside class="panel">
       <div id="siteConfigurator" style="display:none">
         <div class="panel-header">
           <h2>Site</h2>
-          <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine/Analysis for shading decisions. The roof's structure and the site's conditions (wind, snow, use over the day) have their own tabs.</p>
+          <p>Roof size and, optionally, where it really sits — powers the sun-position readout used across Combine and the results for shading decisions. The roof's structure and the site's conditions (wind, snow, use over the day) have their own tabs: Structure inputs and Site conditions.</p>
         </div>
         <div class="section planner-only" id="roof-setup">
           <label>1 · How do you define the roof?</label>
@@ -176,18 +249,25 @@
           <div class="input-row">
             <input type="date" id="siteDate" />
             <input type="time" id="siteTime" value="12:00" />
+            <button class="btn-export" id="btn-site-now" title="Set the fields to right now, at the site">Now</button>
           </div>
+          <p class="hint" id="site-now-status"></p>
         </div>
         <div class="section">
           <label>Sun position</label>
           <div id="sun-compass" class="sun-compass"></div>
           <p class="hint" id="sun-summary">Set a site location to see sun position and shading guidance.</p>
         </div>
+        <div class="section">
+          <label>Sun path today</label>
+          <div id="site-sun-path"></div>
+          <p class="hint">Altitude across the whole day at this site; the ring marks the date/time typed above.</p>
+        </div>
       </div>
 
       <div id="structureConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Structure</h2>
+          <h2>Structure inputs</h2>
           <p>What the roof deck is made of and what it can carry: the grid and columns from Revit, the deck capacity, the natural frequency and the comfort limits. The static and dynamic structural analyses rest on them.</p>
         </div>
   <div class="section planner-only">
@@ -221,6 +301,12 @@
               <option value="4">Zone 4</option>
             </select>
             <p class="hint" id="site-wind-status">Set a site location in Germany and the zone is looked up.</p>
+          </div>
+
+          <div class="section">
+            <label>Annual weather</label>
+            <div id="site-weather-chart"></div>
+            <p class="hint" id="site-weather-status">Set a site location to see its annual weather.</p>
           </div>
 
         <div class="section planner-only">
@@ -428,8 +514,8 @@
 
       <div id="dataConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Reference data</h2>
-          <p>Sports, materials, norms &amp; vegetal palettes for Germany</p>
+          <h2>Catalogue</h2>
+          <p>The reference data the app and Revit read: sports, materials, norms &amp; vegetal palettes for Germany, and the figures the analyses run on</p>
         </div>
 
         <div class="section">
@@ -504,15 +590,15 @@
 
       <div id="analysisConfigurator" style="display:none">
         <div class="panel-header">
-          <h2 id="analysis-heading">Analysis tools</h2>
-          <p id="analysis-intro">Early, approximate checks against the current Combine layout — the Revit add-in runs the full-fidelity version of each of these.</p>
+          <h2 id="analysis-heading">Results: the whole layout at a glance</h2>
+          <p id="analysis-intro">One tile per analysis. Revit's full analysis when it has run on this layout, this app's quick estimate otherwise. Click a tile for the details.</p>
         </div>
         <div class="section" id="analysisResultsSection" style="display:none"></div>
         <div class="section iterations-section" id="analysisIterationsSection">
           <label><i class="ti ti-stack-2" aria-hidden="true"></i> Saved iterations</label>
           <p class="hint">Saved with Combine's "Save for Compare" — select one to analyze it instead.</p>
           <div class="iterations-list" id="iterationsListAnalysis"></div>
-          <button class="btn-export" id="btn-send-iterations-revit" disabled title="Sends every saved iteration to Revit, one Design Option (workset) each — run &quot;Import Iterations as Design Options&quot; there to build them.">
+          <button class="btn-export" id="btn-send-iterations-revit" data-needs="revit" disabled title="Sends every saved iteration to Revit, one Design Option (workset) each — run &quot;Import Iterations as Design Options&quot; there to build them.">
             <i class="ti ti-stack-2" aria-hidden="true"></i>Send to Revit as Design Options
           </button>
         </div>
@@ -520,8 +606,8 @@
 
       <div id="postAnalysisConfigurator" style="display:none">
         <div class="panel-header">
-          <h2>Post Analysis</h2>
-          <p>Where the analysis results turn into design: dynamic families driven by their own numbers, and what still needs attention, ranked by what matters most to you.</p>
+          <h2>Improve</h2>
+          <p>Where the results turn into design: dynamic families driven by their own numbers, and what still needs attention, ranked by what matters most to you.</p>
         </div>
         <div class="section">
           <label><i class="ti ti-adjustments" aria-hidden="true"></i> Priority</label>
@@ -632,7 +718,13 @@
           <div class="guide-wrap">
             <div class="guide-hero">
               <h1>Design your roof, your way</h1>
-              <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Site, Sport, Garden, Combine, Analysis, Compare and Data all live in the rail on the left — here's the order they're meant to be used in.</p>
+              <p class="hint">Sportify arranges sports, activities, and garden zones on a shared roof, automatically checking the same rules a real facility planner would. Site, Sport, Garden, Combine, Results, Compare and the Catalogue all live in the rail on the left — here's the order they're meant to be used in.</p>
+            </div>
+
+            <div class="next-step" id="overviewNext" style="display:none"></div>
+
+            <div class="tour-offer">
+              <button type="button" class="btn-export" data-tour-start><i class="ti ti-compass" aria-hidden="true"></i>Show me around<span class="tour-offer-time">about a minute</span></button>
             </div>
 
               <div class="workflow-row" id="overviewWorkflow">
@@ -642,52 +734,54 @@
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
                 <button class="workflow-step" data-goto="combine"><span class="workflow-num">3</span><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="workflow-label">Combine</span><span class="hint">Drag pieces onto the roof</span></button>
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
-                <button class="workflow-step" data-goto="analysis"><span class="workflow-num">4</span><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="workflow-label">Analysis</span><span class="hint">Check the layout</span></button>
+                <button class="workflow-step" data-goto="analysis"><span class="workflow-num">4</span><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="workflow-label">Results</span><span class="hint">Check the layout</span></button>
                 <i class="ti ti-arrow-right workflow-arrow" aria-hidden="true"></i>
                 <button class="workflow-step" data-goto="compare"><span class="workflow-num">5</span><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="workflow-label">Compare</span><span class="hint">Weigh variants against each other</span></button>
               </div>
 
               <div class="guide-hero guide-section-spacer">
-                <h2>How it thinks</h2>
-                <p class="hint">Three layout philosophies Sportify can work from — whichever one you build toward, the same rules underneath decide if it's actually usable.</p>
+                <h2>What runs where</h2>
+                <p class="hint">Sportify is this app and Revit working as one. Decide here; build in Revit. The status below is live.</p>
               </div>
 
-              <div class="step-grid guide-grid">
-              <div class="section">
-                <label>Grid-based <span class="mode-status available">Available now</span></label>
-                <svg viewBox="0 0 100 74" class="philosophy-diagram grid" aria-hidden="true">
-                  <rect x="4" y="4" width="18" height="18" rx="3"/><rect x="28" y="4" width="18" height="18" rx="3"/><rect x="52" y="4" width="18" height="18" rx="3"/><rect x="76" y="4" width="18" height="18" rx="3"/>
-                  <rect x="4" y="28" width="18" height="18" rx="3"/><rect x="28" y="28" width="18" height="18" rx="3"/><rect x="52" y="28" width="18" height="18" rx="3"/><rect x="76" y="28" width="18" height="18" rx="3"/>
-                  <rect x="4" y="52" width="18" height="18" rx="3"/><rect x="28" y="52" width="18" height="18" rx="3"/><rect x="52" y="52" width="18" height="18" rx="3"/><rect x="76" y="52" width="18" height="18" rx="3"/>
-                </svg>
-                <p class="hint">Define a base module and every piece aligns to it — orderly, predictable, easy to extend. Combine's rule-based auto-arrange already produces a tidy, grid-like default layout today.</p>
+              <div class="where-card" id="overviewWhere"></div>
+
+              <div class="guide-hero guide-section-spacer">
+                <h2>What's new</h2>
+                <p class="hint">Five things that make Sportify yours and clear: who you are and what you see, a few questions that set it up for you, the two ways of placing a layout on the roof, and every analysis at a glance.</p>
               </div>
-              <div class="section">
-                <label>Fractal <span class="mode-status vision">Vision</span></label>
-                <svg viewBox="0 0 100 74" class="philosophy-diagram fractal" aria-hidden="true">
-                  <rect x="3" y="3" width="94" height="68" rx="2" class="diagram-outline"/>
-                  <line x1="50" y1="3" x2="50" y2="71" class="diagram-outline"/>
-                  <line x1="3" y1="37" x2="50" y2="37" class="diagram-outline"/>
-                  <line x1="75" y1="37" x2="75" y2="71" class="diagram-outline"/>
-                  <path d="M12,20 L40,20 L40,55 L62,55 L62,15 L90,15" class="diagram-path"/>
-                </svg>
-                <p class="hint">Circulation branches recursively, like a maze, subdividing the roof into progressively smaller zones instead of one central corridor. The circulation engine's grid + pathfinding core is already built toward this.</p>
+
+              <div class="feature-grid" id="overviewFeatures">
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-user-circle" aria-hidden="true"></i><span>Profile</span></div>
+                  <p class="hint">Your name and photo, the Simple or Advanced view, your role and the theme — saved on this computer and shared with the Sportify tab in Revit. It also shows which tools this computer has (Unity, SOLIDWORKS, Chrome): what cannot work here is hidden instead of failing.</p>
+                  <button type="button" class="btn-export" data-feature="profile">Open your profile<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-list-check" aria-hidden="true"></i><span>The quiz</span></div>
+                  <p class="hint">Four short questions — what you want to do, which analyses matter, what you already have about the site, how well you know Sportify — set what is shown first and where Sportify opens. It only sets defaults, and you can take it again any time.</p>
+                  <button type="button" class="btn-export" data-feature="quiz">Take the quiz<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-hand-move" aria-hidden="true"></i><span>Manual placement</span></div>
+                  <p class="hint">Drag sports and garden pieces onto the roof yourself, in Combine. The rules — clearance, setback, circulation width, entry points — check every move, and suggested spots show where a piece fits.</p>
+                  <button type="button" class="btn-export" data-feature="manual">Place by hand<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-wand" aria-hidden="true"></i><span>Algorithmic placement</span></div>
+                  <p class="hint">Say which courts you want and how many, and the packing engine (a port of the Rhino Rooftop Sports Court Planner) places them by rules: a garden band along the edge, courts against the setback first, a clear path to every lift and ramp, the leftover as garden pockets. Apply it to Combine, then change anything by hand.</p>
+                  <button type="button" class="btn-export" data-feature="algo">Try algorithmic placement<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-head"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span>Results at a glance</span></div>
+                  <p class="hint">One tile per analysis for the whole layout: Revit's full analysis where it has run, this app's quick estimate otherwise, each marked with where it comes from. Select a piece in Combine and its own results appear beside the roof, live as you drag it.</p>
+                  <button type="button" class="btn-export" data-feature="results">See the results<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                </div>
               </div>
-              <div class="section">
-                <label>Organic <span class="mode-status vision">Vision</span></label>
-                <svg viewBox="0 0 100 74" class="philosophy-diagram organic" aria-hidden="true">
-                  <path d="M18,20 C8,30 8,50 22,60 C36,70 60,70 78,55 C94,42 90,18 72,10 C55,3 30,8 18,20 Z" class="diagram-blob"/>
-                  <circle cx="32" cy="34" r="6" class="diagram-dot"/>
-                  <circle cx="55" cy="44" r="5" class="diagram-dot"/>
-                  <circle cx="48" cy="24" r="4" class="diagram-dot"/>
-                </svg>
-                <p class="hint">Draw the boundary by hand — zones adapt to a freeform shape instead of a rectangle, the way a real garden follows the land rather than a grid. Combine already renders an arbitrary polygon boundary when one is imported from Revit; hand-drawing one yourself is the natural next step.</p>
-              </div>
-            </div>
 
             <div class="guide-hero guide-section-spacer">
               <h2>The rules every layout follows</h2>
-              <p class="hint">Whichever philosophy a layout comes from, four rules decide whether it's actually usable — the same ones Combine's auto-arrange and suggested spots already respect (see them live, with the same wording, in Combine's Rules step).</p>
+              <p class="hint">Whether a layout is placed by hand or by the algorithm, four rules decide whether it's actually usable — the same ones Combine's auto-arrange and suggested spots already respect (see them live, with the same wording, in Combine's Rules step).</p>
             </div>
 
             <div class="rule-explain-grid guide-grid">
@@ -723,9 +817,20 @@
         <div id="deliverables-content" style="display:none">
           <div class="guide-wrap">
             <div class="guide-hero">
-              <h1>Deliverables</h1>
+              <h1>Documents &amp; files</h1>
               <p class="hint">Everything Sportify makes, in one folder on your machine with a subfolder for every kind of deliverable. With Revit connected the app and Revit share that folder: exports are saved there by themselves, the analyses run on your layout with one button, and nothing has to be imported or exported by hand.</p>
               <p class="hint ws-status" id="dl-status"></p>
+            </div>
+
+            <!-- The names the files are called after (sessionNames.js) -->
+            <div class="session-names" id="session-names">
+              <div class="deliverable-group-title"><i class="ti ti-tag" aria-hidden="true"></i>Session and iteration</div>
+              <p class="hint">The reports, schedules, diagrams, charts and films Sportify makes start with these two names, so the files of the iterations of one session (or of several sessions) can be told apart in one folder. With an iteration name they are also kept in a folder of that name inside their own (Analysis reports, Schedules, Diagrams, Physical analysis, Videos), one folder per iteration. Both names are optional.</p>
+              <div class="session-names-row">
+                <label>Session<input type="text" id="session-name" maxlength="60" autocomplete="off" spellcheck="false" placeholder="e.g. DIGITAL TOOLS AND METHODS 2 - Roof and Sports" /></label>
+                <label>Iteration<input type="text" id="session-iteration" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. Algorithmic" /></label>
+              </div>
+              <p class="hint session-names-preview" id="session-names-preview"></p>
             </div>
 
             <div class="deliverables-grid">
@@ -818,6 +923,17 @@
               </div>
             </div>
 
+            <h2 class="profile-heading">Your answers</h2>
+            <div id="profile-quiz"></div>
+            <div class="profile-person-buttons profile-tour-row">
+              <button type="button" class="btn-export" data-tour-start><i class="ti ti-compass" aria-hidden="true"></i>Show me around<span class="tour-offer-time">about a minute</span></button>
+            </div>
+
+            <h2 class="profile-heading">This computer</h2>
+            <p class="profile-note">Sportify looks for the tools it can use, so nobody is asked whether they have them. What is missing is hidden instead of failing when it is clicked.</p>
+            <div class="profile-machine" id="profile-machine"></div>
+            <p class="profile-note" id="profile-machine-hidden"></p>
+
             <h2 class="profile-heading">Where your profile is kept</h2>
             <p class="profile-note" id="profile-status"></p>
             <div class="overview-actions profile-actions">
@@ -847,10 +963,54 @@
           <div class="algo-placement" id="algo-placement" hidden></div>
           <div class="combine-roof-pane">
             <div class="placement-switch-bar" data-placement-switch></div>
+            <!-- Plan or 3D (preview.js) -->
+            <div class="combine-view-bar">
+              <div class="placement-switch" role="group" aria-label="Plan or 3D view">
+                <button type="button" class="active" data-combine-view="2d" aria-pressed="true"><i class="ti ti-layout-grid" aria-hidden="true"></i>Plan</button>
+                <button type="button" data-combine-view="3d" aria-pressed="false"><i class="ti ti-cube" aria-hidden="true"></i>3D</button>
+              </div>
+              <span class="combine-view-hint" id="combine-view-hint"></span>
+            </div>
             <div class="combine-canvas-wrap">
               <svg id="combine-canvas" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+              <!-- The 3D view of the same roof (preview.js, previewCore.js): shown instead of the plan while "3D" is chosen. It only reads the board. -->
+              <div class="combine-3d" id="combine-3d" hidden>
+                <canvas id="combine-3d-canvas" tabindex="0" aria-label="3D view of the roof. Drag to turn it, scroll to zoom, right-drag to move it. The arrow keys turn it, plus and minus zoom, Home puts it back."></canvas>
+                <div class="combine-3d-tip" id="combine-3d-tip" hidden></div>
+                <svg class="combine-3d-compass" viewBox="0 0 40 40" aria-hidden="true">
+                  <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
+                  <g id="pv-compass-needle" style="transform-origin: 20px 20px">
+                    <path d="M20 5 L25 20 L15 20 Z" fill="#ef4444"/>
+                    <path d="M20 35 L25 20 L15 20 Z" fill="currentColor" fill-opacity="0.45"/>
+                  </g>
+                  <text x="20" y="4.5" text-anchor="middle" font-size="6" font-weight="700" fill="currentColor">N</text>
+                </svg>
+                <div class="combine-3d-bar">
+                  <div class="pv-row">
+                    <span class="pv-group" role="group" aria-label="View">
+                      <button type="button" data-pv-camera="angle" title="The whole roof from a slanting angle">Angle</button>
+                      <button type="button" data-pv-camera="top" title="Straight down, like the plan">Top</button>
+                      <button type="button" data-pv-camera="below" title="From underneath, to see the structure under the deck">Below</button>
+                    </span>
+                    <label class="pv-check"><input type="checkbox" id="pv-shadows" checked /> Shadows</label>
+                    <label class="pv-check"><input type="checkbox" id="pv-structure" checked /> Structure</label>
+                    <label class="pv-time"><span>Sun at</span><input type="range" id="pv-hour" min="0" max="23.75" step="0.25" value="12" aria-label="Time of day for the sun and the shadows (local solar time: noon is when the sun is highest)" title="Local solar time on the Site tab's date: noon is when the sun is highest" /><output id="pv-hour-label" for="pv-hour">12:00</output></label>
+                    <span class="pv-stats" id="pv-stats"></span>
+                    <button type="button" class="pv-info" id="pv-info" aria-expanded="false" aria-controls="pv-note" title="What this view assumes or lacks" hidden>Notes</button>
+                  </div>
+                  <p class="pv-note" id="pv-note" hidden></p>
+                </div>
+              </div>
               <!-- Combine's "Revit layers" switch (revitLayers.js): what the Revit model has, drawn over the roof only when turned on -->
               <div class="revit-layers" id="revit-layers"></div>
+              <!-- The single most important first action in a fresh session — shown right on the roof (not
+                   buried in the Rules tab, ⚙) until it's satisfied. See drawCombineCanvas's visibility toggle
+                   and syncAddEntryTool's active-state/instruction swap (combineField.js). -->
+              <div class="combine-entry-cta" id="combine-entry-cta" hidden>
+                <i class="ti ti-door-enter" aria-hidden="true"></i>
+                <span id="combine-entry-cta-text">Add an entry point so pathways have somewhere to start.</span>
+                <button class="btn-export accent" id="btn-add-entry-cta"><i class="ti ti-map-pin-plus" aria-hidden="true"></i>Add Entry Point</button>
+              </div>
               <!-- What each number on the board is (combineField.js, renderCombineLegend) -->
               <div class="combine-legend" id="combine-legend" hidden></div>
               <div class="combine-zoom-controls">
@@ -884,6 +1044,14 @@
                   <button id="btn-furniture-close" title="Close">&times;</button>
                 </div>
                 <div id="furniture-panel"></div>
+              </aside>
+
+              <aside class="zone-flyout" id="kinetics-flyout" hidden>
+                <div class="zone-flyout-header">
+                  <span><i class="ti ti-wind" aria-hidden="true"></i> Kinetics</span>
+                  <button id="btn-kinetics-close" title="Close">&times;</button>
+                </div>
+                <div id="kinetics-panel"></div>
               </aside>
 
               <aside class="zone-flyout" id="zone-flyout" hidden>
@@ -1106,62 +1274,77 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-27-greennotpath"></script>
-  <script src="apiSession.js?v=2026-09-27-greennotpath"></script>
-  <script src="data.js?v=2026-09-27-greennotpath"></script>
-  <script src="carbon.js?v=2026-09-27-greennotpath"></script>
-  <script src="activitiesData.js?v=2026-09-27-greennotpath"></script>
-  <script src="vegetation.js?v=2026-09-27-greennotpath"></script>
-  <script src="furnitureElevation.js?v=2026-09-27-greennotpath"></script>
-  <script src="furniture.js?v=2026-09-27-greennotpath"></script>
-  <script src="canvasFlyouts.js?v=2026-09-27-greennotpath"></script>
-  <script src="zones.js?v=2026-09-27-greennotpath"></script>
-  <script src="roofFinish.js?v=2026-09-27-greennotpath"></script>
-  <script src="assumptions.js?v=2026-09-27-greennotpath"></script>
-  <script src="roofFeatures.js?v=2026-09-27-greennotpath"></script>
-  <script src="structure.js?v=2026-09-27-greennotpath"></script>
-  <script src="assemblies.js?v=2026-09-27-greennotpath"></script>
-  <script src="gardenData.js?v=2026-09-27-greennotpath"></script>
-  <script src="prebuiltSessions.js?v=2026-09-27-greennotpath"></script>
-  <script src="rules.js?v=2026-09-27-greennotpath"></script>
-  <script src="sunPosition.js?v=2026-09-27-greennotpath"></script>
-  <script src="balls.js?v=2026-09-27-greennotpath"></script>
-  <script src="field.js?v=2026-09-27-greennotpath"></script>
-  <script src="basketballCourt.js?v=2026-09-27-greennotpath"></script>
-  <script src="volleyballCourt.js?v=2026-09-27-greennotpath"></script>
-  <script src="activityField.js?v=2026-09-27-greennotpath"></script>
-  <script src="planters.js?v=2026-09-27-greennotpath"></script>
-  <script src="gardenPresets.js?v=2026-09-27-greennotpath"></script>
-  <script src="padelCourt.js?v=2026-09-27-greennotpath"></script>
-  <script src="gardenField.js?v=2026-09-27-greennotpath"></script>
-  <script src="combineField.js?v=2026-09-27-greennotpath"></script>
-  <script src="siteField.js?v=2026-09-27-greennotpath"></script>
-  <script src="buildupEditor.js?v=2026-09-27-greennotpath"></script>
-  <script src="dataTab.js?v=2026-09-27-greennotpath"></script>
-  <script src="localSession.js?v=2026-09-27-greennotpath"></script>
-  <script src="revitBridge.js?v=2026-09-27-greennotpath"></script>
-  <script src="sportController.js?v=2026-09-27-greennotpath"></script>
-  <script src="gardenController.js?v=2026-09-27-greennotpath"></script>
-  <script src="windZones.js?v=2026-09-27-greennotpath"></script>
-  <script src="siteController.js?v=2026-09-27-greennotpath"></script>
-  <script src="combineController.js?v=2026-09-27-greennotpath"></script>
-  <script src="analysisController.js?v=2026-09-27-greennotpath"></script>
-  <script src="analysisResults.js?v=2026-09-27-greennotpath"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-27-greennotpath"></script>
-  <script src="siteTabs.js?v=2026-09-27-greennotpath"></script>
-  <script src="roofProgram.js?v=2026-09-27-greennotpath"></script>
-  <script src="workspaceBridge.js?v=2026-09-27-greennotpath"></script>
-  <script src="algoPlacementCore.js?v=2026-09-27-greennotpath"></script>
-  <script src="algoPlacementUI.js?v=2026-09-27-greennotpath"></script>
-  <script src="revitLayers.js?v=2026-09-27-greennotpath"></script>
-  <script src="compareController.js?v=2026-09-27-greennotpath"></script>
-  <script src="designPanel.js?v=2026-09-27-greennotpath"></script>
-  <script src="inspector.js?v=2026-09-27-greennotpath"></script>
-  <script src="combineHistory.js?v=2026-09-27-greennotpath"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-27-greennotpath"></script>
-  <script src="profileCore.js?v=2026-09-27-greennotpath"></script>
-  <script src="profile.js?v=2026-09-27-greennotpath"></script>
-  <script src="sessionGate.js?v=2026-09-27-greennotpath"></script>
-  <script src="main.js?v=2026-09-27-greennotpath"></script>
+  <script src="escape.js?v=2026-09-27-merge-master"></script>
+  <script src="apiSession.js?v=2026-09-27-merge-master"></script>
+  <script src="data.js?v=2026-09-27-merge-master"></script>
+  <script src="carbon.js?v=2026-09-27-merge-master"></script>
+  <script src="activitiesData.js?v=2026-09-27-merge-master"></script>
+  <script src="vegetation.js?v=2026-09-27-merge-master"></script>
+  <script src="furnitureElevation.js?v=2026-09-27-merge-master"></script>
+  <script src="furniture.js?v=2026-09-27-merge-master"></script>
+  <script src="kineticsCatalog.js?v=2026-09-27-merge-master"></script>
+  <script src="kineticsCombine.js?v=2026-09-27-merge-master"></script>
+  <script src="canvasFlyouts.js?v=2026-09-27-merge-master"></script>
+  <script src="zones.js?v=2026-09-27-merge-master"></script>
+  <script src="roofFinish.js?v=2026-09-27-merge-master"></script>
+  <script src="assumptions.js?v=2026-09-27-merge-master"></script>
+  <script src="roofFeatures.js?v=2026-09-27-merge-master"></script>
+  <script src="structure.js?v=2026-09-27-merge-master"></script>
+  <script src="assemblies.js?v=2026-09-27-merge-master"></script>
+  <script src="gardenData.js?v=2026-09-27-merge-master"></script>
+  <script src="prebuiltSessions.js?v=2026-09-27-merge-master"></script>
+  <script src="rules.js?v=2026-09-27-merge-master"></script>
+  <script src="sunPosition.js?v=2026-09-27-merge-master"></script>
+  <script src="balls.js?v=2026-09-27-merge-master"></script>
+  <script src="field.js?v=2026-09-27-merge-master"></script>
+  <script src="basketballCourt.js?v=2026-09-27-merge-master"></script>
+  <script src="volleyballCourt.js?v=2026-09-27-merge-master"></script>
+  <script src="activityField.js?v=2026-09-27-merge-master"></script>
+  <script src="planters.js?v=2026-09-27-merge-master"></script>
+  <script src="gardenPresets.js?v=2026-09-27-merge-master"></script>
+  <script src="padelCourt.js?v=2026-09-27-merge-master"></script>
+  <script src="gardenField.js?v=2026-09-27-merge-master"></script>
+  <script src="combineField.js?v=2026-09-27-merge-master"></script>
+  <script src="previewCore.js?v=2026-09-27-merge-master"></script>
+  <script src="preview.js?v=2026-09-27-merge-master"></script>
+  <script src="siteField.js?v=2026-09-27-merge-master"></script>
+  <script src="siteWeather.js?v=2026-09-27-merge-master"></script>
+  <script src="buildupEditor.js?v=2026-09-27-merge-master"></script>
+  <script src="dataTab.js?v=2026-09-27-merge-master"></script>
+  <script src="localSession.js?v=2026-09-27-merge-master"></script>
+  <script src="revitBridge.js?v=2026-09-27-merge-master"></script>
+  <script src="sportController.js?v=2026-09-27-merge-master"></script>
+  <script src="gardenController.js?v=2026-09-27-merge-master"></script>
+  <script src="windZones.js?v=2026-09-27-merge-master"></script>
+  <script src="siteController.js?v=2026-09-27-merge-master"></script>
+  <script src="combineController.js?v=2026-09-27-merge-master"></script>
+  <script src="resultsStoreCore.js?v=2026-09-27-merge-master"></script>
+  <script src="analysisController.js?v=2026-09-27-merge-master"></script>
+  <script src="analysisResults.js?v=2026-09-27-merge-master"></script>
+  <script src="resultsStore.js?v=2026-09-27-merge-master"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-27-merge-master"></script>
+  <script src="siteTabs.js?v=2026-09-27-merge-master"></script>
+  <script src="roofProgram.js?v=2026-09-27-merge-master"></script>
+  <script src="workspaceBridge.js?v=2026-09-27-merge-master"></script>
+  <script src="sessionNames.js?v=2026-09-27-merge-master"></script>
+  <script src="algoPlacementCore.js?v=2026-09-27-merge-master"></script>
+  <script src="algoPlacementUI.js?v=2026-09-27-merge-master"></script>
+  <script src="revitLayers.js?v=2026-09-27-merge-master"></script>
+  <script src="compareController.js?v=2026-09-27-merge-master"></script>
+  <script src="designPanel.js?v=2026-09-27-merge-master"></script>
+  <script src="inspector.js?v=2026-09-27-merge-master"></script>
+  <script src="combineHistory.js?v=2026-09-27-merge-master"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-27-merge-master"></script>
+  <script src="profileCore.js?v=2026-09-27-merge-master"></script>
+  <script src="profile.js?v=2026-09-27-merge-master"></script>
+  <script src="quizCore.js?v=2026-09-27-merge-master"></script>
+  <script src="quiz.js?v=2026-09-27-merge-master"></script>
+  <script src="tourCore.js?v=2026-09-27-merge-master"></script>
+  <script src="tour.js?v=2026-09-27-merge-master"></script>
+  <script src="whereCore.js?v=2026-09-27-merge-master"></script>
+  <script src="where.js?v=2026-09-27-merge-master"></script>
+  <script src="sessionGate.js?v=2026-09-27-merge-master"></script>
+  <script src="workflowNext.js?v=2026-09-27-merge-master"></script>
+  <script src="main.js?v=2026-09-27-merge-master"></script>
 </body>
 </html>

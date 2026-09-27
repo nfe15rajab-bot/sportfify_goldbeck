@@ -103,14 +103,14 @@ async function planFor(qty) {
     // each court's footprint on the roof is the rectangle the packer laid it on, in the piece's own frame turned by its rotation
     let frameOk = true, why = "";
     for (const c of plan.courts) {
-      const item = board.items.find(i => i.label === c.name), r = c.rect;
+      const item = board.items.find(i => i.label === (sport(c.name) || {}).label), r = c.rect;      // the board carries the sport's label ("Polyvalent (multi-sport)" for the Multi Sport Court), not the packing tool's name
       const turned = item.rotation === 90;
       const w = turned ? item.width_m : item.length_m, h = turned ? item.length_m : item.width_m;
       if (!near(w, r[2] - r[0], 0.06) || !near(h, r[3] - r[1], 0.06)) { frameOk = false; why += ` ${c.name}: ${w} x ${h} on a ${(r[2] - r[0]).toFixed(2)} x ${(r[3] - r[1]).toFixed(2)} rectangle;`; }
     }
     check("each piece, turned as it is, fills exactly the rectangle the packer reserved for it", frameOk, why);
 
-    const bball = board.items.find(i => i.label === "Basketball Court"), vball = board.items.find(i => i.label === "Volleyball"), multi = board.items.find(i => i.label === "Multi Sport Court");
+    const bball = board.items.find(i => i.label === "Basketball Court"), vball = board.items.find(i => i.label === "Volleyball"), multi = board.items.find(i => i.label === "Polyvalent (multi-sport)");
     check("the basketball court is one the basketball module recognises, with its own payload (it does not follow the Sport panel)", get("isBasketballItem")(bball) && !!bball.sourceJson.basketball);
     check("the volleyball court is one the volleyball module recognises, with its own payload", get("isVolleyballItem")(vball) && !!vball.sourceJson.volleyball);
     check("the payload's footprint is the piece's own size (what Revit builds is what the packer reserved)",
@@ -149,18 +149,18 @@ async function planFor(qty) {
   {
     freshBoard(); catalogueUp();
     await planFor({ "Basketball Court": 1 });
-    get("basketballState.hoops = 'one'");                                   // a half court: 11 m along its own length, 13 across
+    get("basketballState.hoops = 'one'");                                   // a half court, mini tier: court 11 x 13, plus its 2 m run-off all round (Sukriti, 2026-09-27) = 15 x 17
     await get("algoApply()");
     check("Apply refuses, throws the stale plan away and says why", sandbox.combineState.items.length === 0 && S.plan === null && toasts.some(t => /sizes changed/i.test(t)), toasts.join(" // "));
     const b = sport("Basketball Court");
-    check("the packer now reserves the half court (13 x 11) and knows its own length runs the short way", near(b.long, 13) && near(b.short, 11) && b.swap === true, `${b.long} x ${b.short} swap=${b.swap}`);
+    check("the packer now reserves the half court WITH its run-off (17 x 15) and knows its own length runs the short way", near(b.long, 17) && near(b.short, 15) && b.swap === true, `${b.long} x ${b.short} swap=${b.swap}`);
 
     const plan = await planFor({ "Basketball Court": 1 });
     await get("algoApply()");
     const item = sandbox.combineState.items[0], c = plan.courts[0];
     const turned = item.rotation === 90, w = turned ? item.width_m : item.length_m, h = turned ? item.length_m : item.width_m;
-    check("a half court is created in the specification's orientation (11 long, 13 wide) and turned onto the packer's rectangle",
-      near(item.length_m, 11) && near(item.width_m, 13) && near(w, c.rect[2] - c.rect[0], 0.06) && near(h, c.rect[3] - c.rect[1], 0.06), `${item.length_m} x ${item.width_m} rotation ${item.rotation} on ${(c.rect[2] - c.rect[0]).toFixed(1)} x ${(c.rect[3] - c.rect[1]).toFixed(1)}`);
+    check("a half court is created in the specification's orientation (envelope 15 long, 17 wide: the court plus its run-off) and turned onto the packer's rectangle",
+      near(item.length_m, 15) && near(item.width_m, 17) && near(w, c.rect[2] - c.rect[0], 0.06) && near(h, c.rect[3] - c.rect[1], 0.06), `${item.length_m} x ${item.width_m} rotation ${item.rotation} on ${(c.rect[2] - c.rect[0]).toFixed(1)} x ${(c.rect[3] - c.rect[1]).toFixed(1)}`);
     get("basketballState.hoops = 'two'");
   }
 

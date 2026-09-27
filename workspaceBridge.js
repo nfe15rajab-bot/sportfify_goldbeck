@@ -10,7 +10,7 @@
  *   exports         when connected, the app's own exports (layout JSON, roof PNG, field JSON/DXF, garden JSON) are saved in the folder instead of the browser's
  *                   Downloads; offline they download as before
  *   commands        run the physical analyses, make the charts PDF, the analysis report and the schedule, ask Revit for the functional diagrams,
- *                   open the folder in Explorer (the Deliverables tab, and the Analysis tab's Run analysis button)
+ *                   open the folder in Explorer (the Documents tab, and the Results tab's Run analysis button)
  *   charts          the analyses' charts as SVG (GET /charts), shown in the Analysis groups and written to the charts PDF
  *
  * Nothing is computed here. Not connected is a normal state (the app works alone); every action says so plainly instead of failing quietly.
@@ -21,6 +21,7 @@ const DRAFT_SYNC_MS = 3000;
 
 const workspaceState = {
   connected: null,            // null until the first answer, then true / false
+  revitVersion: "",           // which Revit ("2025"), as the add-in says
   folder: "", defaultFolder: "", settingsFile: "",
   kinds: [],                  // [{ key, folder, title, hint, count }]
   files: [],                  // [{ kind, name, size, modified_utc, url }], newest first
@@ -54,12 +55,13 @@ async function localApi(path, opts) {
     }
     return { ok: res.ok, status: res.status, json, error: json && json.error ? json.error : res.ok ? "" : "The add-in answered " + res.status + "." };
   } catch (e) {
-    return { ok: false, status: 0, json: null, error: localSession.problem || "Revit is not reachable: open a project in Revit with the Sportify add-in loaded." };
+    return { ok: false, status: 0, json: null, error: localSession.problem || "Revit not open: open a project in Revit with the Sportify add-in loaded." };
   }
 }
 
 function workspaceChanged() {
   workspaceState.stamp++;
+  if (typeof whereRender === "function") whereRender();      // the status of Revit in the top bar, the badges, the Overview's card (where.js)
   if (typeof activeMode !== "undefined" && activeMode === "deliverables") renderDeliverables();
   if (typeof renderAnalysisIfShowingResults === "function") renderAnalysisIfShowingResults();
   if (typeof updateRevitLayersUI === "function") updateRevitLayersUI();
@@ -74,6 +76,7 @@ async function workspaceRefresh() {
     workspaceState.folder = ws.json.folder || "";
     workspaceState.defaultFolder = ws.json.default_folder || "";
     workspaceState.settingsFile = ws.json.settings_file || "";
+    workspaceState.revitVersion = typeof ws.json.revit_version === "string" ? ws.json.revit_version : "";
     workspaceState.kinds = ws.json.kinds || [];
   }
   const nextFiles = files.ok && files.json ? files.json.files || [] : [];
@@ -81,7 +84,7 @@ async function workspaceRefresh() {
   else if (typeof profileRevitClosed === "function") profileRevitClosed();
   const changed = was !== ws.ok || JSON.stringify(nextFiles) !== JSON.stringify(workspaceState.files) || JSON.stringify(ws.json && ws.json.kinds) !== JSON.stringify(workspaceState.kinds);
   workspaceState.files = nextFiles;
-  if (was !== true && ws.ok) { workspaceState.draftSent = null; workspaceState.layoutId = null; }      // Revit was (re)started: it has lost the draft, send it again
+  if (was !== true && ws.ok) { workspaceState.draftSent = null; workspaceState.layoutId = null; if (typeof sessionNames !== "undefined") sessionNames.sent = null; }      // Revit was (re)started: it has lost the draft and the names, send them again
   if (changed) workspaceChanged();
   if (was !== ws.ok && ws.ok) syncDraftLayout(true);
 }
@@ -91,7 +94,7 @@ async function workspaceRefresh() {
 let lastConfigKey = "";
 
 /**
- * The inputs the designer entered or accepted in Revit's assumptions window come into the app's own (Structure and Site conditions tabs), so nothing is typed twice.
+ * The inputs the designer entered or accepted in Revit's assumptions window come into the app's own (Structure inputs and Site conditions tabs), so nothing is typed twice.
  * Only where the app has no decision of its own yet: what was entered here is never overwritten.
  */
 async function pullRevitConfig() {
@@ -137,7 +140,11 @@ async function layoutIdOf(text) {
 /** The JSON text of the layout on screen, as it is sent to the add-in; null when nothing is placed. */
 function currentDraftBody() {
   if (typeof buildCombinedPayload !== "function" || typeof combineState === "undefined" || !combineState.items.length) return null;
-  try { return JSON.stringify(buildCombinedPayload()); } catch (e) { return null; }
+  try {
+    const payload = buildCombinedPayload();
+    delete payload.session;      // the names of the session and the iteration go in their own request (sessionNames.js): they are not the layout, and must not change its identity
+    return JSON.stringify(payload);
+  } catch (e) { return null; }
 }
 
 let lastIdentifiedBody;      // undefined until the first look
@@ -228,7 +235,7 @@ const WS_ACTIONS = {
       await loadCharts(true);
       const list = r.json.analyses || [];
       const failed = list.filter(a => !a.sent);
-      const text = `${r.json.sent} of ${list.length} analyses ran and their results are on the Analysis tab.` + (failed.length ? " Not run: " + failed.map(a => `${a.title} (${a.problem || "no reason given"})`).join("; ") + "." : "");
+      const text = `${r.json.sent} of ${list.length} analyses ran and their results are on the Results tab.` + (failed.length ? " Not run: " + failed.map(a => `${a.title} (${a.problem || "no reason given"})`).join("; ") + "." : "");
       return { ok: failed.length === 0, text };
     }
   },
@@ -285,7 +292,7 @@ async function workspaceAction(name, btn) {
   const action = WS_ACTIONS[name];
   if (!action || workspaceState.busy[name]) return;
   if (workspaceState.connected !== true) {
-    workspaceState.message = { tone: "bad", html: "Revit is not connected: open a project in Revit with the Sportify add-in loaded, then try again." };
+    workspaceState.message = { tone: "bad", html: "Revit not open: open a project in Revit with the Sportify add-in loaded, then try again." };
     workspaceChanged();
     return;
   }
@@ -364,21 +371,21 @@ function wsChartsHtml(keys) {
 
 const WS_TITLES = { structural_loads: "Structural loads", dynamic_analysis: "Dynamic analysis", wind_erosion: "Wind and erosion", soil_percolation: "Rain and soil percolation", sun_and_shading: "Sun and shade" };
 
-/** The Analysis tab's left-panel block: connection, the Run analysis button and what the last action said. */
+/** The Results tab's left-panel block: connection, the Run analysis button and what the last action said. */
 function wsRunPanelHtml() {
   const on = workspaceState.connected === true;
   const running = !!workspaceState.busy.run;
   const noLayout = !workspaceHasLayout();
-  const note = !on ? "Revit is not connected: the analysis runs inside the Revit add-in."
+  const note = !on ? "Revit not open: the analysis runs inside the Revit add-in."
     : noLayout ? "Place something on the roof in Combine first: the analysis runs on the layout."
     : "Runs the physical analyses on the layout as it is now (your Structure and Site conditions inputs included) and brings the results and charts here.";
   return `<label>Run</label>
-    <button class="btn-export primary ws-run-btn" data-ws-action="run" ${!on || noLayout || running ? "disabled" : ""}><i class="ti ${running ? "ti-loader-2 ws-spin" : "ti-player-play"}" aria-hidden="true"></i>${running ? "Running..." : "Run analysis"}</button>
+    <button class="btn-export primary ws-run-btn" data-ws-action="run" ${!on || noLayout || running ? "disabled" : ""}><i class="ti ${running ? "ti-loader-2 ws-spin" : "ti-player-play"}" aria-hidden="true"></i>${running ? "Running..." : "Run analysis"}${typeof whereChipHtml === "function" ? whereChipHtml("revit") : ""}</button>
     <p class="hint">${wsEsc(note)}</p>
     ${workspaceState.message ? `<p class="ws-message tone-${escapeHtml(workspaceState.message.tone)}">${workspaceState.message.html}</p>` : ""}`;
 }
 
-// ------------------------------------------------------------------------------------------------ the Deliverables tab
+// ------------------------------------------------------------------------------------------------ the Documents tab
 
 function wsEsc(s) {
   return escapeHtml(s);
@@ -394,13 +401,18 @@ function wsTime(iso) {
   return isNaN(d) ? "" : d.toLocaleString([], { dateStyle: "short", timeStyle: "short" });
 }
 
+/** The line under a file's link: the iteration's folder when the file is in one, then its size and its time. */
+function wsFileMeta(f) {
+  return (f.folder ? String(f.folder) + " · " : "") + wsSize(f.size) + " · " + wsTime(f.modified_utc);
+}
+
 function wsActionButton(name, icon, title, sub, needsLayout) {
   const on = workspaceState.connected === true;
   const busy = !!workspaceState.busy[name];
   const disabled = !on || busy || (needsLayout && !workspaceHasLayout());
   const why = !on ? "Needs Revit open with the Sportify add-in." : needsLayout && !workspaceHasLayout() ? "Place something in Combine first." : "";
   return `<button class="deliverable-item" data-ws-action="${name}" ${disabled ? "disabled" : ""} ${why ? `title="${wsEsc(why)}"` : ""}>
-    <i class="ti ${busy ? "ti-loader-2 ws-spin" : icon}" aria-hidden="true"></i><span>${wsEsc(title)}<small>${wsEsc(busy ? "Working..." : sub)}</small></span></button>`;
+    <i class="ti ${busy ? "ti-loader-2 ws-spin" : icon}" aria-hidden="true"></i><span>${wsEsc(title)}<small>${wsEsc(busy ? "Working..." : sub)}</small></span>${typeof whereChipHtml === "function" ? whereChipHtml("revit") : ""}</button>`;
 }
 
 function renderDeliverables() {
@@ -411,7 +423,7 @@ function renderDeliverables() {
     ? `<span class="res-dot live"></span> Connected to Revit. Everything you export here is kept in <code>${wsEsc(workspaceState.folder)}</code>
         <button class="btn-export ws-inline-btn" data-ws-action="openFolder"><i class="ti ti-folder-open" aria-hidden="true"></i>Open folder</button>`
     : workspaceState.connected === false
-      ? `<span class="res-dot off"></span> Revit is not connected. Exports download through the browser, and the analysis, PDF and schedule buttons wait for Revit (open a project with the Sportify add-in loaded). Your folder is created by the installer, by default <em>Documents\\Sportify Workspace</em>.`
+      ? `<span class="res-dot off"></span> Revit not open. Exports download through the browser, and the analysis, PDF and schedule buttons wait for Revit (open a project with the Sportify add-in loaded). Your folder is created by the installer, by default <em>Documents\\Sportify Workspace</em>.`
       : `<span class="res-dot"></span> Looking for Revit...`;
 
   const actions = document.getElementById("dl-actions");
@@ -436,7 +448,7 @@ function renderDeliverables() {
     return `<section class="dl-folder">
       <header><div><h3>${wsEsc(k.title)}</h3><div class="hint">${wsEsc(k.hint)}</div></div>
         <button class="btn-export ws-inline-btn" data-ws-action="openFolder" data-kind="${wsEsc(k.key)}" title="Open ${wsEsc(k.folder)} in Explorer"><i class="ti ti-folder" aria-hidden="true"></i></button></header>
-      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(localUrl(f.url))}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsSize(f.size))} · ${wsEsc(wsTime(f.modified_utc))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
+      ${files.length ? `<ul class="dl-files">${files.slice(0, 12).map(f => `<li><a href="${wsEsc(localUrl(f.url))}" target="_blank" rel="noopener">${wsEsc(f.name)}</a><span>${wsEsc(wsFileMeta(f))}</span></li>`).join("")}${files.length > 12 ? `<li class="hint">and ${files.length - 12} more in the folder</li>` : ""}</ul>` : `<p class="hint dl-empty">Nothing here yet.</p>`}
     </section>`;
   }).join("");
 }
@@ -446,4 +458,4 @@ function renderDeliverables() {
 workspaceRefresh();
 setInterval(workspaceRefresh, WORKSPACE_POLL_MS);
 refreshLayoutIdNow();
-setInterval(() => { refreshLayoutIdNow(); syncDraftLayout(false); }, DRAFT_SYNC_MS);
+setInterval(() => { refreshLayoutIdNow(); syncDraftLayout(false); if (typeof sessionNamesSync === "function") sessionNamesSync(false); }, DRAFT_SYNC_MS);

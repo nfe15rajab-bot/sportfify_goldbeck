@@ -20,19 +20,30 @@ function initSiteMap() {
   if (!el || typeof L === "undefined") return;
 
   siteMap = L.map(el).setView([48.8566, 2.3522], 5);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(siteMap);
+  // Two more free, key-less base layers Leaflet can just switch between (a plain tile URL, same as the streets one
+  // above — no separate library or account): satellite imagery to see what is really built or planted on and around
+  // a roof, and a topographic layer for the ground's shape and height, which the wind and rain analyses care about.
+  const satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19, attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+  });
+  const terrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+    maxZoom: 17, attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
+  });
+  L.control.layers({ Streets: streets, Satellite: satellite, Terrain: terrain }, {}, { position: "topright" }).addTo(siteMap);
   siteMap.on("click", e => setSiteLocation(e.latlng.lat, e.latlng.lng));
   requestAnimationFrame(() => siteMap.invalidateSize());
+  siteEnsureMarker(true);      // a location that is already known (sent by the quiz, or from a loaded session) is on the map the first time it is drawn
 }
 
-function setSiteLocation(lat, lng) {
-  siteState.lat = lat;
-  siteState.lng = lng;
+/** The marker for siteState's location, on the map if there is one (and, with `centre`, the map on it). No map yet: nothing to do; initSiteMap calls this when it makes the map. */
+function siteEnsureMarker(centre) {
+  if (!siteMap || siteState.lat == null || typeof L === "undefined") return;
   if (!siteMarker) {
-    siteMarker = L.marker([lat, lng], { draggable: true }).addTo(siteMap);
+    siteMarker = L.marker([siteState.lat, siteState.lng], { draggable: true }).addTo(siteMap);
     siteMarker.on("dragend", () => {
       const p = siteMarker.getLatLng();
       siteState.lat = p.lat; siteState.lng = p.lng;
@@ -40,10 +51,51 @@ function setSiteLocation(lat, lng) {
       if (typeof resolveSiteRegion === "function") resolveSiteRegion();
     });
   } else {
-    siteMarker.setLatLng([lat, lng]);
+    siteMarker.setLatLng([siteState.lat, siteState.lng]);
   }
+  if (centre) siteMap.setView([siteState.lat, siteState.lng], 13);
+}
+
+function setSiteLocation(lat, lng) {
+  siteState.lat = lat;
+  siteState.lng = lng;
+  siteEnsureMarker(false);
   if (typeof updateSiteUI === "function") updateSiteUI();
   if (typeof resolveSiteRegion === "function") resolveSiteRegion();
+}
+
+/**
+ * Up to five places for an address the person typed, from Nominatim (OSM's geocoder): [{ label, lat, lng, addr }] where `addr` is what the wind zone is looked up from
+ * (pickRegion). Its usage policy allows a search when the person asks for it (Enter, or the button) and no autocomplete on every keystroke, so this is only ever called for
+ * an explicit search. Throws when the service cannot be reached; [] when nothing matches.
+ */
+async function siteFindPlaces(query) {
+  const q = String(query || "").trim();
+  if (q.length < 3) return [];
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(q)}`);
+  if (!res.ok) throw new Error("The address search answered " + res.status + ".");
+  const list = await res.json();
+  return (Array.isArray(list) ? list : []).map(r => ({ label: String(r.display_name || ""), lat: Number(r.lat), lng: Number(r.lon), addr: r.address || null }))
+    .filter(p => p.label && Number.isFinite(p.lat) && Number.isFinite(p.lng));
+}
+
+/**
+ * Sends a place to the Site tab (the start-up quiz does): the location, its address, the region the wind zone comes from (when the search already gave it, no second
+ * lookup), the address field of the tab, and the marker on the map. Works before the Site tab has ever been opened: the map is not made yet, so the marker is put there when it is.
+ */
+function siteApplyPlace(place) {
+  siteState.lat = place.lat;
+  siteState.lng = place.lng;
+  siteState.address = place.label || place.address || "";
+  if (place.addr) {
+    siteState.region = pickRegion(place.addr);
+    siteState.windZoneAuto = typeof lookupWindZone === "function" ? lookupWindZone(siteState.region) : null;
+  }
+  const field = document.getElementById("siteAddressSearch");
+  if (field && siteState.address) field.value = siteState.address;
+  siteEnsureMarker(true);
+  if (typeof updateSiteUI === "function") updateSiteUI();
+  if (!place.addr && typeof resolveSiteRegion === "function") resolveSiteRegion();
 }
 
 /**
