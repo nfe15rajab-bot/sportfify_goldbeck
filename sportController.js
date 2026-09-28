@@ -43,9 +43,16 @@ const FIELD_SPORTS = {
  */
 const OUTDOOR_GROUPS = [
   { label: "Courts", categories: ["court"] },
-  { label: "Facilities", ids: ["locker_module", "bathroom_module", "rest_area"] },
   { label: "Miscellaneous", categories: [] }, // catch-all — filled below
 ];
+
+/**
+ * Where people change, wash and sit down. These used to be a group inside the
+ * Sport bar, which put "locker room" in the same list as "padel court" — two
+ * different questions. They have their own tab now; the same configurator
+ * serves them, because a facility is still an activity underneath.
+ */
+const FACILITY_IDS = ["locker_module", "dressing_cabin", "bathroom_module", "rest_area"];
 
 /** One activity-bar button, field or activity — the two data shapes share label/short/icon, so one template covers both. */
 function activityIconHtml(kind, id, activeId, item) {
@@ -60,8 +67,18 @@ function activityIconHtml(kind, id, activeId, item) {
  * — the outdoor groups each sorted smallest-footprint-first so "what fits
  * in this leftover 6x4m corner" is a scan, not a hunt through 24 flat icons.
  */
-function buildActivityBar() {
+function buildActivityBar(scope) {
   const bar = document.getElementById("activity-bar");
+
+  // The Facilities tab lists only its own, and no sports at all.
+  if (scope === "facilities") {
+    bar.innerHTML = `<div class="rail-cat-header">FACILITIES</div>`
+      + FACILITY_IDS.filter(id => ACTIVITIES[id] && !ACTIVITIES[id].hidden)
+          .map(id => activityIconHtml("activity", id, state.activityId, ACTIVITIES[id])).join("");
+    wireActivityBar(bar);
+    return;
+  }
+
   let html = `<div class="rail-cat-header">INDOOR</div>`;
   Object.entries(FIELD_SPORTS).forEach(([id, f]) => {
     if (f.hidden) return;
@@ -71,6 +88,7 @@ function buildActivityBar() {
   const byGroup = OUTDOOR_GROUPS.map(() => []);
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
     if (a.hidden) return;
+    if (FACILITY_IDS.includes(id)) return;   // its own tab now
     const group = OUTDOOR_GROUPS.findIndex(g => (g.ids && g.ids.includes(id)) || (g.categories && g.categories.includes(a.category)));
     byGroup[group < 0 ? OUTDOOR_GROUPS.length - 1 : group].push([id, a]);
   });
@@ -82,7 +100,11 @@ function buildActivityBar() {
       .forEach(([id, a]) => { html += activityIconHtml("activity", id, state.activityId, a); });
   });
   bar.innerHTML = html;
+  wireActivityBar(bar);
+}
 
+/** One button's behaviour, shared by the Sport bar and the Facilities bar. */
+function wireActivityBar(bar) {
   bar.querySelectorAll(".activity-icon").forEach(btn => {
     btn.addEventListener("click", () => {
       bar.querySelectorAll(".activity-icon").forEach(b => b.classList.remove("active"));
@@ -138,6 +160,11 @@ function sportCourtAndRunoff() {
   if (state.sport === "volleyball" && typeof volleyballCourt === "function") {
     const vs = Object.assign({}, volleyballState, { variant: state.variant }), c = volleyballCourt(vs), z = volleyballFreeZone(vs);
     return { court_l: c.length_m, court_w: c.width_m, run_ends: z.ends_m, run_sides: z.sides_m };
+  }
+  if (state.sport === "football" && typeof footballType === "function") {
+    // football specifies itself (footballCourt.js): its court type carries the pitch and its own run-off
+    const t = footballType();
+    return { court_l: t.length_m, court_w: t.width_m, run_ends: t.runoff_m, run_sides: t.runoff_m };
   }
   if (state.sport === "basketball" && typeof basketballPlayArea === "function") {
     const p = basketballPlayArea(Object.assign({}, basketballState, { variant: state.variant }));
@@ -312,6 +339,8 @@ function buildSportPayload() {
       ? basketballPlacementPayload() : undefined,
     volleyball: (state.sport === "volleyball" && typeof volleyballPlacementPayload === "function")
       ? volleyballPlacementPayload() : undefined,
+    football: (state.sport === "football" && typeof footballPlacementPayload === "function")
+      ? footballPlacementPayload() : undefined,
     layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"],
   };
 }
@@ -345,6 +374,14 @@ function buildActivityPayload() {
     // whatever the panel happens to show later.
     padel: (state.activityId === "padel_court" && typeof padelPlacementPayload === "function")
       ? padelPlacementPayload() : undefined,
+    ping_pong: (state.activityId === "ping_pong" && typeof pingPongPlacementPayload === "function")
+      ? pingPongPlacementPayload() : undefined,
+    // A family the design team authored carries the values set on it, so Revit
+    // can place THEIR family configured rather than build one of ours.
+    familyInstance:
+      (state.activityId === "climbing_tower" && typeof climbingTowerPayload === "function") ? climbingTowerPayload()
+      : (typeof isActivityFamily === "function" && isActivityFamily(state.activityId)) ? activityFamilyPayload(state.activityId)
+      : undefined,
   };
 }
 

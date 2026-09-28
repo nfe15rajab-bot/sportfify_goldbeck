@@ -112,6 +112,28 @@ function drawActivity(activityId, dims, isDark) {
   // centre line's 20 cm overrun, and a generic rectangle claims a court
   // exists without showing whether it is one.
   if (typeof syncPadelPanel === "function") syncPadelPanel(activityId);
+
+  // The Climbing Tower is a family the design team authored, so it configures
+  // and draws itself: a generic rectangle says nothing about a 12 m tower that
+  // flares, and its size comes from the family's radii rather than from the
+  // preset's length and width.
+  // The design team's own families, placed as activities: the Locker Bank, the
+  // Dressing Cabin, the Yoga Deck.
+  if (typeof syncActivityFamilyPanel === "function" && syncActivityFamilyPanel(activityId)) {
+    if (typeof activityFamilyApplyFootprint === "function") activityFamilyApplyFootprint();
+    if (typeof drawActivityFamilyPreview === "function") { drawActivityFamilyPreview(svg, activityId, isDark); return; }
+  }
+
+  // Table tennis: the table is fixed, so what it configures is the room round it.
+  if (typeof syncPingPongPanel === "function" && syncPingPongPanel(activityId)) {
+    if (typeof pingPongApplyFootprint === "function") pingPongApplyFootprint();
+    if (typeof drawPingPongPreview === "function") { drawPingPongPreview(svg, isDark); return; }
+  }
+
+  if (typeof syncClimbingTowerPanel === "function" && syncClimbingTowerPanel(activityId)) {
+    if (typeof towerApplyFootprint === "function") towerApplyFootprint();
+    if (typeof drawClimbingTowerPreview === "function") { drawClimbingTowerPreview(svg, isDark); return; }
+  }
   if (activityId === "padel_court" && typeof drawPadelPreview === "function") {
     drawPadelPreview(svg, isDark);
     return;

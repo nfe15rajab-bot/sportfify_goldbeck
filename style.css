@@ -1504,3 +1504,25 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .session-names-row input:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 1px; }
 .session-names-preview { margin: 4px 0 0; overflow-wrap: anywhere; }
 @media (max-width: 720px) { .session-names-row { grid-template-columns: 1fr; } }
+
+/* ── Configuring a component, in the panel ───────────────────────────────── */
+/* A family's parameters open where you picked it, over the roof, rather than in
+   a workspace of their own: changing a planter's substrate depth is part of
+   designing the roof, not a trip to another screen. The panel widens for it,
+   because a parameter table and a plan-and-section drawing do not read at the
+   width a picker needs. */
+.zone-flyout.is-editing { width: 430px; }
+
+.component-editor-head { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.component-editor-head .btn-link { padding: 0; font-size: 12px; }
+
+/* The drawing planters.js makes: plan and section, side by side, to the panel's
+   width so the section is not squeezed to nothing. */
+.component-editor-drawing {
+  display: block;
+  width: 100%;
+  height: 230px;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-1);
+}

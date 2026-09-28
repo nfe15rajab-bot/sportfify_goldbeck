@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-28-nokinetics"></script>
+  <script src="themeInit.js?v=2026-09-28-moamen-merge"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -14,7 +14,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org https://archive-api.open-meteo.com; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-28-nokinetics" />
+  <link rel="stylesheet" href="style.css?v=2026-09-28-moamen-merge" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -154,10 +154,10 @@
       <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Site conditions</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
-      <button id="modeGardenBlocks" class="activity-icon" title="Garden — planters and garden blocks"><i class="ti ti-plant" aria-hidden="true"></i><span class="activity-icon-label">Garden</span></button>
+      <button id="modeFacilities" class="activity-icon" title="Facilities — lockers, bathrooms and rest areas"><i class="ti ti-door" aria-hidden="true"></i><span class="activity-icon-label">Facilities</span></button>
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
       <button id="btn-vegetation-toggle" class="activity-icon" title="Vegetation — trees, shrubs, planting"><i class="ti ti-tree" aria-hidden="true"></i><span class="activity-icon-label">Plants</span></button>
-      <button id="btn-furniture-toggle" class="activity-icon" title="Furniture — benches, tables, bins, bollards, lights"><i class="ti ti-armchair" aria-hidden="true"></i><span class="activity-icon-label">Furniture</span></button>
+      <button id="btn-furniture-toggle" class="activity-icon" title="Components — benches, tables, planters, bins, bollards, lights"><i class="ti ti-components" aria-hidden="true"></i><span class="activity-icon-label">Components</span></button>
       <button id="btn-kinetics-toggle" class="activity-icon" title="Kinetics — louvre pergolas, sails, screens, fences: place them by hand or let Algorithmic placement place them by quantity"><i class="ti ti-wind" aria-hidden="true"></i><span class="activity-icon-label">Kinetics</span></button>
       <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
       <div class="activity-bar-divider"></div>
@@ -433,14 +433,6 @@
         </div>
       </div>
 
-      <div id="gardenBlocksConfigurator" style="display:none">
-        <div class="panel-header">
-          <h2>Garden</h2>
-          <p>Parametric planters — the Revit family "Planter"</p>
-        </div>
-        <div id="planter-panel"></div>
-      </div>
-
       <div id="gardenConfigurator" style="display:none">
         <div class="panel-header">
           <h2 id="garden-panel-title">Garden Configurator</h2>
@@ -696,7 +688,6 @@
       <div class="canvas-wrap">
         <svg id="field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
         <svg id="garden-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
-        <svg id="planter-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
 
         <div id="site-content" style="display:none">
           <div id="site-map" class="site-map"></div>
@@ -1042,7 +1033,7 @@
 
               <aside class="zone-flyout" id="furniture-flyout" hidden>
                 <div class="zone-flyout-header">
-                  <span><i class="ti ti-armchair" aria-hidden="true"></i> Furniture</span>
+                  <span><i class="ti ti-components" aria-hidden="true"></i> Components</span>
                   <button id="btn-furniture-close" title="Close">&times;</button>
                 </div>
                 <div id="furniture-panel"></div>
@@ -1276,77 +1267,83 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-28-nokinetics"></script>
-  <script src="apiSession.js?v=2026-09-28-nokinetics"></script>
-  <script src="data.js?v=2026-09-28-nokinetics"></script>
-  <script src="carbon.js?v=2026-09-28-nokinetics"></script>
-  <script src="activitiesData.js?v=2026-09-28-nokinetics"></script>
-  <script src="vegetation.js?v=2026-09-28-nokinetics"></script>
-  <script src="furnitureElevation.js?v=2026-09-28-nokinetics"></script>
-  <script src="furniture.js?v=2026-09-28-nokinetics"></script>
-  <script src="kineticsCatalog.js?v=2026-09-28-nokinetics"></script>
-  <script src="kineticsCombine.js?v=2026-09-28-nokinetics"></script>
-  <script src="canvasFlyouts.js?v=2026-09-28-nokinetics"></script>
-  <script src="zones.js?v=2026-09-28-nokinetics"></script>
-  <script src="roofFinish.js?v=2026-09-28-nokinetics"></script>
-  <script src="assumptions.js?v=2026-09-28-nokinetics"></script>
-  <script src="roofFeatures.js?v=2026-09-28-nokinetics"></script>
-  <script src="structure.js?v=2026-09-28-nokinetics"></script>
-  <script src="assemblies.js?v=2026-09-28-nokinetics"></script>
-  <script src="gardenData.js?v=2026-09-28-nokinetics"></script>
-  <script src="prebuiltSessions.js?v=2026-09-28-nokinetics"></script>
-  <script src="rules.js?v=2026-09-28-nokinetics"></script>
-  <script src="sunPosition.js?v=2026-09-28-nokinetics"></script>
-  <script src="balls.js?v=2026-09-28-nokinetics"></script>
-  <script src="field.js?v=2026-09-28-nokinetics"></script>
-  <script src="basketballCourt.js?v=2026-09-28-nokinetics"></script>
-  <script src="volleyballCourt.js?v=2026-09-28-nokinetics"></script>
-  <script src="activityField.js?v=2026-09-28-nokinetics"></script>
-  <script src="planters.js?v=2026-09-28-nokinetics"></script>
-  <script src="gardenPresets.js?v=2026-09-28-nokinetics"></script>
-  <script src="padelCourt.js?v=2026-09-28-nokinetics"></script>
-  <script src="gardenField.js?v=2026-09-28-nokinetics"></script>
-  <script src="combineField.js?v=2026-09-28-nokinetics"></script>
-  <script src="previewCore.js?v=2026-09-28-nokinetics"></script>
-  <script src="preview.js?v=2026-09-28-nokinetics"></script>
-  <script src="siteField.js?v=2026-09-28-nokinetics"></script>
-  <script src="siteWeather.js?v=2026-09-28-nokinetics"></script>
-  <script src="buildupEditor.js?v=2026-09-28-nokinetics"></script>
-  <script src="dataTab.js?v=2026-09-28-nokinetics"></script>
-  <script src="localSession.js?v=2026-09-28-nokinetics"></script>
-  <script src="revitBridge.js?v=2026-09-28-nokinetics"></script>
-  <script src="sportController.js?v=2026-09-28-nokinetics"></script>
-  <script src="gardenController.js?v=2026-09-28-nokinetics"></script>
-  <script src="windZones.js?v=2026-09-28-nokinetics"></script>
-  <script src="siteController.js?v=2026-09-28-nokinetics"></script>
-  <script src="combineController.js?v=2026-09-28-nokinetics"></script>
-  <script src="resultsStoreCore.js?v=2026-09-28-nokinetics"></script>
-  <script src="analysisController.js?v=2026-09-28-nokinetics"></script>
-  <script src="analysisResults.js?v=2026-09-28-nokinetics"></script>
-  <script src="resultsStore.js?v=2026-09-28-nokinetics"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-28-nokinetics"></script>
-  <script src="siteTabs.js?v=2026-09-28-nokinetics"></script>
-  <script src="roofProgram.js?v=2026-09-28-nokinetics"></script>
-  <script src="workspaceBridge.js?v=2026-09-28-nokinetics"></script>
-  <script src="sessionNames.js?v=2026-09-28-nokinetics"></script>
-  <script src="algoPlacementCore.js?v=2026-09-28-nokinetics"></script>
-  <script src="algoPlacementUI.js?v=2026-09-28-nokinetics"></script>
-  <script src="revitLayers.js?v=2026-09-28-nokinetics"></script>
-  <script src="compareController.js?v=2026-09-28-nokinetics"></script>
-  <script src="designPanel.js?v=2026-09-28-nokinetics"></script>
-  <script src="inspector.js?v=2026-09-28-nokinetics"></script>
-  <script src="combineHistory.js?v=2026-09-28-nokinetics"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-28-nokinetics"></script>
-  <script src="profileCore.js?v=2026-09-28-nokinetics"></script>
-  <script src="profile.js?v=2026-09-28-nokinetics"></script>
-  <script src="quizCore.js?v=2026-09-28-nokinetics"></script>
-  <script src="quiz.js?v=2026-09-28-nokinetics"></script>
-  <script src="tourCore.js?v=2026-09-28-nokinetics"></script>
-  <script src="tour.js?v=2026-09-28-nokinetics"></script>
-  <script src="whereCore.js?v=2026-09-28-nokinetics"></script>
-  <script src="where.js?v=2026-09-28-nokinetics"></script>
-  <script src="sessionGate.js?v=2026-09-28-nokinetics"></script>
-  <script src="workflowNext.js?v=2026-09-28-nokinetics"></script>
-  <script src="main.js?v=2026-09-28-nokinetics"></script>
+  <script src="escape.js?v=2026-09-28-moamen-merge"></script>
+  <script src="apiSession.js?v=2026-09-28-moamen-merge"></script>
+  <script src="data.js?v=2026-09-28-moamen-merge"></script>
+  <script src="carbon.js?v=2026-09-28-moamen-merge"></script>
+  <script src="activitiesData.js?v=2026-09-28-moamen-merge"></script>
+  <script src="vegetation.js?v=2026-09-28-moamen-merge"></script>
+  <script src="furnitureElevation.js?v=2026-09-28-moamen-merge"></script>
+  <script src="components.js?v=2026-09-28-moamen-merge"></script>
+  <script src="furniture.js?v=2026-09-28-moamen-merge"></script>
+  <script src="kineticsCatalog.js?v=2026-09-28-moamen-merge"></script>
+  <script src="kineticsCombine.js?v=2026-09-28-moamen-merge"></script>
+  <script src="canvasFlyouts.js?v=2026-09-28-moamen-merge"></script>
+  <script src="zones.js?v=2026-09-28-moamen-merge"></script>
+  <script src="roofFinish.js?v=2026-09-28-moamen-merge"></script>
+  <script src="assumptions.js?v=2026-09-28-moamen-merge"></script>
+  <script src="roofFeatures.js?v=2026-09-28-moamen-merge"></script>
+  <script src="structure.js?v=2026-09-28-moamen-merge"></script>
+  <script src="assemblies.js?v=2026-09-28-moamen-merge"></script>
+  <script src="gardenData.js?v=2026-09-28-moamen-merge"></script>
+  <script src="prebuiltSessions.js?v=2026-09-28-moamen-merge"></script>
+  <script src="rules.js?v=2026-09-28-moamen-merge"></script>
+  <script src="sunPosition.js?v=2026-09-28-moamen-merge"></script>
+  <script src="balls.js?v=2026-09-28-moamen-merge"></script>
+  <script src="field.js?v=2026-09-28-moamen-merge"></script>
+  <script src="footballCourt.js?v=2026-09-28-moamen-merge"></script>
+  <script src="basketballCourt.js?v=2026-09-28-moamen-merge"></script>
+  <script src="volleyballCourt.js?v=2026-09-28-moamen-merge"></script>
+  <script src="activityField.js?v=2026-09-28-moamen-merge"></script>
+  <script src="planters.js?v=2026-09-28-moamen-merge"></script>
+  <script src="gardenPresets.js?v=2026-09-28-moamen-merge"></script>
+  <script src="greenRoof.js?v=2026-09-28-moamen-merge"></script>
+  <script src="activityFamilies.js?v=2026-09-28-moamen-merge"></script>
+  <script src="pingPongTable.js?v=2026-09-28-moamen-merge"></script>
+  <script src="climbingTower.js?v=2026-09-28-moamen-merge"></script>
+  <script src="padelCourt.js?v=2026-09-28-moamen-merge"></script>
+  <script src="gardenField.js?v=2026-09-28-moamen-merge"></script>
+  <script src="combineField.js?v=2026-09-28-moamen-merge"></script>
+  <script src="previewCore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="preview.js?v=2026-09-28-moamen-merge"></script>
+  <script src="siteField.js?v=2026-09-28-moamen-merge"></script>
+  <script src="siteWeather.js?v=2026-09-28-moamen-merge"></script>
+  <script src="buildupEditor.js?v=2026-09-28-moamen-merge"></script>
+  <script src="dataTab.js?v=2026-09-28-moamen-merge"></script>
+  <script src="localSession.js?v=2026-09-28-moamen-merge"></script>
+  <script src="revitBridge.js?v=2026-09-28-moamen-merge"></script>
+  <script src="sportController.js?v=2026-09-28-moamen-merge"></script>
+  <script src="gardenController.js?v=2026-09-28-moamen-merge"></script>
+  <script src="windZones.js?v=2026-09-28-moamen-merge"></script>
+  <script src="siteController.js?v=2026-09-28-moamen-merge"></script>
+  <script src="combineController.js?v=2026-09-28-moamen-merge"></script>
+  <script src="resultsStoreCore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="analysisController.js?v=2026-09-28-moamen-merge"></script>
+  <script src="analysisResults.js?v=2026-09-28-moamen-merge"></script>
+  <script src="resultsStore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="kineticsPostAnalysis.js?v=2026-09-28-moamen-merge"></script>
+  <script src="siteTabs.js?v=2026-09-28-moamen-merge"></script>
+  <script src="roofProgram.js?v=2026-09-28-moamen-merge"></script>
+  <script src="workspaceBridge.js?v=2026-09-28-moamen-merge"></script>
+  <script src="sessionNames.js?v=2026-09-28-moamen-merge"></script>
+  <script src="algoPlacementCore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="algoPlacementUI.js?v=2026-09-28-moamen-merge"></script>
+  <script src="revitLayers.js?v=2026-09-28-moamen-merge"></script>
+  <script src="compareController.js?v=2026-09-28-moamen-merge"></script>
+  <script src="designPanel.js?v=2026-09-28-moamen-merge"></script>
+  <script src="inspector.js?v=2026-09-28-moamen-merge"></script>
+  <script src="combineHistory.js?v=2026-09-28-moamen-merge"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-28-moamen-merge"></script>
+  <script src="profileCore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="profile.js?v=2026-09-28-moamen-merge"></script>
+  <script src="quizCore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="quiz.js?v=2026-09-28-moamen-merge"></script>
+  <script src="tourCore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="tour.js?v=2026-09-28-moamen-merge"></script>
+  <script src="whereCore.js?v=2026-09-28-moamen-merge"></script>
+  <script src="where.js?v=2026-09-28-moamen-merge"></script>
+  <script src="sessionGate.js?v=2026-09-28-moamen-merge"></script>
+  <script src="workflowNext.js?v=2026-09-28-moamen-merge"></script>
+  <script src="main.js?v=2026-09-28-moamen-merge"></script>
 </body>
 </html>
