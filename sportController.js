@@ -43,9 +43,16 @@ const FIELD_SPORTS = {
  */
 const OUTDOOR_GROUPS = [
   { label: "Courts", categories: ["court"] },
-  { label: "Facilities", ids: ["locker_module", "bathroom_module", "rest_area"] },
   { label: "Miscellaneous", categories: [] }, // catch-all — filled below
 ];
+
+/**
+ * Where people change, wash and sit down. These used to be a group inside the
+ * Sport bar, which put "locker room" in the same list as "padel court" — two
+ * different questions. They have their own tab now; the same configurator
+ * serves them, because a facility is still an activity underneath.
+ */
+const FACILITY_IDS = ["locker_room", "locker_module", "dressing_cabin", "bathroom_module", "rest_area"];   // + the Locker Room (user, 2026-09-28)
 
 /** One activity-bar button, field or activity — the two data shapes share label/short/icon, so one template covers both. */
 function activityIconHtml(kind, id, activeId, item) {
@@ -60,8 +67,18 @@ function activityIconHtml(kind, id, activeId, item) {
  * — the outdoor groups each sorted smallest-footprint-first so "what fits
  * in this leftover 6x4m corner" is a scan, not a hunt through 24 flat icons.
  */
-function buildActivityBar() {
+function buildActivityBar(scope) {
   const bar = document.getElementById("activity-bar");
+
+  // The Facilities tab lists only its own, and no sports at all.
+  if (scope === "facilities") {
+    bar.innerHTML = `<div class="rail-cat-header">FACILITIES</div>`
+      + FACILITY_IDS.filter(id => ACTIVITIES[id] && !ACTIVITIES[id].hidden)
+          .map(id => activityIconHtml("activity", id, state.activityId, ACTIVITIES[id])).join("");
+    wireActivityBar(bar);
+    return;
+  }
+
   let html = `<div class="rail-cat-header">INDOOR</div>`;
   Object.entries(FIELD_SPORTS).forEach(([id, f]) => {
     if (f.hidden) return;
@@ -71,6 +88,7 @@ function buildActivityBar() {
   const byGroup = OUTDOOR_GROUPS.map(() => []);
   Object.entries(ACTIVITIES).forEach(([id, a]) => {
     if (a.hidden) return;
+    if (FACILITY_IDS.includes(id)) return;   // its own tab now
     const group = OUTDOOR_GROUPS.findIndex(g => (g.ids && g.ids.includes(id)) || (g.categories && g.categories.includes(a.category)));
     byGroup[group < 0 ? OUTDOOR_GROUPS.length - 1 : group].push([id, a]);
   });
@@ -82,7 +100,11 @@ function buildActivityBar() {
       .forEach(([id, a]) => { html += activityIconHtml("activity", id, state.activityId, a); });
   });
   bar.innerHTML = html;
+  wireActivityBar(bar);
+}
 
+/** One button's behaviour, shared by the Sport bar and the Facilities bar. */
+function wireActivityBar(bar) {
   bar.querySelectorAll(".activity-icon").forEach(btn => {
     btn.addEventListener("click", () => {
       bar.querySelectorAll(".activity-icon").forEach(b => b.classList.remove("active"));
@@ -139,6 +161,11 @@ function sportCourtAndRunoff() {
     const vs = Object.assign({}, volleyballState, { variant: state.variant }), c = volleyballCourt(vs), z = volleyballFreeZone(vs);
     return { court_l: c.length_m, court_w: c.width_m, run_ends: z.ends_m, run_sides: z.sides_m };
   }
+  if (state.sport === "football" && typeof footballType === "function") {
+    // football specifies itself (footballCourt.js): its court type carries the pitch and its own run-off
+    const t = footballType();
+    return { court_l: t.length_m, court_w: t.width_m, run_ends: t.runoff_m, run_sides: t.runoff_m };
+  }
   if (state.sport === "basketball" && typeof basketballPlayArea === "function") {
     const p = basketballPlayArea(Object.assign({}, basketballState, { variant: state.variant }));
     return { court_l: p.length_m, court_w: p.width_m, run_ends: p.insetX_m, run_sides: p.insetY_m };
@@ -170,6 +197,54 @@ function updateUI() {
   document.getElementById("field-label").textContent = `${sportLabel} — ${variantLabel}`;
   document.getElementById("norm-badge").textContent  = d.norm;
   if(typeof drawField === "function") drawField(state.sport, state.variant, state.capacity, isDarkMode());
+  syncSportPushButtons();
+}
+
+/* ── Garden Core roof: only Calisthenics and Yoga from the Sport tab (user, 2026-09-27) ── */
+const GARDEN_CORE_SPORT_TAB_OK = ["calisthenics", "yoga_deck", "locker_room", "locker_module", "bathroom_module"];   // + the locker and bathroom modules (user, same day)
+
+function isGardenCoreRoof() {
+  const p = typeof getRoofProgram === "function" ? getRoofProgram() : null;
+  return !!(p && p.key === "garden");
+}
+
+/** A piece that comes from the Sport tab's library (a court, or any activity / facility) and is not Calisthenics or Yoga. */
+function isNonGardenSportPiece(item) {
+  if (!item) return false;
+  if (item.kind === "field") return true;
+  if (item.kind !== "activity") return false;
+  const id = item.sourceJson && item.sourceJson.activity && item.sourceJson.activity.type_id;
+  return !GARDEN_CORE_SPORT_TAB_OK.includes(id);
+}
+
+/** The Push buttons: on a Garden Core roof a court cannot be pushed, and of the activities only Calisthenics and Yoga can. */
+function syncSportPushButtons() {
+  const garden = isGardenCoreRoof();
+  const set = (btnId, blocked) => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = blocked;
+    btn.title = blocked ? "This roof is Garden Core: only Calisthenics, Yoga, lockers and bathrooms can be pushed to Combine." : "";
+    let note = document.getElementById(btnId + "-note");
+    if (!note) { note = document.createElement("p"); note.id = btnId + "-note"; note.className = "hint"; btn.insertAdjacentElement("afterend", note); }
+    note.textContent = blocked ? "This roof is Garden Core: only Calisthenics, Yoga, lockers and bathrooms can be pushed to Combine." : "";
+    note.hidden = !blocked;
+  };
+  set("btn-push-sport", garden);
+  set("btn-push-activity", garden && !GARDEN_CORE_SPORT_TAB_OK.includes(state.activityId));
+}
+
+/** The roof became Garden Core: every Sport-tab piece that is not Calisthenics or Yoga leaves the board and the tray. */
+function removeNonGardenSportPieces() {
+  const gone = combineState.items.filter(isNonGardenSportPiece).concat((combineState.tray || []).filter(isNonGardenSportPiece));
+  if (!gone.length) return;
+  combineState.items = combineState.items.filter(i => !isNonGardenSportPiece(i));
+  combineState.tray = (combineState.tray || []).filter(i => !isNonGardenSportPiece(i));
+  if (gone.some(i => i.id === combineState.selectedId)) { combineState.selectedId = null; combineState.selectedKind = null; }
+  if (typeof renderCombineTray === "function") renderCombineTray();
+  if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  const names = [...new Set(gone.map(i => i.label))].join(", ");
+  if (typeof showToast === "function") showToast("Sports removed", `The roof is Garden Core now, so ${gone.length} piece${gone.length === 1 ? "" : "s"} that ${gone.length === 1 ? "is" : "are"} not Calisthenics, Yoga, lockers or bathrooms ${gone.length === 1 ? "was" : "were"} removed: ${names}.`);
 }
 
 function updateActivityUI() {
@@ -181,6 +256,7 @@ function updateActivityUI() {
   document.getElementById("field-label").textContent = `${a.label}${tierV && activityTierKeys(state.activityId).length > 1 ? " — " + sportTierLabel(state.activityTier) : ""}${qtyLabel}`;
   document.getElementById("norm-badge").textContent = tierV ? tierV.norm : a.norm;
   if(typeof drawActivity === "function") drawActivity(state.activityId, { length: state.activityLength, width: state.activityWidth }, isDarkMode());
+  syncSportPushButtons();
 }
 
 /* ── Sport Listeners & Exports ── */
@@ -263,6 +339,8 @@ function buildSportPayload() {
       ? basketballPlacementPayload() : undefined,
     volleyball: (state.sport === "volleyball" && typeof volleyballPlacementPayload === "function")
       ? volleyballPlacementPayload() : undefined,
+    football: (state.sport === "football" && typeof footballPlacementPayload === "function")
+      ? footballPlacementPayload() : undefined,
     layers: ["field_boundary", "center_line", "center_circle", "goal_area", "penalty_area", "run_off_zone", "stands"],
   };
 }
@@ -296,6 +374,14 @@ function buildActivityPayload() {
     // whatever the panel happens to show later.
     padel: (state.activityId === "padel_court" && typeof padelPlacementPayload === "function")
       ? padelPlacementPayload() : undefined,
+    ping_pong: (state.activityId === "ping_pong" && typeof pingPongPlacementPayload === "function")
+      ? pingPongPlacementPayload() : undefined,
+    // A family the design team authored carries the values set on it, so Revit
+    // can place THEIR family configured rather than build one of ours.
+    familyInstance:
+      (state.activityId === "climbing_tower" && typeof climbingTowerPayload === "function") ? climbingTowerPayload()
+      : (typeof isActivityFamily === "function" && isActivityFamily(state.activityId)) ? activityFamilyPayload(state.activityId)
+      : undefined,
   };
 }
 
@@ -400,16 +486,20 @@ document.getElementById("activityLength").addEventListener("input", e => { state
 document.getElementById("activityWidth").addEventListener("input", e => { state.activityWidth = Number(e.target.value) || ACTIVITIES[state.activityId].width; updateActivityUI(); });
 document.getElementById("activityQuantity").addEventListener("input", e => { state.activityQuantity = Number(e.target.value); document.getElementById("qty-val").textContent = state.activityQuantity; updateActivityUI(); });
 document.getElementById("btn-push-activity").addEventListener("click", () => {
+  if (isGardenCoreRoof() && !GARDEN_CORE_SPORT_TAB_OK.includes(state.activityId)) return;   // Garden Core: Calisthenics and Yoga only
   const a = ACTIVITIES[state.activityId];
+  let last = null;
   for (let i = 0; i < Math.max(1, state.activityQuantity); i++) {
     // We pass the full built payload into sourceJson so Combine can export it later
     const sourceJson = typeof buildActivityPayload === "function" ? buildActivityPayload() : {};
-    addCombineItem({ kind: "activity", label: a.label, length_m: state.activityLength, width_m: state.activityWidth, sourceJson });
+    last = addCombineItem({ kind: "activity", label: a.label, length_m: state.activityLength, width_m: state.activityWidth, sourceJson });
   }
-  setMode("combine");
+  // stay in this tab (user, 2026-09-28): the tray on the right lists it, and its buttons go on to Combine / Garden Components
+  if (typeof pushTrayAdded === "function") pushTrayAdded(last); else setMode("combine");
 });
 
 document.getElementById("btn-push-sport").addEventListener("click", () => {
+  if (isGardenCoreRoof()) return;                                                            // Garden Core: no courts
   // A sport that specifies itself works out its own footprint. Volleyball's
   // free zone is 6.5 m at the ends for FIVB events and 5 m at the sides, which
   // the single `runoff` figure cannot express — and the piece on the roof has
@@ -417,10 +507,11 @@ document.getElementById("btn-push-sport").addEventListener("click", () => {
   // (basketball likewise: its competition area already includes the free zone, so the run-off is not added twice)
   const fp = sportFootprint();
 
-  addCombineItem({
+  const item = addCombineItem({
     kind: "field", label: `${state.sport} (${state.variant})`,
     length_m: fp.length_m, width_m: fp.width_m,
     sourceJson: buildSportPayload(),
   });
-  setMode("combine");
+  // stay in this tab (user, 2026-09-28): the tray on the right lists it
+  if (typeof pushTrayAdded === "function") pushTrayAdded(item); else setMode("combine");
 });

@@ -169,8 +169,10 @@ function refreshSuggestions() {
   // Switched off in Tools → no suggestions computed, so none are drawn on the
   // roof and none are listed. Off means off, not "hidden but still there".
   const suggestionsOn = typeof suggestionsEnabled === "undefined" || suggestionsEnabled;
-  combineState.suggestions = suggestionsOn && item && typeof suggestPositionsForItem === "function"
-    ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 1) : [];
+  // only a spot the board's rules (the Algorithmic placement's, boardSpotOk in combineField.js) accept is offered
+  const spots = suggestionsOn && item && typeof suggestPositionsForItem === "function"
+    ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 60) : [];
+  combineState.suggestions = (typeof boardSpotOk === "function" ? spots.filter(c => boardSpotOk(item, c.x_m, c.y_m, c.rotation)) : spots).slice(0, 1);
   if (typeof drawCombineCanvas === "function") drawCombineCanvas();
 }
 
@@ -273,7 +275,7 @@ document.getElementById("btn-remove-selected").addEventListener("click", deleteS
 /** Is this board piece the Locker & Dressing Room or the Bathroom & Shower module (the ones the indoor zone's wall stands round)? */
 function isServiceModuleItem(item) {
   const id = item && item.sourceJson && item.sourceJson.activity && item.sourceJson.activity.type_id;
-  return id === "locker_module" || id === "bathroom_module";
+  return id === "locker_room" || id === "bathroom_module";          // the Locker Room (not the Locker Bank family) and the Bathroom module
 }
 
 /**
@@ -320,6 +322,8 @@ document.getElementById("btn-add-entry").addEventListener("click", () => {
 // #combine-entry-cta) instead of the Rules tab — one source of truth for
 // what "Add Entry Point" actually does.
 document.getElementById("btn-add-entry-cta")?.addEventListener("click", () => {
+  // entry points are added in the Roof Type and Accessibility tab now (user, 2026-09-28)
+  if (typeof setMode === "function") { setMode("roofAccess"); return; }
   document.getElementById("btn-add-entry").click();
 });
 
@@ -446,7 +450,7 @@ function buildCombinedPayload() {
   // Same grid+BFS pass the canvas already draws from (computeCirculation is
   // pure/cheap to call again here) — so the exported paths are exactly what
   // the marching-ants show, not a re-derived approximation.
-  const circulation = computeCirculation(combineState, DESIGN_RULES);
+  const circulation = typeof boardRuleCheck === "function" ? boardRuleCheck(combineState.items).circulation : computeCirculation(combineState, DESIGN_RULES);
 
   const payload = {
     version: "1.3",

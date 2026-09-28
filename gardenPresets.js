@@ -12,6 +12,14 @@
  * the setback line of the roof's longest edge. Green roof beds in the setback band along every roof edge of 6 m or more that has no entry point, and a
  * 4 x 4 m green roof bed in each of the two corners at the ends of the longest edge, inside the setback lines.
  * More rules to come from the user.
+ *
+ * Preset 2, SOCIAL GARDEN (user, 2026-09-27): the Quiet Garden with Planter T no. 1, 3, 4 and 6 of the middle row (counted along the row) replaced by the
+ * Garden tab's Park Bench and Table, each centred where its Planter T would stand; everything else the same.
+ *
+ * Preset 3, PLANTED GARDEN (user, 2026-09-27): the Social Garden with, in the middle row, no. 2-5 removed and one green roof bed over the whole strip
+ * from the outer edge of no. 2 to that of no. 5 (the middle row's depth); Planter T in place of Planter S no. 7, 12, 13, 18 (centred on the S position);
+ * and at no. 8, 11, 14, 17 a green roof bed as wide as a Planter S, running from the S row's inner edge out to meet the setback line (its green strip).
+ * Numbering as on the board: middle row 1-6, one S row 7-12, the other 13-18, counted along the row.
  */
 
 const GARDEN_BED_MIN_EDGE_M = 6;       // a roof edge shorter than this gets no green bed in the setback
@@ -41,6 +49,21 @@ const GARDEN_PRESETS = {
   }
 };
 
+// Social Garden: the Quiet Garden with Park Bench and Table in place of Planter T no. 1, 3, 4, 6 (`swap`: the row's pieces, by index, that are a bench instead)
+GARDEN_PRESETS.social_garden = Object.assign({}, GARDEN_PRESETS.quiet_garden, {
+  label: "Social Garden",
+  rows: GARDEN_PRESETS.quiet_garden.rows.map(r => r.side === 0 ? Object.assign({}, r, { swap: [0, 2, 3, 5] }) : r)
+});
+
+// Planted Garden: the Social Garden, then (by index along the row) `skip` = left empty, `tAt` = a Planter T centred on that spot, `bedAt` = a green
+// bed as wide as the row's planter running outward to the setback line; `midBed` = one green bed over the middle row from piece `from` to piece `to`.
+GARDEN_PRESETS.planted_garden = Object.assign({}, GARDEN_PRESETS.social_garden, {
+  label: "Planted Garden",
+  rows: GARDEN_PRESETS.social_garden.rows.map(r => r.side === 0 ? Object.assign({}, r, { skip: [1, 2, 3, 4] })
+                                                               : Object.assign({}, r, { tAt: [0, 5], bedAt: [1, 4] })),
+  midBed: { from: 1, to: 4 }
+});
+
 /** The roof outline in board metres (x right, y down), as the board draws it. */
 function gardenPresetFootprint() {
   if (typeof algoFootprint === "function") return algoFootprint();
@@ -66,6 +89,22 @@ function gardenPresetAxes() {
   // where the longest edge starts and ends, along the row
   const edgeLo = best ? best.lo : Math.min(...xs), edgeHi = best ? best.hi : Math.max(...xs);
   return { cx, cy, alongX, edgeLine, inward, edgeLo, edgeHi, spanX: Math.max(...xs) - Math.min(...xs), spanY: Math.max(...ys) - Math.min(...ys) };
+}
+
+/** How far from (px, py) in direction (dx, dy) (one of the axes) the roof outline is, in metres (Infinity if never). */
+function gardenOutlineReach(px, py, dx, dy) {
+  const foot = gardenPresetFootprint();
+  let best = Infinity;
+  foot.forEach((a, i) => {
+    const b = foot[(i + 1) % foot.length];
+    if (dy !== 0 && Math.abs(a[1] - b[1]) < 1e-9 && px >= Math.min(a[0], b[0]) - 1e-9 && px <= Math.max(a[0], b[0]) + 1e-9) {
+      const d = (a[1] - py) * dy; if (d > 1e-9 && d < best) best = d;
+    }
+    if (dx !== 0 && Math.abs(a[0] - b[0]) < 1e-9 && py >= Math.min(a[1], b[1]) - 1e-9 && py <= Math.max(a[1], b[1]) + 1e-9) {
+      const d = (a[0] - px) * dx; if (d > 1e-9 && d < best) best = d;
+    }
+  });
+  return best;
 }
 
 /** Is anything on the board that a preset would clear (pieces, garden zones, indoor walls, the tray)? */
@@ -96,6 +135,14 @@ function applyGardenPreset(key) {
   gardenClearBoard();
 
   const stamp = Date.now();
+  const sb = typeof DESIGN_RULES !== "undefined" ? DESIGN_RULES.boundarySetback_m : 1.5;
+  const extraBeds = [];                                        // the preset's own green beds, as boxes [x0, y0, x1, y1]
+  if (preset.midBed) {
+    // one bed over the middle row from piece `from` to piece `to` (outer edge to outer edge), as deep as the middle row
+    const a0 = (preset.midBed.from - (mid.count - 1) / 2) * pitch - m.len / 2, a1 = (preset.midBed.to - (mid.count - 1) / 2) * pitch + m.len / 2;
+    const c = ax.alongX ? ax.cy : ax.cx;
+    extraBeds.push(ax.alongX ? [ax.cx + a0, c - m.wid / 2, ax.cx + a1, c + m.wid / 2] : [c - m.wid / 2, ax.cy + a0, c + m.wid / 2, ax.cy + a1]);
+  }
   let n = 0;
   preset.rows.forEach(r => {
     const sz = sizeOf(r.planter), label = PLANTER_VARIANTS[r.planter].label;
@@ -104,6 +151,42 @@ function applyGardenPreset(key) {
     for (let i = 0; i < r.count; i++) {
       const along = (i - (r.count - 1) / 2) * pitch;           // the piece's centre, from the centre point along the longest side
       const cxm = ax.alongX ? ax.cx + along : ax.cx + across, cym = ax.alongX ? ax.cy + across : ax.cy + along;
+      if (r.skip && r.skip.includes(i)) continue;
+      if (r.bedAt && r.bedAt.includes(i)) {
+        // a green bed as wide as the planter it replaces, from the row's inner edge out to the setback line on that side
+        const inner = (ax.alongX ? ax.cy : ax.cx) + r.side * (m.wid / 2 + r.clear);
+        const reach = gardenOutlineReach(ax.alongX ? cxm : inner, ax.alongX ? inner : cym, ax.alongX ? 0 : r.side, ax.alongX ? r.side : 0);
+        const outer = inner + r.side * Math.max(sz.wid, reach - sb);
+        const a0 = along - sz.len / 2, a1 = along + sz.len / 2, c0 = Math.min(inner, outer), c1 = Math.max(inner, outer);
+        extraBeds.push(ax.alongX ? [ax.cx + a0, c0, ax.cx + a1, c1] : [c0, ax.cy + a0, c1, ax.cy + a1]);
+        continue;
+      }
+      if (r.tAt && r.tAt.includes(i)) {
+        // a Planter T centred where the Planter S would stand
+        const t = sizeOf("planter_t"), tLabel = PLANTER_VARIANTS.planter_t.label;
+        const tW = ax.alongX ? t.len : t.wid, tH = ax.alongX ? t.wid : t.len;
+        combineState.items.push({
+          id: `preset_${key}_${stamp}_${n++}`, kind: "gardenBlock", label: tLabel,
+          length_m: t.len, width_m: t.wid, rotation: ax.alongX ? 0 : 90,
+          x_m: Math.round((cxm - tW / 2) * 100) / 100, y_m: Math.round((cym - tH / 2) * 100) / 100,
+          preset: key,
+          sourceJson: { version: "1.0", generator: "Sportify-Garden-Preset", preset: key, gardenBlock: { type: "planter_t", label: tLabel, family: "Planter", params: t.p } }
+        });
+        continue;
+      }
+      if (r.swap && r.swap.includes(i) && typeof GARDEN_BENCH !== "undefined") {
+        // a Park Bench and Table here instead, centred where the planter would stand (as Push to Combine gives it: its family is still to come)
+        const bl = GARDEN_BENCH.length / 1000, bw = GARDEN_BENCH.width / 1000, bLabel = GARDEN_BENCH.label;
+        const bW = ax.alongX ? bl : bw, bH = ax.alongX ? bw : bl;
+        combineState.items.push({
+          id: `preset_${key}_${stamp}_${n++}`, kind: "gardenBlock", label: bLabel,
+          length_m: bl, width_m: bw, rotation: ax.alongX ? 0 : 90,
+          x_m: Math.round((cxm - bW / 2) * 100) / 100, y_m: Math.round((cym - bH / 2) * 100) / 100,
+          preset: key,
+          sourceJson: { version: "1.0", generator: "Sportify-Garden-Preset", preset: key, gardenBlock: { type: GARDEN_BENCH.id, label: bLabel, family: null, length_mm: GARDEN_BENCH.length, width_mm: GARDEN_BENCH.width } }
+        });
+        continue;
+      }
       const w = ax.alongX ? sz.len : sz.wid, h = ax.alongX ? sz.wid : sz.len;   // its footprint on the board
       const params = r.seatCapFrom != null && i % 2 === r.seatCapFrom ? Object.assign({}, sz.p, { seatCap: true }) : sz.p;
       combineState.items.push({
@@ -116,7 +199,6 @@ function applyGardenPreset(key) {
     }
   });
   // the activities at the two ends of the planters, against the longest edge's setback line
-  const sb = typeof DESIGN_RULES !== "undefined" ? DESIGN_RULES.boundarySetback_m : 1.5;
   (preset.ends || []).forEach(e => {
     const a = typeof ACTIVITIES !== "undefined" && ACTIVITIES[e.activity];
     if (!a) return;
@@ -137,6 +219,15 @@ function applyGardenPreset(key) {
   });
 
   let beds = preset.beds ? gardenSetbackBeds(key, stamp, sb) : 0;
+  if (extraBeds.length && typeof ensureZoneState === "function" && typeof rectPoints === "function") {
+    ensureZoneState();
+    const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
+    const R = v => Math.round(v * 100) / 100;
+    extraBeds.forEach((b, i) => {
+      combineState.zones.push(syncZoneBounds({ id: `zone_preset_${key}_${stamp}_bed${i}`, kind: "green_roof", assemblyKey: assembly, points: rectPoints(R(b[0]), R(b[1]), R(b[2] - b[0]), R(b[3] - b[1])), preset: key }));
+      beds++;
+    });
+  }
   if (preset.cornerBeds && typeof ensureZoneState === "function" && typeof rectPoints === "function") {
     // a square bed in each corner at the ends of the longest edge: against that edge's setback line and the setback line at the end
     ensureZoneState();
@@ -217,6 +308,10 @@ function syncGardenPresetButtons() {
   const show = !!(program && program.key === "garden");
   box.style.display = show ? "flex" : "none";
   box.parentElement.classList.toggle("has-garden-presets", show);   // the legend then stops above the buttons (style.css)
+  // how much room the legend leaves at the bottom: the buttons' own height, their offset from the bottom, and a gap
+  if (show) box.parentElement.style.setProperty("--garden-presets-room", (box.offsetHeight + 22 + 14) + "px");
 }
 
 document.getElementById("btn-preset-quiet-garden")?.addEventListener("click", () => applyGardenPreset("quiet_garden"));
+document.getElementById("btn-preset-social-garden")?.addEventListener("click", () => applyGardenPreset("social_garden"));
+document.getElementById("btn-preset-planted-garden")?.addEventListener("click", () => applyGardenPreset("planted_garden"));

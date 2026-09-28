@@ -21,7 +21,14 @@ function drawField(sport, variant, capacity, isDark) {
   // A sport that names its own surface hides the generic material controls; a
   // sport that does not has to get them back, so this runs for every sport
   // rather than only for the specified ones.
-  const specifiesItsOwn = sport === "basketball" || sport === "volleyball";
+  const specifiesItsOwn = sport === "basketball" || sport === "volleyball" || sport === "football";
+
+  // Football has no size variant: its COURT TYPE is the size (a futsal court is
+  // 40 x 20 m because FIFA says so), and two controls that both set the size can
+  // disagree. Hidden here rather than removed, because every other sport uses it.
+  document.querySelectorAll("#field-params .section").forEach(sec => {
+    if (sec.querySelector("label")?.textContent?.trim() === "Size variant") sec.hidden = sport === "football";
+  });
   document.querySelectorAll("#field-params .section").forEach(sec => {
     const l = sec.querySelector("label")?.textContent?.trim();
     if (l === "Material quality" || l === "Reference material (database)"
@@ -34,6 +41,11 @@ function drawField(sport, variant, capacity, isDark) {
 
   if (typeof syncBasketballPanel === "function") syncBasketballPanel(sport);
   if (typeof syncVolleyballPanel === "function") syncVolleyballPanel(sport);
+  if (typeof syncFootballPanel === "function") syncFootballPanel(sport);
+  if (sport === "football" && typeof drawFootballPreview === "function") {
+    drawFootballPreview(svg, isDark);
+    return;
+  }
   if (sport === "volleyball" && typeof drawVolleyballPreview === "function") {
     drawVolleyballPreview(svg, isDark);
     return;

@@ -3,9 +3,9 @@
  * it onto the roof. Same "placed, not drawn" pattern as furniture.js (a louvre pergola has a position and a
  * footprint, not an area you mark out) — the catalog itself lives in kineticsCatalog.js.
  *
- * Distinct from kineticsPostAnalysis.js's "Dynamic Families" panel (the Improve tab): that one only
- * displays what Revit's Kinetics ribbon already built from an analysis; this one is where the user decides
- * where a kinetic element goes, and at which of its standard build sizes, in the first place.
+ * Distinct from what Revit's Kinetics ribbon builds from an analysis (the web app has no tab that displays
+ * that any more): this one is where the user decides where a kinetic element goes, and at which of its
+ * standard build sizes, in the first place.
  */
 
 const kineticsState = { category: null, key: null };

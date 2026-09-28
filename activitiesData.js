@@ -190,12 +190,32 @@ const ACTIVITIES = {
     norm: "Reference sheet",
   },
   locker_module: {
-    label: "Locker & Dressing Room Module",
+    label: "Locker Bank",
     short: "Lockers",
+    icon: "ti-lock",
+    // A placeholder size only: the real footprint comes from the family's own
+    // Column_Count and Module_Width (facilityFamilies.js).
+    length: 0.80, width: 0.70,
+    category: "service",
+    norm: "Revit family — Locker Bank",
+  },
+  // The locker ROOM (user, 2026-09-28): the 10 x 5 m Locker & Dressing Room module as it was before the Locker Bank family took the old
+  // locker_module id. Algorithmic placement's "Locker & Dressing Room Module" (service corner, 2 m lobby, indoor zone) takes its size from here.
+  locker_room: {
+    label: "Locker Room",
+    short: "Locker Room",
     icon: "ti-square-rounded",
     length: 10.00, width: 5.00,
     category: "service",
     norm: "Reference sheet",
+  },
+  dressing_cabin: {
+    label: "Dressing Cabin",
+    short: "Cabin",
+    icon: "ti-door-enter",
+    length: 2.10, width: 1.80,
+    category: "service",
+    norm: "Revit family — Dressing_Cabin",
   },
   bathroom_module: {
     label: "Bathroom & Shower Module",

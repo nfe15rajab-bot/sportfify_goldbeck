@@ -15,7 +15,7 @@
 const CANVAS_FLYOUTS = {
   "zone-flyout":       { button: "btn-zone-toggle",       close: "btn-zone-close",       render: () => renderZonePanel?.() },
   "vegetation-flyout": { button: "btn-vegetation-toggle", close: "btn-vegetation-close", render: () => renderVegetationPanel?.() },
-  "furniture-flyout":  { button: "btn-furniture-toggle",  close: "btn-furniture-close",  render: () => renderFurniturePanel?.() },
+  "furniture-flyout":  { button: "btn-furniture-toggle",  close: "btn-furniture-close",  render: () => renderComponentsPanel?.() },
   "kinetics-flyout":   { button: "btn-kinetics-toggle",   close: "btn-kinetics-close",   render: () => renderKineticsPanel?.() },
 };
 

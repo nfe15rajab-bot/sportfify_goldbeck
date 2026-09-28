@@ -275,12 +275,18 @@ function circulationCellSize(roof) {
 
 /**
  * owner[cell] === -1 means walkable; otherwise it's the index of the item
- * whose buffered footprint occupies that cell. Callers pass bufferM — the
- * circulation-check caller uses the circulation width (not the clearance
- * rule), which is what makes a too-narrow gap between pieces register as
- * "not a real walkway" even though the pieces themselves aren't overlapping.
+ * whose buffered footprint occupies that cell, or GRID_GREEN for a green roof
+ * bed. Callers pass bufferM — the circulation-check caller uses the circulation
+ * width (not the clearance rule), which is what makes a too-narrow gap between
+ * pieces register as "not a real walkway" even though the pieces themselves
+ * aren't overlapping.
+ *
+ * Green roof zones (green beds) are NOT pathways (user, 2026-09-27): their cells,
+ * grown by the same half buffer, are blocked too, so a gap between a piece and a
+ * bed only counts as a walkway when it is as wide as the circulation width.
  */
-function buildOccupancyGrid(roof, items, bufferM) {
+const GRID_GREEN = -2;
+function buildOccupancyGrid(roof, items, bufferM, zones = []) {
   const cell = circulationCellSize(roof);
   const cols = Math.max(3, Math.ceil(roof.length / cell));
   const rows = Math.max(3, Math.ceil(roof.width / cell));
@@ -297,6 +303,33 @@ function buildOccupancyGrid(roof, items, bufferM) {
       for (let c = c0; c <= c1; c++) {
         const k = r * cols + c;
         if (owner[k] === -1) owner[k] = idx;
+      }
+    }
+  });
+
+  // green beds: a cell is blocked when its centre lies in the bed or within half the buffer of it
+  zones.filter(z => (z.kind || "green_roof") === "green_roof" && Array.isArray(z.points) && z.points.length >= 3).forEach(z => {
+    const pts = z.points;
+    const inPoly = (x, y) => {
+      let c = false;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        const a = pts[i], b = pts[j];
+        if (((a.y_m > y) !== (b.y_m > y)) && (x < (b.x_m - a.x_m) * (y - a.y_m) / (b.y_m - a.y_m) + a.x_m)) c = !c;
+      }
+      return c;
+    };
+    const nearEdge = (x, y) => pts.some((a, i) => {
+      const b = pts[(i + 1) % pts.length], dx = b.x_m - a.x_m, dy = b.y_m - a.y_m, L2 = dx * dx + dy * dy;
+      const t = L2 ? clamp(((x - a.x_m) * dx + (y - a.y_m) * dy) / L2, 0, 1) : 0;
+      return Math.hypot(a.x_m + t * dx - x, a.y_m + t * dy - y) < half;
+    });
+    const xs = pts.map(p => p.x_m), ys = pts.map(p => p.y_m);
+    const c0 = clamp(Math.floor((Math.min(...xs) - half) / cell), 0, cols - 1), c1 = clamp(Math.ceil((Math.max(...xs) + half) / cell) - 1, 0, cols - 1);
+    const r0 = clamp(Math.floor((Math.min(...ys) - half) / cell), 0, rows - 1), r1 = clamp(Math.ceil((Math.max(...ys) + half) / cell) - 1, 0, rows - 1);
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const k = r * cols + c, x = (c + 0.5) * cell, y = (r + 0.5) * cell;
+        if (owner[k] === -1 && (inPoly(x, y) || nearEdge(x, y))) owner[k] = GRID_GREEN;
       }
     }
   });
@@ -397,7 +430,7 @@ function computeCirculation(combineState, rules) {
   if (items.length === 0) return { paths: [], unreachable };
   if (entries.length === 0) { items.forEach(it => unreachable.add(it.id)); return { paths: [], unreachable }; }
 
-  const grid = buildOccupancyGrid(roof, items, rules.circulationWidth_m);
+  const grid = buildOccupancyGrid(roof, items, rules.circulationWidth_m, combineState.zones || []);
   const starts = [];
   entries.forEach(ep => { const k = entryStartCell(ep, roof, grid); if (k >= 0) starts.push(k); });
   if (starts.length === 0) { items.forEach(it => unreachable.add(it.id)); return { paths: [], unreachable }; }
@@ -470,7 +503,7 @@ function boxAccessDistance(grid, dist, xm, ym, wM, hM) {
 function suggestPositionsForItem(item, combineState, rules, topN = 3) {
   const roof = combineState.roof;
   const others = combineState.items.filter(it => it.id !== item.id);
-  const grid = buildOccupancyGrid(roof, others, rules.circulationWidth_m);
+  const grid = buildOccupancyGrid(roof, others, rules.circulationWidth_m, combineState.zones || []);
   const starts = combineState.entryPoints.map(ep => entryStartCell(ep, roof, grid)).filter(k => k >= 0);
   const dist = starts.length ? bfs(grid, starts).dist : null;
   const windSensitive = isWindSensitive(item);

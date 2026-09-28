@@ -82,14 +82,14 @@ check("every workspace a view lists exists", Object.values(PROFILE_VIEWS).every(
 check("Advanced shows everything, and hides nothing", core.profileHiddenModes("advanced").length === 0);
 check("an unknown view counts as Advanced; an unknown workspace is never hidden", core.profileModeVisible("expert", "data") && core.profileModeVisible("simple", "somethingNew"));
 check("Simple keeps the main path and the always-there tabs", ["guide", "site", "sport", "combine", "analysis", "deliverables", "session", "profile"].every(m => core.profileModeVisible("simple", m)));
-check("Simple hides exactly: Structure inputs, Site conditions, Compare, Improve, Catalogue, Revit families", core.profileHiddenModes("simple").join() === "structure,conditions,compare,postAnalysis,data,families", core.profileHiddenModes("simple").join());
+check("Simple hides exactly: Structure inputs, Site conditions, Compare, Catalogue, Revit families", core.profileHiddenModes("simple").join() === "structure,conditions,compare,data,families", core.profileHiddenModes("simple").join());
 
 // the rail as the page draws it: which separators stay
 const layout = view => core.profileRailLayout(railItems.map(i => (i.divider ? { divider: true } : { divider: false, visible: core.profileModeVisible(view, Object.keys(PROFILE_MODES).find(k => PROFILE_MODES[k].button === i.id) || "") || !/^mode[A-Z]/.test(i.id) })));
 const drawn = view => railItems.map((it, i) => (it.divider ? (layout(view)[i] ? "|" : "") : (core.profileModeVisible(view, Object.keys(PROFILE_MODES).find(k => PROFILE_MODES[k].button === it.id) || "") || !/^mode[A-Z]/.test(it.id) ? it.id : ""))).filter(Boolean).join(" ");
 check("Advanced draws the whole rail, every separator included", railItems.length > 0 && layout("advanced").every((v, i) => railItems[i].divider ? v : true) && drawn("advanced").split(" ").length === railItems.length, drawn("advanced"));
 const simpleRail = drawn("simple");
-check("Simple draws the rail as Site | Sport Garden Zones Plants Furniture Kinetics Combine | Results (no separator at an end or twice in a row)", simpleRail === "modeSite | modeSport modeGardenBlocks btn-zone-toggle btn-vegetation-toggle btn-furniture-toggle btn-kinetics-toggle modeCombine | modeAnalysis", simpleRail);
+check("Simple draws the rail as Site Roof & Access | Sport Facilities Zones Plants Components Kinetics Combine | Results (no separator at an end or twice in a row)", simpleRail === "modeSite modeRoofAccess | modeSport modeFacilities btn-zone-toggle btn-vegetation-toggle btn-furniture-toggle btn-kinetics-toggle modeCombine | modeAnalysis", simpleRail);
 
 // the Overview's steps: each leads to a workspace the profile knows, and Simple hides only the last
 const steps = [...html.matchAll(/class="workflow-step" data-goto="(\w+)"/g)].map(m => m[1]);
@@ -363,15 +363,6 @@ function harness({ stored = null, elements = {} } = {}) {
     const css = read("style.css");
     const rule = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].find(m => m[1].split(",").map(s => s.trim()).includes("#profile-content"));
     check("the Profile tab's content can scroll (the same fix #analysis-content/#data-content/#compare-content already have, not just centered-and-clipped by .canvas-wrap)",
-      !!rule && /overflow-y:\s*auto/.test(rule[2]) && /height:\s*100%/.test(rule[2]));
-  }
-  {
-    // Improve (#postAnalysis-content) was left out of the shared #analysis-content/#compare-content/#families-content/
-    // #profile-content rule when it was written — same silent-clip symptom as the Profile tab above, just on a newer
-    // tab that was not part of that fix's own list yet.
-    const css = read("style.css");
-    const rule = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].find(m => m[1].split(",").map(s => s.trim()).includes("#postAnalysis-content"));
-    check("the Improve tab's content can scroll too (#postAnalysis-content), not just centered-and-clipped by .canvas-wrap",
       !!rule && /overflow-y:\s*auto/.test(rule[2]) && /height:\s*100%/.test(rule[2]));
   }
 

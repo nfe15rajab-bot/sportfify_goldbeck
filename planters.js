@@ -44,10 +44,21 @@ const PLANTER_FAMILY_DEFAULTS = {
   substrateDepth: 300, outletHeight: 30, outletBottomOffset: 25, outletTopOffset: 55, centreRow: true, seatCap: true, tree: true
 };
 
-/** The two planters: length x width x height (Rim Height), the rest from the family. */
+/** The planters: length x width x height (Rim Height), the rest from the family.
+ *
+ * The "(with pedestal)" variants (design team, 2026-09-28) are separate Revit
+ * families that carry the pedestal as real geometry rather than as a dimension
+ * the tray floor sits above. Their PARAMETERS are identical to the plain ones,
+ * checked value by value against the shipped .rfa — so they share this editor
+ * and these formulas, and differ only in which family Revit loads. That is why
+ * they are listed here rather than folded into a toggle: a toggle would read as
+ * a dimension change when it is actually a different family.
+ */
 const PLANTER_VARIANTS = {
   planter_s: { label: "Planter S", short: "Planter S", size: { length: 2400, width: 1000, rimHeight: 450 } },
-  planter_t: { label: "Planter T", short: "Planter T", size: { length: 2400, width: 2400, rimHeight: 900 } }
+  planter_t: { label: "Planter T", short: "Planter T", size: { length: 2400, width: 2400, rimHeight: 900 } },
+  planter_s_pedestal: { label: "Planter S (with pedestal)", short: "Planter S · ped.", size: { length: 2400, width: 1000, rimHeight: 450 } },
+  planter_t_pedestal: { label: "Planter T (with pedestal)", short: "Planter T · ped.", size: { length: 2400, width: 2400, rimHeight: 900 } }
 };
 
 /** Park Bench and Table (user, 2026-09-27): its own Revit family, still to come from colleagues. Only the overall footprint is fixed, 2000 x 2000 mm; the
@@ -84,25 +95,15 @@ function planterParams(id) {
 
 // ------------------------------------------------------------------------------------------------ the item bar and the panel
 
-function buildPlanterBar() {
-  const bar = document.getElementById("activity-bar");
-  const items = Object.entries(PLANTER_VARIANTS).map(([id, v]) => [id, v, "ti-plant-2"]).concat([[GARDEN_BENCH.id, GARDEN_BENCH, "ti-armchair"]]);
-  bar.innerHTML = `<div class="rail-cat-header">GARDEN</div>` + items.map(([id, v, icon]) =>
-    `<button class="activity-icon${id === planterState.active ? " active" : ""}" data-planter="${id}" title="${escapeHtml(v.label)}"><i class="ti ${icon}"></i><span class="activity-icon-label">${escapeHtml(v.short)}</span></button>`).join("");
-  bar.querySelectorAll("[data-planter]").forEach(btn => btn.addEventListener("click", () => {
-    planterState.active = btn.dataset.planter; planterSave();
-    buildPlanterBar(); updatePlanterUI();
-  }));
-}
-
-function updatePlanterUI() {
-  if (planterState.active === GARDEN_BENCH.id) { updateBenchUI(); return; }
-  const id = planterState.active, v = PLANTER_VARIANTS[id], p = planterParams(id);
-  document.getElementById("field-label").textContent = `${v.label} — ${p.length} × ${p.width} × ${p.rimHeight} mm`;
-  document.getElementById("norm-badge").textContent = "Revit family: Planter";
-  const host = document.getElementById("planter-panel");
-  if (host) host.innerHTML = planterPanelHtml(id, p);
-  drawPlanter(p);
+/**
+ * A parameter changed. The panel that is showing the editor redraws itself; the
+ * planter's own plan-and-section drawing redraws in place.
+ *
+ * There is no workspace to update any more — the editor lives inside the
+ * Components panel, over the roof, so you never leave what you are designing.
+ */
+function planterRefresh() {
+  if (typeof renderComponentsPanel === "function") renderComponentsPanel();
 }
 
 function planterPanelHtml(id, p) {
@@ -158,43 +159,56 @@ function gardenPushHtml() {
     </div>`;
 }
 
-// ------------------------------------------------------------------------------------------------ Park Bench and Table (placeholder until its family arrives)
+/* The Park Bench and Table has no parameters to edit until its family arrives,
+   so it has no editor here: the Components panel shows its footprint and lets
+   you place it. */
 
-function updateBenchUI() {
-  const b = GARDEN_BENCH;
-  document.getElementById("field-label").textContent = `${b.label} — ${b.length} × ${b.width} mm`;
-  document.getElementById("norm-badge").textContent = "Revit family: to come";
-  const host = document.getElementById("planter-panel");
-  if (host) host.innerHTML = `
-    <div class="section">
-      <label>Footprint (L × W)</label>
-      <div class="dims">
-        <div class="dim-card"><div class="val">${escapeHtml(b.length)}</div><div class="lbl">Length (mm)</div></div>
-        <div class="dim-card"><div class="val">${escapeHtml(b.width)}</div><div class="lbl">Width (mm)</div></div>
-      </div>
-      <p class="hint">Family to come — the sizes will follow the Revit family when it arrives. Until then only the overall footprint is fixed.</p>
-    </div>
-    ${gardenPushHtml()}`;
-  drawBench();
-}
-
-/** The bench's footprint in plan, with a placeholder table and a bench on two sides. */
-function drawBench() {
-  const svg = document.getElementById("planter-field");
-  if (!svg) return;
-  const b = GARDEN_BENCH, dark = typeof isDarkMode === "function" && isDarkMode();
-  const ink = dark ? "#c9cbe0" : "#3a3f4b", dim = dark ? "#aaa" : "#666", font = `font-family="'Titillium Web', Arial, sans-serif"`;
-  const VW = 600, VH = 400, s = 250 / Math.max(b.length, b.width);
-  const w = b.length * s, h = b.width * s, x = (VW - w) / 2, y = 80;
-  const wood = dark ? "#9c8a6a" : "#d8c3a0", mm = v => v * s;
-  let g = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${ink}" stroke-width="1.2" stroke-dasharray="6 4"/>`;
-  // placeholder only: a 1.8 x 0.8 m table in the middle, a 1.8 x 0.4 m bench on each long side
-  g += `<rect x="${x + mm(100)}" y="${y + mm(600)}" width="${mm(1800)}" height="${mm(800)}" rx="3" fill="${wood}" stroke="${ink}" stroke-width="1"/>`;
-  [100, 1500].forEach(o => { g += `<rect x="${x + mm(100)}" y="${y + mm(o)}" width="${mm(1800)}" height="${mm(400)}" rx="3" fill="${wood}" fill-opacity="0.7" stroke="${ink}" stroke-width="0.8"/>`; });
-  if (typeof archDimSvg === "function") g += archDimSvg("top", x, x + w, y, 14, `${b.length}`, dim, 10.5) + archDimSvg("left", y, y + h, x, 14, `${b.width}`, dim, 10.5);
-  svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
-  svg.innerHTML = `<text x="${VW / 2}" y="${y - 40}" text-anchor="middle" font-size="12" font-weight="700" fill="${ink}" ${font}>Plan</text>` + g
-    + `<text x="${VW / 2}" y="${VH - 8}" text-anchor="middle" font-size="10" fill="${dim}" ${font}>Placeholder — the Park Bench and Table family is still to come · sizes in mm</text>`;
+/**
+ * A garden block on the Combine board, in its board footprint (x, y, w, h in px): a planter as the Garden tab draws it in plan - rim, soil, the
+ * seat cap ring when its Seat Cap is on, the centre row, a tree crown when its Tree is on - and the Park Bench and Table as a table between two
+ * benches along the longer side. What is drawn is the piece's own values (sourceJson), i.e. what Revit gets.
+ */
+function gardenBlockBoardSvg(x, y, w, h, item) {
+  const gb = (item.sourceJson && item.sourceJson.gardenBlock) || {};
+  const dark = typeof isDarkMode === "function" && isDarkMode();
+  const ink = dark ? "#c9cbe0" : "#5a4630", wood = dark ? "#9c8a6a" : "#d8c3a0";
+  const k = Math.min(w, h);
+  if (gb.type === (typeof GARDEN_BENCH !== "undefined" ? GARDEN_BENCH.id : "park_bench_table")) {
+    // benches along the longer side (a square piece: along x), table between them - the Garden tab's placeholder, to scale
+    const alongX = w >= h, L = alongX ? w : h, S = alongX ? h : w;
+    const r = (a, b, c, d) => alongX ? { x: x + a, y: y + b, w: c, h: d } : { x: x + b, y: y + a, w: d, h: c };
+    const parts = [[0.05 * L, 0.05 * S, 0.9 * L, 0.2 * S, 0.7], [0.05 * L, 0.3 * S, 0.9 * L, 0.4 * S, 1], [0.05 * L, 0.75 * S, 0.9 * L, 0.2 * S, 0.7]];
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${dark ? "#2a2f3a" : "#f4efe6"}"/>` + parts.map(([a, b, c, d, o]) => {
+      const q = r(a, b, c, d);
+      return `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" rx="${Math.max(0.5, k * 0.03)}" fill="${wood}" fill-opacity="${o}" stroke="${ink}" stroke-width="0.6"/>`;
+    }).join("");
+  }
+  const p = gb.params || {};
+  const lenM = Math.max(item.length_m, item.width_m) || 1, px = Math.max(w, h) / lenM;        // px per metre
+  const wall = Math.max(1, 0.06 * px);
+  if (p.seatCap && gb.type === "planter_s") {
+    // a Planter S with its seat cap on reads as a bench: the cap's wood over the whole top, boards along its length, no planting shown (user)
+    const alongX = w >= h, n = 4;
+    let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="${wood}" stroke="${ink}" stroke-width="0.6"/>`;
+    for (let i = 1; i < n; i++) s += alongX ? `<line x1="${x + 1}" y1="${y + (h * i) / n}" x2="${x + w - 1}" y2="${y + (h * i) / n}" stroke="${ink}" stroke-width="0.4" stroke-opacity="0.5"/>`
+                                             : `<line x1="${x + (w * i) / n}" y1="${y + 1}" x2="${x + (w * i) / n}" y2="${y + h - 1}" stroke="${ink}" stroke-width="0.4" stroke-opacity="0.5"/>`;
+    return s;
+  }
+  let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="${dark ? "#5b4a3a" : "#b99d7e"}"/>`
+    + `<rect x="${x + wall}" y="${y + wall}" width="${Math.max(0, w - 2 * wall)}" height="${Math.max(0, h - 2 * wall)}" fill="${dark ? "#3f5a2f" : "#8cbf6a"}"/>`;
+  if (p.seatCap) s += `<path fill-rule="evenodd" d="M${x},${y}h${w}v${h}h${-w}Z M${x + wall * 1.8},${y + wall * 1.8}v${h - wall * 3.6}h${w - wall * 3.6}v${-(h - wall * 3.6)}Z" fill="${wood}" stroke="${ink}" stroke-width="0.5"/>`;
+  if (p.centreRow) {
+    const hor = w >= h;
+    s += hor ? `<line x1="${x + wall * 2}" y1="${y + h / 2}" x2="${x + w - wall * 2}" y2="${y + h / 2}" stroke="${dark ? "#8fcf6f" : "#4f8a35"}" stroke-width="0.8" stroke-dasharray="2 1.5"/>`
+             : `<line x1="${x + w / 2}" y1="${y + wall * 2}" x2="${x + w / 2}" y2="${y + h - wall * 2}" stroke="${dark ? "#8fcf6f" : "#4f8a35"}" stroke-width="0.8" stroke-dasharray="2 1.5"/>`;
+  }
+  if (p.tree) {
+    // the crown, kept inside the planter's outline so it never hides a neighbour or a board number
+    const cr = k * 0.48, cx = x + w / 2, cy = y + h / 2;
+    s += `<circle cx="${cx}" cy="${cy}" r="${cr}" fill="${dark ? "#2f6b2a" : "#5d9e3f"}" fill-opacity="0.55" stroke="${dark ? "#8fcf6f" : "#2f5d22"}" stroke-width="0.7"/>`
+      + `<circle cx="${cx}" cy="${cy}" r="${Math.max(0.8, k * 0.06)}" fill="${dark ? "#8a7560" : "#6d4c2f"}"/>`;
+  }
+  return s;
 }
 
 /** The item on screen goes to the Combine tray (one per click), carrying what Revit will need to build it. */
@@ -218,18 +232,18 @@ document.addEventListener("change", e => {
   if (!t.dataset || t.dataset.planterParam == null) return;
   const n = Math.round(Number(t.value));
   if (Number.isFinite(n) && n >= 0) planterState.values[planterState.active][t.dataset.planterParam] = n;
-  planterSave(); updatePlanterUI();
+  planterSave(); planterRefresh();
 });
 document.addEventListener("click", e => {
   const pick = e.target.closest && e.target.closest("[data-planter-pick]");
-  if (pick) { planterState.active = pick.dataset.planterPick; planterSave(); buildPlanterBar(); updatePlanterUI(); return; }
+  if (pick) { planterState.active = pick.dataset.planterPick; planterSave(); planterRefresh(); return; }
   if (e.target.closest && e.target.closest("[data-garden-push]")) { pushGardenItemToCombine(); return; }
   const tg = e.target.closest && e.target.closest("[data-planter-toggle]");
-  if (tg) { planterState.values[planterState.active][tg.dataset.planterToggle] = tg.dataset.val === "1"; planterSave(); updatePlanterUI(); return; }
+  if (tg) { planterState.values[planterState.active][tg.dataset.planterToggle] = tg.dataset.val === "1"; planterSave(); planterRefresh(); return; }
   if (e.target.closest && e.target.closest("[data-planter-reset]")) {
     const id = planterState.active;
     planterState.values[id] = Object.assign({}, PLANTER_FAMILY_DEFAULTS, PLANTER_VARIANTS[id].size);
-    planterSave(); updatePlanterUI();
+    planterSave(); planterRefresh();
   }
 });
 

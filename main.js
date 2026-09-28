@@ -42,7 +42,6 @@ function applyTheme(mode) {
   }
   if (activeMode === "sport") updateUI();
   else if (activeMode === "garden") updateGardenUI();
-  else if (activeMode === "gardenBlocks" && typeof updatePlanterUI === "function") updatePlanterUI();
 }
 
 function setTheme(mode) {
@@ -66,14 +65,14 @@ document.getElementById("modeProfile").addEventListener("click", () => setMode("
 document.getElementById("modeSite").addEventListener("click", () => setMode("site"));
 document.getElementById("modeStructure").addEventListener("click", () => setMode("structure"));
 document.getElementById("modeConditions").addEventListener("click", () => setMode("conditions"));
+document.getElementById("modeRoofAccess")?.addEventListener("click", () => setMode("roofAccess"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
-document.getElementById("modeGardenBlocks").addEventListener("click", () => setMode("gardenBlocks"));
+document.getElementById("modeFacilities")?.addEventListener("click", () => setMode("facilities"));
 // Garden is no longer a workspace — planting is drawn as a zone in Combine.
 document.getElementById("modeCombine").addEventListener("click", () => setMode("combine"));
 document.getElementById("modeData").addEventListener("click", () => setMode("data"));
 document.getElementById("modeAnalysis").addEventListener("click", () => setMode("analysis"));
 document.getElementById("modeCompare").addEventListener("click", () => setMode("compare"));
-document.getElementById("modePostAnalysis").addEventListener("click", () => setMode("postAnalysis"));
 document.getElementById("btn-guide-start").addEventListener("click", () => setMode("site"));
 
 /* ── Overview / Deliverables / Save Session tabs ──
@@ -117,32 +116,33 @@ function setMode(mode) {
     return;
   }
   const isGarden = mode === "garden";
-  const isGardenBlocks = mode === "gardenBlocks";
-  const isSport = mode === "sport";
+  // Facilities shares the Sport workspace — the same configurator, the same
+  // canvas, the same push — because a locker room is an activity underneath.
+  // Only the bar differs, so the two modes travel together from here on.
+  const isFacilities = mode === "facilities";
+  const isSport = mode === "sport" || isFacilities;
   const isCombine = mode === "combine";
   const isData = mode === "data";
   const isAnalysis = mode === "analysis";
   const isCompare = mode === "compare";
-  const isPostAnalysis = mode === "postAnalysis";
   const isGuide = mode === "guide";
   const isSite = mode === "site";
   const isStructure = mode === "structure";
   const isConditions = mode === "conditions";
+  const isRoofAccess = mode === "roofAccess";           // Roof Type and Accessibility (roofAccess.js)
   const isDeliverables = mode === "deliverables";
   const isSession = mode === "session";
   const isProfile = mode === "profile";
   const isFamilies = mode === "families";
 
   if (isGarden) updateActivityBarForMode("garden");
-  else if (isSport) buildActivityBar();
-  else if (isGardenBlocks && typeof buildPlanterBar === "function") buildPlanterBar();
+  else if (isSport) buildActivityBar(isFacilities ? "facilities" : "sport");
   else if (isAnalysis && typeof buildAnalysisRail === "function") buildAnalysisRail();   // Analysis's own rail: Overview, then a group per kind of analysis
-  else if (isPostAnalysis && typeof buildPostAnalysisRail === "function") buildPostAnalysisRail();   // Improve's own rail: Dynamic Families, Recommendations
 
-  // Revit's analysis results are only polled while the Results tab (its overview shows them too) or Improve is open. Combine asks once
+  // Revit's analysis results are only polled while the Results tab (its overview shows them too) is open. Combine asks once
   // when it opens, so the results shown for a selected piece are not older than the visit.
   if (typeof startResultsPolling === "function") {
-    if (isPostAnalysis || isAnalysis) startResultsPolling();
+    if (isAnalysis) startResultsPolling();
     else stopResultsPolling();
     if (isCombine && typeof pollAnalysisResults === "function") pollAnalysisResults();
   }
@@ -162,35 +162,33 @@ function setMode(mode) {
   // Site, and Guide keep the sidebar visible/hidden per their own
   // minimal needs. Analysis uses the rail for the groups of results Revit
   // sends (analysisResults.js).
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isCompare || isGuide || isSite || isStructure || isConditions || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isCompare || isGuide || isSite || isStructure || isConditions || isRoofAccess || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
   document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
 
   document.getElementById("siteConfigurator").style.display = isSite ? "block" : "none";
   document.getElementById("structureConfigurator").style.display = isStructure ? "block" : "none";
   document.getElementById("conditionsConfigurator").style.display = isConditions ? "block" : "none";
+  document.getElementById("roofAccessConfigurator").style.display = isRoofAccess ? "block" : "none";
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
   document.getElementById("gardenConfigurator").style.display = isGarden ? "block" : "none";
-  document.getElementById("gardenBlocksConfigurator").style.display = isGardenBlocks ? "block" : "none";
   // combineConfigurator is itself a flex row (roof pane + step pane) now,
   // so it needs "flex" rather than "block" to lay its children out
   // correctly whenever it's re-shown.
   document.getElementById("combineConfigurator").style.display = isCombine ? "flex" : "none";
   document.getElementById("dataConfigurator").style.display = isData ? "block" : "none";
   document.getElementById("analysisConfigurator").style.display = isAnalysis ? "block" : "none";
-  document.getElementById("postAnalysisConfigurator").style.display = isPostAnalysis ? "block" : "none";
   document.getElementById("compareConfigurator").style.display = isCompare ? "block" : "none";
 
   document.getElementById("field").style.display = isSport ? "block" : "none";
   document.getElementById("garden-field").style.display = isGarden ? "block" : "none";
-  document.getElementById("planter-field").style.display = isGardenBlocks ? "block" : "none";
   // #combine-canvas is nested inside #combineConfigurator now, so toggling
   // that parent already shows/hides it — no separate toggle needed here.
   document.getElementById("site-content").style.display = isSite ? "block" : "none";
   document.getElementById("structure-content").style.display = isStructure ? "block" : "none";
   document.getElementById("conditions-content").style.display = isConditions ? "block" : "none";
+  document.getElementById("roofAccess-content").style.display = isRoofAccess ? "block" : "none";
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
-  document.getElementById("postAnalysis-content").style.display = isPostAnalysis ? "block" : "none";
   document.getElementById("compare-content").style.display = isCompare ? "block" : "none";
   document.getElementById("families-content").style.display = isFamilies ? "block" : "none";
   document.getElementById("guide-content").style.display = isGuide ? "block" : "none";
@@ -207,15 +205,15 @@ function setMode(mode) {
   document.getElementById("modeSite").classList.toggle("active", isSite);
   document.getElementById("modeStructure").classList.toggle("active", isStructure);
   document.getElementById("modeConditions").classList.toggle("active", isConditions);
-  document.getElementById("modeSport").classList.toggle("active", isSport);
-  document.getElementById("modeGardenBlocks").classList.toggle("active", isGardenBlocks);
+  document.getElementById("modeRoofAccess")?.classList.toggle("active", isRoofAccess);
+  document.getElementById("modeSport").classList.toggle("active", isSport && !isFacilities);
+  document.getElementById("modeFacilities")?.classList.toggle("active", isFacilities);
   document.getElementById("modeGarden")?.classList.toggle("active", isGarden);
   document.getElementById("modeCombine").classList.toggle("active", isCombine);
   document.getElementById("modeFamilies").classList.toggle("active", isFamilies);
   document.getElementById("modeData").classList.toggle("active", isData);
   document.getElementById("modeAnalysis").classList.toggle("active", isAnalysis);
   document.getElementById("modeCompare").classList.toggle("active", isCompare);
-  document.getElementById("modePostAnalysis").classList.toggle("active", isPostAnalysis);
 
   // Explicit branch per mode — a bare `else` here previously meant "anything
   // that isn't garden/sport" silently ran updateCombineUI(), which broke the
@@ -224,15 +222,14 @@ function setMode(mode) {
   // siteController.js/siteField.js) except for the map, which needs an
   // explicit (re)init once its container is actually visible/sized.
   if (isGarden) updateGardenUI();
-  else if (isGardenBlocks && typeof updatePlanterUI === "function") updatePlanterUI();
   else if (isSport) updateUI();
   else if (isCombine) updateCombineUI();
   else if (isData && typeof updateDataUI === "function") updateDataUI();
   else if (isAnalysis && typeof updateAnalysisUI === "function") updateAnalysisUI();
-  else if (isPostAnalysis && typeof updatePostAnalysisUI === "function") updatePostAnalysisUI();
   else if (isCompare && typeof updateCompareUI === "function") updateCompareUI();
   else if (isFamilies && typeof updateFamiliesUI === "function") updateFamiliesUI();
   else if (isStructure && typeof updateStructureTabUI === "function") { updateStructureUI(); updateAssumptionsUI(); updateStructureTabUI(); }
+  else if (isRoofAccess) { if (typeof updateRoofSetupUI === "function") updateRoofSetupUI(); if (typeof renderRoofAccess === "function") renderRoofAccess(); }
   else if (isConditions && typeof updateConditionsTabUI === "function") { updateSiteUI(); updateAssumptionsUI(); updateConditionsTabUI(); }
   else if (isSite && typeof initSiteMap === "function") {
     initSiteMap(); // no-ops after the first call (siteMap already exists)
@@ -244,6 +241,7 @@ function setMode(mode) {
 
   activeMode = mode;
   if (typeof workflowNextUpdate === "function") workflowNextUpdate(mode);
+  if (typeof renderPushTray === "function") renderPushTray();          // the "Pushed to Combine" tray: Sport and Facilities tabs only
 }
 
 /* ── Role toggle (Planner / Client) ──

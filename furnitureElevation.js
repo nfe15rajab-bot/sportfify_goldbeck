@@ -91,6 +91,7 @@ function furnitureElevationSvg(f, opts) {
     case "bin":     art = binArt(L, h, X, Y, box, colour); break;
     case "light":   art = bollardArt(L, h, X, Y, box, colour, poolR); break;
     case "bollard": art = bollardArt(L, h, X, Y, box, colour, 0); break;
+    case "planter": art = planterArt(f, L, h, box, colour); break;
     default:        art = box(0, 0, L, h, colour, 0.75);
   }
 
@@ -141,6 +142,41 @@ function benchArt(f, L, h, box, colour) {
     out += box(L * 0.90, armY - 0.04, L, armY, colour, 0.80);
   }
   return out;
+}
+
+/**
+ * A planter: the trough, what is in it, and what sits on it.
+ *
+ * Drawn from the same family parameters the editor shows, so the thumbnail and
+ * the editor cannot disagree — substrate to its real depth, the seat cap as the
+ * board that overhangs the rim, the tree when the family has one.
+ */
+function planterArt(f, L, h, box, colour) {
+  const wall = Math.min(0.06, L * 0.06);
+  const soil = "#8a6a4a";
+  let out = "";
+  // The trough: two rim walls and the floor between them.
+  out += box(0, 0, wall, h, colour, 0.9);
+  out += box(L - wall, 0, L, h, colour, 0.9);
+  out += box(0, 0, L, h * 0.12, colour, 0.75);
+  // Substrate, to whatever depth the family is set to.
+  const fill = f.substrate_ratio == null ? 0.62 : Math.max(0.1, Math.min(0.95, f.substrate_ratio));
+  out += box(wall, h * 0.12, L - wall, h * fill, soil, 0.85);
+  // The seat cap is a board across the rim, overhanging it — the thing that
+  // turns a planter into somewhere to sit.
+  if (f.seat_cap) out += box(-wall * 0.6, h, L + wall * 0.6, h + 0.07, "#d8c3a0", 0.95);
+  if (f.tree) {
+    const cx = L / 2, r = Math.min(L, 1.1) * 0.22;
+    out += box(cx - 0.03, h * fill, cx + 0.03, h + 0.5, "#6d4c2f", 0.9);
+    out += `<circle cx="${(0).toFixed(1)}" cy="0" r="0" fill="none"/>`;
+    out += planterCrown(cx, h + 0.5 + r * 0.6, r, box);
+  }
+  return out;
+}
+
+/** The crown, as a block rather than a circle: `box` is the only shape this module draws in metres. */
+function planterCrown(cx, cy, r, box) {
+  return box(cx - r, cy - r, cx + r, cy + r, "#5d9e3f", 0.8);
 }
 
 /** A picnic set: the table, with the near bench in front of it. */
@@ -241,7 +277,12 @@ function heightRule(x, yTop, yGround, metres) {
 function furnitureFigureHtml(f, opts) {
   if (!f) return "";
   opts = opts || {};
-  const caption = "Drawn to scale from the catalogue dimensions";
+  // A supplier's product is drawn from its catalogue record; a design team
+  // family is drawn from the parameters it is currently set to. Saying which
+  // matters, because one of them changes when you configure it.
+  const caption = opts.from === "family"
+    ? "Drawn to scale from the family's parameters"
+    : "Drawn to scale from the catalogue dimensions";
 
   if (f.image_url) {
     const credit = f.image_credit || f.manufacturer || "";

@@ -30,6 +30,7 @@ const AlgoPlacement = (function () {
   // ── parameters (the Rhino tool's) ───────────────────────────────────────────────
   const RES = 0.1;                  // grid step (m). 0.1 keeps every preset size exact
   const DEFAULT_SETBACK = 1.0;      // m, garden band width along the roof edge
+  const SHORT_EDGE_NO_GARDEN_M = 6; // m, a roof edge shorter than this gets no garden in its setback band (paved instead; user, 2026-09-28)
   const DEFAULT_PATH_W = 2.0;       // m, clear pathway width (primary network)
   const MIN_PATH_W_M = 1.0;         // m, the pathway may NARROW to this (2.0 -> 1.5 -> 1.0) if a court needs the room
   const MIN_ACCESS_M = 2.0;         // m, min shared edge between court and pathway
@@ -1889,6 +1890,27 @@ const AlgoPlacement = (function () {
           strip = inRight ? [x, y0 - sb, x + sb, y1 + sb] : [x - sb, y0 - sb, x, y1 + sb];
         }
         if (strip) pavedM.push(strip);
+      }
+    }
+    // RULE (user, 2026-09-28, every roof type): the band along a roof edge shorter than SHORT_EDGE_NO_GARDEN_M gets no garden - it is paved like a
+    // door's edge. The setback itself is unchanged (courts still keep out of it). At a convex end the strip stops short by the setback, so the corner
+    // square stays with the neighbouring edge's band.
+    if (site.setback > 0) {
+      const F = site.foot, n = F.length, sb = site.setback;
+      const inside = (x, y) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) if ((F[i][1] > y) !== (F[j][1] > y) && x < (F[j][0] - F[i][0]) * (y - F[i][1]) / (F[j][1] - F[i][1]) + F[i][0]) c = !c; return c; };
+      for (let i = 0; i < n; i++) {
+        const a = F[i], b = F[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        if (L >= SHORT_EDGE_NO_GARDEN_M || L < 1e-6) continue;
+        const ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L;
+        if (Math.abs(ux) > 1e-6 && Math.abs(uy) > 1e-6) continue;                       // a slanted edge: its band stays as it is
+        let nx = -uy, ny = ux;                                                           // the normal into the roof
+        if (!inside((a[0] + b[0]) / 2 + nx * 0.05, (a[1] + b[1]) / 2 + ny * 0.05)) { nx = -nx; ny = -ny; }
+        const convex = (p, dir) => !inside(p[0] + dir * ux * 0.05 + nx * 0.05, p[1] + dir * uy * 0.05 + ny * 0.05);
+        const t0 = convex(a, -1) ? sb : 0, t1 = convex(b, 1) ? sb : 0;                  // trim a convex end by the setback
+        if (L - t0 - t1 < 1e-6) continue;
+        const p0 = [a[0] + ux * t0, a[1] + uy * t0], p1 = [b[0] - ux * t1, b[1] - uy * t1];
+        const q0 = [p0[0] + nx * sb, p0[1] + ny * sb], q1 = [p1[0] + nx * sb, p1[1] + ny * sb];
+        pavedM.push([Math.min(p0[0], p1[0], q0[0], q1[0]), Math.min(p0[1], p1[1], q0[1], q1[1]), Math.max(p0[0], p1[0], q0[0], q1[0]), Math.max(p0[1], p1[1], q0[1], q1[1])]);
       }
     }
     let pavedDraw = [];

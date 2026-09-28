@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-27-workflownext2"></script>
+  <script src="themeInit.js?v=2026-09-28-pingpongsnap"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -14,7 +14,7 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org https://archive-api.open-meteo.com; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-27-workflownext2" />
+  <link rel="stylesheet" href="style.css?v=2026-09-28-pingpongsnap" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -159,17 +159,17 @@
       <button id="modeSite" class="activity-icon" title="Site"><i class="ti ti-map-pin" aria-hidden="true"></i><span class="activity-icon-label">Site</span></button>
       <button id="modeStructure" class="activity-icon" title="Structure inputs — grid, columns, deck capacity, natural frequency"><i class="ti ti-building" aria-hidden="true"></i><span class="activity-icon-label">Structure inputs</span></button>
       <button id="modeConditions" class="activity-icon" title="Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)"><i class="ti ti-cloud-snow" aria-hidden="true"></i><span class="activity-icon-label">Site conditions</span></button>
+      <button id="modeRoofAccess" class="activity-icon" title="Roof Type and Accessibility — what the roof is for, and where people come in"><i class="ti ti-door-enter" aria-hidden="true"></i><span class="activity-icon-label">Roof &amp; Access</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeSport" class="activity-icon" title="Sport"><i class="ti ti-ball-basketball" aria-hidden="true"></i><span class="activity-icon-label">Sport</span></button>
-      <button id="modeGardenBlocks" class="activity-icon" title="Garden — planters and garden blocks"><i class="ti ti-plant" aria-hidden="true"></i><span class="activity-icon-label">Garden</span></button>
+      <button id="modeFacilities" class="activity-icon" title="Facilities — lockers, bathrooms and rest areas"><i class="ti ti-door" aria-hidden="true"></i><span class="activity-icon-label">Facilities</span></button>
       <button id="btn-zone-toggle" class="activity-icon" title="Ground zones — planting, lawn, walkways"><i class="ti ti-plant-2" aria-hidden="true"></i><span class="activity-icon-label">Zones</span></button>
       <button id="btn-vegetation-toggle" class="activity-icon" title="Vegetation — trees, shrubs, planting"><i class="ti ti-tree" aria-hidden="true"></i><span class="activity-icon-label">Plants</span></button>
-      <button id="btn-furniture-toggle" class="activity-icon" title="Furniture — benches, tables, bins, bollards, lights"><i class="ti ti-armchair" aria-hidden="true"></i><span class="activity-icon-label">Furniture</span></button>
+      <button id="btn-furniture-toggle" class="activity-icon" title="Garden Components — benches, tables, planters, bins, bollards, lights"><i class="ti ti-components" aria-hidden="true"></i><span class="activity-icon-label">Garden Components</span></button>
       <button id="btn-kinetics-toggle" class="activity-icon" title="Kinetics — louvre pergolas, sails, screens, fences: place them by hand or let Algorithmic placement place them by quantity"><i class="ti ti-wind" aria-hidden="true"></i><span class="activity-icon-label">Kinetics</span></button>
       <button id="modeCombine" class="activity-icon" title="Combine"><i class="ti ti-layout-grid" aria-hidden="true"></i><span class="activity-icon-label">Combine</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeAnalysis" class="activity-icon" title="Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate"><i class="ti ti-chart-histogram" aria-hidden="true"></i><span class="activity-icon-label">Results</span></button>
-      <button id="modePostAnalysis" class="activity-icon" title="Improve — what to change first, ranked, and the moving parts that answer the analysis"><i class="ti ti-transform" aria-hidden="true"></i><span class="activity-icon-label">Improve</span></button>
       <button id="modeCompare" class="activity-icon" title="Compare"><i class="ti ti-chart-bar" aria-hidden="true"></i><span class="activity-icon-label">Compare</span></button>
       <div class="activity-bar-divider"></div>
       <button id="modeData" class="activity-icon" title="Catalogue — the reference data the app and Revit read: sports, materials, analysis figures"><i class="ti ti-database" aria-hidden="true"></i><span class="activity-icon-label">Catalogue</span></button>
@@ -216,11 +216,6 @@
             </button>
             <p class="hint">A plain rectangle, length × breadth.</p>
           </div>
-        </div>
-        <div class="section" id="roof-program-section">
-          <label>2 · What is this roof?</label>
-          <div class="roof-program-cards" id="roof-program-cards"></div>
-          <p class="hint" id="roof-program-status"></p>
         </div>
         <div class="section planner-only">
           <label>Site location</label>
@@ -290,6 +285,25 @@
           <label>Deck, frequency and comfort</label>
           <p class="hint">Enter the structural engineer's values, or accept the built-in ones knowingly; until then every structural result is marked PRELIMINARY. Revit asks for the same values before it runs an analysis.</p>
           <div id="assumptions-panel-structure" class="assumptions-panel"></div>
+        </div>
+      </div>
+
+      <div id="roofAccessConfigurator" style="display:none">
+        <div class="panel-header">
+          <h2>Roof Type and Accessibility</h2>
+          <p>What the roof is for, and where people come in. Every later step (the sports offered, the garden presets, the pathways) follows from these two.</p>
+        </div>
+        <div class="section" id="roof-program-section">
+          <label>1 · What is this roof?</label>
+          <div class="roof-program-cards" id="roof-program-cards"></div>
+          <p class="hint" id="roof-program-status"></p>
+        </div>
+        <div class="section">
+          <label>2 · Entry points</label>
+          <button class="btn-export accent" id="btn-roofaccess-add-entry"><i class="ti ti-door-enter" aria-hidden="true"></i>Add Entry Point</button>
+          <p class="hint" id="roofaccess-add-hint" hidden>Click near the roof edge on the drawing: the entry point snaps onto the outline. One per click.</p>
+          <div class="roofaccess-entries" id="roofaccess-entries"></div>
+          <p class="hint">Select an entry point (on the drawing or in the list) and press Delete, or use ×, to remove it. Moving one along its edge is done on the Combine board.</p>
         </div>
       </div>
 
@@ -438,14 +452,6 @@
             </button>
           </div>
         </div>
-      </div>
-
-      <div id="gardenBlocksConfigurator" style="display:none">
-        <div class="panel-header">
-          <h2>Garden</h2>
-          <p>Parametric planters — the Revit family "Planter"</p>
-        </div>
-        <div id="planter-panel"></div>
       </div>
 
       <div id="gardenConfigurator" style="display:none">
@@ -611,22 +617,6 @@
         </div>
       </div>
 
-      <div id="postAnalysisConfigurator" style="display:none">
-        <div class="panel-header">
-          <h2>Improve</h2>
-          <p>Where the results turn into design: dynamic families driven by their own numbers, and what still needs attention, ranked by what matters most to you.</p>
-        </div>
-        <div class="section">
-          <label><i class="ti ti-adjustments" aria-hidden="true"></i> Priority</label>
-          <p class="hint">Which analysis the recommendations below are ranked against.</p>
-          <div class="quality-btns" id="postAnalysisPriorityBtns">
-            <div class="q-btn active" data-priority="sun">Sun</div>
-            <div class="q-btn" data-priority="wind_erosion">Wind &amp; Erosion</div>
-            <div class="q-btn" data-priority="structural">Structural</div>
-          </div>
-        </div>
-      </div>
-
       <div id="compareConfigurator" style="display:none">
         <div class="panel-header">
           <h2 id="compare-heading">Compare configurations</h2>
@@ -703,7 +693,6 @@
       <div class="canvas-wrap">
         <svg id="field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
         <svg id="garden-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
-        <svg id="planter-field" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:none"></svg>
 
         <div id="site-content" style="display:none">
           <div id="site-map" class="site-map"></div>
@@ -711,12 +700,11 @@
 
         <div id="structure-content" style="display:none"><div class="res-wrap" id="structure-view"></div></div>
         <div id="conditions-content" style="display:none"><div class="res-wrap" id="conditions-view"></div></div>
+        <div id="roofAccess-content" class="roofaccess-content" style="display:none"><svg id="roofaccess-field" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg></div>
 
         <div id="data-content" style="display:none"></div>
 
         <div id="analysis-content" style="display:none"></div>
-
-        <div id="postAnalysis-content" style="display:none"></div>
 
         <div id="compare-content" style="display:none"></div>
         <div id="families-content" style="display:none"></div>
@@ -1016,7 +1004,7 @@
               <div class="combine-entry-cta" id="combine-entry-cta" hidden>
                 <i class="ti ti-door-enter" aria-hidden="true"></i>
                 <span id="combine-entry-cta-text">Add an entry point so pathways have somewhere to start.</span>
-                <button class="btn-export accent" id="btn-add-entry-cta"><i class="ti ti-map-pin-plus" aria-hidden="true"></i>Add Entry Point</button>
+                <button class="btn-export accent" id="btn-add-entry-cta"><i class="ti ti-map-pin-plus" aria-hidden="true"></i>Add entry points in Roof &amp; Access</button>
               </div>
               <!-- What each number on the board is (combineField.js, renderCombineLegend) -->
               <div class="combine-legend" id="combine-legend" hidden></div>
@@ -1026,7 +1014,9 @@
                 <button id="btn-combine-zoom-reset" title="Reset view"><i class="ti ti-focus-2" aria-hidden="true"></i></button>
               </div>
               <!-- Garden Core presets (gardenPresets.js): shown only on a Garden Core roof -->
-              <div class="garden-presets" id="garden-presets" style="position:absolute; right:6px; bottom:22px; display:none; flex-direction:column; gap:4px; align-items:stretch;">
+              <div class="garden-presets" id="garden-presets" style="position:absolute; right:6px; bottom:22px; display:none; flex-direction:row; gap:6px; align-items:stretch;">
+                <button class="btn-export accent" id="btn-preset-planted-garden" title="Garden preset: the Social Garden with a planted bed in the middle, Planter T at the four corners and beds out to the setback"><i class="ti ti-leaf" aria-hidden="true"></i>Planted Garden</button>
+                <button class="btn-export accent" id="btn-preset-social-garden" title="Garden preset: the Quiet Garden with Park Bench and Table in place of Planter T no. 1, 3, 4 and 6"><i class="ti ti-armchair" aria-hidden="true"></i>Social Garden</button>
                 <button class="btn-export accent" id="btn-preset-quiet-garden" title="Garden preset: 6 Planter T in a row along the roof's longest side, centred"><i class="ti ti-plant-2" aria-hidden="true"></i>Quiet Garden</button>
               </div>
 
@@ -1047,7 +1037,7 @@
 
               <aside class="zone-flyout" id="furniture-flyout" hidden>
                 <div class="zone-flyout-header">
-                  <span><i class="ti ti-armchair" aria-hidden="true"></i> Furniture</span>
+                  <span><i class="ti ti-components" aria-hidden="true"></i> Garden Components</span>
                   <button id="btn-furniture-close" title="Close">&times;</button>
                 </div>
                 <div id="furniture-panel"></div>
@@ -1163,7 +1153,7 @@
 
               <div class="section">
                 <label>Entry points</label>
-                <button class="btn-export accent" id="btn-add-entry">
+                <button class="btn-export accent" id="btn-add-entry" hidden>
                   <i class="ti ti-door-enter" aria-hidden="true"></i>Add Entry Point
                 </button>
                 <p class="hint" id="add-entry-hint" style="display:none">Tool active — click near the site edge to drop one pin (click the button again to cancel).</p>
@@ -1281,78 +1271,85 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-27-workflownext2"></script>
-  <script src="apiSession.js?v=2026-09-27-workflownext2"></script>
-  <script src="data.js?v=2026-09-27-workflownext2"></script>
-  <script src="carbon.js?v=2026-09-27-workflownext2"></script>
-  <script src="activitiesData.js?v=2026-09-27-workflownext2"></script>
-  <script src="vegetation.js?v=2026-09-27-workflownext2"></script>
-  <script src="furnitureElevation.js?v=2026-09-27-workflownext2"></script>
-  <script src="furniture.js?v=2026-09-27-workflownext2"></script>
-  <script src="kineticsCatalog.js?v=2026-09-27-workflownext2"></script>
-  <script src="kineticsCombine.js?v=2026-09-27-workflownext2"></script>
-  <script src="canvasFlyouts.js?v=2026-09-27-workflownext2"></script>
-  <script src="zones.js?v=2026-09-27-workflownext2"></script>
-  <script src="roofFinish.js?v=2026-09-27-workflownext2"></script>
-  <script src="assumptions.js?v=2026-09-27-workflownext2"></script>
-  <script src="roofFeatures.js?v=2026-09-27-workflownext2"></script>
-  <script src="structure.js?v=2026-09-27-workflownext2"></script>
-  <script src="assemblies.js?v=2026-09-27-workflownext2"></script>
-  <script src="gardenData.js?v=2026-09-27-workflownext2"></script>
-  <script src="prebuiltSessions.js?v=2026-09-27-workflownext2"></script>
-  <script src="rules.js?v=2026-09-27-workflownext2"></script>
-  <script src="sunPosition.js?v=2026-09-27-workflownext2"></script>
-  <script src="balls.js?v=2026-09-27-workflownext2"></script>
-  <script src="field.js?v=2026-09-27-workflownext2"></script>
-  <script src="basketballCourt.js?v=2026-09-27-workflownext2"></script>
-  <script src="volleyballCourt.js?v=2026-09-27-workflownext2"></script>
-  <script src="activityField.js?v=2026-09-27-workflownext2"></script>
-  <script src="planters.js?v=2026-09-27-workflownext2"></script>
-  <script src="gardenPresets.js?v=2026-09-27-workflownext2"></script>
-  <script src="padelCourt.js?v=2026-09-27-workflownext2"></script>
-  <script src="gardenField.js?v=2026-09-27-workflownext2"></script>
-  <script src="combineField.js?v=2026-09-27-workflownext2"></script>
-  <script src="previewCore.js?v=2026-09-27-workflownext2"></script>
-  <script src="preview.js?v=2026-09-27-workflownext2"></script>
-  <script src="siteField.js?v=2026-09-27-workflownext2"></script>
-  <script src="siteWeather.js?v=2026-09-27-workflownext2"></script>
-  <script src="buildupEditor.js?v=2026-09-27-workflownext2"></script>
-  <script src="dataTab.js?v=2026-09-27-workflownext2"></script>
-  <script src="localSession.js?v=2026-09-27-workflownext2"></script>
-  <script src="revitBridge.js?v=2026-09-27-workflownext2"></script>
-  <script src="sportController.js?v=2026-09-27-workflownext2"></script>
-  <script src="gardenController.js?v=2026-09-27-workflownext2"></script>
-  <script src="windZones.js?v=2026-09-27-workflownext2"></script>
-  <script src="siteController.js?v=2026-09-27-workflownext2"></script>
-  <script src="combineController.js?v=2026-09-27-workflownext2"></script>
-  <script src="resultsStoreCore.js?v=2026-09-27-workflownext2"></script>
-  <script src="analysisController.js?v=2026-09-27-workflownext2"></script>
-  <script src="analysisResults.js?v=2026-09-27-workflownext2"></script>
-  <script src="resultsStore.js?v=2026-09-27-workflownext2"></script>
-  <script src="kineticsPostAnalysis.js?v=2026-09-27-workflownext2"></script>
-  <script src="siteTabs.js?v=2026-09-27-workflownext2"></script>
-  <script src="roofProgram.js?v=2026-09-27-workflownext2"></script>
-  <script src="workspaceBridge.js?v=2026-09-27-workflownext2"></script>
-  <script src="sessionNames.js?v=2026-09-27-workflownext2"></script>
-  <script src="algoPlacementCore.js?v=2026-09-27-workflownext2"></script>
-  <script src="algoPlacementUI.js?v=2026-09-27-workflownext2"></script>
-  <script src="revitLayers.js?v=2026-09-27-workflownext2"></script>
-  <script src="compareController.js?v=2026-09-27-workflownext2"></script>
-  <script src="designPanel.js?v=2026-09-27-workflownext2"></script>
-  <script src="inspector.js?v=2026-09-27-workflownext2"></script>
-  <script src="combineHistory.js?v=2026-09-27-workflownext2"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-27-workflownext2"></script>
-  <script src="profileCore.js?v=2026-09-27-workflownext2"></script>
-  <script src="profile.js?v=2026-09-27-workflownext2"></script>
-  <script src="quizCore.js?v=2026-09-27-workflownext2"></script>
-  <script src="quiz.js?v=2026-09-27-workflownext2"></script>
-  <script src="tourCore.js?v=2026-09-27-workflownext2"></script>
-  <script src="tour.js?v=2026-09-27-workflownext2"></script>
-  <script src="whereCore.js?v=2026-09-27-workflownext2"></script>
-  <script src="where.js?v=2026-09-27-workflownext2"></script>
-  <script src="landingPreview3d.js?v=2026-09-27-workflownext2"></script>
-  <script src="sessionGate.js?v=2026-09-27-workflownext2"></script>
-  <script src="workflowNext.js?v=2026-09-27-workflownext2"></script>
-  <script src="main.js?v=2026-09-27-workflownext2"></script>
+  <script src="escape.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="apiSession.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="data.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="carbon.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="activitiesData.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="vegetation.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="furnitureElevation.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="components.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="furniture.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="kineticsCatalog.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="kineticsCombine.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="canvasFlyouts.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="zones.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="roofFinish.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="assumptions.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="roofFeatures.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="structure.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="assemblies.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="gardenData.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="prebuiltSessions.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="rules.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="sunPosition.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="balls.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="field.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="footballCourt.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="basketballCourt.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="volleyballCourt.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="activityField.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="planters.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="gardenPresets.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="greenRoof.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="activityFamilies.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="pingPongTable.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="climbingTower.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="padelCourt.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="gardenField.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="combineField.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="previewCore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="preview.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="siteField.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="siteWeather.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="buildupEditor.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="dataTab.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="localSession.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="revitBridge.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="sportController.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="pushTray.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="gardenController.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="windZones.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="siteController.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="combineController.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="resultsStoreCore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="analysisController.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="analysisResults.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="resultsStore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="siteTabs.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="roofProgram.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="workspaceBridge.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="sessionNames.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="algoPlacementCore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="algoPlacementUI.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="roofAccess.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="revitLayers.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="compareController.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="designPanel.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="inspector.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="combineHistory.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="profileCore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="profile.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="quizCore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="quiz.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="tourCore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="tour.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="whereCore.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="where.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="landingPreview3d.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="sessionGate.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="workflowNext.js?v=2026-09-28-pingpongsnap"></script>
+  <script src="main.js?v=2026-09-28-pingpongsnap"></script>
 </body>
 </html>

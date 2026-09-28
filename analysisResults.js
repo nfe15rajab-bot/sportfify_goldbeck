@@ -41,8 +41,8 @@ const RESULT_SECTIONS = {
   lca: { title: "LCA", run: RUN_PATH_ALGORITHMIC + "LCA Analysis" },
   carbon_impact: { title: "Carbon impact", run: RUN_PATH_ALGORITHMIC + "Carbon Impact Analysis" },
   sun_and_shading: { title: "Sun and shade", run: RUN_PATH_PHYSICAL + "Environmental → Sun & Shade Analysis" },
-  // Shown in the Improve tab (kineticsPostAnalysis.js), not this rail — see ANALYSIS_SUBTABS's note above. Still
-  // listed here so results-keys-parity.js can confirm the add-in and the web app agree on what "kinetics" means.
+  // Not shown in any web tab (the Improve tab that used to show it was removed) — listed here only so
+  // results-keys-parity.js can confirm the add-in and the web app agree on what "kinetics" means.
   kinetics: { title: "Kinetics", run: "Sportify ribbon → Kinetics" }
 };
 
@@ -161,7 +161,6 @@ function renderAnalysisIfShowingResults() {
     if (analysisSub !== "overview") renderAnalysisResultsView();
     else if (typeof renderAnalysisOverviewIfChanged === "function") renderAnalysisOverviewIfChanged();      // the overview's tiles show what Revit sent too (resultsStore.js)
   }
-  if (typeof renderPostAnalysisIfShowing === "function") renderPostAnalysisIfShowing();
 }
 
 // ---------------------------------------------------------------------------------------------------- the rail

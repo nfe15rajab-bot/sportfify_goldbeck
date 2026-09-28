@@ -65,11 +65,11 @@ html[data-app-mode="sport"][data-mode="dark"] {
   --fill-accent: #ff7a52; --fill-accent-hover: #ff9470; --text-accent: #ff9f7a; --border-accent: #ff9f7a;
   --bg-accent: rgba(255,90,54,0.22); --accent-hover-tint: rgba(255,90,54,0.30);
 }
-html[data-app-mode="garden"], html[data-app-mode="gardenBlocks"] {
+html[data-app-mode="garden"] {
   --fill-accent: #2f8f4e; --fill-accent-hover: #256e3c; --text-accent: #1f6b39; --border-accent: #2f8f4e;
   --bg-accent: #e3f3e7; --accent-hover-tint: #d3ecd9;
 }
-html[data-app-mode="garden"][data-mode="dark"], html[data-app-mode="gardenBlocks"][data-mode="dark"] {
+html[data-app-mode="garden"][data-mode="dark"] {
   --fill-accent: #4caf6e; --fill-accent-hover: #5fc182; --text-accent: #6fcf8f; --border-accent: #6fcf8f;
   --bg-accent: rgba(76,175,110,0.20); --accent-hover-tint: rgba(76,175,110,0.28);
 }
@@ -360,12 +360,12 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Data tab: reuses Combine's .step-grid/.section card layout ── */
 #data-content { width: 100%; height: 100%; overflow-y: auto; padding: 20px; }
 
-/* ── Analysis/Improve/Compare/Revit families/Profile: same "scroll, don't clip" fix as Data/Guide above — .canvas-wrap
+/* ── Analysis/Compare/Revit families/Profile: same "scroll, don't clip" fix as Data/Guide above — .canvas-wrap
    itself is overflow:hidden (so its centering doesn't get fought by a tall child), so each content div needs its
    own overflow-y:auto or anything taller than the viewport (the Sun Path chart below, or just a narrow/short
    window — a phone, a small pane) is unreachable rather than just scrollable. Site's own #site-content is
    deliberately the one exception: it holds only the map, sized to fit its box, never text to scroll past. ── */
-#analysis-content, #postAnalysis-content, #compare-content, #families-content, #profile-content { width: 100%; height: 100%; overflow-y: auto; padding: 20px; }
+#analysis-content, #compare-content, #families-content, #profile-content { width: 100%; height: 100%; overflow-y: auto; padding: 20px; }
 /* Structure inputs/Site conditions use .res-wrap for their own padding (same reasoning as Deliverables/Save Session below) — an outer padding here would just double it up. */
 #structure-content, #conditions-content { width: 100%; height: 100%; overflow-y: auto; }
 /* Deliverables/Save Session use .guide-wrap for their own padding (same as
@@ -418,10 +418,11 @@ html[data-role="client"] .planner-only { display: none !important; }
 .combine-zoom-controls button { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 4px; color: var(--text-secondary); cursor: pointer; font-size: 13px; }
 .combine-zoom-controls button:hover { background: var(--surface-1); color: var(--text-accent); }
 /* A column beside the board rather than over it: while it is open the board gives up that width, so the legend never hides part of the roof. */
-.combine-legend { position: absolute; top: 6px; right: 6px; z-index: 5; width: 230px; max-height: calc(100% - 12px); display: flex; flex-direction: column; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0,0,0,0.12); font-size: 11px; }
+.combine-legend { position: absolute; top: 6px; right: 6px; z-index: 5; width: 230px; max-height: calc((100% - 12px) / 2); display: flex; flex-direction: column; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); box-shadow: 0 2px 10px rgba(0,0,0,0.12); font-size: 11px; }
 .combine-legend[hidden] { display: none; }
 /* with the Garden Core preset buttons shown (gardenPresets.js), the legend stops above them and scrolls inside */
-.combine-canvas-wrap.has-garden-presets .combine-legend { max-height: calc(100% - 76px); }
+.combine-canvas-wrap.has-garden-presets .combine-legend { max-height: calc((100% - var(--garden-presets-room, 76px)) / 2); }   /* half the board height (user) */
+.garden-presets .btn-export { white-space: nowrap; }
 .combine-canvas-wrap:has(.combine-legend.open) #combine-canvas { width: calc(100% - 242px); }
 .combine-canvas-wrap:has(.combine-legend.open) .combine-zoom-controls { right: 242px; }
 .combine-legend-head { display: flex; align-items: center; gap: 6px; padding: 7px 9px; font-weight: 600; color: var(--text-primary); }
@@ -576,7 +577,7 @@ html[data-role="client"] .planner-only { display: none !important; }
    specifically (Data/Guide/Analysis/Compare stay in the top .mode-toggle) —
    sits outermost-left, one tier up from .activity-bar's per-mode item
    picker, reusing its exact .activity-icon visual language on purpose. */
-/* overflow-y: auto so a short window scrolls to reach the later tabs (Improve, Compare, Catalogue, Revit families)
+/* overflow-y: auto so a short window scrolls to reach the later tabs (Compare, Catalogue, Revit families)
    instead of silently clipping them off past whatever height the window happens to be — this rail has grown by a
    full item (Kinetics) since it was first laid out, so a window height that used to just barely fit no longer does. */
 .mode-rail { width: 48px; min-width: 48px; background: #161616; display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 2px; position: relative; z-index: 2; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.06); overflow-y: auto; overflow-x: hidden; }
@@ -1539,3 +1540,59 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .session-names-row input:focus-visible { outline: 2px solid var(--text-accent); outline-offset: 1px; }
 .session-names-preview { margin: 4px 0 0; overflow-wrap: anywhere; }
 @media (max-width: 720px) { .session-names-row { grid-template-columns: 1fr; } }
+
+/* ── Configuring a component, in the panel ───────────────────────────────── */
+/* A family's parameters open where you picked it, over the roof, rather than in
+   a workspace of their own: changing a planter's substrate depth is part of
+   designing the roof, not a trip to another screen. The panel widens for it,
+   because a parameter table and a plan-and-section drawing do not read at the
+   width a picker needs. */
+.zone-flyout.is-editing { width: 430px; }
+
+.component-editor-head { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.component-editor-head .btn-link { padding: 0; font-size: 12px; }
+
+/* The drawing planters.js makes: plan and section, side by side, to the panel's
+   width so the section is not squeezed to nothing. */
+.component-editor-drawing {
+  display: block;
+  width: 100%;
+  height: 230px;
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-1);
+}
+
+/* "Pushed to Combine" tray, Sport and Facilities tabs (pushTray.js): on the right, above the floating Next button */
+.push-tray { position: fixed; right: 18px; bottom: 74px; z-index: 39; width: 290px; max-height: calc(100vh - 190px); display: flex; flex-direction: column; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); box-shadow: 0 6px 20px rgba(0,0,0,0.18); font-size: 12px; }
+.push-tray[hidden] { display: none; }
+.push-tray-head { display: flex; align-items: center; gap: 6px; padding: 9px 11px; font-weight: 700; color: var(--text-primary); border-bottom: 0.5px solid var(--border); }
+.push-tray-head i { color: var(--text-accent); font-size: 14px; }
+.push-tray-total { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.push-tray-list { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 6px; display: flex; flex-direction: column; gap: 2px; }
+.push-tray-row { display: flex; align-items: center; gap: 6px; padding: 5px 5px; border-radius: 4px; color: var(--text-primary); }
+.push-tray-row.flash { animation: push-tray-flash 1.2s ease-out; }
+@keyframes push-tray-flash { from { background: rgba(34,197,94,0.28); } to { background: transparent; } }
+.push-tray-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.push-tray-size { font-size: 10.5px; color: var(--text-secondary); white-space: nowrap; }
+.push-tray-count { font-weight: 700; color: var(--text-accent); white-space: nowrap; }
+.push-tray-remove { width: 20px; height: 20px; border: none; border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; }
+.push-tray-remove:hover { background: var(--surface-1); color: var(--text-fail); }
+.push-tray-empty { margin: 6px 4px; font-size: 11px; color: var(--text-muted); }
+.push-tray-actions { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; border-top: 0.5px solid var(--border); }
+.push-tray-actions .btn-export { justify-content: center; }
+
+/* "× n" on a pushed piece picked n times (combineField.js renderCombineTray): bottom right of its thumbnail */
+.tray-thumb-count { position: absolute; top: 38px; right: 4px; min-width: 20px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--fill-accent); color: var(--on-accent); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.25); pointer-events: none; }
+
+/* Roof Type and Accessibility tab (roofAccess.js) */
+.roofaccess-content { position: absolute; inset: 0; padding: 24px; }
+#roofaccess-field { width: 100%; height: 100%; display: block; touch-action: none; }
+.roofaccess-entries { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
+.roofaccess-entry { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 5px; font-size: 12px; color: var(--text-primary); cursor: pointer; }
+.roofaccess-entry:hover { background: var(--surface-1); }
+.roofaccess-entry.selected { background: var(--surface-1); box-shadow: inset 2px 0 0 var(--text-accent); }
+.roofaccess-num { min-width: 20px; height: 20px; border-radius: 50%; background: #f59e0b; color: #3b2506; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+.roofaccess-remove { margin-left: auto; width: 20px; height: 20px; border: none; border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 14px; }
+.roofaccess-remove:hover { color: var(--text-fail); background: var(--surface-2); }
+#btn-roofaccess-add-entry.active { outline: 2px solid var(--text-accent); outline-offset: 2px; }

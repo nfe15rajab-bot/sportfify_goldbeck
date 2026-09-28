@@ -60,10 +60,6 @@ const TOUR_STEPS = [
     text: () => "Wind, snow and the use of the roof over the day, and the sun and the shade: the inputs of the environmental analyses."
   },
   {
-    id: "postAnalysis", mode: "postAnalysis", target: "#postAnalysis-content", title: "Improve",
-    text: () => "What to change first, ranked from the results, and the moving shading (louvres, sails, fences) built from the analysis."
-  },
-  {
     id: "compare", mode: "compare", target: "#compare-content", title: "Compare variants",
     text: () => "Save layouts for Compare and weigh them against each other."
   },

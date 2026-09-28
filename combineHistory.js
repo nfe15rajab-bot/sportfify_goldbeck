@@ -119,7 +119,7 @@ function restoreCombineState(snapshot) {
     if (typeof refreshSuggestions === "function") refreshSuggestions();
     else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
     if (typeof renderZonePanel === "function" && !document.getElementById("zone-flyout")?.hidden) renderZonePanel();
-    if (typeof renderFurniturePanel === "function" && !document.getElementById("furniture-flyout")?.hidden) renderFurniturePanel();
+    if (typeof renderComponentsPanel === "function" && !document.getElementById("furniture-flyout")?.hidden) renderComponentsPanel();
   } finally {
     restoringHistory = false;
   }
