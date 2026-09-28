@@ -49,11 +49,12 @@ document.getElementById("workflowNextBtn")?.addEventListener("click", () => {
 });
 
 /**
- * "Sync with Revit" (applies the algorithm's preview to the board — Apply to Combine's own button — the step
- * before a layout can be sent on to Revit; shown in Combine regardless of which of Manual/Algorithmic placement
- * is open right now, so switching between them never hides the shortcut) and "Save for Compare" (anywhere in
- * Combine) beside the main Next button: real shortcuts, not a second copy of what each does — each just clicks
- * its real button in the Design panel, so there is exactly one place that ever needs to change.
+ * "Sync with Revit" (Algorithmic's preview onto the board first, when that panel is open — Apply to Combine's own
+ * function — then the board to Revit for real: the same non-draft POST /combined-layout push Export Combined JSON
+ * makes, which is what Auto Import in Revit actually watches; workspaceBridge.js's own automatic push is a draft
+ * that Auto Import ignores, on purpose. Shown in Combine regardless of which of Manual/Algorithmic placement is
+ * open right now, so switching between them never hides the shortcut) and "Save for Compare" (anywhere in Combine)
+ * beside the main Next button.
  */
 function workflowShortcutsUpdate(mode) {
   const applyBtn = document.getElementById("workflowApplyBtn");
@@ -63,5 +64,11 @@ function workflowShortcutsUpdate(mode) {
   if (saveBtn) saveBtn.hidden = !(inCombine && document.getElementById("btn-save-compare"));
 }
 
-document.getElementById("workflowApplyBtn")?.addEventListener("click", () => document.getElementById("algo-apply")?.click());
+document.getElementById("workflowApplyBtn")?.addEventListener("click", async () => {
+  // Direct call, not a synthetic .click(): algoApply() is async (it can await the build-up catalogue and
+  // court-option loads before it touches combineState.items), and a dispatched DOM click can't be awaited —
+  // syncing the board to Revit right after a bare .click() could send what was on the board BEFORE the apply.
+  if (document.getElementById("algo-apply") && typeof algoApply === "function") await algoApply();
+  if (typeof syncCombineToRevit === "function") await syncCombineToRevit();
+});
 document.getElementById("workflowSaveCompareBtn")?.addEventListener("click", () => document.getElementById("btn-save-compare")?.click());

@@ -196,6 +196,45 @@ async function syncDraftLayout(force) {
   }
 }
 
+/**
+ * "Sync with Revit" (workflowNext.js's floating shortcut, and any future caller that wants the same thing): the
+ * real, non-draft POST /combined-layout that Export Combined JSON also makes — the one Auto Import actually
+ * watches for (RoofBoundaryServer.SetCombinedLayoutPayload bumps the version; the draft push above deliberately
+ * does not) — then POST /revit-command?name=import-now, which asks Revit (RevitCommandBridge) to import what was
+ * just pushed right away, on its own thread, instead of waiting for Auto Import's own two-second poll or depending
+ * on that ribbon toggle being on at all. Unlike downloadCombinedSession() this never also saves or downloads a
+ * file — a "sync" the person may click many times while iterating should not pop up a download every time Revit
+ * happens to be closed.
+ */
+async function syncCombineToRevit() {
+  if (!workspaceHasLayout()) {
+    if (typeof showToast === "function") showToast("Nothing to sync yet", "Place a sport, an activity, or a garden piece on the roof in Combine first.");
+    return false;
+  }
+  if (workspaceState.connected !== true) {
+    if (typeof showToast === "function") showToast("Revit not open", "Open a project in Revit with the Sportify add-in loaded, then try again.");
+    return false;
+  }
+  const body = currentDraftBody();
+  if (body === null) return false;
+  const r = await localApi("/combined-layout", { method: "POST", body, contentType: "application/json" });
+  if (!r.ok) {
+    if (typeof showToast === "function") showToast("Not sent to Revit", r.error || "The add-in refused the layout.");
+    return false;
+  }
+  workspaceState.draftSent = body;
+  workspaceState.layoutId = r.json && r.json.layout_id ? r.json.layout_id : await layoutIdOf(body);
+  // Best-effort: an add-in build from before this asked for "import-now" answers 400 ("Unknown command"), which is
+  // fine — the layout is sent either way, and Auto Import (if on) still picks it up within a couple of seconds.
+  const imported = await localApi("/revit-command?name=import-now", { method: "POST" });
+  if (typeof showToast === "function") {
+    showToast("Sent to Revit", imported.ok
+      ? "Importing it into the model now."
+      : "Auto Import will bring it into the model within a couple of seconds if it's turned on in Revit's Sportify ribbon.");
+  }
+  return true;
+}
+
 // ------------------------------------------------------------------------------------------------ the app's own exports
 
 function triggerDownload(blob, name) {
