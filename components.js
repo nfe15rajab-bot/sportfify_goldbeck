@@ -157,13 +157,13 @@ function componentsPanelHtml() {
   const tabs = componentCategoriesPresent().map(c => {
     const n = componentsInCategory(c.key).length;
     return `<button class="furniture-tab${c.key === componentsState.category ? " active" : ""}"
-                    data-component-cat="${c.key}" title="${c.label}">
-              ${c.label}<span class="furniture-tab-count">${n}</span>
+                    data-component-cat="${escapeHtml(c.key)}" title="${escapeHtml(c.label)}">
+              ${escapeHtml(c.label)}<span class="furniture-tab-count">${n}</span>
             </button>`;
   }).join("");
 
   const options = componentsInCategory(componentsState.category).map(i =>
-    `<option value="${i.id}"${i.id === componentsState.id ? " selected" : ""}>${i.sub} ${i.label}</option>`).join("");
+    `<option value="${escapeHtml(i.id)}"${i.id === componentsState.id ? " selected" : ""}>${i.sub} ${escapeHtml(i.label)}</option>`).join("");
 
   const picker = `
     <div class="section">
@@ -237,9 +237,9 @@ function catalogueComponentHtml(item) {
   return `
     <div class="section furniture-hero">
       ${furnitureFigureHtml(f)}
-      <div class="furniture-hero-name">${f.product}</div>
-      <p class="hint">${componentSourceBadge(item)} · ${f.manufacturer.split(" (")[0]}</p>
-      <p class="hint">${f.description}</p>
+      <div class="furniture-hero-name">${escapeHtml(f.product)}</div>
+      <p class="hint">${componentSourceBadge(item)} · ${escapeHtml(f.manufacturer.split(" (")[0])}</p>
+      <p class="hint">${escapeHtml(f.description)}</p>
     </div>
 
     <div class="section">
@@ -252,8 +252,8 @@ function catalogueComponentHtml(item) {
         ${f.price != null ? `<div class="dim-card"><div class="val">€ ${f.price}</div><div class="lbl">${f.price_quoted ? "quoted" : "estimated"}</div></div>` : ""}
       </div>
       <p class="hint">
-        ${f.material}${f.cost_group ? ` · DIN 276 KG ${f.cost_group}` : ""}
-        ${f.source_url ? ` · <a href="${f.source_url}" target="_blank" rel="noopener">${f.manufacturer.split(" (")[0]}</a>` : ""}
+        ${escapeHtml(f.material)}${f.cost_group ? ` · DIN 276 KG ${escapeHtml(f.cost_group)}` : ""}
+        ${f.source_url ? ` · <a href="${safeUrl(f.source_url)}" target="_blank" rel="noopener">${escapeHtml(f.manufacturer.split(" (")[0])}</a>` : ""}
       </p>
     </div>
 
@@ -290,8 +290,8 @@ function familyComponentHtml(item) {
   return `
     <div class="section furniture-hero">
       ${figure}
-      <div class="furniture-hero-name">${item.label}</div>
-      <p class="hint">${componentSourceBadge(item)}${item.family ? ` · Revit family: ${item.family}` : ""}</p>
+      <div class="furniture-hero-name">${escapeHtml(item.label)}</div>
+      <p class="hint">${componentSourceBadge(item)}${item.family ? ` · Revit family: ${escapeHtml(item.family)}` : ""}</p>
     </div>
 
     <div class="section">

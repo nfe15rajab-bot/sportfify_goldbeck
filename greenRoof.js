@@ -209,7 +209,7 @@ function greenRoofSectionSvg(params, assembly, isDark) {
     if (!d) return;
     const f = (typeof ASSEMBLY_LAYER_FUNCTIONS !== "undefined" && ASSEMBLY_LAYER_FUNCTIONS[fnOf(slot)]) || { color: "#888", label: slot };
     out += `<rect x="${x0 + wall}" y="${yOf(bottom + d)}" width="${x1 - x0 - wall * 2}" height="${Math.max(1, mm(d))}"
-                  fill="${f.color}"><title>${escapeHtml(f.label)} — ${d} mm</title></rect>`;
+                  fill="${escapeHtml(f.color)}"><title>${escapeHtml(f.label)} — ${d} mm</title></rect>`;
   });
 
   // The rim walls, drawn last so they read as in front of the fill.

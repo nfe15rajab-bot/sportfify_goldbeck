@@ -27,7 +27,7 @@ const PREVIEW_DEFAULTS = {
   furnitureM: 0.6,
 };
 const PREVIEW_KIND_COLORS = { field: "#3d6fff", activity: "#9c4fe0", garden: "#0ea355", vegetation: "#2f7a43", revit: "#d97706" };
-const PREVIEW_ZONE_COLORS = { green_roof: "#4a9c5d" };
+const PREVIEW_ZONE_COLORS = { green_roof: "#7fa046" };
 const PREVIEW_MIN_SUN_DEG = 3;        // below this the shadows would be miles long: none are drawn
 
 function previewHex(hex, alpha = 1) {
@@ -964,7 +964,7 @@ function previewBuildScene(snapIn) {
   for (const z of snap.zones || []) {
     const poly = (z.points || []).map(p => [previewNum(p.x_m, 0), previewNum(p.y_m, 0)]);
     if (previewCleanPolygon(poly).length < 3) continue;
-    const green = previewHex(PREVIEW_ZONE_COLORS[z.kind] || "#4a9c5d");
+    const green = previewHex(PREVIEW_ZONE_COLORS[z.kind] || "#7fa046");
 
     const fam = z.family && z.family.parameters;
     if (fam) {
