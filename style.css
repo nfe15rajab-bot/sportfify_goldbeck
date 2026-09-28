@@ -740,6 +740,9 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── Session gate ── */
 .session-gate { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(8,9,20,0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.25s ease; }
 .session-gate.session-gate-hidden { opacity: 0; pointer-events: none; }
+/* Fixed to the overlay itself, not the scrolling card, so it stays reachable regardless of how far the card's own content is scrolled. */
+.session-gate-close { position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: var(--surface-1); color: var(--text-muted); font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.session-gate-close:hover { background: var(--surface-2); color: var(--text-primary); }
 /* max-height + overflow-y:auto, not just centered by the flex parent above: a tall card (the landing's video/features/split
    together) would otherwise have its top clipped off-screen with no way to reach it on a short window, the same "adaptive"
    bug the Profile tab had — see sportify-hardening notes. */

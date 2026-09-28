@@ -16,6 +16,7 @@
 
 const sessionGateEl = document.getElementById("sessionGate");
 const gateCardEl = document.querySelector(".session-gate-card");
+const gateCloseBtn = document.getElementById("btn-gate-close");
 const gateLoadBtn = document.getElementById("btn-gate-load");
 const gateLoadLabel = document.getElementById("btn-gate-load-label");
 const gateNewBtn = document.getElementById("btn-gate-new");
@@ -263,6 +264,12 @@ function leaveSessionGate() {
   // Where the person's answers say to start (the quiz: Site, Combine, Results or Documents), else the Overview — same as a fresh page load
   setMode(typeof profileLandingMode === "function" ? profileLandingMode() : "guide");
 }
+// The close button (top-right of the overlay, not the card, so it is reachable however far the card itself is scrolled):
+// dismisses the gate exactly like any other path through it, on whatever step it was showing — resuming, starting new
+// and the presets each set combineState (or leave it) before calling leaveSessionGate themselves; a plain close leaves
+// combineState exactly as it already was (empty on a first visit, the autosave if main.js restored one) and just
+// reveals it, same as reloading the page and never opening the gate at all.
+gateCloseBtn?.addEventListener("click", () => leaveSessionGate());
 
 /**
  * "New Session" in the top bar (next to Save Session): brings the same first-run picker back — Resume/Start New/Load a
