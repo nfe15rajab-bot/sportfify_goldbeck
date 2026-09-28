@@ -77,8 +77,8 @@ const KINETICS = {
   },
   acoustic_screen: {
     label: "Retractable Acoustic Screen", short: "Acoustic screen", icon: "ti-volume-3",
-    category: "edge", kineticKind: "acoustic_screen", built: false,
-    hint: "A deployable vertical baffle between a loud court and a quiet zone. Placeable now; Revit has no acoustic-baffle mechanics yet.",
+    category: "edge", kineticKind: "acoustic_screen", built: true,
+    hint: "The roller fence's own mechanism, with a solid absorptive panel (~12 kg/m² placeholder) in place of the ball-stop mesh, plus a screening sound-transmission-loss estimate (the standard mass law).",
     // Baffle-panel stock in 4 m lengths; a run is 1-2 panels (a third panel would need a mid-span post the concept doesn't have yet).
     variants: {
       compact: { length: 4.0, width: 0.3, note: "one panel" },
@@ -87,8 +87,8 @@ const KINETICS = {
   },
   divider_net: {
     label: "Retractable Court Divider Net", short: "Divider net", icon: "ti-grid-dots",
-    category: "edge", kineticKind: "divider_net", built: false,
-    hint: "A net or mesh wall that raises/lowers between two courts. Placeable now; Revit has no divider-net mechanics yet.",
+    category: "edge", kineticKind: "divider_net", built: true,
+    hint: "The roller fence's own mechanism and mesh, sized against wind and a ball's impact the same way a real fence is — just placed between two courts instead of at a roof edge.",
     // Sized to the width of the court it divides, rather than an arbitrary stock length.
     variants: {
       compact: { length: 6.1, width: 0.3, note: "badminton / pickleball width" },
@@ -98,8 +98,8 @@ const KINETICS = {
   },
   membrane_roof: {
     label: "Retractable Membrane Roof", short: "Membrane roof", icon: "ti-tent",
-    category: "freestanding", kineticKind: "membrane_roof", built: false,
-    hint: "An ETFE/fabric roof over a single court that opens and closes — a single-court-scale version of a kinetic greenhouse. Placeable now; Revit has no membrane-roof mechanics yet.",
+    category: "freestanding", kineticKind: "membrane_roof", built: true,
+    hint: "The tensile sail's own mechanism (masts on ground rails, tensioned fabric) at a court-roof scale. Deployment still follows the sail's sun-tracking run-in/run-out — a true open/close-for-weather cycle is a further refinement, not yet built.",
     // Sized to the single court it covers.
     variants: {
       compact: { length: 10.0, width: 6.0, note: "padel / pickleball court" },
@@ -109,8 +109,8 @@ const KINETICS = {
   },
   green_screen: {
     label: "Kinetic Green Screen", short: "Green screen", icon: "ti-plant-2",
-    category: "freestanding", kineticKind: "green_screen", built: false,
-    hint: "A vertically retractable planted trellis — shade or privacy, bridging the garden and kinetic sides of the roof. Placeable now; Revit has no green-screen mechanics yet.",
+    category: "edge", kineticKind: "green_screen", built: true,
+    hint: "The roller fence's own mechanism, with a planted trellis panel (frame + foliage, ~12 kg/m² placeholder) in place of the ball-stop mesh — the soil itself stays in a base planter, only the frame and foliage retract.",
     // Trellis systems come as 2 m modules; a run is 1-3 modules.
     variants: {
       compact: { length: 2.0, width: 0.5, note: "one module" },

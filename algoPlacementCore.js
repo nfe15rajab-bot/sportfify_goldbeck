@@ -99,12 +99,12 @@ const AlgoPlacement = (function () {
     { name: "Planter T", label: "Planter T", group: "Garden", long: 2.4, short: 2.4, color: [138, 90, 43], headcount: null, deadLoad: null },
     { name: "Park Bench and Table", label: "Park Bench and Table", group: "Garden", long: 2.0, short: 2.0, color: [138, 90, 43], headcount: null, deadLoad: null },
     // Freestanding kinetic elements (kineticsCatalog.js): footprints packed into open area like a court. Edge-anchored kinds (roller fence, acoustic
-    // screen, divider net, wind-break) are not offered here — they belong on a specific edge, not floating in open area, so they stay manual-only.
+    // screen, divider net, wind-break, green screen — a vertical retractable screen, not a horizontal canopy, despite its name) are not offered here —
+    // they belong on a specific line (a roof edge, or between two courts), not floating in open area, so they stay manual-only.
     { name: "Overhead Louvre (Pergola)", label: "Overhead Louvre (Pergola)", group: "Kinetic Elements", long: 6.0, short: 4.0, color: [8, 145, 178], headcount: null, deadLoad: 0.35, assumed: true },
     { name: "Tensile Sail (Movable Pillars)", label: "Tensile Sail (Movable Pillars)", group: "Kinetic Elements", long: 8.0, short: 6.0, color: [14, 165, 164], headcount: null, deadLoad: 0.15, assumed: true },
     { name: "Solar-Tracking PV Canopy", label: "Solar-Tracking PV Canopy", group: "Kinetic Elements", long: 6.0, short: 4.0, color: [3, 105, 161], headcount: null, deadLoad: 0.40, assumed: true },
-    { name: "Retractable Membrane Roof", label: "Retractable Membrane Roof", group: "Kinetic Elements", long: 12.0, short: 8.0, color: [20, 184, 166], headcount: null, deadLoad: 0.30, assumed: true },
-    { name: "Kinetic Green Screen", label: "Kinetic Green Screen", group: "Kinetic Elements", long: 4.0, short: 0.5, color: [22, 163, 74], headcount: null, deadLoad: 0.50, assumed: true }
+    { name: "Retractable Membrane Roof", label: "Retractable Membrane Roof", group: "Kinetic Elements", long: 12.0, short: 8.0, color: [20, 184, 166], headcount: null, deadLoad: 0.30, assumed: true }
   ];
   const PING_PONG_TABLE = "Ping Pong Outdoor", PING_PONG_PAIR = "Ping Pong Pair";
   const labelOf = name => { const s = SPORTS.find(x => x.name === name); return s ? s.label : name; };

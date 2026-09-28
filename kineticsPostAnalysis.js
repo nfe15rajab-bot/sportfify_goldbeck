@@ -210,13 +210,20 @@ const KINETIC_KIND_TEXT = {
   fence: { part: "Guide rails", open: "" },
   pv_canopy: { part: "Panels", open: "Tracking angle" },
   windbreak: { part: "Guide rails", open: "" },
+  divider_net: { part: "Guide rails", open: "" },
+  acoustic_screen: { part: "Guide rails", open: "" },
+  green_screen: { part: "Guide rails", open: "" },
+  membrane_roof: { part: "Masts", open: "Size run to (× analysed)" },
 };
+const KINETIC_FENCE_KINDS = ["fence", "windbreak", "divider_net", "acoustic_screen", "green_screen"];
+const KINETIC_SAIL_LIKE_KINDS = ["sail", "membrane_roof"];
 
 function renderKineticPiece(p) {
   const states = Array.isArray(p.states) ? p.states : [];
   const kind = KINETIC_KIND_TEXT[p.kind] ? p.kind : "overhead";
   const text = KINETIC_KIND_TEXT[kind];
-  const isFence = kind === "fence" || kind === "windbreak";
+  const isFence = KINETIC_FENCE_KINDS.includes(kind);
+  const isSailLike = KINETIC_SAIL_LIKE_KINDS.includes(kind);
   const size = isFence ? resNum(p.length_m, 1) + " m × " + resNum(p.height_m, 1) + " m" : (kind === "slats" || kind === "fins") ? resNum(p.length_m, 1) + " m × " + resNum(p.height_m, 1) + " m" : resNum(p.width_m, 1) + " × " + resNum(p.depth_m, 1) + " m";
   return `<div class="res-block">
     <label>${resEsc(p.equipment_name || "Dynamic unit")} <span class="res-pill state-entered">${resEsc(p.kind_label || "Overhead louvre")}</span>${p.phase ? ` <span class="res-pill state-accepted">${resEsc(p.phase)}</span>` : ""}</label>
@@ -227,12 +234,12 @@ function renderKineticPiece(p) {
       <div class="dim-card"><div class="val">${p.parts_placed != null && p.parts_placed ? p.parts_placed + (p.moving_parts ? " (" + p.moving_parts + " moving)" : "") : "—"}</div><div class="lbl">Adaptive parts</div></div>
     </div>
     ${p.spacing ? renderKineticSpacing(p.spacing, p.supports, text.part) : ""}
-    ${states.length && !isFence ? `<table class="res-table"><thead><tr><th>State</th><th>Solar time</th><th>Sun elevation</th><th>${resEsc(text.open)}</th><th>${kind === "sail" ? "Shade held (masts tracking)" : "Direct sun stopped"}</th>${kind === "sail" ? "" : "<th>Wind torque / blade</th>"}</tr></thead><tbody>
-      ${states.map(s => `<tr><td>${resEsc(s.label)}</td><td>${resNum(s.solar_time_h, 1)} h</td><td>${resNum(s.sun_elevation_deg, 0)}°</td><td>${kind === "sail" ? "× " + resNum(s.louvre_open_angle_deg, 2) : resNum(s.louvre_open_angle_deg, 0) + "°"}</td><td>${resNum(s.sun_stopped_percent, 0)}%</td>${kind === "sail" ? "" : `<td>${resNum(s.wind_torque_operating_nm, 2)} N·m</td>`}</tr>`).join("")}
+    ${states.length && !isFence ? `<table class="res-table"><thead><tr><th>State</th><th>Solar time</th><th>Sun elevation</th><th>${resEsc(text.open)}</th><th>${isSailLike ? "Shade held (masts tracking)" : "Direct sun stopped"}</th>${isSailLike ? "" : "<th>Wind torque / blade</th>"}</tr></thead><tbody>
+      ${states.map(s => `<tr><td>${resEsc(s.label)}</td><td>${resNum(s.solar_time_h, 1)} h</td><td>${resNum(s.sun_elevation_deg, 0)}°</td><td>${isSailLike ? "× " + resNum(s.louvre_open_angle_deg, 2) : resNum(s.louvre_open_angle_deg, 0) + "°"}</td><td>${resNum(s.sun_stopped_percent, 0)}%</td>${isSailLike ? "" : `<td>${resNum(s.wind_torque_operating_nm, 2)} N·m</td>`}</tr>`).join("")}
     </tbody></table>` : ""}
     ${p.mechanics ? renderKineticMechanics(p, p.mechanics) : ""}
-    ${p.sail ? renderSailMechanics(p.sail) : ""}
-    ${p.fence ? renderFenceMechanics(p.fence) : ""}
+    ${p.sail ? renderSailMechanics(p.sail, kind === "membrane_roof" ? "Retractable membrane roof" : "Sail on movable pillars") : ""}
+    ${p.fence ? renderFenceMechanics(p.fence, kind) : ""}
   </div>`;
 }
 
@@ -247,7 +254,7 @@ function renderKineticSpacing(sp, su, part) {
   return `<div class="res-block"><label>Recommendation</label>${sp.reason ? `<p class="hint">${resText(sp.reason)}</p>` : ""}${tiles}</div>`;
 }
 
-function renderSailMechanics(s) {
+function renderSailMechanics(s, label) {
   const tiles = `<div class="res-tiles">
     ${resTile("Sail", resNum(s.area_m2, 1) + " m²", resNum(s.width_m, 1) + " × " + resNum(s.depth_m, 1) + " m on four masts " + resNum(s.mast_height_m, 1) + " m high; " + resNum(s.fabric_mass_kg, 0) + " kg of fabric")}
     ${resTile("Mast", resNum(s.mast_diameter_mm, 0) + " mm", s.mast_ok ? "passes at " + resNum(s.mast_utilisation_percent, 0) + "% of the yield" : "too light: " + resNum(s.recommended_mast_diameter_mm, 0) + " mm passes", s.mast_ok ? "ok" : "bad")}
@@ -259,19 +266,31 @@ function renderSailMechanics(s) {
     ${resTile("Storm", resNum(s.storm_height_m, 1) + " m", "the masts run in, then telescope down" + (s.mast_stages > 1 ? " (" + s.mast_stages + " stages of " + resNum(s.mast_stage_m, 2) + " m: the lowest they can go)" : "") + " and the fabric is slack")}
   </div>`;
   const findings = Array.isArray(s.findings) && s.findings.length ? `<ul class="res-list">${s.findings.map(f => `<li>${resText(f)}</li>`).join("")}</ul>` : "";
-  return `<div class="res-block"><label>Sail on movable pillars</label>${tiles}${findings}</div>`;
+  return `<div class="res-block"><label>${resEsc(label || "Sail on movable pillars")}</label>${tiles}${findings}</div>`;
 }
 
-function renderFenceMechanics(f) {
+const KINETIC_FENCE_LABEL = {
+  fence: "Roller fence — turned on only when it is needed",
+  windbreak: "Wind-break screen — turned on only when it is needed",
+  divider_net: "Court divider net — turned on only when it is needed",
+  acoustic_screen: "Acoustic screen — turned on only when it is needed",
+  green_screen: "Green screen — turned on only when it is needed",
+};
+
+function renderFenceMechanics(f, kind) {
+  const isRealFence = kind === "fence";
+  const summarySub = isRealFence
+    ? resEsc(f.edge || "") + " edge, " + resNum(f.height_m, 1) + " m high; it stops " + resNum(f.stops_percent_of_exits, 0) + "% of the shots that leave the roof there"
+    : resEsc(f.edge || "") + ", " + resNum(f.height_m, 1) + " m high";
   const tiles = `<div class="res-tiles">
-    ${resTile("Fence", resNum(f.length_m, 1) + " m", resEsc(f.edge || "") + " edge, " + resNum(f.height_m, 1) + " m high; it stops " + resNum(f.stops_percent_of_exits, 0) + "% of the shots that leave the roof there")}
+    ${resTile("Fence", resNum(f.length_m, 1) + " m", summarySub)}
     ${resTile("Guide rails", resNum(f.rails, 0), resNum(f.bay_spacing_m, 1) + " m apart, " + resNum(f.rail_size_mm, 0) + " mm square tube", f.rail_ok ? "ok" : "bad")}
     ${resTile("Rail stress", resNum(f.rail_utilisation_percent, 0) + "%", "of the yield with the safety factor; " + resNum(f.rail_deflection_mm, 0) + " mm at the top against " + resNum(f.rail_deflection_limit_mm, 0) + " mm allowed" + (f.rail_ok ? "" : "; " + resNum(f.recommended_rail_size_mm, 0) + " mm passes"), f.rail_ok ? "ok" : "bad")}
-    ${resTile("A ball hits it", resNum(f.impact_energy_j, 0) + " J", resNum(f.impact_force_kn, 1) + " kN over the give of the net; " + resNum(f.impact_moment_kn_m, 1) + " kN·m at the foot of a rail")}
+    ${resTile(isRealFence ? "A ball hits it" : "A ball hits it (conservative check)", resNum(f.impact_energy_j, 0) + " J", resNum(f.impact_force_kn, 1) + " kN over the give of the net; " + resNum(f.impact_moment_kn_m, 1) + " kN·m at the foot of a rail")}
     ${resTile("Wind on the net", resNum(f.wind_moment_kn_m, 1) + " kN·m", "at the foot of a rail, up to the operating wind limit")}
     ${resTile("Roller motor", resNum(f.motor_torque_nm, 1) + " N·m", resNum(f.motor_force_n, 0) + " N to lift the bar and the curtain; about " + resNum(f.motor_power_w, 0) + " W, " + resNum(f.deploy_seconds, 0) + " s to deploy")}
     ${resTile("Storm", f.storm_retract ? "stow it" : "holds", f.storm_retract ? "the deployed net would be a sail on its rails in the design peak: an anemometer overrides the switch" : "no wind rule beyond the operating limit", f.storm_retract ? "warn" : "ok")}
   </div>`;
   const findings = Array.isArray(f.findings) && f.findings.length ? `<ul class="res-list">${f.findings.map(x => `<li>${resText(x)}</li>`).join("")}</ul>` : "";
-  return `<div class="res-block"><label>Roller fence — turned on only when it is needed</label>${tiles}${findings}</div>`;
+  return `<div class="res-block"><label>${resEsc(KINETIC_FENCE_LABEL[kind] || KINETIC_FENCE_LABEL.fence)}</label>${tiles}${findings}</div>`;
 }
