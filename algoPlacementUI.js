@@ -52,6 +52,10 @@ const ALGO_CATALOGUE = {
   "Planter S": { kind: "gardenBlock", id: "planter_s" },
   "Planter T": { kind: "gardenBlock", id: "planter_t" },
   "Park Bench and Table": { kind: "gardenBlock", id: "park_bench_table" },
+  // more of the Garden Components tab (user, 2026-09-28): the pedestal planters, and the catalogue's picnic set placed as the product the tab pushes
+  "Planter S (with pedestal)": { kind: "gardenBlock", id: "planter_s_pedestal" },
+  "Planter T (with pedestal)": { kind: "gardenBlock", id: "planter_t_pedestal" },
+  "Picknickset": { kind: "furniture", id: "hds_picknickset" },
   // Freestanding kinetic elements (kineticsCatalog.js's KINETICS): sized once there, no tiers — see algoTierKey()'s "kinetics" exclusion below.
   "Overhead Louvre (Pergola)": { kind: "kinetics", id: "overhead_louvre" },
   "Tensile Sail (Movable Pillars)": { kind: "kinetics", id: "shade_sail" },
@@ -103,7 +107,8 @@ const ALGO_LISTS = [
   { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] },
-  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] }
+  // (the tab's smaller pieces - benches, bins, bollards, lights - are placed by hand: under the existing rules an item needs a long side of 2 m to be reached)
+  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Planter S (with pedestal)", "Planter T (with pedestal)", "Park Bench and Table", "Picknickset"] }
   // (the Kinetic elements are no longer offered here (user, 2026-09-28); their engine entries and ALGO_CATALOGUE mapping stay for the Kinetics tab)
 ];
 /** Which headings each roof type shows. Garden Core keeps only the garden activities and blocks; Mixed and a roof with no type yet show everything. Kinetic elements (shade/PV/screening) are relevant to both. */
@@ -184,7 +189,7 @@ function algoSpecifiedState(name) {
 /** The size tier chosen in the Sport tab for an item of this list (activitiesData.js getSportTier); null for an item that has one size. */
 function algoTierKey(name) {
   const cat = ALGO_CATALOGUE[name];
-  if (!cat || cat.kind === "gardenBlock" || cat.kind === "kinetics") return null;
+  if (!cat || cat.kind === "gardenBlock" || cat.kind === "kinetics" || cat.kind === "furniture") return null;
   return cat.kind === "field" ? cat.sport : "act:" + cat.id;
 }
 function algoTierOf(name) {
@@ -226,7 +231,7 @@ function algoAdoptSpecifiedSizes() {
   }
   // the Garden tab's blocks take the size set there (a planter's Length x Width, the bench's fixed footprint), in metres
   for (const [name, cat] of Object.entries(ALGO_CATALOGUE)) {
-    const sp = AlgoPlacement.SPORTS.find(s => s.name === name), fp = cat.kind === "gardenBlock" ? algoGardenBlockSize(cat.id) : null;
+    const sp = AlgoPlacement.SPORTS.find(s => s.name === name), fp = cat.kind === "gardenBlock" ? algoGardenBlockSize(cat.id) : cat.kind === "furniture" ? algoFurnitureSize(cat.id) : null;
     if (!sp || !fp) continue;
     const long = algoRound(Math.max(fp.l, fp.w)), short = algoRound(Math.min(fp.l, fp.w));
     if (sp.long !== long || sp.short !== short) { sp.long = long; sp.short = short; changed = true; }
@@ -1160,9 +1165,27 @@ function algoGardenBlockSize(id) {
   return { l: p.length / 1000, w: p.width / 1000 };
 }
 
+/** A catalogue product's footprint (furniture.js FURNITURE, read from the API), in metres { l, w }, or null while the catalogue is not loaded (the engine's own size stays). */
+function algoFurnitureSize(key) {
+  const f = typeof FURNITURE !== "undefined" ? FURNITURE[key] : null;
+  return f && f.length_m && f.width_m ? { l: f.length_m, w: f.width_m } : null;
+}
+
 function algoCatalogueSource(name, sp) {
   const cat = ALGO_CATALOGUE[name];
   const quality = "medium";
+  if (cat.kind === "furniture") {           // the same source the Garden Components tab's push gives it (furniture.js pushFurnitureToCombine)
+    const f = typeof FURNITURE !== "undefined" ? FURNITURE[cat.id] : null;
+    return { version: "1.0", generator: "Sportify-Algorithmic-Placement",
+      furniture: f ? {
+        key: f.key, manufacturer: f.manufacturer, product: f.product, label: f.label, category: f.category,
+        length_m: f.length_m, width_m: f.width_m, height_m: f.height_m, dimensions_published: f.dimensions_published,
+        seats: f.seats, weight_kg: f.weight_kg, weight_published: f.weight_published, capacity_l: f.capacity_l,
+        price: f.price, price_quoted: f.price_quoted, cost_group: f.cost_group, material: f.material,
+        description: f.description, source_url: f.source_url, image_url: f.image_url, image_credit: f.image_credit,
+        revit_family_name: `Sportify - ${f.manufacturer.split(" (")[0]} ${f.product}`,
+      } : { key: cat.id, product: sp.label, label: sp.label, length_m: sp.long, width_m: sp.short } };
+  }
   if (cat.kind === "kinetics") {            // the same source Push to Combine gives it (kineticsCombine.js pushKineticsToCombine)
     const k = typeof KINETICS !== "undefined" ? KINETICS[cat.id] : null;
     // The algorithmic panel has no size picker of its own yet — it always places the "standard" build size,
@@ -1257,6 +1280,11 @@ async function algoApply() {
   }
   // A specified court's weight (what the structural analysis puts on the deck) comes from the court options in the API, which the volleyball and basketball panels fetch
   // when they are first opened. Applied before they ever were, the courts were exported with weight_kg 0: a court that weighs nothing (found by the live Revit import).
+  // a catalogue product (the Picknickset) is placed as the product itself: its details come from the catalogue, which the API gives and which is read lazily
+  if (plan.courts.some(c => ALGO_CATALOGUE[c.name] && ALGO_CATALOGUE[c.name].kind === "furniture") && typeof loadFurniture === "function" && typeof furnitureLoaded !== "undefined" && !furnitureLoaded) {
+    try { await loadFurniture(); } catch (e) { /* placed with the engine's size and name; the catalogue details are missing, as offline */ }
+    if (algoState.plan !== plan || algoState.busy) return;
+  }
   const wantsCourt = key => plan.courts.some(c => new RegExp(key, "i").test(c.name));
   const optionLoads = [];
   if (wantsCourt("volleyball") && typeof loadVolleyballOptions === "function" && typeof volleyballOptionsLoaded !== "undefined" && !volleyballOptionsLoaded) optionLoads.push(loadVolleyballOptions());
@@ -1286,14 +1314,12 @@ async function algoApply() {
     ensureZoneState();
     const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
     withoutBuildUp = !assembly;
-    // The tray the designer picked in the Zones panel, same as a hand-drawn zone
-    // gets. Without this the algorithm's zones came out as bare floors while the
-    // one zone drawn by hand had a tray — the same roof described two ways.
-    const family = combineState.zoneFamily || null;
     const rects = (plan.bandRects || algoState.site.bandRects).concat(plan.pockets).filter(r => r[2] - r[0] >= 0.3 && r[3] - r[1] >= 0.3);
     rects.forEach((r, i) => {
       // A zone is a polygon (zones.js): `points` is the truth and the box is derived from it, so the pocket is made as the rectangle it is.
-      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, familyKey: family, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
+      // every green area goes to Revit as the Green Roof Module (greenRoof.js), one tray per zone sized to its own length x width, the build-up inside
+      // (user, 2026-09-28: Revit places a tray only for a zone that carries the family)
+      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, familyKey: typeof GREEN_ROOF_DEFAULT_FAMILY !== "undefined" ? GREEN_ROOF_DEFAULT_FAMILY : null, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
       combineState.zones.push(syncZoneBounds(zone));
       zoneCount++;
     });

@@ -322,6 +322,7 @@ gateFileInput.addEventListener("change", e => {
 
 gateNewBtn.addEventListener("click", () => {
   leaveSessionGate();
+  if (typeof defaultSetbackBeds === "function") defaultSetbackBeds();      // a new session starts with the default green roof in the setback (gardenPresets.js)
   // a person who starts a new session and has never met the quiz is offered it now (quiz.js decides: never twice, never for someone who has set their profile by hand)
   if (typeof quizMaybeOpen === "function") setTimeout(quizMaybeOpen, 300);
 });

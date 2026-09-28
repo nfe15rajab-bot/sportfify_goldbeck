@@ -245,7 +245,8 @@ function itemZoneInfo(item) {
   const id = item.kind === "field" ? item.sourceJson?.field?.sport
     : item.kind === "activity" ? item.sourceJson?.activity?.type_id
       : item.kind === "gardenBlock" ? item.sourceJson?.gardenBlock?.type
-        : null;
+        : item.kind === "furniture" ? item.sourceJson?.furniture?.key      // only the catalogue products the Algorithmic placement offers (the Picknickset)
+          : null;
   return (id && algoZoneLookup()[item.kind + ":" + id]) || { name: null, zone: "outdoor", noSetback: false };
 }
 
@@ -258,6 +259,11 @@ const BOARD_SERVICE_LOBBY_M = 2.0;                        // = SERVICE_LOBBY_M i
 const BOARD_NO_CLUSTER = new Set(["Rest / Hydration Area"]); // = NO_CLUSTER in algoPlacementCore.js: indoor, but not inside the indoor zone's wall
 const BOARD_PING_PONG = "Ping Pong Outdoor";              // two of these may stand long edge to long edge (the locked Ping Pong pair rule)
 const BOARD_EPS = 0.02;                                   // m, slack for positions typed or dragged by hand
+// THE ONE RULE DIFFERENCE from the Algorithmic placement (user, 2026-09-28): a piece a Garden Core preset placed (gardenPresets.js tags it `preset`) needs
+// only this much from an entrance's way in, instead of the engine's ENTRY_GAP_M (2.5 m) - the presets' Calisthenics stands 2.28 m from one on the user's
+// roof. Every other piece, and the Algorithmic placement itself, keep 2.5 m.
+const BOARD_PRESET_ENTRY_GAP_M = 2.25;
+const boardIsPresetPiece = it => !!(it.preset || it.sourceJson?.preset);
 
 /**
  * The distances the engine works with, in metres. With a roof type (zoning): 1.5 m inside a zone (the narrowest in-zone path it makes), the primary path
@@ -370,7 +376,8 @@ function boardRuleCheck(items, opts = {}) {
   }
   // the entrances' ways in (validate: egap round every entry; the plain rule: the court gap)
   items.forEach((it, i) => {
-    if (check(i) && entryRects.some(E => boardSep(rects[i], E) < R.egap - BOARD_EPS)) out.tooClose.add(it.id);
+    const egap = boardIsPresetPiece(it) ? Math.min(R.egap, BOARD_PRESET_ENTRY_GAP_M) : R.egap;
+    if (check(i) && entryRects.some(E => boardSep(rects[i], E) < egap - BOARD_EPS)) out.tooClose.add(it.id);
   });
   // the indoor zone's wall line: nothing but indoor items within the primary-path width of the box round the indoor cluster (validate)
   if (R.zoning) {
@@ -724,6 +731,7 @@ function drawCombineCanvas() {
   const svg = document.getElementById("combine-canvas");
   if (!svg) return;
   if (typeof syncGardenPresetButtons === "function") syncGardenPresetButtons();   // the Garden Core presets show only on a Garden Core roof
+  if (typeof dropDefaultBedsOnEntryEdges === "function") dropDefaultBedsOnEntryEdges();   // the default green roof never covers an edge with an entry point
   const roof = combineState.roof;
   const items = combineState.items;
   const entries = combineState.entryPoints;
@@ -1112,7 +1120,7 @@ function renderCombineSummary(circulation) {
 function boardGapText(R) {
   if (!R) return "";
   return R.zoning
-    ? `${R.zgap.toFixed(1)} m same-zone / ${R.xgap.toFixed(1)} m cross-zone / ${R.lobby.toFixed(1)} m in front of a service module / ${R.egap.toFixed(1)} m from an entrance`
+    ? `${R.zgap.toFixed(1)} m same-zone / ${R.xgap.toFixed(1)} m cross-zone / ${R.lobby.toFixed(1)} m in front of a service module / ${R.egap.toFixed(1)} m from an entrance (${BOARD_PRESET_ENTRY_GAP_M.toFixed(2)} m for Garden Core preset pieces)`
     : `${R.gap.toFixed(1)} m between pieces and from an entrance`;
 }
 

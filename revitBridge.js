@@ -74,6 +74,8 @@ async function pollRevitBoundary() {
     revitRoofPushed = true;
 
     const roof = data.roof;
+    const footKey = r => JSON.stringify([r.length, r.width, r.boundary || null]);
+    const oldFoot = footKey(combineState.roof);
     combineState.roof.length = roof.length_m;
     combineState.roof.width  = roof.width_m;
     combineState.roof.boundary = roof.boundary_m || null;
@@ -109,6 +111,8 @@ async function pollRevitBoundary() {
     showToast("Roof boundary pushed from Revit", detail + (activeMode !== "combine" ? " — switch to Combine to view." : ""));
     // a footprint has arrived: remember it came from Revit and, if the roof has no type yet, ask for one (Sports Core / Garden Core / Mixed)
     if (typeof roofProgramOnFootprint === "function") roofProgramOnFootprint("revit", detail);
+    // a NEW footprint gets the default green roof in its setback (gardenPresets.js); the same roof arriving again (a page reload, a resumed session) does not
+    if (footKey(combineState.roof) !== oldFoot && typeof defaultSetbackBeds === "function") defaultSetbackBeds();
 
     if (activeMode === "combine") {
       if (typeof refreshSuggestions === "function") refreshSuggestions();

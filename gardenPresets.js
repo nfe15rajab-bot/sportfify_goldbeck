@@ -251,7 +251,7 @@ function applyGardenPreset(key) {
     const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
     const R = v => Math.round(v * 100) / 100;
     extraBeds.forEach((b, i) => {
-      combineState.zones.push(syncZoneBounds({ id: `zone_preset_${key}_${stamp}_bed${i}`, kind: "green_roof", assemblyKey: assembly, points: rectPoints(R(b[0]), R(b[1]), R(b[2] - b[0]), R(b[3] - b[1])), preset: key }));
+      combineState.zones.push(syncZoneBounds({ id: `zone_preset_${key}_${stamp}_bed${i}`, kind: "green_roof", assemblyKey: assembly, familyKey: typeof GREEN_ROOF_DEFAULT_FAMILY !== "undefined" ? GREEN_ROOF_DEFAULT_FAMILY : null, points: rectPoints(R(b[0]), R(b[1]), R(b[2] - b[0]), R(b[3] - b[1])), preset: key }));
       beds++;
     });
   }
@@ -263,7 +263,7 @@ function applyGardenPreset(key) {
     const across0 = ax.inward > 0 ? ax.edgeLine + sb : ax.edgeLine - sb - d;
     [ax.edgeLo + sb, ax.edgeHi - sb - d].forEach((along0, i) => {
       const x = ax.alongX ? along0 : across0, y = ax.alongX ? across0 : along0;
-      combineState.zones.push(syncZoneBounds({ id: `zone_preset_${key}_${stamp}_corner${i}`, kind: "green_roof", assemblyKey: assembly, points: rectPoints(R(x), R(y), d, d), preset: key }));
+      combineState.zones.push(syncZoneBounds({ id: `zone_preset_${key}_${stamp}_corner${i}`, kind: "green_roof", assemblyKey: assembly, familyKey: typeof GREEN_ROOF_DEFAULT_FAMILY !== "undefined" ? GREEN_ROOF_DEFAULT_FAMILY : null, points: rectPoints(R(x), R(y), d, d), preset: key }));
       beds++;
     });
   }
@@ -275,6 +275,8 @@ function applyGardenPreset(key) {
 /**
  * Green roof beds in the setback band: one along every roof edge of GARDEN_BED_MIN_EDGE_M or more with no entry point on it, `sb` deep, on the roof side.
  * Where two beds meet at an outside corner, the longer edge's bed keeps the corner square, so they do not overlap. Returns how many were made.
+ * `key` = the preset that makes them, or null for the Manual board's default beds (defaultSetbackBeds below), which are tagged `defaultBed` instead.
+ * Each bed remembers the roof edge it runs along (`bedEdge`), so a default bed can be taken away when an entry point is later put on that edge.
  */
 function gardenSetbackBeds(key, stamp, sb) {
   if (typeof ensureZoneState !== "function" || typeof syncZoneBounds !== "function") return 0;
@@ -321,10 +323,40 @@ function gardenSetbackBeds(key, stamp, sb) {
     } else {
       pts = [e.a, e.b, [e.b[0] + nx * sb, e.b[1] + ny * sb], [e.a[0] + nx * sb, e.a[1] + ny * sb]].map(p => ({ x_m: R(p[0]), y_m: R(p[1]) }));
     }
-    combineState.zones.push(syncZoneBounds({ id: `zone_preset_${key}_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, points: pts, preset: key }));
+    const tag = key ? { preset: key } : { defaultBed: true };
+    combineState.zones.push(syncZoneBounds(Object.assign({ id: `zone_${key ? "preset_" + key : "default"}_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, familyKey: typeof GREEN_ROOF_DEFAULT_FAMILY !== "undefined" ? GREEN_ROOF_DEFAULT_FAMILY : null, points: pts, bedEdge: [e.a.slice(), e.b.slice()] }, tag)));
     count++;
   });
   return count;
+}
+
+/**
+ * The Manual board's default green roof (user, 2026-09-28): Green Roof Module beds in the setback band along every roof edge of 6 m or more with no entry
+ * point on it, the same beds the presets lay. Made ONLY for a new session and a new roof footprint (sessionGate.js Start a New Session, revitBridge.js /
+ * the Revit file import / the roof size inputs in combineController.js) - never for a loaded session. They are ordinary zones after that: a preset or an
+ * Algorithmic Apply replaces them like every other zone, and a person can select and delete any of them. A new footprint replaces the previous default
+ * beds (not zones anyone drew).
+ */
+function defaultSetbackBeds() {
+  if (typeof ensureZoneState !== "function") return 0;
+  ensureZoneState();
+  combineState.zones = combineState.zones.filter(z => !z.defaultBed);
+  const sb = typeof DESIGN_RULES !== "undefined" ? DESIGN_RULES.boundarySetback_m : 1.5;
+  const n = gardenSetbackBeds(null, Date.now(), sb);
+  if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  return n;
+}
+
+/** A default bed whose edge has since got an entry point is taken away (the default never covers an edge with an entry); called on every board redraw. */
+function dropDefaultBedsOnEntryEdges() {
+  const zones = combineState.zones || [], entries = combineState.entryPoints || [];
+  if (!entries.length || !zones.some(z => z.defaultBed && z.bedEdge)) return;
+  const onEdge = (p, a, b) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy;
+    const t = L2 ? Math.max(0, Math.min(1, ((p.x_m - a[0]) * dx + (p.y_m - a[1]) * dy) / L2)) : 0;
+    return Math.hypot(a[0] + t * dx - p.x_m, a[1] + t * dy - p.y_m) < 0.1;
+  };
+  combineState.zones = zones.filter(z => !(z.defaultBed && z.bedEdge && entries.some(p => onEdge(p, z.bedEdge[0], z.bedEdge[1]))));
 }
 
 /** The preset buttons show only on a Garden Core roof (called on every board redraw). */

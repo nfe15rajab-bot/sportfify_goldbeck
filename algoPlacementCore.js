@@ -105,7 +105,13 @@ const AlgoPlacement = (function () {
     { name: "Overhead Louvre (Pergola)", label: "Overhead Louvre (Pergola)", group: "Kinetic Elements", long: 6.0, short: 4.0, color: [8, 145, 178], headcount: null, deadLoad: 0.35, assumed: true },
     { name: "Tensile Sail (Movable Pillars)", label: "Tensile Sail (Movable Pillars)", group: "Kinetic Elements", long: 8.0, short: 6.0, color: [14, 165, 164], headcount: null, deadLoad: 0.15, assumed: true },
     { name: "Solar-Tracking PV Canopy", label: "Solar-Tracking PV Canopy", group: "Kinetic Elements", long: 6.0, short: 4.0, color: [3, 105, 161], headcount: null, deadLoad: 0.40, assumed: true },
-    { name: "Retractable Membrane Roof", label: "Retractable Membrane Roof", group: "Kinetic Elements", long: 12.0, short: 8.0, color: [20, 184, 166], headcount: null, deadLoad: 0.30, assumed: true }
+    { name: "Retractable Membrane Roof", label: "Retractable Membrane Roof", group: "Kinetic Elements", long: 12.0, short: 8.0, color: [20, 184, 166], headcount: null, deadLoad: 0.30, assumed: true },
+    { name: "Kinetic Green Screen", label: "Kinetic Green Screen", group: "Kinetic Elements", long: 4.0, short: 0.5, color: [22, 163, 74], headcount: null, deadLoad: 0.50, assumed: true },
+    // more of the Garden Components tab's elements (user, 2026-09-28): only those big enough for the existing rules (a long side of at least MIN_ACCESS_M);
+    // sizes follow the tab (algoPlacementUI adopts them), no headcount / dead load given yet. Appended, so the order of everything above is unchanged.
+    { name: "Planter S (with pedestal)", label: "Planter S (with pedestal)", group: "Garden", long: 2.4, short: 1.0, color: [138, 90, 43], headcount: null, deadLoad: null },
+    { name: "Planter T (with pedestal)", label: "Planter T (with pedestal)", group: "Garden", long: 2.4, short: 2.4, color: [138, 90, 43], headcount: null, deadLoad: null },
+    { name: "Picknickset", label: "Picknickset", group: "Garden", long: 2.0, short: 1.8, color: [138, 90, 43], headcount: null, deadLoad: null }
   ];
   const PING_PONG_TABLE = "Ping Pong Outdoor", PING_PONG_PAIR = "Ping Pong Pair";
   const labelOf = name => { const s = SPORTS.find(x => x.name === name); return s ? s.label : name; };
@@ -113,7 +119,7 @@ const AlgoPlacement = (function () {
   // ── zones (used only when a plan is made with `zoning`) ──
   // indoor (walls around, ignores the setback, grows from the Locker corner), garden (Yoga, Calisthenics, the Garden tab's blocks: respects the setback like outdoor) and outdoor (everything else)
   const INDOOR_NAMES = new Set(["Ping Pong", "Bouldering Wall", "Badminton", "Locker & Dressing Room Module", "Bathroom & Shower Module", "Rest / Hydration Area"]);
-  const GARDEN_NAMES = new Set(["Yoga", "Calisthenics", "Planter S", "Planter T", "Park Bench and Table"]);
+  const GARDEN_NAMES = new Set(["Yoga", "Calisthenics", "Planter S", "Planter T", "Park Bench and Table", "Planter S (with pedestal)", "Planter T (with pedestal)", "Picknickset"]);
   const NO_CLUSTER = new Set(["Rest / Hydration Area"]);         // indoor, but not part of the cluster that grows from the Locker corner
   const zoneOf = name => INDOOR_NAMES.has(name) ? "indoor" : GARDEN_NAMES.has(name) ? "garden" : "outdoor";
   // only the service modules have walls around them, so only they ignore the setback: every sport (indoor ones included) respects it

@@ -208,8 +208,8 @@ function applySmartRuleRecommendation(rec) {
   showToast("Smart rules applied", `Circulation width and minimum entries raised for ~${rec.totalAreaM2} m² programmed.`);
 }
 
-document.getElementById("roofLength").addEventListener("input", e => { combineState.roof.length = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; combineState.roof.rotationDeg = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
-document.getElementById("roofWidth").addEventListener("input", e => { combineState.roof.width = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; combineState.roof.rotationDeg = 0; if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("roofLength").addEventListener("input", e => { combineState.roof.length = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; combineState.roof.rotationDeg = 0; if (typeof defaultSetbackBeds === "function") defaultSetbackBeds(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("roofWidth").addEventListener("input", e => { combineState.roof.width = Number(e.target.value) || 1; combineState.roof.boundary = null; combineState.roof.originXm = 0; combineState.roof.originYm = 0; combineState.roof.rotationDeg = 0; if (typeof defaultSetbackBeds === "function") defaultSetbackBeds(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 // Manual Revit Import
 document.getElementById("btn-import-revit").addEventListener("click", () => { document.getElementById("import-revit-file").click(); });
@@ -236,6 +236,7 @@ document.getElementById("import-revit-file").addEventListener("change", e => {
       if(statusEl) statusEl.textContent = `Imported ${roof.length_m}m × ${roof.width_m}m from Revit.`;
       if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas();
       if (typeof roofProgramOnFootprint === "function") roofProgramOnFootprint("revit", `${roof.length_m} × ${roof.width_m} m from the imported file`);
+      if (typeof defaultSetbackBeds === "function") defaultSetbackBeds();       // a new footprint: the default green roof in its setback (gardenPresets.js)
     } catch (err) {
       if(statusEl) statusEl.textContent = `Import failed: ${err.message}`;
     }
