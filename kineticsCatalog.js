@@ -66,8 +66,8 @@ const KINETICS = {
   },
   pv_canopy: {
     label: "Solar-Tracking PV Canopy", short: "PV canopy", icon: "ti-solar-panel",
-    category: "freestanding", kineticKind: "pv_canopy", built: false,
-    hint: "Same overhead-louvre mechanism, but the blades carry photovoltaic modules and track for energy yield instead of shade coverage. Placeable now; Revit has no PV-tracking mechanics yet.",
+    category: "freestanding", kineticKind: "pv_canopy", built: true,
+    hint: "Same overhead-louvre frame and single-axis tracking, panels in place of blades. Row spacing avoids self-shading (not a shade target); panel mass is a stated placeholder (~15 kg/m²) until a real module spec is entered.",
     // Same bay-module system as the overhead louvre, since it reuses that mechanism.
     variants: {
       compact: { length: 3.0, width: 3.0, note: "one bay" },

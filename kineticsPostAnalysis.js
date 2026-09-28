@@ -208,6 +208,7 @@ const KINETIC_KIND_TEXT = {
   fins: { part: "Fins", open: "Fin turn angle" },
   sail: { part: "Masts", open: "Size run to (× analysed)" },
   fence: { part: "Guide rails", open: "" },
+  pv_canopy: { part: "Panels", open: "Tracking angle" },
 };
 
 function renderKineticPiece(p) {
