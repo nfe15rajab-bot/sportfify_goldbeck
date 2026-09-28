@@ -202,6 +202,11 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* The tab bar is centred and the controls sit at the right: with the label the pill needs the screen to be about 1240 px wide, as a dot about 1000. Narrower (the docked pane in Revit): the Overview's card has the status. */
 @media (max-width: 1240px) { .where-pill { padding: 0 9px; } .where-pill #whereRevitLabel { display: none; } }
 @media (max-width: 1000px) { .where-pill { display: none; } }
+/* Only shown at all once revitBridge.js finds more than one pushed roof — same width thresholds as the pill beside it, so the docked pane never has to make room for both. */
+.roof-picker { height: 30px; padding: 0 8px; font-size: 11.5px; font-weight: 600; font-family: var(--font-sans); color: var(--text-secondary); background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; max-width: 160px; }
+.roof-picker:hover { color: var(--text-primary); border-color: var(--border-accent); }
+@media (max-width: 1240px) { .roof-picker { max-width: 40px; } }
+@media (max-width: 1000px) { .roof-picker { display: none !important; } }
 .where-chip { display: inline-block; flex-shrink: 0; margin-left: 8px; padding: 1px 7px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 10px; color: var(--text-accent); background: var(--bg-accent); border: 0.5px solid var(--border-accent); }
 .where-chip-off { color: var(--text-muted); background: transparent; border-color: var(--border-strong); }
 .deliverable-item .where-chip, .ws-run-btn .where-chip { margin-left: auto; }

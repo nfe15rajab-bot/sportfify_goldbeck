@@ -16,8 +16,48 @@ let revitRoofPushed = false;
 function startRevitPolling() {
   if (revitPollHandle) return;
   pollRevitBoundary();
-  revitPollHandle = setInterval(pollRevitBoundary, REVIT_POLL_MS);
+  refreshRoofPicker();
+  revitPollHandle = setInterval(() => { pollRevitBoundary(); refreshRoofPicker(); }, REVIT_POLL_MS);
 }
+
+let lastRoofPickerStr = null;
+
+/**
+ * The roof picker beside the "Revit connected" pill: every roof pushed this Revit session (RoofBoundaryServer.ListRoofs, one per
+ * distinct roof/floor element — a project can have several at different heights), shown only once there's more than one to choose
+ * from. Picking a different one asks the add-in to make it active (POST /roofs/active), then re-polls the boundary right away so
+ * the board updates without waiting out the next tick.
+ */
+async function refreshRoofPicker() {
+  const picker = document.getElementById("roofPicker");
+  if (!picker) return;
+  let list;
+  try {
+    const res = await localFetch("/roofs");
+    if (!res.ok) { picker.hidden = true; return; }
+    list = (await res.json()).roofs || [];
+  } catch (err) { picker.hidden = true; return; }
+
+  if (list.length < 2) { picker.hidden = true; return; }
+
+  const raw = JSON.stringify(list);
+  if (raw === lastRoofPickerStr) { picker.hidden = false; return; }
+  lastRoofPickerStr = raw;
+
+  picker.innerHTML = list.map(r =>
+    `<option value="${escapeHtml(r.id)}"${r.active ? " selected" : ""}>${escapeHtml(r.name)} (${r.length_m.toFixed(1)}×${r.width_m.toFixed(1)} m)</option>`
+  ).join("");
+  picker.hidden = false;
+}
+
+document.getElementById("roofPicker")?.addEventListener("change", async e => {
+  const id = e.target.value;
+  const res = await localFetch("/roofs/active?id=" + encodeURIComponent(id), { method: "POST" });
+  if (!res.ok) { showToast("Couldn't switch roofs", "The add-in didn't accept that roof — try again."); refreshRoofPicker(); return; }
+  lastRevitPayloadStr = null;      // force pollRevitBoundary to apply the newly active roof even if its JSON happens to match what's already on screen
+  await pollRevitBoundary();
+  await refreshRoofPicker();
+});
 
 async function pollRevitBoundary() {
   const statusEl = document.getElementById("import-revit-status");
