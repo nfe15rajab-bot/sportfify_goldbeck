@@ -27,6 +27,35 @@ function snapGridSvg(roof, scale, roofOx, roofOy) {
   return `<g class="snap-grid">${lines}</g>`;
 }
 
+function formatMetres(v) { const r = Math.round(v * 10) / 10; return Number.isInteger(r) ? String(r) : r.toFixed(1); }
+
+/**
+ * A metre ruler along the roof's top and left edges: tick marks and numeric labels at a step that adapts to
+ * zoom (never crowding closer than ~34px on screen), so a length or a width — the whole roof's, or the gap
+ * between two pieces — can be read at a glance instead of estimated by eye against the faint snap grid.
+ */
+function rulerSvg(roof, scale, roofOx, roofOy) {
+  const steps = [0.5, 1, 2, 5, 10, 20, 50, 100];
+  const step = steps.find(s => s * scale >= 34) || steps[steps.length - 1];
+  const color = isDarkMode() ? "#8c90a8" : "#666";
+  const font = `font-size="9" font-family="'Titillium Web', Arial, sans-serif" fill="${color}"`;
+  const tick = 5;
+  const xs = []; for (let x = 0; x < roof.length - 1e-6; x += step) xs.push(x); xs.push(roof.length);
+  const ys = []; for (let y = 0; y < roof.width - 1e-6; y += step) ys.push(y); ys.push(roof.width);
+  let marks = "";
+  xs.forEach(x => {
+    const px = roofOx + x * scale;
+    marks += `<line x1="${px}" y1="${roofOy - tick}" x2="${px}" y2="${roofOy}" stroke="${color}" stroke-width="1"/><text x="${px}" y="${roofOy - tick - 3}" text-anchor="middle" ${font}>${formatMetres(x)}</text>`;
+  });
+  ys.forEach(y => {
+    const py = roofOy + y * scale;
+    marks += `<line x1="${roofOx - tick}" y1="${py}" x2="${roofOx}" y2="${py}" stroke="${color}" stroke-width="1"/><text x="${roofOx - tick - 3}" y="${py + 3}" text-anchor="end" ${font}>${formatMetres(y)}</text>`;
+  });
+  marks += `<line x1="${roofOx}" y1="${roofOy}" x2="${roofOx + roof.length * scale}" y2="${roofOy}" stroke="${color}" stroke-width="1"/>`;
+  marks += `<line x1="${roofOx}" y1="${roofOy}" x2="${roofOx}" y2="${roofOy + roof.width * scale}" stroke="${color}" stroke-width="1"/>`;
+  return `<g class="roof-ruler">${marks}</g>`;
+}
+
 const KIND_COLORS = {
   field:    { stroke: "#3d6fff", fill: "rgba(61,111,255,0.35)" },
   activity: { stroke: "#9c4fe0", fill: "rgba(156,79,224,0.32)" },
@@ -457,6 +486,7 @@ function drawCombineCanvas() {
     ${roofShapeSvg(roof, scale, roofOx, roofOy, roofPxW, roofPxH)}
     ${typeof revitBoundarySvg === "function" ? revitBoundarySvg(scale, roofOx, roofOy) : ""}
     ${snapGridSvg(roof, scale, roofOx, roofOy)}
+    ${rulerSvg(roof, scale, roofOx, roofOy)}
     ${typeof zonesSvg === "function" ? zonesSvg(scale, roofOx, roofOy) : ""}
     ${typeof structureSvg === "function" ? structureSvg(scale, roofOx, roofOy) : ""}
     ${typeof roofFeaturesSvg === "function" ? roofFeaturesSvg(scale, roofOx, roofOy) : ""}

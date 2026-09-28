@@ -113,6 +113,10 @@ select:focus { border-color: var(--border-accent); outline: none; }
 .q-btn:hover { background: var(--surface-1); }
 .q-btn.active { background: var(--bg-accent); border-color: var(--border-accent); color: var(--text-accent); }
 
+/* ── Kinetics custom build size: two labeled number inputs side by side ── */
+.kinetics-custom-size { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.kinetics-custom-size label { font-size: 10px; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px; }
+
 /* ── Dimension cards ── */
 .dims { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
 .dim-card { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 8px; }
