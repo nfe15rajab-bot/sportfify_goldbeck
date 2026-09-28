@@ -365,6 +365,15 @@ function harness({ stored = null, elements = {} } = {}) {
     check("the Profile tab's content can scroll (the same fix #analysis-content/#data-content/#compare-content already have, not just centered-and-clipped by .canvas-wrap)",
       !!rule && /overflow-y:\s*auto/.test(rule[2]) && /height:\s*100%/.test(rule[2]));
   }
+  {
+    // Improve (#postAnalysis-content) was left out of the shared #analysis-content/#compare-content/#families-content/
+    // #profile-content rule when it was written — same silent-clip symptom as the Profile tab above, just on a newer
+    // tab that was not part of that fix's own list yet.
+    const css = read("style.css");
+    const rule = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].find(m => m[1].split(",").map(s => s.trim()).includes("#postAnalysis-content"));
+    check("the Improve tab's content can scroll too (#postAnalysis-content), not just centered-and-clipped by .canvas-wrap",
+      !!rule && /overflow-y:\s*auto/.test(rule[2]) && /height:\s*100%/.test(rule[2]));
+  }
 
   console.log(fails === 0 ? "\nPROFILE OK" : `\n${fails} check(s) failed`);
   process.exit(fails === 0 ? 0 : 1);
