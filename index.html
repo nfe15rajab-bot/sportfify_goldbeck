@@ -33,10 +33,13 @@
 
         <div id="landingPreviewStep">
           <div class="landing-preview" id="landingPreview">
-            <div class="landing-carousel-wrap">
+            <div class="landing-carousel-wrap" id="landingCarouselWrap">
               <img class="landing-carousel-img" id="landingCarouselImg" src="samples/landing-shot-combine.jpg" alt="A Sportify analysis screen" />
               <button type="button" class="landing-carousel-toggle" id="btn-landing-carousel-toggle"><i class="ti ti-player-pause-filled" aria-hidden="true"></i></button>
             </div>
+            <!-- Swapped in for the slideshow above, live, whenever Revit is connected AND has a roof pushed (landingPreview3d.js) — the actual
+                 connected roof turning slowly, instead of a screenshot. Falls back to the slideshow the moment either stops being true. -->
+            <canvas class="landing-preview-3d" id="landingPreviewCanvas" hidden></canvas>
             <p class="hint landing-carousel-caption" id="landingCarouselCaption">Several courts placed and priced on a real roof, in Combine.</p>
           </div>
 
@@ -118,7 +121,11 @@
     </div>
 
     <!-- One step through the design workflow (Site through Revit families); workflowNext.js shows/hides/labels it for whatever tab is on screen -->
-    <button type="button" class="workflow-next-btn" id="workflowNextBtn" hidden><span id="workflowNextLabel"></span><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    <div class="workflow-next-row" id="workflowNextRow">
+      <button type="button" class="workflow-next-btn workflow-next-btn-secondary" id="workflowApplyBtn" hidden title="Apply to Combine — puts the algorithm's preview on the board, so it can be sent to Revit"><i class="ti ti-check" aria-hidden="true"></i>Sync with Revit</button>
+      <button type="button" class="workflow-next-btn workflow-next-btn-secondary" id="workflowSaveCompareBtn" hidden><i class="ti ti-chart-bar" aria-hidden="true"></i>Save for Compare</button>
+      <button type="button" class="workflow-next-btn" id="workflowNextBtn" hidden><span id="workflowNextLabel"></span><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    </div>
 
     <div class="mode-toggle">
       <button id="modeGuide" class="mode-btn active">Overview</button>
@@ -1343,6 +1350,7 @@
   <script src="tour.js?v=2026-09-27-workflownext2"></script>
   <script src="whereCore.js?v=2026-09-27-workflownext2"></script>
   <script src="where.js?v=2026-09-27-workflownext2"></script>
+  <script src="landingPreview3d.js?v=2026-09-27-workflownext2"></script>
   <script src="sessionGate.js?v=2026-09-27-workflownext2"></script>
   <script src="workflowNext.js?v=2026-09-27-workflownext2"></script>
   <script src="main.js?v=2026-09-27-workflownext2"></script>

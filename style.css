@@ -451,6 +451,24 @@ html[data-role="client"] .planner-only { display: none !important; }
 .iterations-pane { flex: 0 1 200px; min-width: 140px; max-width: 400px; height: 100%; display: flex; flex-direction: column; background: var(--surface-2); border-left: 0.5px solid var(--border); padding: 14px 12px; overflow-y: auto; overflow-x: auto; }
 .iterations-pane-header { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; color: var(--text-primary); }
 .iterations-pane-hint { margin: 4px 0 12px; }
+
+/* Below this, the three columns' own min-widths (260 + 300 + 140, plus the 48px rail) are all sitting at their
+   floor at once — every panel legible in isolation, but the whole screen cramped. Real window widths this narrow
+   come up mainly docked inside Revit (a WebView2 pane sharing space with the model view), not a normal browser
+   tab, so this is keyed on width alone the same way .algo-body's own breakpoint above is. Stacked instead of
+   squeezed: the roof gets a real height back, and the two side panels scroll below it rather than fighting it
+   for width. */
+@media (max-width: 1000px) {
+  /* .canvas-wrap (this element's real parent) is a fixed-height, overflow:hidden flex row everywhere else in the
+     app (a lone SVG or the 2D/3D canvas never needs to scroll) — stacking the three columns here makes this
+     particular child taller than that box, so this is the one place that box needs to scroll instead of clip. */
+  .canvas-wrap:has(> #combineConfigurator) { overflow-y: auto; }
+  #combineConfigurator { flex-direction: column; height: auto; min-height: 100%; }
+  .combine-roof-pane { flex: 0 0 auto; min-width: 0; min-height: 340px; }
+  .combine-step-pane { flex: 0 0 auto; min-width: 0; max-width: none; height: auto; border-left: none; border-top: 0.5px solid var(--border); }
+  .iterations-pane { flex: 0 0 auto; min-width: 0; max-width: none; height: auto; max-height: 260px; border-left: none; border-top: 0.5px solid var(--border); }
+  .panel-resizer { display: none; }
+}
 .iterations-section .hint { margin-bottom: 10px; }
 .iterations-list { display: flex; flex-direction: column; gap: 8px; }
 .iteration-card { display: flex; flex-direction: column; gap: 5px; padding: 6px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface-1); cursor: pointer; text-align: left; }
@@ -458,6 +476,13 @@ html[data-role="client"] .planner-only { display: none !important; }
 .iteration-card-thumb { width: 100%; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
 .iteration-card-thumb svg { width: 100%; height: auto; display: block; }
 .iteration-card-label { font-size: 10.5px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.iterations-archived { margin-top: 10px; }
+.iterations-archived summary { font-size: 11px; font-weight: 700; color: var(--text-secondary); cursor: pointer; list-style: none; }
+.iterations-archived summary::-webkit-details-marker { display: none; }
+.iterations-archived summary::before { content: "▸ "; }
+.iterations-archived[open] summary::before { content: "▾ "; }
+.iterations-archived-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; opacity: 0.7; }
 
 /* ── Combine tray — pushed-but-unplaced pieces, dragged onto the roof ──
  * A mini-game-style inventory tray: a piece pushed from Sport/Garden lands
@@ -536,10 +561,15 @@ html[data-role="client"] .planner-only { display: none !important; }
 /* ── One step through the design workflow (workflowNext.js) — fixed on the page, not built into any one tab's own
    (very different) markup, so it appears the same way in all of them; clear of .combine-zoom-controls (top-right,
    inside the canvas) and .toast-container (top-right, the viewport) since this sits at the opposite corner. ── */
-.workflow-next-btn { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; align-items: center; gap: 7px; padding: 11px 18px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--fill-accent), var(--violet)); color: #fff; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 26px rgba(61,111,255,0.35); transition: transform 0.12s ease; }
+.workflow-next-row { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; align-items: center; gap: 8px; }
+.workflow-next-btn { display: flex; align-items: center; gap: 7px; padding: 11px 18px; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--fill-accent), var(--violet)); color: #fff; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 26px rgba(61,111,255,0.35); transition: transform 0.12s ease; }
 .workflow-next-btn:hover { transform: translateY(-1px); }
 .workflow-next-btn[hidden] { display: none; }
 .workflow-next-btn i { font-size: 14px; }
+/* Apply to Combine / Save for Compare beside the main Next button: real shortcuts to actions that already exist
+   in the Design panel, not a second source of truth — each just clicks its real button (workflowNext.js) — so a
+   quieter treatment than the accent "Next" pill keeps that one button reading as the primary action. */
+.workflow-next-btn-secondary { background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border-strong); box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
 
 /* ── Activity bar ── */
 /* VS Code-style: a persistent, always-visible rail for Sport/Garden/Combine
@@ -730,6 +760,7 @@ html[data-role="client"] .planner-only { display: none !important; }
 .landing-carousel-toggle { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: none; background: rgba(8,9,20,0.55); color: #fff; font-size: 13px; cursor: pointer; backdrop-filter: blur(2px); }
 .landing-carousel-toggle:hover { background: rgba(8,9,20,0.8); }
 .landing-carousel-caption { font-size: 10.5px; margin: 6px 2px 0; text-align: left; }
+.landing-preview-3d { width: 100%; height: 220px; display: block; border-radius: calc(var(--radius) * 1.4); background: #0b0c14; }
 
 .landing-features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
 .landing-feature { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; text-align: left; font-size: 11px; line-height: 1.4; color: var(--text-secondary); background: var(--surface-1); border: 0.5px solid var(--border-strong); border-radius: var(--radius); }

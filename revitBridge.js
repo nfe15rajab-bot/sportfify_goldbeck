@@ -7,6 +7,11 @@
 const REVIT_POLL_MS = 2000;
 let revitPollHandle = null;
 let lastRevitPayloadStr = null;
+// True from the first roof this session actually receives from a live Revit connection onward (sticky through a
+// later reconnect, same as combineState.roof itself) — landingPreview3d.js's gate for showing the live 3D preview
+// instead of the landing page's slideshow: "connected" alone isn't enough, since a freshly opened project with
+// nothing pushed yet would otherwise show whatever roof combineState already held (a demo/autosave, not Revit's).
+let revitRoofPushed = false;
 
 function startRevitPolling() {
   if (revitPollHandle) return;
@@ -26,6 +31,7 @@ async function pollRevitBoundary() {
     const raw = JSON.stringify(data);
     if (raw === lastRevitPayloadStr) return;
     lastRevitPayloadStr = raw;
+    revitRoofPushed = true;
 
     const roof = data.roof;
     combineState.roof.length = roof.length_m;
@@ -68,6 +74,7 @@ async function pollRevitBoundary() {
       if (typeof refreshSuggestions === "function") refreshSuggestions();
       else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
     }
+    if (typeof landingPreview3dCheck === "function") landingPreview3dCheck();
   } catch (err) {
     if(statusEl) statusEl.textContent = "Revit not open. Import an exported file, or enter the size by hand.";
   }

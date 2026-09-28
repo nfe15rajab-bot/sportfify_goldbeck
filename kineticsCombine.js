@@ -85,7 +85,7 @@ function kineticsPanelHtml() {
          <label>Build size</label>
          <select id="kinetics-size-select">${sizeKeys.map(sk => {
            const v = k.variants[sk];
-           return `<option value="${escapeHtml(sk)}"${sk === size ? " selected" : ""}>${escapeHtml(kineticsBuildSizeLabel(sk))} — ${v.note} (${v.length} × ${v.width} m)</option>`;
+           return `<option value="${escapeHtml(sk)}"${sk === size ? " selected" : ""}>${escapeHtml(kineticsBuildSizeLabel(sk))} — ${escapeHtml(v.note)} (${v.length} × ${v.width} m)</option>`;
          }).join("")}</select>
          <p class="hint">Standard build sizes for fabrication, not a free-form dimension — the same reasoning a manufacturer's own size chart gives.</p>
        </div>`
@@ -107,7 +107,7 @@ function kineticsPanelHtml() {
 
     <div class="section">
       <div class="dims">
-        <div class="dim-card"><div class="val">${fp.length} × ${fp.width} m</div><div class="lbl">Footprint · ${fp.note}</div></div>
+        <div class="dim-card"><div class="val">${fp.length} × ${fp.width} m</div><div class="lbl">Footprint · ${escapeHtml(fp.note)}</div></div>
         <div class="dim-card"><div class="val">${k.built ? "Yes" : "Not yet"}</div><div class="lbl">Real mechanics in Revit</div></div>
       </div>
       <p class="hint">${escapeHtml(k.hint)}</p>

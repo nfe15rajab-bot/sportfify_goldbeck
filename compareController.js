@@ -104,15 +104,27 @@ function buildGoldbeckCompareConfigDefs() {
  * default slots are never evicted by a save landing in another slot.
  */
 let savedCompareConfigs = [];
+// Iterations Revit's "Accept as Primary" (SwitchIterationCommand) moved out of the active list — see acceptPrimaryIteration below.
+// Still real entries (same shape as savedCompareConfigs, still clickable to load back into Combine), just out of the way.
+let archivedCompareConfigs = [];
 
 function saveConfigToCompare(payload) {
   const sportCount = payload.placements.filter(pl => pl.category === "field" || pl.category === "activity").length;
   const gardenCount = payload.placements.filter(pl => pl.category === "garden").length;
+  const defaultName = `Saved Layout ${savedCompareConfigs.length + 1}`;
+  // A name of their own, not just a running number that looks the same across sessions once the oldest is
+  // replaced (three "Saved Layout 4"-ish cards in a row told nothing apart at a glance). Cancelling keeps the
+  // default rather than blocking the save — naming is a nicety, not a requirement.
+  const typed = typeof window !== "undefined" && typeof window.prompt === "function" ? window.prompt("Name this saved layout:", defaultName) : null;
+  const name = typed && typed.trim() ? typed.trim() : defaultName;
   const entry = {
     id: `saved_${Date.now()}`,
-    name: `Saved Layout ${savedCompareConfigs.length + 1}`,
+    name,
     tagline: `Saved from Combine — ${sportCount} sport, ${gardenCount} garden piece(s) on ${payload.roof_context.length_m}×${payload.roof_context.width_m} m.`,
     payload,
+    // Which of Manual/Algorithmic placement was open when this was saved — restored on load (below) instead of
+    // always landing back on Manual, so an iteration built by the algorithm still shows its own panel afterward.
+    mode: typeof algoState !== "undefined" && algoState.mode === "algo" ? "algo" : "manual",
   };
   savedCompareConfigs.push(entry);
   if (savedCompareConfigs.length > 3) savedCompareConfigs.shift();
@@ -158,12 +170,38 @@ function renderIterationsPanels() {
   const html = savedCompareConfigs.length === 0
     ? `<p class="hint">No saved iterations yet — use "Save for Compare" in Combine.</p>`
     : savedCompareConfigs.map(iterationCardHtml).join("");
+  const archivedHtml = archivedCompareConfigs.length === 0 ? "" : `
+    <details class="iterations-archived">
+      <summary>Archived (${archivedCompareConfigs.length})</summary>
+      <div class="iterations-archived-list">${archivedCompareConfigs.map(iterationCardHtml).join("")}</div>
+    </details>`;
   ["iterationsListCombine", "iterationsListAnalysis"].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
+    if (el) el.innerHTML = html + archivedHtml;
   });
   const sendBtn = document.getElementById("btn-send-iterations-revit");
   if (sendBtn) sendBtn.disabled = savedCompareConfigs.length === 0;
+}
+
+/**
+ * Revit's "Accept as Primary" (SwitchIterationCommand, "Show Iteration" dialog): the user picked one imported iteration
+ * as the final layout, so every OTHER saved iteration moves into the collapsed "Archived" section — still there, still
+ * loadable, just out of the active list. Matches by the saved layout's own id first (round-tripped through POST
+ * /iterations and Revit's IterationSourceIds this session), falling back to the 1-based send-order position when Revit
+ * has no id for it (the project was reopened without a fresh "Import Iterations as Design Options" run).
+ * Called once per newly-accepted primary by workspaceBridge.js's pullAcceptedPrimary.
+ */
+function acceptPrimaryIteration(primary) {
+  if (!primary || savedCompareConfigs.length === 0) return;
+  const byId = primary.id ? savedCompareConfigs.find(c => c.id === primary.id) : null;
+  const keep = byId || savedCompareConfigs[primary.index - 1];
+  if (!keep) return;
+  const others = savedCompareConfigs.filter(c => c !== keep);
+  if (others.length === 0) return;      // nothing else to archive
+  archivedCompareConfigs = others.concat(archivedCompareConfigs);
+  savedCompareConfigs = [keep];
+  renderIterationsPanels();
+  showToast("Primary iteration accepted", `"${keep.name}" stays active — ${others.length} other saved iteration${others.length === 1 ? "" : "s"} archived.`);
 }
 
 /**
@@ -194,11 +232,12 @@ document.getElementById("btn-send-iterations-revit")?.addEventListener("click", 
 document.addEventListener("click", e => {
   const card = e.target.closest(".iteration-card");
   if (!card) return;
-  const entry = savedCompareConfigs.find(c => c.id === card.dataset.iterationId);
+  const entry = savedCompareConfigs.find(c => c.id === card.dataset.iterationId) || archivedCompareConfigs.find(c => c.id === card.dataset.iterationId);
   if (!entry) return;
   try {
     applySessionSnapshot(entry.payload);
     if (activeMode === "combine") {
+      if (typeof algoSetMode === "function") algoSetMode(entry.mode === "algo" ? "algo" : "manual");
       if (typeof setWizardStep === "function") setWizardStep(2);
       showToast(entry.name, "Loaded into Combine — Tools tab.");
     } else if (activeMode === "analysis" && typeof updateAnalysisUI === "function") {

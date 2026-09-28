@@ -90,7 +90,10 @@ function showPreviewStep() {
   landingSplitEl.hidden = true;
   gateShowMainActions(false);
   gateCardEl.classList.add("session-gate-landing");
-  if (!gatePrefersReducedMotion) landingCarouselStart();
+  // landingPreview3dCheck decides between the two: it starts the carousel itself (respecting gatePrefersReducedMotion)
+  // when Revit isn't connected with a pushed roof, and stops it (showing the live 3D view instead) when it is.
+  if (typeof landingPreview3dCheck === "function") landingPreview3dCheck();
+  else if (!gatePrefersReducedMotion) landingCarouselStart();
 }
 function showSplitStep() {
   landingPreviewStepEl.hidden = true;
@@ -98,6 +101,7 @@ function showSplitStep() {
   gateShowMainActions(false);
   gateCardEl.classList.add("session-gate-landing");
   landingCarouselStop();
+  if (typeof landingPreview3dStop === "function") landingPreview3dStop();
 }
 /** The returning-user's practical actions (Resume/Start new/Preset) — the slideshow stops rather than keep advancing off-screen. */
 function showReturningActions() {
@@ -106,6 +110,7 @@ function showReturningActions() {
   gateShowMainActions(true);
   gateCardEl.classList.remove("session-gate-landing");
   landingCarouselStop();
+  if (typeof landingPreview3dStop === "function") landingPreview3dStop();
 }
 if (gateHasHistory()) showReturningActions(); else showPreviewStep();
 
@@ -128,6 +133,10 @@ function landingShowSlide(i) {
   if (!landingCarouselImgEl || !slide) return;
   landingCarouselImgEl.style.opacity = "0";
   setTimeout(() => {
+    // A transition already in flight (this very call included — the unconditional landingShowSlide(0) below fires
+    // before the first workspace poll can possibly answer) must not clobber the caption after landingPreview3d.js
+    // has since switched to the live 3D view: it owns the caption while showing, same as it owns the canvas/wrap swap.
+    if (typeof landingPreview3d !== "undefined" && landingPreview3d.showing) return;
     landingCarouselImgEl.src = slide.src;
     if (landingCarouselCaptionEl) landingCarouselCaptionEl.textContent = slide.caption;
     landingCarouselImgEl.style.opacity = "1";
