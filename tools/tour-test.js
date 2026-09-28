@@ -148,7 +148,7 @@ const allTargets = () => Object.fromEntries(tour.TOUR_STEPS.filter(s => s.target
     check("Back goes to the step before, into its workspace (the Overview again)", /Step 4 of 15/.test(p.card()) && p.calls.setMode.at(-1) === "guide" && !/data-tour-act="back" disabled/.test(p.card()));
     for (let i = 0; i < 20; i++) { if (!p.run("tourState.active")) break; p.click("next"); await p.settle(); }
     const visited = p.calls.setMode.filter((m, i, a) => i === 0 || m !== a[i - 1]);
-    check("going through the whole tour visits the workspaces in the plan's order", visited.join() === "site,guide,site,sport,combine,analysis,structure,conditions,compare,postAnalysis,deliverables,profile,guide", visited.join());
+    check("going through the whole tour visits the workspaces in the plan's order", visited.join() === "site,guide,site,sport,combine,analysis,structure,conditions,postAnalysis,compare,deliverables,profile,guide", visited.join());
     check("the last step says Finish, and finishing closes the overlay, puts the person back on the Overview, and says so", p.overlay().style.display === "none" && p.run("tourState.active") === false && p.sandbox.activeMode === "guide" && p.calls.toasts.some(t => /That was the tour/.test(t)));
   }
   {
