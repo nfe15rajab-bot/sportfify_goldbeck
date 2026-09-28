@@ -49,7 +49,11 @@ function combinePreviewSnapshot() {
       const fp = typeof getFootprint === "function" ? getFootprint(it) : { w: it.length_m, h: it.width_m };
       return { id: it.id, kind: it.kind, label: it.label, x_m: it.x_m, y_m: it.y_m, w: fp.w, h: fp.h, sourceJson: it.sourceJson };
     }),
-    zones: (combineState.zones || []).map(z => ({ id: z.id, kind: z.kind, points: z.points })),
+    zones: (combineState.zones || []).map(z => ({ id: z.id, kind: z.kind, points: z.points,
+      // The tray, so a zone built in one has real depth in the 3D instead of being painted on the deck.
+      family: typeof greenRoofFamilyPayload === "function"
+        ? greenRoofFamilyPayload(z.familyKey, typeof getAssembly === "function" ? getAssembly(z.assemblyKey) : null, z.length_m, z.width_m)
+        : null })),
     walls: combineState.walls || [],
     structure: combineState.structure || null,
     entries: combineState.entryPoints || [],
