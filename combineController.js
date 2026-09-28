@@ -750,6 +750,25 @@ function applySessionSnapshot(payload, opts = {}) {
     if (typeof algoSave === "function") algoSave();
   }
 
+  // Algorithmic placement's own per-catalogue counts: without this, a resumed/imported session's placed pieces (a Sand Pit, a
+  // Trampoline, ...) never showed up as "already placed" in the Algorithmic tab's quantity steppers, which stayed at whatever they
+  // last were (usually all zero) even though the exact same pieces were sitting right there on the board — confusing when deciding
+  // how many MORE to generate, and the reason a freshly imported session's Algorithmic tab looked empty. Reset (not merged: a loaded
+  // session only ever describes placed pieces, same reasoning as combineState.tray above) and rebuilt from what actually imported,
+  // via the same kind+id -> engine-name lookup the board itself already uses (itemZoneInfo, combineField.js) to know which zone and
+  // setback rule a piece follows. A piece the engine does not offer a name for (kinetics, or a Revit-only family with no algorithmic
+  // counterpart) is simply not counted, same as it is already not offered as a name in ALGO_LISTS.
+  if (typeof algoState !== "undefined" && typeof itemZoneInfo === "function") {
+    algoState.qty = {};
+    combineState.items.forEach(item => {
+      const info = itemZoneInfo(item);
+      if (info.name) algoState.qty[info.name] = (algoState.qty[info.name] || 0) + 1;
+    });
+    algoState.good = Object.assign({}, algoState.qty);
+    if (typeof algoSave === "function") algoSave();
+    if (typeof algoBuildPanel === "function") algoBuildPanel();
+  }
+
   const sc = payload.site_conditions;
   if (sc) {
     siteState.northSet = sc.north_set ?? sc.north_deg != null;
