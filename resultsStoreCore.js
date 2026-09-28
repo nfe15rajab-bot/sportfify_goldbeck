@@ -31,7 +31,7 @@ const RESULTS_GROUPS = [
 ];
 
 /**
- * Every analysis, keyed by the name of the section the Revit add-in publishes it under (RESULT_SECTIONS in analysisResults.js has the same keys plus "kinetics", which lives in the Improve tab).
+ * Every analysis, keyed by the name of the section the Revit add-in publishes it under (RESULT_SECTIONS in analysisResults.js has the same keys plus "kinetics", which has no web tab of its own).
  *   estimate  which quick estimate this app computes for it ("fire", "access", "water", "wind", "lca"), or null: it has none, only Revit's full analysis
  *   piece     which pieces it says something about: "all", "garden" (only garden pieces), or null (a whole-roof analysis)
  */

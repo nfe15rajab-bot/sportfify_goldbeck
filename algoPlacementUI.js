@@ -45,7 +45,7 @@ const ALGO_CATALOGUE = {
   "Modular Tower Slide": { kind: "activity", id: "modular_tower_slide" },
   "Climbing Tower": { kind: "activity", id: "climbing_tower" },
   "Balance Logs": { kind: "activity", id: "balance_logs" },
-  "Locker & Dressing Room Module": { kind: "activity", id: "locker_module" },
+  "Locker & Dressing Room Module": { kind: "activity", id: "locker_room" },     // the 10 x 5 m Locker Room (locker_module is now the Locker Bank family)
   "Bathroom & Shower Module": { kind: "activity", id: "bathroom_module" },
   "Rest / Hydration Area": { kind: "activity", id: "rest_area" },
   // the Garden tab's blocks (planters.js): sized there, and on the board the same brown garden blocks Push to Combine makes
@@ -76,6 +76,13 @@ const ALGO_SPECIFIED = {
     field: "volleyball",
     ready: () => typeof volleyballState !== "undefined" && typeof volleyballFootprint === "function" && typeof volleyballPlacementPayload === "function",
     state: () => volleyballState, footprint: s => volleyballFootprint(s), payload: s => volleyballPlacementPayload(s)
+  },
+  // Football follows Moamen's football module (footballCourt.js, user 2026-09-28): the court type chosen in the Sport tab (futsal / small-sided / mini)
+  // with that type's own run-off, as the Sport tab's Push to Combine places it
+  "Football": {
+    field: "football",
+    ready: () => typeof footballState !== "undefined" && typeof footballFootprint === "function" && typeof footballPlacementPayload === "function",
+    state: () => footballState, footprint: s => footballFootprint(s), payload: s => footballPlacementPayload(s)
   }
 };
 
@@ -96,11 +103,11 @@ const ALGO_LISTS = [
   { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] },
-  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] },
-  { heading: "Kinetic elements", names: ["Overhead Louvre (Pergola)", "Tensile Sail (Movable Pillars)", "Solar-Tracking PV Canopy", "Retractable Membrane Roof"] }
+  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] }
+  // (the Kinetic elements are no longer offered here (user, 2026-09-28); their engine entries and ALGO_CATALOGUE mapping stay for the Kinetics tab)
 ];
 /** Which headings each roof type shows. Garden Core keeps only the garden activities and blocks; Mixed and a roof with no type yet show everything. Kinetic elements (shade/PV/screening) are relevant to both. */
-const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services", "Kinetic elements"], garden: ["Garden activities", "Garden blocks", "Kinetic elements"] };
+const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services"], garden: ["Garden activities", "Garden blocks"] };
 
 /** The lists the current roof type offers: [{ heading, names }]. */
 function algoListsForRoof() {
@@ -201,8 +208,9 @@ function algoAdoptSpecifiedSizes() {
     if (!sp || ALGO_SPECIFIED[name]) continue;
     const act = cat.kind === "activity" && typeof ACTIVITIES !== "undefined" ? ACTIVITIES[cat.id] : null;
     if (!tier && !act) continue;
+    const mod = cat.kind === "activity" ? algoActivityModuleSize(cat.id) : null;     // an activity Moamen's module sizes: as the Sport tab does
     const d = cat.kind === "field" ? (typeof FIELDS !== "undefined" && FIELDS[cat.sport] && FIELDS[cat.sport][tier])
-                                   : act && (tier ? act.variants && act.variants[tier] : { l: act.length, w: act.width });
+                                   : mod || (act && (tier ? act.variants && act.variants[tier] : { l: act.length, w: act.width }));
     if (!d) continue;
     const run = cat.kind === "field" ? (d.runoff || 0) * 2 : 0;
     const long = algoRound(Math.max(d.l, d.w) + run), short = algoRound(Math.min(d.l, d.w) + run);
@@ -378,7 +386,12 @@ function algoSportMeta(sp) {
   const fmt = n => String(Math.round(n * 10) / 10);
   const tier = algoTierOf(sp.name);
   const parts = [];
-  if (tier) parts.push(`<span class="algo-tier" title="Size variant, chosen in the Sport tab">${algoEsc(sportTierLabel(tier))}</span>`);
+  if (sp.name === "Football" && typeof footballState !== "undefined") {
+    // football is sized by Moamen's court type (Futsal / Small-sided / Mini), not a size tier: the tag shows that type, named as the Sport tab names it
+    const key = footballState.courtType, fromDb = typeof FOOTBALL_OPTIONS !== "undefined" && FOOTBALL_OPTIONS.courtType && FOOTBALL_OPTIONS.courtType.values[key];
+    const typeName = (fromDb && fromDb.label) || { futsal: "Futsal", small_sided: "Small-sided", mini: "Mini" }[key] || key;
+    parts.push(`<span class="algo-tier" title="Court type, chosen in the Sport tab">${algoEsc(typeName)}</span>`);
+  } else if (tier) parts.push(`<span class="algo-tier" title="Size variant, chosen in the Sport tab">${algoEsc(sportTierLabel(tier))}</span>`);
   parts.push(`<span title="Footprint">${fmt(sp.long)} × ${fmt(sp.short)} m</span>`, `<span title="Area">${fmt(sp.long * sp.short)} m²</span>`);
   if (sp.headcount == null && !sp.headcountNote && sp.deadLoad == null) {
     parts.push(`<span class="algo-sport-none" title="Headcount and dead load come from the reference sheet, which does not list this court">headcount and dead load: not in the reference sheet</span>`);
@@ -456,7 +469,7 @@ function algoBuildPanel() {
           <p class="hint">The whole roof footprint is available. The pathway network starts at the <strong>entry points</strong> you placed on the roof edge in Manual placement: it crosses the garden band from each door and joins them into one.</p>
           <div id="algo-blocks" class="algo-blocks"></div>
           <div class="algo-row-buttons">
-            <button class="btn-export" data-act="back"><i class="ti ti-door-enter" aria-hidden="true"></i>Edit entry points in Manual placement</button>
+            <button class="btn-export" data-act="entries"><i class="ti ti-door-enter" aria-hidden="true"></i>Edit entry points</button>
           </div>
         </section>
         <section class="algo-card"><h3>2 · Settings</h3>
@@ -520,6 +533,7 @@ function algoBindPanel(panel) {
     else if (act === "shuffle") algoShuffle();
     else if (act === "clear-applied") algoClearApplied(true);
     else if (act === "back") algoSetMode("manual");
+    else if (act === "entries" && typeof setMode === "function") setMode("roofAccess");      // entry points live in Roof Type and Accessibility
   });
   panel.addEventListener("input", e => {
     const t = e.target;
@@ -1122,8 +1136,20 @@ function algoFieldRunoff(name) {
   const st = ALGO_SPECIFIED[name] ? algoSpecifiedState(name) : null;
   if (name === "Volleyball" && st && typeof volleyballFreeZone === "function") { const z = volleyballFreeZone(st); return { ends: z.ends_m, sides: z.sides_m }; }
   if (name === "Basketball Court" && st && typeof basketballPlayArea === "function") { const p = basketballPlayArea(st); return { ends: p.insetX_m, sides: p.insetY_m }; }
+  if (name === "Football" && st && typeof footballType === "function") { const t = footballType(st); return { ends: t.runoff_m, sides: t.runoff_m }; }
   const d = typeof FIELDS !== "undefined" && FIELDS[cat.sport] && FIELDS[cat.sport][tier];
   return { ends: d ? d.runoff || 0 : 0, sides: d ? d.runoff || 0 : 0 };
+}
+
+/**
+ * An activity whose Sport tab size comes from its own module (Moamen's), in metres { l, w }, or null: Algorithmic placement follows the Sport
+ * tab (user, 2026-09-28). Ping Pong = the chosen playing space round the ITTF table (pingPongTable.js); Climbing Tower = the family's widest
+ * radius across (climbingTower.js). The Ping Pong pair is worked out from the single table's size, so it follows too.
+ */
+function algoActivityModuleSize(id) {
+  if (id === "ping_pong" && typeof pingPongFootprint === "function") { const f = pingPongFootprint(); return { l: f.length_m, w: f.width_m }; }
+  if (id === "climbing_tower" && typeof towerFootprintM === "function") { const f = towerFootprintM(); return { l: f.length_m, w: f.width_m }; }
+  return null;
 }
 
 /** A Garden tab block's size in metres, { l, w }, as the Garden tab has it now; null if planters.js is not loaded. */
@@ -1180,7 +1206,11 @@ function algoCatalogueSource(name, sp) {
     quality_key: typeof getActivityQualityKey === "function" ? getActivityQualityKey(cat.id) : "",
     activity: Object.assign({ type_id: cat.id, category: a ? a.category : "court", norm: a ? a.norm : "", dimensions: { length_m: sp.long, width_m: sp.short } },
       algoTierOf(name) && a && a.variants ? { variant: algoTierOf(name), norm: a.variants[algoTierOf(name)].norm } : {}),
-    materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null }
+    materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null },
+    // what the Sport tab's own push carries for a module-sized activity, so Revit gets the same settings (sportController.js buildActivityPayload)
+    ping_pong: cat.id === "ping_pong" && typeof pingPongPlacementPayload === "function" ? pingPongPlacementPayload() : undefined,
+    familyInstance: cat.id === "climbing_tower" && typeof climbingTowerPayload === "function" ? climbingTowerPayload()
+      : (typeof isActivityFamily === "function" && isActivityFamily(cat.id) && typeof activityFamilyPayload === "function") ? activityFamilyPayload(cat.id) : undefined
   };
 }
 
@@ -1256,10 +1286,14 @@ async function algoApply() {
     ensureZoneState();
     const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
     withoutBuildUp = !assembly;
+    // The tray the designer picked in the Zones panel, same as a hand-drawn zone
+    // gets. Without this the algorithm's zones came out as bare floors while the
+    // one zone drawn by hand had a tray — the same roof described two ways.
+    const family = combineState.zoneFamily || null;
     const rects = (plan.bandRects || algoState.site.bandRects).concat(plan.pockets).filter(r => r[2] - r[0] >= 0.3 && r[3] - r[1] >= 0.3);
     rects.forEach((r, i) => {
       // A zone is a polygon (zones.js): `points` is the truth and the box is derived from it, so the pocket is made as the rectangle it is.
-      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
+      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, familyKey: family, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
       combineState.zones.push(syncZoneBounds(zone));
       zoneCount++;
     });

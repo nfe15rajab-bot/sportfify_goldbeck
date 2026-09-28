@@ -200,7 +200,7 @@ const snapshot = (over = {}) => ({
   const field = read("combineField.js"), zones = read("zones.js");
   const kinds = Object.entries(P.PREVIEW_KIND_COLORS).every(([k, hex]) => new RegExp(k + ":\\s*\\{\\s*stroke:\\s*\"" + hex + "\"", "i").test(field));
   check("the 3D colours of the kinds are the plan's (combineField.js KIND_COLORS)", kinds);
-  check("...and the green roof zone's is the zone kind's (zones.js)", /green_roof:[\s\S]*?color:\s*"#4a9c5d"/.test(zones));
+  check("...and the green roof zone's is the zone kind's (zones.js)", /green_roof:[\s\S]*?color:\s*"#7fa046"/.test(zones));
 }
 
 // ---------------------------------------------------------------------------------------------------------------- preview.js against a stand-in page

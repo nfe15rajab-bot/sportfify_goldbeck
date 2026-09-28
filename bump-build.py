@@ -60,12 +60,29 @@ def main() -> int:
 
     index_path = ROOT / "index.html"
     html = io.open(index_path, encoding="utf-8").read()
-    stamped = html.count(f"?v={old}")
-    io.open(index_path, "w", encoding="utf-8", newline="\n").write(html.replace(f"?v={old}", f"?v={new}"))
+
+    # EVERY ?v=, not only the ones carrying the previous build.
+    #
+    # This used to be html.replace(f"?v={old}", ...), which restamps a URL only
+    # if it already holds the exact previous stamp. A file added with a
+    # hand-typed stamp that did not match therefore missed that run — and every
+    # run after it, because it was never equal to `old` again. It froze.
+    #
+    # Five files had frozen this way (components.js, footballCourt.js,
+    # activityFamilies.js, pingPongTable.js, climbingTower.js): edits to them
+    # shipped, but any browser holding the old URL kept serving its cache, so
+    # the code on screen was not the code in the repository. That is the exact
+    # failure this script exists to prevent.
+    before = set(re.findall(r'\?v=([^"\']+)', html))
+    html_new, stamped = re.subn(r'\?v=[^"\']+', f"?v={new}", html)
+    io.open(index_path, "w", encoding="utf-8", newline="\n").write(html_new)
 
     print(f"{old}  ->  {new}")
     print(f"  data.js: SPORTIFY_BUILD updated")
     print(f"  index.html: {stamped} script/stylesheet URL(s) restamped")
+    stale = sorted(v for v in before if v not in (old, new))
+    if stale:
+        print(f"  (also caught {len(stale)} URL(s) left on other stamp(s): {', '.join(stale)})")
     print()
     print("Reload the page (and rebuild the add-in if the in-Revit copy matters).")
     return 0

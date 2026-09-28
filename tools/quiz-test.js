@@ -84,7 +84,7 @@ check("a landing the profile does not allow is dropped, one it allows is kept", 
 check("onboarded is only ever true or false", core.normalizeProfile({ onboarded: true }).onboarded === true && core.normalizeProfile({ onboarded: "yes" }).onboarded === false && core.normalizeProfile({}).onboarded === false);
 check("Simple with an extra shows the extra's tab and nothing else more; Advanced ignores extras; an unknown extra brings nothing", core.profileModeVisible("simple", "structure", ["structure"]) && !core.profileModeVisible("simple", "conditions", ["structure"]) && !core.profileModeVisible("simple", "structure", ["nope"]) && !core.profileModeVisible("simple", "structure") && core.profileModeVisible("advanced", "structure", []));
 check("safety and carbon add no tab (their results are in Results): Simple stays as it is for them", core.profileHiddenModes("simple", ["safety", "carbon"]).join() === core.profileHiddenModes("simple").join());
-check("the tabs Simple hides shrink by exactly the extras' tabs", core.profileHiddenModes("simple", ["structure", "conditions"]).join() === "compare,postAnalysis,data,families");
+check("the tabs Simple hides shrink by exactly the extras' tabs", core.profileHiddenModes("simple", ["structure", "conditions"]).join() === "compare,data,families");
 
 // ---------------------------------------------------------------------------------------------------------------- the files
 const html = read("index.html");

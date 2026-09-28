@@ -13,6 +13,34 @@ let dragState = null; // { kind: "item"|"entry", id, startPtX, startPtY, startXm
 
 function snapToGrid(v) { return Math.round(v / SNAP_GRID_M) * SNAP_GRID_M; }
 
+const PAIR_SNAP_M = 0.5;   // a Ping Pong table dragged this close to a pair spot beside another table snaps into it
+
+/**
+ * Ping Pong tables only (user, 2026-09-28): a table's size (e.g. 7.6 x 4.6 m) is not a multiple of the 0.5 m grid, so on the grid alone two tables can never
+ * touch - they overlap by 0.1 m or leave a 0.4 m gap, and the pair rule flags both. Dragged near the spot where it would stand long edge to long edge beside
+ * another table, ends lined up (the Algorithmic placement's Ping Pong pair), the table snaps exactly into that spot instead. `rawX/rawY` = where the pointer
+ * puts it before any snapping; returns [x, y] (the grid position when no pair spot is near).
+ */
+function pingPongPairSnap(item, rawX, rawY, gridX, gridY) {
+  const isTable = it => it.kind === "activity" && it.sourceJson?.activity?.type_id === "ping_pong";
+  if (!isTable(item)) return [gridX, gridY];
+  const fp = getFootprint(item);
+  let best = null;
+  combineState.items.forEach(o => {
+    if (o.id === item.id || !isTable(o)) return;
+    const ofp = getFootprint(o);
+    if (Math.abs(ofp.w - fp.w) > 1e-6 || Math.abs(ofp.h - fp.h) > 1e-6) return;     // same size, turned the same way
+    const spots = fp.w >= fp.h
+      ? [[o.x_m, o.y_m + ofp.h], [o.x_m, o.y_m - fp.h]]                            // long edges run along x: above or below
+      : [[o.x_m + ofp.w, o.y_m], [o.x_m - fp.w, o.y_m]];                           // long edges run along y: left or right
+    spots.forEach(([x, y]) => {
+      const d = Math.max(Math.abs(x - rawX), Math.abs(y - rawY));
+      if (d <= PAIR_SNAP_M && (!best || d < best.d)) best = { x, y, d };
+    });
+  });
+  return best ? [best.x, best.y] : [gridX, gridY];
+}
+
 /** Faint 0.5m reference grid across the whole roof rectangle — the same plain (0,0)-(length,width) box placement/packing already works against, not the visual boundary polygon. Purely visual; snapToGrid() is what actually snaps drags. */
 function snapGridSvg(roof, scale, roofOx, roofOy) {
   let lines = "";
@@ -188,14 +216,11 @@ function findOverlappingIds(items, bufferM = 0) {
 let _algoZoneLookup = null;
 
 /**
- * Maps a sport/activity key (item.sourceJson.field.sport or
- * .activity.type_id — the one identifier both catalogues agree on; item
- * labels differ between them, e.g. "Ping Pong Station" vs "Ping Pong" for
- * the same thing) to the algorithmic engine's zone classification. Built
- * once from ALGO_CATALOGUE (algoPlacementUI.js) cross-referenced with
- * AlgoPlacement.zoneOf/noSetback (algoPlacementCore.js) — lazily, since
- * those scripts load after this one; by the time a redraw actually runs
- * (after the page has fully loaded) both are available.
+ * Maps a board piece's key (kind + item.sourceJson.field.sport / .activity.type_id / .gardenBlock.type — the one identifier both catalogues agree on; item
+ * labels differ between them, e.g. "Ping Pong Station" vs "Ping Pong" for the same thing) to the algorithmic engine's name and zone classification. Built
+ * once from ALGO_CATALOGUE (algoPlacementUI.js) cross-referenced with AlgoPlacement.zoneOf/noSetback (algoPlacementCore.js) — lazily, since those scripts
+ * load after this one; by the time a redraw actually runs (after the page has fully loaded) both are available. The kinetic elements are left out: the
+ * Algorithmic placement no longer offers them, so on the board they keep the plain checks of a piece the engine does not know.
  */
 function algoZoneLookup() {
   if (_algoZoneLookup) return _algoZoneLookup;
@@ -203,78 +228,285 @@ function algoZoneLookup() {
   const map = {};
   Object.keys(ALGO_CATALOGUE).forEach(engineName => {
     const cat = ALGO_CATALOGUE[engineName];
-    const key = cat.kind === "field" ? cat.sport : cat.id;
-    map[key] = { zone: AlgoPlacement.zoneOf(engineName), noSetback: AlgoPlacement.noSetback(engineName) };
+    if (cat.kind === "kinetics") return;
+    const key = cat.kind + ":" + (cat.kind === "field" ? cat.sport : cat.id);
+    map[key] = { name: engineName, zone: AlgoPlacement.zoneOf(engineName), noSetback: AlgoPlacement.noSetback(engineName) };
   });
   _algoZoneLookup = map;
   return map;
 }
 
 /**
- * A Combine item's zone ("indoor"/"garden"/"outdoor") and whether it is
- * exempt from the boundary setback (only the two service modules, which
- * stand against a real wall, are). Falls back to "outdoor"/not-exempt for
- * anything the algorithmic catalogue doesn't cover.
+ * A Combine item's engine name (null for a piece the Algorithmic placement does not place), its zone ("indoor"/"garden"/"outdoor") and whether it is
+ * exempt from the boundary setback (only the two service modules, which stand against a real wall, are). A piece the engine does not know counts as
+ * "outdoor" and not exempt.
  */
 function itemZoneInfo(item) {
-  const key = item.kind === "field" ? item.sourceJson?.field?.sport
+  const id = item.kind === "field" ? item.sourceJson?.field?.sport
     : item.kind === "activity" ? item.sourceJson?.activity?.type_id
-      : null;
-  return (key && algoZoneLookup()[key]) || { zone: "outdoor", noSetback: false };
+      : item.kind === "gardenBlock" ? item.sourceJson?.gardenBlock?.type
+        : null;
+  return (id && algoZoneLookup()[item.kind + ":" + id]) || { name: null, zone: "outdoor", noSetback: false };
+}
+
+/* ── The Manual board follows the Algorithmic placement's rules (user, 2026-09-28: "the manual one has to adapt") ──
+ * Every number and test below is the engine's own (algoPlacementCore.js validate / requiredGapCells / hasAccess), read from the same settings the
+ * Algorithmic placement panel uses (algoPlacementUI.js algoZoningOn / algoSetback / algoEntryRects / algoBuildSite), so a board that passes here is one the
+ * engine would accept, and an Applied layout never shows a flag. The rule files themselves are not touched.
+ */
+const BOARD_SERVICE_LOBBY_M = 2.0;                        // = SERVICE_LOBBY_M in algoPlacementCore.js: clear in front of a locker / bathroom module
+const BOARD_NO_CLUSTER = new Set(["Rest / Hydration Area"]); // = NO_CLUSTER in algoPlacementCore.js: indoor, but not inside the indoor zone's wall
+const BOARD_PING_PONG = "Ping Pong Outdoor";              // two of these may stand long edge to long edge (the locked Ping Pong pair rule)
+const BOARD_EPS = 0.02;                                   // m, slack for positions typed or dragged by hand
+
+/**
+ * The distances the engine works with, in metres. With a roof type (zoning): 1.5 m inside a zone (the narrowest in-zone path it makes), the primary path
+ * width between zones and to the indoor zone's wall, 2.5 m round an entrance's way in, 2.0 m in front of a service module; without one, the plain 2.0 m
+ * rule everywhere. W = the narrowest primary pathway the engine may build (the panel's "narrowest if needed", never under 2.0 m).
+ */
+function boardRules() {
+  const A = AlgoPlacement;
+  const minPath = typeof ALGO_MIN_PATH_M !== "undefined" ? ALGO_MIN_PATH_M : 2.0;
+  const s = typeof algoState !== "undefined" ? algoState.settings : {};
+  const W = Math.max(minPath, Math.min(Number(s.minPathW) || minPath, Number(s.pathW) || minPath));
+  const zoning = typeof algoZoningOn === "function" && algoZoningOn();
+  const base = { zoning, W, minAcc: Math.min(A.MIN_ACCESS_M, W), setback: typeof algoSetback === "function" ? algoSetback() : DESIGN_RULES.boundarySetback_m };
+  return zoning
+    ? Object.assign(base, { zgap: Math.min(...A.ZONE_GAP_OPTIONS_M), xgap: W, egap: A.ENTRY_GAP_M, lobby: BOARD_SERVICE_LOBBY_M })
+    : Object.assign(base, { gap: minPath, egap: minPath });
+}
+
+/** The clear gap (m) two pieces must keep: requiredGapCells in the engine (the Locker + Bathroom share a wall; a service module needs its lobby). */
+function boardRequiredGap(za, zb, R) {
+  if (!R.zoning) return R.gap;
+  if (za.noSetback && zb.noSetback) return 0;
+  const base = za.zone === zb.zone ? R.zgap : R.xgap;
+  return (za.noSetback || zb.noSetback) ? Math.max(base, R.lobby) : base;
+}
+
+const boardRect = it => { const fp = getFootprint(it); return [it.x_m, it.y_m, it.x_m + fp.w, it.y_m + fp.h]; };
+/** How far apart two rectangles are, the engine's way: the larger of the x and y separations (negative = they overlap). "Closer than g" = this < g. */
+const boardSep = (a, b) => Math.max(Math.max(b[0] - a[2], a[0] - b[2]), Math.max(b[1] - a[3], a[1] - b[3]));
+
+/** Two outdoor Ping Pong tables side by side along their LONG edges, touching, ends lined up: the engine's Ping Pong pair (no path between them). */
+function boardIsPingPongPair(a, b, ra, rb) {
+  if (a.name !== BOARD_PING_PONG || b.name !== BOARD_PING_PONG) return false;
+  const same = (p, q) => Math.abs(p - q) <= BOARD_EPS;
+  const long = r => r[2] - r[0] >= r[3] - r[1] - 1e-9 ? "x" : "y";
+  if (long(ra) !== long(rb)) return false;
+  if (long(ra) === "x") return same(ra[0], rb[0]) && same(ra[2], rb[2]) && (same(ra[3], rb[1]) || same(rb[3], ra[1]));
+  return same(ra[1], rb[1]) && same(ra[3], rb[3]) && (same(ra[2], rb[0]) || same(rb[2], ra[0]));
+}
+
+/** Is the rectangle (metres) on the real roof outline: its corners inside, and no corner of the outline (a notch) poking into it. */
+function boardRectOnRoof(r, poly) {
+  const P = poly.map(p => ({ x: p[0], y: p[1] })), e = BOARD_EPS;
+  const cornersIn = [[r[0] + e, r[1] + e], [r[2] - e, r[1] + e], [r[0] + e, r[3] - e], [r[2] - e, r[3] - e]].every(([x, y]) => pointInPolygon(P, x, y));
+  return cornersIn && !poly.some(([x, y]) => x > r[0] + e && x < r[2] - e && y > r[1] + e && y < r[3] - e);
+}
+
+let _boardSite = { key: null, site: null, error: null };
+/** The engine's own site (grid of the real outline, garden band, entrance ways in, openings), built exactly as the Algorithmic placement builds it; cached. */
+function boardAlgoSite() {
+  if (typeof algoBuildSite !== "function" || typeof algoSiteKey !== "function") return { site: null, error: "Algorithmic placement not loaded" };
+  let key;
+  try { key = algoSiteKey(); } catch (ex) { return { site: null, error: ex.message }; }
+  if (_boardSite.key !== key) {
+    _boardSite.key = key;
+    try { _boardSite.site = algoBuildSite(); _boardSite.error = null; } catch (ex) { _boardSite.site = null; _boardSite.error = ex.message; }
+  }
+  return _boardSite;
+}
+
+/** A rectangle in metres as the engine grid's cells (rounded to the nearest cell: the engine places on a 0.1 m grid). */
+function boardCells(g, r) {
+  const res = AlgoPlacement.RES;
+  return [Math.round((r[0] - g.ox) / res), Math.round((r[1] - g.oy) / res), Math.round((r[2] - g.ox) / res), Math.round((r[3] - g.oy) / res)];
 }
 
 /**
- * Zone-aware replacement for a flat clearance rule: two pieces in the same
- * zone need DESIGN_RULES.zoneClearance_m between them, two pieces in
- * different zones need the wider crossZoneClearance_m, and a piece within
- * entryClearance_m of an entry point also fails — mirroring the
- * algorithmic engine's own in-zone/primary/entry gaps (algoPlacementCore.js:
- * ZONE_GAP_OPTIONS_M / PRIMARY_OPTIONS_M / ENTRY_GAP_M) so a hand-placed
- * board is held to the same rule an Applied one already is. A pair that
- * are both setback-exempt (Locker + Bathroom) is skipped entirely — they
- * share a real wall by design, 0 m apart.
+ * Every rule the engine's own final check (validate) holds a layout to, applied to the pieces on the board. Returns
+ *   tooClose   ids closer than the engine's gap to a neighbour, to an entrance's way in, or (zoning) to the indoor zone's wall line
+ *   outOfBounds ids not on the real roof outline
+ *   setback    ids in the garden band (only the service modules may stand there), on an entrance's way in, or on an opening / equipment
+ *   circulation { paths, unreachable }: every piece must touch a pathway at least W wide over MIN_ACCESS_M of its edge, the pathways starting at the
+ *              entrances and staying out of the garden band and the green beds - or (zoning) face a reached piece of its own zone across an in-zone path
+ *   area       { total, usable, pct, limit } the courts' share of the sports area (the engine's 75 % limit)
+ *   R, site, error
+ * `only` = restrict the per-piece checks to these ids (the suggested spots test one piece at a time); `skipAccess` leaves the pathway search out.
  */
-function findClearanceViolations(items, entries, rules) {
-  const violating = new Set();
+function boardRuleCheck(items, opts = {}) {
+  const out = { tooClose: new Set(), wallIds: new Set(), outOfBounds: new Set(), setback: new Set(), circulation: { paths: [], unreachable: new Set() }, area: null, R: null, site: null, error: null };
+  if (typeof AlgoPlacement === "undefined" || typeof algoFootprint !== "function") return out;
+  const R = out.R = boardRules();
+  const { site, error } = boardAlgoSite();
+  out.site = site; out.error = error;
+  const poly = algoFootprint();
+  const info = items.map(itemZoneInfo), rects = items.map(boardRect);
+  const entryRects = typeof algoEntryRects === "function" ? algoEntryRects() : [];
+  const check = i => !opts.only || opts.only.has(items[i].id);
+  const g = site ? (R.zoning && site.full ? site.full : site.grid) : null;
+
+  // on the roof, out of the garden band, off the entrances' ways in and off openings (validate: itemFree / outdoorOk, or the plain usable zone)
+  items.forEach((it, i) => {
+    if (!check(i)) return;
+    if (!boardRectOnRoof(rects[i], poly)) { out.outOfBounds.add(it.id); return; }
+    if (!g || !info[i].name) return;
+    const c = boardCells(g, rects[i]);
+    const ok = R.zoning ? g.itemFree(c) && (info[i].noSetback || g.outdoorOk(c)) : g.isFree(c);
+    if (!ok) out.setback.add(it.id);
+  });
+
+  // the gaps between pieces, with the Ping Pong pair's shared long edge allowed (each table has at most one partner)
+  const partner = new Map();
   for (let i = 0; i < items.length; i++) {
-    const a = items[i], za = itemZoneInfo(a);
     for (let j = i + 1; j < items.length; j++) {
-      const b = items[j], zb = itemZoneInfo(b);
-      if (za.noSetback && zb.noSetback) continue;
-      const need = za.zone === zb.zone ? rules.zoneClearance_m : rules.crossZoneClearance_m;
-      if (zoneGapM(a, b) < need) { violating.add(a.id); violating.add(b.id); }
+      if (!check(i) && !check(j)) continue;
+      const need = boardRequiredGap(info[i], info[j], R), sep = boardSep(rects[i], rects[j]);
+      if (sep >= need - BOARD_EPS) continue;
+      if (sep > -BOARD_EPS && !partner.has(i) && !partner.has(j) && boardIsPingPongPair(info[i], info[j], rects[i], rects[j])) { partner.set(i, j); partner.set(j, i); continue; }
+      out.tooClose.add(items[i].id); out.tooClose.add(items[j].id);
     }
   }
-  items.forEach(it => {
-    const fp = getFootprint(it);
-    entries.forEach(ep => {
-      const dx = Math.max(it.x_m - ep.x_m, 0, ep.x_m - (it.x_m + fp.w));
-      const dy = Math.max(it.y_m - ep.y_m, 0, ep.y_m - (it.y_m + fp.h));
-      if (Math.hypot(dx, dy) < rules.entryClearance_m) violating.add(it.id);
-    });
+  // the entrances' ways in (validate: egap round every entry; the plain rule: the court gap)
+  items.forEach((it, i) => {
+    if (check(i) && entryRects.some(E => boardSep(rects[i], E) < R.egap - BOARD_EPS)) out.tooClose.add(it.id);
   });
-  return violating;
+  // the indoor zone's wall line: nothing but indoor items within the primary-path width of the box round the indoor cluster (validate)
+  if (R.zoning) {
+    let box = null;
+    items.forEach((it, i) => {
+      if (info[i].zone !== "indoor" || !info[i].name || BOARD_NO_CLUSTER.has(info[i].name)) return;
+      const r = rects[i];
+      box = box ? [Math.min(box[0], r[0]), Math.min(box[1], r[1]), Math.max(box[2], r[2]), Math.max(box[3], r[3])] : r.slice();
+    });
+    if (box) items.forEach((it, i) => {
+      if (check(i) && info[i].zone !== "indoor" && boardSep(box, rects[i]) < R.xgap - BOARD_EPS) { out.tooClose.add(it.id); out.wallIds.add(it.id); }
+    });
+  }
+
+  // the courts' share of the sports area (the engine refuses more than BUILT_LIMIT_PCT)
+  if (site) {
+    const total = items.reduce((s, it, i) => s + (info[i].name ? (rects[i][2] - rects[i][0]) * (rects[i][3] - rects[i][1]) : 0), 0);
+    out.area = { total, usable: site.usableArea, pct: site.usableArea > 0 ? 100 * total / site.usableArea : 0, limit: AlgoPlacement.BUILT_LIMIT_PCT };
+  }
+
+  if (!opts.skipAccess) out.circulation = boardCirculation(items, info, rects, g, R);
+  return out;
 }
 
 /**
- * Ids of every placed sport/service piece sitting inside the boundary-
- * setback band — the same band setbackGuideSvg draws as a dashed guide,
- * now actually enforced. Only the two service modules (Locker, Bathroom)
- * are exempt; garden/furniture/vegetation pieces aren't checked at all,
- * since the setback band is the garden band by design.
+ * The engine's access rule (hasAccess / validate) on the board. There are no drawn pathways here, so a pathway is any free W x W square the engine could lay:
+ * on the roof, out of the garden band, off the entrances' ways in, openings, pieces and green beds (green beds are not pathways). Squares are joined cell by
+ * cell starting beside each entrance's way in; a piece is reached when reached squares cover at least MIN_ACCESS_M of one of its edges, or (zoning) when it
+ * faces a reached piece of its own zone across a gap no wider than a primary path (an in-zone path). Returns { paths, unreachable } like computeCirculation.
  */
-function findSetbackViolations(items, roof, rules) {
-  const violating = new Set();
-  const sb = rules.boundarySetback_m;
-  items.forEach(it => {
-    if (it.kind !== "field" && it.kind !== "activity") return;
-    if (itemZoneInfo(it).noSetback) return;
-    const fp = getFootprint(it);
-    const inside = it.x_m >= sb - 1e-6 && it.y_m >= sb - 1e-6 &&
-      (it.x_m + fp.w) <= roof.length - sb + 1e-6 && (it.y_m + fp.h) <= roof.width - sb + 1e-6;
-    if (!inside) violating.add(it.id);
+function boardCirculation(items, info, rects, g, R) {
+  const unreachable = new Set(), paths = [];
+  if (!items.length) return { paths, unreachable };
+  if (!g || !combineState.entryPoints.length) { items.forEach(it => unreachable.add(it.id)); return { paths, unreachable }; }
+  const res = AlgoPlacement.RES, nx = g.nx, ny = g.ny, W = Math.round(R.W / res), minAcc = Math.round(R.minAcc / res);
+  const cells = rects.map(r => boardCells(g, r));
+  // what a pathway may not cross besides the grid's own blocks: the pieces and the green beds
+  const block = new Uint8Array(nx * ny);
+  const fill = (x0, y0, x1, y1) => { for (let y = Math.max(0, y0); y < Math.min(ny, y1); y++) block.fill(1, y * nx + Math.max(0, x0), y * nx + Math.min(nx, x1)); };
+  cells.forEach(c => fill(c[0], c[1], c[2], c[3]));
+  (combineState.zones || []).filter(z => (z.kind || "green_roof") === "green_roof" && Array.isArray(z.points) && z.points.length >= 3).forEach(z => {
+    const P = z.points.map(p => ({ x: p.x_m, y: p.y_m }));
+    const xs = P.map(p => p.x), ys = P.map(p => p.y);
+    const c = boardCells(g, [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]);
+    for (let y = Math.max(0, c[1] - 1); y < Math.min(ny, c[3] + 1); y++) for (let x = Math.max(0, c[0] - 1); x < Math.min(nx, c[2] + 1); x++) {
+      if (pointInPolygon(P, g.ox + (x + 0.5) * res, g.oy + (y + 0.5) * res)) block[y * nx + x] = 1;
+    }
   });
-  return violating;
+  const S = new Int32Array((nx + 1) * (ny + 1));
+  for (let y = 0; y < ny; y++) {
+    let run = 0;
+    for (let x = 0; x < nx; x++) { run += block[y * nx + x]; S[(y + 1) * (nx + 1) + x + 1] = S[y * (nx + 1) + x + 1] + run; }
+  }
+  const px = nx - W + 1, py = ny - W + 1;
+  if (px <= 0 || py <= 0) { items.forEach(it => unreachable.add(it.id)); return { paths, unreachable }; }
+  const okAt = (x, y) => x >= 0 && y >= 0 && x < px && y < py && g.isFree([x, y, x + W, y + W])
+    && S[(y + W) * (nx + 1) + x + W] - S[y * (nx + 1) + x + W] - S[(y + W) * (nx + 1) + x] + S[y * (nx + 1) + x] === 0;
+
+  // breadth-first over the squares' top-left corners, from the squares that touch an entrance's way in
+  const parent = new Int32Array(px * py).fill(-2), queue = [];
+  const seed = (x, y) => { if (okAt(x, y) && parent[y * px + x] === -2) { parent[y * px + x] = -1; queue.push(y * px + x); } };
+  g.entryCells.forEach(E => {
+    for (let y = E[1] - W + 1; y < E[3]; y++) { seed(E[0] - W, y); seed(E[2], y); }
+    for (let x = E[0] - W + 1; x < E[2]; x++) { seed(x, E[1] - W); seed(x, E[3]); }
+  });
+  for (let qi = 0; qi < queue.length; qi++) {
+    const k = queue[qi], x = k % px, y = (k - x) / px;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nxp = x + dx, nyp = y + dy;
+      if (nxp < 0 || nyp < 0 || nxp >= px || nyp >= py) continue;
+      const nk = nyp * px + nxp;
+      if (parent[nk] !== -2 || !okAt(nxp, nyp)) continue;
+      parent[nk] = k; queue.push(nk);
+    }
+  }
+  const reachedAt = (x, y) => x >= 0 && y >= 0 && x < px && y < py && parent[y * px + x] !== -2;
+
+  // a piece is reached by the squares lying flush along one of its edges, when they cover at least minAcc of it
+  const reached = items.map(() => false), via = items.map(() => -1);
+  cells.forEach((c, i) => {
+    const sides = [
+      { len: c[3] - c[1], at: t => [c[2], c[1] + t] }, { len: c[3] - c[1], at: t => [c[0] - W, c[1] + t] },
+      { len: c[2] - c[0], at: t => [c[0] + t, c[3]] }, { len: c[2] - c[0], at: t => [c[0] + t, c[1] - W] }
+    ];
+    for (const s of sides) {
+      const cover = new Uint8Array(Math.max(0, s.len));
+      let first = -1;
+      for (let t = -W + 1; t < s.len; t++) {
+        const [x, y] = s.at(t);
+        if (!reachedAt(x, y)) continue;
+        if (first < 0) first = y * px + x;
+        cover.fill(1, Math.max(0, t), Math.min(s.len, t + W));
+      }
+      if (cover.reduce((a, v) => a + v, 0) >= Math.min(minAcc, s.len)) { reached[i] = true; via[i] = first; break; }
+    }
+  });
+  // zoning: across an in-zone path from a reached piece of the same zone (validate's second pass; never across the Locker / Bathroom shared wall)
+  if (R.zoning) for (let moved = true; moved;) {
+    moved = false;
+    for (let i = 0; i < items.length; i++) {
+      if (reached[i]) continue;
+      for (let j = 0; j < items.length; j++) {
+        if (!reached[j] || info[i].zone !== info[j].zone || (info[i].noSetback && info[j].noSetback)) continue;
+        const gap = Math.round(Math.max(boardRequiredGap(info[i], info[j], R), R.W) / res), a = cells[i], b = cells[j];
+        const dx = Math.max(a[0] - b[2], b[0] - a[2]), dy = Math.max(a[1] - b[3], b[1] - a[3]);
+        const face = dx >= 0 && dx <= gap + 1 ? Math.min(a[3], b[3]) - Math.max(a[1], b[1]) : dy >= 0 && dy <= gap + 1 ? Math.min(a[2], b[2]) - Math.max(a[0], b[0]) : 0;
+        if (face >= Math.min(minAcc, a[2] - a[0], a[3] - a[1])) { reached[i] = true; moved = true; break; }
+      }
+    }
+  }
+  items.forEach((it, i) => {
+    if (!reached[i]) { unreachable.add(it.id); return; }
+    if (via[i] < 0) return;
+    const pts = [];
+    for (let k = via[i]; k >= 0; k = parent[k]) { const x = k % px, y = (k - x) / px; pts.push({ x: g.ox + (x + W / 2) * res, y: g.oy + (y + W / 2) * res }); }
+    paths.push({ itemId: it.id, points: typeof simplifyPath === "function" ? simplifyPath(pts.reverse()) : pts.reverse() });
+  });
+  return { paths, unreachable };
+}
+
+/** The pieces the rules flag, for the old callers (a piece closer than the engine's gap to a neighbour, an entrance's way in or the indoor zone's wall). */
+function findClearanceViolations(items) {
+  return boardRuleCheck(items, { skipAccess: true }).tooClose;
+}
+
+/** Ids of every piece in the garden band (only the Locker and Bathroom modules may stand there), on an entrance's way in, or on an opening. */
+function findSetbackViolations(items) {
+  return boardRuleCheck(items, { skipAccess: true }).setback;
+}
+
+/** Would `item` break no placement rule at (x, y, rotation)? Position and gaps only (the suggested spots ask this of many spots, so no pathway search). */
+function boardSpotOk(item, x, y, rotation) {
+  const moved = Object.assign({}, item, { x_m: x, y_m: y, rotation });
+  const others = combineState.items.filter(it => it.id !== item.id);
+  const r = boardRuleCheck(others.concat([moved]), { only: new Set([item.id]), skipAccess: true });
+  return !r.tooClose.has(item.id) && !r.outOfBounds.has(item.id) && !r.setback.has(item.id);
 }
 
 /**
@@ -315,8 +547,16 @@ function combineWallSvg(walls, scale, roofOx, roofOy) {
   return svg;
 }
 
-/** Dashed inset rectangle showing the boundary-setback margin from the rules panel. */
+/**
+ * The garden band (the boundary setback) as the Algorithmic placement's engine lays it along the real roof outline: a faint shaded band, the same area the
+ * setback check above flags. Falls back to the dashed inset rectangle while the engine's site is not available.
+ */
 function setbackGuideSvg(roof, scale, roofOx, roofOy) {
+  const site = typeof boardAlgoSite === "function" ? boardAlgoSite().site : null;
+  if (site && site.bandRects) {
+    return `<g opacity="0.5" pointer-events="none">` + site.bandRects.map(r =>
+      `<rect x="${roofOx + r[0] * scale}" y="${roofOy + r[1] * scale}" width="${(r[2] - r[0]) * scale}" height="${(r[3] - r[1]) * scale}" fill="rgba(140,140,140,0.22)"/>`).join("") + `</g>`;
+  }
   const sb = Math.min(DESIGN_RULES.boundarySetback_m, roof.length / 2 - 0.05, roof.width / 2 - 0.05);
   if (sb <= 0) return "";
   const x = roofOx + sb * scale, y = roofOy + sb * scale;
@@ -408,9 +648,23 @@ let combineLegendFolded = false;
  * on the board does. `st` carries the rule results drawCombineCanvas already
  * computed, so nothing is checked twice.
  */
+/**
+ * The legend's top lines up with the top of the Manual / Algorithmic placement switch above the board (user, 2026-09-27), wherever the layout puts
+ * that switch: measured, not a fixed offset. The legend stays inside the board box, so this is a (negative) top relative to it.
+ */
+function alignCombineLegend() {
+  const box = document.getElementById("combine-legend"), wrap = box && box.parentElement;
+  const bar = document.querySelector(".placement-switch-bar");
+  if (!box || !wrap || !bar || !bar.offsetParent) { if (box) box.style.top = ""; return; }
+  const top = Math.round(bar.getBoundingClientRect().top - wrap.getBoundingClientRect().top);
+  box.style.top = top + "px";
+}
+window.addEventListener("resize", () => alignCombineLegend());
+
 function renderCombineLegend(st) {
   const box = document.getElementById("combine-legend");
   if (!box) return;
+  alignCombineLegend();
   const items = combineState.items, zones = combineState.zones || [];
   const count = items.length + zones.length;
   box.hidden = count === 0;
@@ -431,9 +685,9 @@ function renderCombineLegend(st) {
 
   const pieceRows = items.map(it => {
     const fp = getFootprint(it);
-    const flag = st.overlappingIds.has(it.id) ? { icon: "⚠", tip: "Too close to a neighbour or an entry point" }
+    const flag = st.overlappingIds.has(it.id) ? { icon: "⚠", tip: "Too close to a neighbour, an entry point or the indoor zone's wall" }
       : st.outOfBoundsIds.has(it.id) ? { icon: "⚠", tip: "Outside the roof boundary" }
-      : st.setbackIds.has(it.id) ? { icon: "⚠", tip: "Inside the setback band" }
+      : st.setbackIds.has(it.id) ? { icon: "⚠", tip: "Inside the setback band, on an entrance's way in or on an opening" }
       : st.unreachable.has(it.id) ? { icon: "🚫", tip: "Not reachable from an entrance" } : null;
     return row("item", it.id, (KIND_COLORS[it.kind] || KIND_COLORS.field).stroke, it.label, `${fp.w.toFixed(1)} × ${fp.h.toFixed(1)} m`, flag);
   }).join("");
@@ -493,15 +747,14 @@ function drawCombineCanvas() {
     ${setbackGuideSvg(roof, scale, roofOx, roofOy)}
   `;
 
-  // These two are the expensive-ish operations (grid build + BFS), so run
-  // them once per redraw and hand the results to both the SVG and the
-  // rules checklist rather than recomputing per consumer.
-  const overlappingIds = findClearanceViolations(items, entries, DESIGN_RULES);
-  const circulation = computeCirculation(combineState, DESIGN_RULES);
-  const outOfBoundsIds = findOutOfBoundsIds(items, roof);
+  // The Algorithmic placement's rules, applied to the board (boardRuleCheck): run once per redraw (the pathway search is the expensive part) and handed to
+  // the SVG, the status line, the legend and the rules checklist, so none of them can disagree.
+  const check = boardRuleCheck(items);
+  const overlappingIds = check.tooClose;
+  const circulation = check.circulation;
+  const outOfBoundsIds = check.outOfBounds;
   const anyOutOfBounds = outOfBoundsIds.size > 0;
-  const zoneConflicts = findZoneConflicts(items, DESIGN_RULES);
-  const setbackIds = findSetbackViolations(items, roof, DESIGN_RULES);
+  const setbackIds = check.setback;
 
   // Circulation paths draw under the pieces so labels stay readable.
   circulation.paths.forEach(p => {
@@ -543,6 +796,19 @@ function drawCombineCanvas() {
       const spin = item.rotation
         ? ` transform="rotate(${item.rotation}, ${x + w / 2}, ${y + h / 2})"` : "";
       el += `<g${spin}>${furnitureSvg(x, y, w, h, item, selected, strokeColor, isPlanner)}</g>`;
+      return;
+    }
+
+    // The Garden tab's blocks draw what they are (planters.js gardenBlockBoardSvg): a planter's rim, soil, seat cap and tree as its own
+    // options say, the Park Bench and Table as a table between two benches. Drawn in the board footprint, so no rotation is needed.
+    if (item.kind === "gardenBlock" && typeof gardenBlockBoardSvg === "function") {
+      el += `<g>${gardenBlockBoardSvg(x, y, w, h, item)}
+          <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
+                fill="transparent" stroke="${strokeColor}"
+                stroke-width="${selected ? 2.5 : 1.2}"
+                stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
+                style="cursor:${isPlanner ? "grab" : "pointer"}"/>
+        </g>`;
       return;
     }
 
@@ -689,15 +955,17 @@ function drawCombineCanvas() {
     } else if (items.length === 0) {
       statusEl.textContent = `${zoneCount} ground zone(s) drawn. Push a sport or activity to place pieces.`;
     } else if (overlappingIds.size > 0) {
-      statusEl.textContent = `⚠ ${overlappingIds.size} piece(s) too close to a neighbor or an entry point (${DESIGN_RULES.zoneClearance_m.toFixed(1)} m same-zone / ${DESIGN_RULES.crossZoneClearance_m.toFixed(1)} m cross-zone / ${DESIGN_RULES.entryClearance_m.toFixed(1)} m from an entrance).`;
+      statusEl.textContent = `⚠ ${overlappingIds.size} piece(s) too close to a neighbor or an entry point (${boardGapText(check.R)}).`;
     } else if (anyOutOfBounds) {
       statusEl.textContent = "⚠ One or more pieces extend outside the roof boundary.";
     } else if (setbackIds.size > 0) {
-      statusEl.textContent = `⚠ ${setbackIds.size} piece(s) sit inside the ${DESIGN_RULES.boundarySetback_m.toFixed(1)} m setback band.`;
+      statusEl.textContent = `⚠ ${setbackIds.size} piece(s) sit inside the ${check.R.setback.toFixed(1)} m setback band, on an entrance's way in or on an opening.`;
     } else if (entries.length === 0) {
       statusEl.textContent = `${items.length} piece(s) placed. Add an entry point to check circulation.`;
     } else if (circulation.unreachable.size > 0) {
-      statusEl.textContent = `⚠ ${circulation.unreachable.size} piece(s) aren't reachable from an entrance.`;
+      statusEl.textContent = `⚠ ${circulation.unreachable.size} piece(s) aren't reachable from an entrance by a ${check.R.W.toFixed(1)} m pathway.`;
+    } else if (check.area && check.area.pct > check.area.limit) {
+      statusEl.textContent = `⚠ The courts cover ${check.area.pct.toFixed(0)}% of the sports area (limit ${check.area.limit}%).`;
     } else if (typeof findZoneClashes === "function" && findZoneClashes().length > 0) {
       const n = findZoneClashes().length;
       statusEl.textContent = `⚠ ${n} ground zone clash(es) with a placed piece.`;
@@ -708,7 +976,7 @@ function drawCombineCanvas() {
     }
   }
 
-  renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts, setbackIds);
+  renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, check, setbackIds);
   renderCombineSummary(circulation);
   if (typeof renderDesignPanel === "function") renderDesignPanel(circulation);
   // What is selected, and a record of the change — both read the state the
@@ -840,11 +1108,20 @@ function renderCombineSummary(circulation) {
  * Rebuilding innerHTML from state matches the pattern used everywhere
  * else in this app (e.g. updateGardenUI's layer cards).
  */
-function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConflicts, setbackIds) {
+/** The gaps the board holds pieces to, in words (the Algorithmic placement's, see boardRules). */
+function boardGapText(R) {
+  if (!R) return "";
+  return R.zoning
+    ? `${R.zgap.toFixed(1)} m same-zone / ${R.xgap.toFixed(1)} m cross-zone / ${R.lobby.toFixed(1)} m in front of a service module / ${R.egap.toFixed(1)} m from an entrance`
+    : `${R.gap.toFixed(1)} m between pieces and from an entrance`;
+}
+
+function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, check, setbackIds) {
   const panel = document.getElementById("rules-panel");
   if (!panel) return;
   const items = combineState.items;
   const entries = combineState.entryPoints;
+  const R = check && check.R;
 
   const rows = [{
     passed: entries.length >= DESIGN_RULES.minEntryPoints,
@@ -855,39 +1132,41 @@ function renderRulesPanel(overlappingIds, anyOutOfBounds, circulation, zoneConfl
   if (items.length === 0) {
     rows.push({ passed: true, label: "Layout", detail: "Push a sport or garden piece to Combine to start checking rules." });
   } else {
+    const wallN = check && check.wallIds ? check.wallIds.size : 0;
     rows.push({
       passed: overlappingIds.size === 0,
-      label: `Clearance (${DESIGN_RULES.zoneClearance_m.toFixed(1)} m same-zone / ${DESIGN_RULES.crossZoneClearance_m.toFixed(1)} m cross-zone)`,
-      detail: overlappingIds.size === 0 ? "All pieces respect the zone-aware gap." : `${overlappingIds.size} piece(s) too close to a neighbor or an entry point.`,
+      label: `Clearance (same rules as Algorithmic placement)`,
+      detail: (overlappingIds.size === 0 ? "All pieces keep " : `${overlappingIds.size} piece(s) closer than `) + escapeHtml(boardGapText(R))
+        + (R && R.zoning ? `; ${R.xgap.toFixed(1)} m from the indoor zone's wall` : "") + "."
+        + (wallN ? ` ${wallN} of them too close to the indoor zone's wall.` : "")
+        + " Two Ping Pong tables may stand long edge to long edge.",
     });
     rows.push({
       passed: !anyOutOfBounds,
       label: "Inside site boundary",
-      detail: !anyOutOfBounds ? "Everything fits inside the roof footprint." : "One or more pieces extend past the edge.",
+      detail: !anyOutOfBounds ? "Everything fits inside the roof outline." : "One or more pieces extend past the roof outline.",
     });
     rows.push({
       passed: !setbackIds || setbackIds.size === 0,
-      label: `Setback respected (${DESIGN_RULES.boundarySetback_m.toFixed(1)} m)`,
+      label: `Setback respected (${(R ? R.setback : DESIGN_RULES.boundarySetback_m).toFixed(1)} m)`,
       detail: !setbackIds || setbackIds.size === 0
-        ? "No sport sits inside the boundary setback."
-        : `${setbackIds.size} piece(s) inside the setback band (only the locker and bathroom modules may stand there).`,
+        ? "No piece sits in the garden band, on an entrance's way in or on an opening."
+        : `${setbackIds.size} piece(s) in the garden band, on an entrance's way in or on an opening (only the locker and bathroom modules may stand in the band).`,
     });
     rows.push({
       passed: entries.length > 0 && circulation.unreachable.size === 0,
-      label: `Circulation access (${DESIGN_RULES.circulationWidth_m.toFixed(1)} m paths)`,
+      label: `Pathway access (${R ? R.W.toFixed(1) : "2.0"} m paths)`,
       detail: entries.length === 0
         ? "Waiting on an entrance to check reachability."
         : circulation.unreachable.size === 0
-          ? "Every piece connects back to an entrance."
+          ? `Every piece touches a pathway from an entrance over at least ${R ? R.minAcc.toFixed(1) : "2.0"} m of its edge${R && R.zoning ? ", or faces a reached piece of its zone across an in-zone path" : ""}.`
           : `${circulation.unreachable.size} piece(s) can't be reached from any entrance.`,
     });
-    if (zoneConflicts) {
+    if (check && check.area) {
       rows.push({
-        passed: zoneConflicts.pairs.length === 0,
-        label: `Quiet zones protected (${DESIGN_RULES.quietBufferM.toFixed(1)} m buffer)`,
-        detail: zoneConflicts.pairs.length === 0
-          ? "No wellness/garden zone sits too close to a loud court or activity."
-          : zoneConflicts.pairs.map(p => `"${p.quietLabel}" is ${p.distanceM.toFixed(1)} m from "${p.loudLabel}"`).join("; ") + ".",
+        passed: check.area.pct <= check.area.limit,
+        label: `Sports area used (limit ${check.area.limit}%)`,
+        detail: `The pieces cover ${check.area.total.toFixed(0)} of ${check.area.usable.toFixed(0)} m² (${check.area.pct.toFixed(0)}%).`,
       });
     }
   }
@@ -1011,12 +1290,22 @@ function renderCombineTray() {
     wrap.innerHTML = `<p class="hint combine-tray-empty">Push a sport, activity, or garden piece — it lands here first, then drag it onto the roof.</p>`;
     return;
   }
-  wrap.innerHTML = tray.map(it => {
+  // identical pieces (same kind, label and size) are ONE thumbnail with "× n" at its bottom right (user, 2026-09-28): dragging it out or its ×
+  // takes the last copy, so the count goes down one at a time
+  const groups = new Map();
+  tray.forEach(it => {
+    const key = [it.kind, it.label, Number(it.length_m).toFixed(2), Number(it.width_m).toFixed(2)].join("|");
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(it);
+  });
+  wrap.innerHTML = [...groups.values()].map(copies => {
+    const it = copies[copies.length - 1], n = copies.length;
     const colors = KIND_COLORS[it.kind] || KIND_COLORS.field;
     return `
-      <div class="tray-thumb" data-tray-id="${escapeHtml(it.id)}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${escapeHtml(it.label)} — ${it.length_m}m × ${it.width_m}m">
-        <button class="tray-thumb-remove" data-tray-remove="${escapeHtml(it.id)}" title="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>
+      <div class="tray-thumb" data-tray-id="${escapeHtml(it.id)}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${escapeHtml(it.label)} — ${it.length_m}m × ${it.width_m}m${n > 1 ? " — " + n + " copies" : ""}">
+        <button class="tray-thumb-remove" data-tray-remove="${escapeHtml(it.id)}" title="Remove one"><i class="ti ti-x" aria-hidden="true"></i></button>
         <div class="tray-thumb-box">${trayThumbSvg(it, 64, 50)}</div>
+        ${n > 1 ? `<span class="tray-thumb-count">× ${n}</span>` : ""}
         <span class="tray-thumb-label">${escapeHtml(it.label)}</span>
       </div>`;
   }).join("");
@@ -1087,8 +1376,8 @@ function initTrayDragInteractions() {
     const svgX = (e.clientX - svgRect.left) / svgRect.width * CVW;
     const svgY = (e.clientY - svgRect.top) / svgRect.height * CVH;
     const fp = getFootprint(item);
-    let x_m = snapToGrid((svgX - roofOx) / scale - fp.w / 2);
-    let y_m = snapToGrid((svgY - roofOy) / scale - fp.h / 2);
+    const rawX = (svgX - roofOx) / scale - fp.w / 2, rawY = (svgY - roofOy) / scale - fp.h / 2;
+    let [x_m, y_m] = pingPongPairSnap(item, rawX, rawY, snapToGrid(rawX), snapToGrid(rawY));
     x_m = Math.max(0, Math.min(combineState.roof.length - fp.w, x_m));
     y_m = Math.max(0, Math.min(combineState.roof.width - fp.h, y_m));
 
@@ -1308,8 +1597,8 @@ function initCombineInteractions() {
     const item = combineState.items.find(i => i.id === dragState.id);
     if (!item) return;
 
-    const nextX = snapToGrid(dragState.startXm + dxM);
-    const nextY = snapToGrid(dragState.startYm + dyM);
+    const rawX = dragState.startXm + dxM, rawY = dragState.startYm + dyM;
+    const [nextX, nextY] = pingPongPairSnap(item, rawX, rawY, snapToGrid(rawX), snapToGrid(rawY));
 
     // The drag simply doesn't follow into a drawn zone, which reads as the
     // piece bumping into it rather than as an error.

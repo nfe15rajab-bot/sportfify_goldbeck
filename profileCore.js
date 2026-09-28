@@ -30,12 +30,12 @@ const PROFILE_MODES = {
   site:         { button: "modeSite",         label: "Site",            title: "Site" },
   structure:    { button: "modeStructure",    label: "Structure inputs", title: "Structure inputs — grid, columns, deck capacity, natural frequency" },
   conditions:   { button: "modeConditions",   label: "Site conditions", title: "Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)" },
+  roofAccess:   { button: "modeRoofAccess",   label: "Roof & Access",   title: "Roof Type and Accessibility — what the roof is for, and where people come in" },
   sport:        { button: "modeSport",        label: "Sport",           title: "Sport" },
-  gardenBlocks: { button: "modeGardenBlocks", label: "Garden",           title: "Garden — planters and garden blocks" },
+  facilities:   { button: "modeFacilities",   label: "Facilities",      title: "Facilities — lockers, bathrooms and rest areas" },
   combine:      { button: "modeCombine",      label: "Combine",         title: "Combine" },
   analysis:     { button: "modeAnalysis",     label: "Results",         title: "Results — every analysis for this layout: Revit's full analysis, or this app's quick estimate" },
   compare:      { button: "modeCompare",      label: "Compare",         title: "Compare" },
-  postAnalysis: { button: "modePostAnalysis", label: "Improve",         title: "Improve — what to change first, ranked, and the moving parts that answer the analysis" },
   data:         { button: "modeData",         label: "Catalogue",       title: "Catalogue — the reference data the app and Revit read: sports, materials, analysis figures" },
   families:     { button: "modeFamilies",     label: "Revit families",  title: "Revit families — what your Revit project has loaded, to place in Combine" },
   deliverables: { button: "modeDeliverables", label: "Documents",       title: "Documents & files — layouts, charts, reports and schedules, kept in your Sportify folder" },
@@ -51,7 +51,7 @@ const PROFILE_VIEWS = {
   simple: {
     title: "Simple",
     tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take your documents.",
-    modes: ["guide", "site", "sport", "gardenBlocks", "combine", "analysis", "deliverables", "session", "profile"]
+    modes: ["guide", "site", "roofAccess", "sport", "facilities", "combine", "analysis", "deliverables", "session", "profile"]
   },
   advanced: {
     title: "Advanced",
@@ -69,7 +69,7 @@ const PROFILE_EXTRAS = {
   structure:    { label: "Structure inputs",                modes: ["structure"] },
   conditions:   { label: "Site conditions",                 modes: ["conditions"] },
   compare:      { label: "Comparing variants",              modes: ["compare"] },
-  postAnalysis: { label: "Improve (recommendations, moving shading)", modes: ["postAnalysis"] },
+  postAnalysis: { label: "Kinetics (moving shading, sails, fences — Revit and SOLIDWORKS/Unity only)", modes: [] },
   safety:       { label: "Safety checks",                   modes: [] },
   carbon:       { label: "Carbon and materials",            modes: [] }
 };

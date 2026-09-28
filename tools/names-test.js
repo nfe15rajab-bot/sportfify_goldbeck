@@ -20,8 +20,8 @@ const html = read("index.html");
 const M = core.PROFILE_MODES;
 
 // ---------------------------------------------------------------------------------------------------------------- the table
-check("the ids of the workspaces are the ones code, saved profiles and the add-in know (only the words changed)", Object.keys(M).join() === "guide,site,structure,conditions,sport,gardenBlocks,combine,analysis,compare,postAnalysis,data,families,deliverables,session,profile");
-check("the new names: Results, Improve, Catalogue, Revit families, Documents, Structure inputs, Site conditions", ["analysis:Results", "postAnalysis:Improve", "data:Catalogue", "families:Revit families", "deliverables:Documents", "structure:Structure inputs", "conditions:Site conditions"].every(p => M[p.split(":")[0]].label === p.split(":")[1]));
+check("the ids of the workspaces are the ones code, saved profiles and the add-in know (only the words changed)", Object.keys(M).join() === "guide,site,structure,conditions,roofAccess,sport,facilities,combine,analysis,compare,data,families,deliverables,session,profile");
+check("the new names: Results, Catalogue, Revit families, Documents, Structure inputs, Site conditions", ["analysis:Results", "data:Catalogue", "families:Revit families", "deliverables:Documents", "structure:Structure inputs", "conditions:Site conditions"].every(p => M[p.split(":")[0]].label === p.split(":")[1]));
 check("every name is unique, so no two tabs can be confused", new Set(Object.values(M).map(m => m.label)).size === Object.keys(M).length);
 check("a rail label fits on two lines of the 48 px rail (no word over 10 characters, 18 in all), a top bar label on one (16 at most)", Object.entries(M).every(([id, m]) => {
   const rail = html.includes(`<button id="${m.button}" class="activity-icon"`);
@@ -30,13 +30,13 @@ check("a rail label fits on two lines of the 48 px rail (no word over 10 charact
 
 // ---------------------------------------------------------------------------------------------------------------- the page says what the table says
 const button = id => { const m = new RegExp(`<button id="${id}"([^>]*)>([\\s\\S]*?)</button>`).exec(html); return m ? { attrs: m[1], inner: m[2] } : null; };
-const text = inner => inner.replace(/<[^>]+>/g, "").trim();
+const text = inner => inner.replace(/<[^>]+>/g, "").trim().replace(/&amp;|&lt;|&gt;|&quot;|&#39;/g, e => ({ "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" }[e]));
 const attr = (attrs, name) => { const m = new RegExp(`${name}="([^"]*)"`).exec(attrs); return m ? m[1].replace(/&amp;/g, "&") : null; };
 Object.entries(M).forEach(([id, m]) => {
   const b = button(m.button);
   check(`the button of "${id}" says "${m.label}"${m.title ? " and its tooltip says what it is for" : ""}`, !!b && text(b.inner) === m.label && (!m.title || attr(b.attrs, "title") === m.title));
 });
-check("the panels are headed with the same words: Structure inputs, Site conditions, Catalogue, Improve, Documents & files, and the Results heading in the tab's first group", /<h2>Structure inputs<\/h2>/.test(html) && /<h2>Site conditions<\/h2>/.test(html) && /<h2>Catalogue<\/h2>/.test(html) && /<h2>Improve<\/h2>/.test(html) && /<h1>Documents &amp; files<\/h1>/.test(html) && /id="analysis-heading">Results: /.test(html));
+check("the panels are headed with the same words: Structure inputs, Site conditions, Catalogue, Documents & files, and the Results heading in the tab's first group", /<h2>Structure inputs<\/h2>/.test(html) && /<h2>Site conditions<\/h2>/.test(html) && /<h2>Catalogue<\/h2>/.test(html) && /<h1>Documents &amp; files<\/h1>/.test(html) && /id="analysis-heading">Results: /.test(html));
 check("the Overview's path names the tab: Results", /<span class="workflow-label">Results<\/span>/.test(html) && /Combine, Results, Compare and the Catalogue/.test(html));
 const rule = where.WHERE_RULE;
 check("the rule that comes with the Overview's card sends the answers to the Results tab", /Results tab/.test(rule) && rule.length < 90);
@@ -44,10 +44,10 @@ check("the rule that comes with the Overview's card sends the answers to the Res
 // ---------------------------------------------------------------------------------------------------------------- the words other screens use are the table's
 const steps = tour.TOUR_STEPS, stepText = id => steps.find(s => s.id === id).text({ view: "advanced" });
 check("the tour names the top bar tabs as they are: Overview, Documents, Save Session, Profile", ["guide", "deliverables", "session", "profile"].every(m => stepText("topbar").includes(M[m].label)));
-check("the tour's step for each renamed tab has its new name as its title or in its words", steps.find(s => s.id === "structure").title === M.structure.label && steps.find(s => s.id === "postAnalysis").title === M.postAnalysis.label && steps.find(s => s.id === "conditions").title === M.conditions.label && /Results/.test(stepText("path")));
+check("the tour's step for each renamed tab has its new name as its title or in its words", steps.find(s => s.id === "structure").title === M.structure.label && steps.find(s => s.id === "conditions").title === M.conditions.label && /Results/.test(stepText("path")));
 const out = (goal, analyses) => quiz.quizOutcome({ goal, analyses, site_data: ["roof_outline"], experience: "some" });
 check("the quiz sends a person to the tab by its name: Results after 'check', Documents after 'documents'", out("check", ["sun"]).next.text.includes(M.analysis.label) && out("documents", []).next.text.includes(M.deliverables.label));
-check("the extras the quiz adds to the Simple view carry the names of the tabs they bring back", core.PROFILE_EXTRAS.structure.label === M.structure.label && core.PROFILE_EXTRAS.conditions.label === M.conditions.label && core.PROFILE_EXTRAS.postAnalysis.label.startsWith(M.postAnalysis.label));
+check("the extras the quiz adds to the Simple view carry the names of the tabs they bring back", core.PROFILE_EXTRAS.structure.label === M.structure.label && core.PROFILE_EXTRAS.conditions.label === M.conditions.label);
 
 // ---------------------------------------------------------------------------------------------------------------- nothing still uses an older name or a second wording
 const OLD = [
