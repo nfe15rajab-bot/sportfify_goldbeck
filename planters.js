@@ -44,10 +44,21 @@ const PLANTER_FAMILY_DEFAULTS = {
   substrateDepth: 300, outletHeight: 30, outletBottomOffset: 25, outletTopOffset: 55, centreRow: true, seatCap: true, tree: true
 };
 
-/** The two planters: length x width x height (Rim Height), the rest from the family. */
+/** The planters: length x width x height (Rim Height), the rest from the family.
+ *
+ * The "(with pedestal)" variants (design team, 2026-09-28) are separate Revit
+ * families that carry the pedestal as real geometry rather than as a dimension
+ * the tray floor sits above. Their PARAMETERS are identical to the plain ones,
+ * checked value by value against the shipped .rfa — so they share this editor
+ * and these formulas, and differ only in which family Revit loads. That is why
+ * they are listed here rather than folded into a toggle: a toggle would read as
+ * a dimension change when it is actually a different family.
+ */
 const PLANTER_VARIANTS = {
   planter_s: { label: "Planter S", short: "Planter S", size: { length: 2400, width: 1000, rimHeight: 450 } },
-  planter_t: { label: "Planter T", short: "Planter T", size: { length: 2400, width: 2400, rimHeight: 900 } }
+  planter_t: { label: "Planter T", short: "Planter T", size: { length: 2400, width: 2400, rimHeight: 900 } },
+  planter_s_pedestal: { label: "Planter S (with pedestal)", short: "Planter S · ped.", size: { length: 2400, width: 1000, rimHeight: 450 } },
+  planter_t_pedestal: { label: "Planter T (with pedestal)", short: "Planter T · ped.", size: { length: 2400, width: 2400, rimHeight: 900 } }
 };
 
 /** Park Bench and Table (user, 2026-09-27): its own Revit family, still to come from colleagues. Only the overall footprint is fixed, 2000 x 2000 mm; the

@@ -61,6 +61,9 @@ const ZONE_KINDS = {
     color: "#4a9c5d",
     hint: "The roof build-up itself. Extensive or intensive is chosen by the system below.",
     assemblyCategories: ["extensive", "intensive"],
+    // Which family table the panel offers for this kind. A kind with no family
+    // is drawn as a floor alone, which is right for a roof laid directly.
+    family: "green_roof",
   },
 };
 
@@ -77,6 +80,12 @@ function ensureZoneState() {
   if (!Array.isArray(combineState.zones)) combineState.zones = [];
   if (!combineState.zoneKind) combineState.zoneKind = "green_roof";
   if (!combineState.zoneAssembly) combineState.zoneAssembly = defaultAssemblyFor(combineState.zoneKind);
+  // undefined means "never chosen", so default it; null means "chosen: none",
+  // which is a real answer and must survive a re-render.
+  if (combineState.zoneFamily === undefined) {
+    combineState.zoneFamily = (ZONE_KINDS[combineState.zoneKind] || {}).family === "green_roof"
+      && typeof GREEN_ROOF_DEFAULT_FAMILY !== "undefined" ? GREEN_ROOF_DEFAULT_FAMILY : null;
+  }
 }
 
 /** Build-up systems that suit a kind — a paving system is not an answer for a tree pit. */
@@ -149,6 +158,7 @@ function addZone(x_m, y_m, length_m, width_m) {
     id: `zone_${Date.now()}_${zoneCounter++}`,
     kind: combineState.zoneKind,
     assemblyKey: combineState.zoneAssembly,
+    familyKey: combineState.zoneFamily || null,
     points: rectPoints(snapToGrid(x_m), snapToGrid(y_m), snapToGrid(length_m), snapToGrid(width_m)),
   };
   syncZoneBounds(zone);
@@ -496,6 +506,8 @@ function renderZonePanel() {
       <p class="hint">${escapeHtml((ZONE_KINDS[combineState.zoneKind] || {}).hint || "")}</p>
     </div>
 
+    ${familySectionHtml()}
+
     <div class="section">
       <label>Build-up system</label>
       <select id="zone-assembly-select">${assemblyOptions}</select>
@@ -530,6 +542,57 @@ function renderZonePanel() {
   wireZonePanel();
 }
 
+/**
+ * The green roof family a zone is built from, and what the chosen build-up does
+ * to it.
+ *
+ * Placed between "what are you drawing" and "build-up system" because that is
+ * the order the decisions actually happen in: the tray is the product, the
+ * build-up is what goes in it, and the second changes the first (a deeper system
+ * raises the rim) but never the other way round.
+ */
+function familySectionHtml() {
+  if (typeof GREEN_ROOF_FAMILIES === "undefined") return "";
+  const kind = ZONE_KINDS[combineState.zoneKind] || {};
+  if (kind.family !== "green_roof") return "";
+
+  const keys = Object.keys(GREEN_ROOF_FAMILIES);
+  const chosen = combineState.zoneFamily;
+  const fam = typeof getGreenRoofFamily === "function" ? getGreenRoofFamily(chosen) : null;
+  const assembly = typeof getAssembly === "function" ? getAssembly(combineState.zoneAssembly) : null;
+
+  const options = `<option value=""${!chosen ? " selected" : ""}>None — build-up only, no tray</option>`
+    + keys.map(k => `<option value="${escapeHtml(k)}"${k === chosen ? " selected" : ""}>${escapeHtml(GREEN_ROOF_FAMILIES[k].label)}</option>`).join("");
+
+  if (!fam) {
+    return `
+      <div class="section">
+        <label>Green roof family</label>
+        <select id="zone-family-select">${options}</select>
+        <p class="hint">Without a family the zone is built as a floor of the build-up alone — correct for a roof laid directly, wrong for a tray system.</p>
+      </div>`;
+  }
+
+  const p = typeof greenRoofParams === "function"
+    ? greenRoofParams(chosen, assembly, fam.nominal.length / 1000, fam.nominal.width / 1000) : null;
+  const untrayed = typeof greenRoofUntrayedLayers === "function" ? greenRoofUntrayedLayers(assembly) : [];
+
+  return `
+    <div class="section">
+      <label>Green roof family</label>
+      <select id="zone-family-select">${options}</select>
+      <p class="hint">${escapeHtml(fam.note || "")}</p>
+      ${p ? `
+        <div style="margin:8px 0">${greenRoofSectionSvg(p, assembly, isDarkMode())}</div>
+        <p class="hint">Rim <strong>${p.rimHeight} mm</strong> · ${greenRoofTrayedMm(p)} mm of build-up in the tray · ${GREEN_ROOF_FREEBOARD_MM} mm freeboard${
+          assembly ? " — the rim follows the system you chose." : " — the family's own defaults, until a system is chosen."}</p>
+        ${assembly ? `<p class="hint">On import the placeholder block inside the tray is deleted and a floor of
+          <strong>${escapeHtml(assembly.provider)} ${escapeHtml(assembly.system_name)}</strong> is built in its place.</p>` : ""}
+        ${untrayed.length ? `<p class="hint">${untrayed.length} layer(s) the tray has no slot for — ${
+          escapeHtml(untrayed.map(l => l.name).join(", "))} — are carried by the floor.</p>` : ""}` : ""}
+    </div>`;
+}
+
 /** A compact section through the build-up, so the choice is visible rather than just named. */
 function assemblyStripSvg(assembly) {
   const total = assemblyLayerTotalMm(assembly);
@@ -551,6 +614,12 @@ function wireZonePanel() {
     // The previous system may not suit the new kind, so fall back to one that does.
     const still = assembliesForKind(combineState.zoneKind).some(a => a.key === combineState.zoneAssembly);
     if (!still) combineState.zoneAssembly = defaultAssemblyFor(combineState.zoneKind);
+    renderZonePanel();
+  });
+
+  const famSel = document.getElementById("zone-family-select");
+  if (famSel) famSel.addEventListener("change", () => {
+    combineState.zoneFamily = famSel.value || null;
     renderZonePanel();
   });
 
@@ -672,6 +741,13 @@ function buildZonePayload(zone) {
     points: (zone.points || []).map(p => ({ x_m: p.x_m, y_m: p.y_m })),
     area_m2: zoneAreaM2(zone),
     assembly_key: zone.assemblyKey,
+    // The tray, sized to this zone and with its layers driven by the build-up.
+    // Null when the zone is a floor laid directly, with no tray system.
+    family: typeof greenRoofFamilyPayload === "function"
+      ? greenRoofFamilyPayload(zone.familyKey,
+          typeof getAssembly === "function" ? getAssembly(zone.assemblyKey) : null,
+          zone.length_m, zone.width_m)
+      : null,
   };
 }
 
@@ -682,6 +758,9 @@ function zoneFromPayload(z, i) {
     id: z.id || `zone_${Date.now()}_${i}`,
     kind: z.kind || "green_roof",
     assemblyKey: z.assembly_key || null,
+    // An export from before zones had a tray simply has no family, which is the
+    // same thing as choosing none — so it reloads as a floor, exactly as it was.
+    familyKey: (z.family && z.family.key) || null,
     points: Array.isArray(z.points) && z.points.length >= 3
       ? z.points.map(p => ({ x_m: p.x_m, y_m: p.y_m }))
       // An export from before zones had corners: rebuild the rectangle it was.
