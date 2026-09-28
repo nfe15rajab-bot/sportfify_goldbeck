@@ -23,7 +23,16 @@
 
 /**
  * One entry per family. `inputs` are [parameter, label, hint]; `footprint`
- * turns the values into the size the roof plan reserves.
+ * turns the values into the size the roof plan reserves, ALWAYS in metres
+ * whatever unit the family itself is authored in.
+ *
+ * `units` is the family's own unit, and it is per family rather than global
+ * because the design team does not author them all the same way: the locker
+ * bank, cabin and deck state themselves in metres, while the trampoline, bocce
+ * court and sprint lane state themselves in millimetres. Mirroring each one in
+ * the unit it was written in means the number in this panel and the number in
+ * Revit's Family Types dialog are the same number, which is the whole point of
+ * mirroring them at all.
  */
 const ACTIVITY_FAMILIES = {
   locker_module: {
@@ -111,7 +120,106 @@ const ACTIVITY_FAMILIES = {
       width_m: p.Cabin_Depth + (p.Show_Clearance ? p.Clearance_Depth : 0),
     }),
   },
+
+  /* ── Millimetre families (design team, 2026-09-28) ─────────────────────── */
+
+  /**
+   * One family, not two. The trampoline is set IN the sand pit — the pit is
+   * what it lands in and what it is bedded on — so Revit has it as a single
+   * "Trampoline-SandPit". The app's separate Sand Pit activity is left alone:
+   * a sand pit without a trampoline is still a thing you can want.
+   *
+   * It is round, which nothing else here is. The footprint is the square the
+   * circle sits in, because that is what a roof plan has to keep clear.
+   */
+  trampoline: {
+    family: "Trampoline-SandPit",
+    label: "Trampoline in a Sand Pit",
+    units: "mm",
+    inputs: [
+      ["Jump_Radius",  "Jump radius",  "The mat you bounce on"],
+      ["Pad_Width",    "Pad width",    "The safety pad round the mat"],
+      ["Base_Height",  "Base height",  "Depth of the pit below the deck"],
+      ["Bedding",      "Bedding",      "Sand under the frame"],
+      ["Net_Height",   "Net height",   "Only built when the net is shown"],
+    ],
+    defaults: {
+      Jump_Radius: 1450, Pad_Width: 300, Base_Height: 400, Bedding: 50, Net_Height: 2100,
+    },
+    toggles: [["Show_Net", "Safety net", false]],
+    derived: [
+      ["Total radius", p => p.Jump_Radius + p.Pad_Width, "Jump radius + pad width"],
+      ["Overall diameter", p => 2 * (p.Jump_Radius + p.Pad_Width), "2 × total radius"],
+      ["Bedding top", p => p.Base_Height + p.Bedding, "Base height + bedding"],
+    ],
+    footprint: p => {
+      const d = 2 * (p.Jump_Radius + p.Pad_Width) / 1000;
+      return { length_m: d, width_m: d };
+    },
+    headline: p => ({ val: `${(2 * (p.Jump_Radius + p.Pad_Width) / 1000).toFixed(2)} m`, lbl: "Diameter" }),
+  },
+
+  /**
+   * The bocce court the app already offered as a plain rectangle, now as the
+   * design team's family.
+   *
+   * The bumpers are taken as sitting OUTSIDE the playing surface, so the roof
+   * reserves the court plus both of them. If they are meant to be within the
+   * 18 m instead, the derived row below says so plainly enough to catch it —
+   * which is why it is shown rather than folded silently into the footprint.
+   */
+  urban_bocce: {
+    family: "Bocce Court",
+    label: "Urban Bocce Court",
+    units: "mm",
+    inputs: [
+      ["Court_Length",     "Court length",     "The playing surface"],
+      ["Court_Width",      "Court width",      ""],
+      ["Bumper_Thickness", "Bumper thickness", "The board down each side"],
+      ["Bumper_Height",    "Bumper height",    ""],
+    ],
+    defaults: {
+      Court_Length: 18000, Court_Width: 3000, Bumper_Thickness: 150, Bumper_Height: 250,
+    },
+    derived: [
+      ["Overall length", p => p.Court_Length + 2 * p.Bumper_Thickness, "Court length + 2 × bumper thickness"],
+      ["Overall width",  p => p.Court_Width + 2 * p.Bumper_Thickness,  "Court width + 2 × bumper thickness"],
+      ["Playing area",   p => Math.round(p.Court_Length * p.Court_Width / 1e6), "Court length × court width, m²"],
+    ],
+    footprint: p => ({
+      length_m: (p.Court_Length + 2 * p.Bumper_Thickness) / 1000,
+      width_m: (p.Court_Width + 2 * p.Bumper_Thickness) / 1000,
+    }),
+    headline: p => ({ val: `${(p.Court_Length / 1000).toFixed(1)} × ${(p.Court_Width / 1000).toFixed(1)} m`, lbl: "Playing surface" }),
+  },
+
+  /**
+   * A sprint lane is one lane, and its length is the whole question: 63 m is a
+   * 60 m sprint plus run-off, and it is the single hardest thing to fit on a
+   * roof. So the panel leads with the length rather than the area.
+   */
+  sprint_lane: {
+    family: "Sprint Lane",
+    label: "Sprint Lane",
+    units: "mm",
+    inputs: [
+      ["Lane_Length",     "Lane length",     "Including run-off at both ends"],
+      ["Lane_Width",      "Lane width",      "One lane"],
+      ["Track_Thickness", "Track thickness", "The surfacing itself"],
+    ],
+    defaults: { Lane_Length: 63000, Lane_Width: 1200, Track_Thickness: 20 },
+    derived: [
+      ["Surfaced area", p => Math.round(p.Lane_Length * p.Lane_Width / 1e6), "Lane length × lane width, m²"],
+    ],
+    footprint: p => ({ length_m: p.Lane_Length / 1000, width_m: p.Lane_Width / 1000 }),
+    headline: p => ({ val: `${(p.Lane_Length / 1000).toFixed(1)} m`, lbl: "Lane length" }),
+  },
 };
+
+/** The family's own unit. Metres unless it says otherwise. */
+function activityFamilyUnits(id) {
+  return (ACTIVITY_FAMILIES[id] || {}).units || "m";
+}
 
 const ACTIVITY_FAMILY_STORAGE_KEY = "sportify-activity-families";
 
@@ -166,22 +274,34 @@ function syncActivityFamilyPanel(activityId) {
   const fp = activityFamilyFootprintM(activityId);
   const num = v => (Math.round(v * 1000) / 1000).toLocaleString("en-US");
 
+  // A millimetre family steps in whole millimetres; a metre family in 50 mm.
+  // Showing the family's own unit is what makes this panel checkable against
+  // Revit's Family Types dialog side by side.
+  const unit = activityFamilyUnits(activityId);
+  const step = unit === "mm" ? 1 : 0.05;
+
   const input = ([key, label, hint, opts]) => {
     const o = opts || {};
     return `
       <tr>
         <td>${escapeHtml(label)}${hint ? `<br><small>${escapeHtml(hint)}</small>` : ""}</td>
-        <td><input type="number" step="${o.integer ? 1 : 0.05}" min="${o.min ?? 0}"
+        <td><input type="number" step="${o.integer ? 1 : step}" min="${o.min ?? 0}"
                    data-family-param="${escapeHtml(key)}" value="${escapeHtml(p[key])}">
-            <small>${o.integer ? "" : "m"}</small></td>
+            <small>${o.integer ? "" : escapeHtml(unit)}</small></td>
       </tr>`;
   };
 
-  const derived = ([label, fn, how]) => `
-    <tr class="planter-formula">
-      <td>${escapeHtml(label)}</td>
-      <td>${num(fn(p))} <small>m</small><br><small>= ${escapeHtml(how)}</small></td>
-    </tr>`;
+  // A derived row that is already a unit of its own — an area, a count — says
+  // so in its own description rather than being labelled with the family's
+  // length unit, which would read as "12 mm" for twelve square metres.
+  const derived = ([label, fn, how]) => {
+    const bare = /m²|count|how many/i.test(how) || /area|planters|lockers/i.test(label);
+    return `
+      <tr class="planter-formula">
+        <td>${escapeHtml(label)}</td>
+        <td>${num(fn(p))}${bare ? "" : ` <small>${escapeHtml(unit)}</small>`}<br><small>= ${escapeHtml(how)}</small></td>
+      </tr>`;
+  };
 
   const toggles = (f.toggles || []).map(([key, label]) => `
     <label class="planter-toggle"><span>${escapeHtml(label)}</span>
@@ -197,9 +317,16 @@ function syncActivityFamilyPanel(activityId) {
       <p class="hint">Revit family: ${escapeHtml(f.family)} · the parameters it exposes</p>
       <div class="dims">
         <div class="dim-card"><div class="val">${fp.length_m} × ${fp.width_m} m</div><div class="lbl">Footprint on the roof</div></div>
-        ${activityId === "locker_module"
-          ? `<div class="dim-card"><div class="val">${p.Column_Count}</div><div class="lbl">Lockers in the bank</div></div>`
-          : `<div class="dim-card"><div class="val">${num(p.Total_Height)} m</div><div class="lbl">Total height</div></div>`}
+        ${(() => {
+          // What matters second differs per family — a bank is its locker
+          // count, a sprint lane is its length, a trampoline is its diameter.
+          // Asking every family for Total_Height printed "undefined m" for the
+          // three that have no such parameter.
+          if (f.headline) { const h = f.headline(p); return `<div class="dim-card"><div class="val">${escapeHtml(h.val)}</div><div class="lbl">${escapeHtml(h.lbl)}</div></div>`; }
+          if (activityId === "locker_module") return `<div class="dim-card"><div class="val">${p.Column_Count}</div><div class="lbl">Lockers in the bank</div></div>`;
+          if (p.Total_Height != null) return `<div class="dim-card"><div class="val">${num(p.Total_Height)} m</div><div class="lbl">Total height</div></div>`;
+          return "";
+        })()}
       </div>
     </div>
 
@@ -227,7 +354,7 @@ function activityFamilyPayload(activityId) {
     type: activityId,
     label: f.label,
     family: f.family,
-    units: "m",
+    units: activityFamilyUnits(activityId),
     params: activityFamilyParams(activityId),
   };
 }
@@ -294,6 +421,45 @@ function drawActivityFamilyPreview(svg, activityId, isDark) {
       const cx = x + (i + 0.82) * p.Module_Width * s;
       art += `<circle cx="${cx}" cy="${y + h / 2}" r="${Math.max(1, s * 0.03)}" fill="${ink}" fill-opacity="0.8"/>`;
     }
+  } else if (activityId === "trampoline") {
+    // Round, so it is drawn round: the pit, the pad, and the mat you land on.
+    const cx = x + w / 2, cy = y + h / 2;
+    const rOuter = (p.Jump_Radius + p.Pad_Width) / 1000 * s;
+    const rJump = p.Jump_Radius / 1000 * s;
+    const sand = isDark ? "#7a6a4a" : "#e0d3ae";
+    art += `<circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="${sand}" stroke="${ink}" stroke-width="1.2"/>`;
+    art += `<circle cx="${cx}" cy="${cy}" r="${rJump}" fill="${isDark ? "#2f3350" : "#4a4f63"}" stroke="${ink}" stroke-width="1"/>`;
+    // Springs round the mat, which is what the pad covers.
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      art += `<line x1="${cx + Math.cos(a) * rJump}" y1="${cy + Math.sin(a) * rJump}"
+                    x2="${cx + Math.cos(a) * rOuter}" y2="${cy + Math.sin(a) * rOuter}"
+                    stroke="${ink}" stroke-width="0.5" stroke-opacity="0.5"/>`;
+    }
+    if (p.Show_Net) {
+      art += `<circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="${ink}" stroke-width="1" stroke-dasharray="4 3"/>`;
+      art += `<text x="${cx}" y="${y - 6}" text-anchor="middle" font-size="9" fill="${dim}" ${font}>net ${(p.Net_Height / 1000).toFixed(2)} m high</text>`;
+    }
+  } else if (activityId === "urban_bocce") {
+    // The bumpers are the court: a bocce court is a boarded channel.
+    const bump = Math.max(1.5, p.Bumper_Thickness / 1000 * s);
+    art += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${isDark ? "#5a4a34" : "#b08d63"}" stroke="${ink}" stroke-width="1.2"/>`;
+    art += `<rect x="${x + bump}" y="${y + bump}" width="${w - bump * 2}" height="${h - bump * 2}"
+                  fill="${isDark ? "#6f6a4a" : "#d8cfa8"}" stroke="${ink}" stroke-width="0.8"/>`;
+    // The throwing line at each end, which is what makes it read as a court.
+    [0.12, 0.88].forEach(t => {
+      art += `<line x1="${x + w * t}" y1="${y + bump}" x2="${x + w * t}" y2="${y + h - bump}"
+                    stroke="${ink}" stroke-width="0.8" stroke-opacity="0.6" stroke-dasharray="4 3"/>`;
+    });
+  } else if (activityId === "sprint_lane") {
+    // One lane. Drawn with its start and finish, because the length is the
+    // thing being decided and a bare strip says nothing about which end is which.
+    art += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${isDark ? "#7a3f34" : "#c4643f"}" stroke="${ink}" stroke-width="1.2"/>`;
+    const lineW = Math.max(1.5, 0.05 * s);
+    art += `<rect x="${x}" y="${y}" width="${lineW}" height="${h}" fill="#ffffff"/>`;
+    art += `<rect x="${x + w - lineW}" y="${y}" width="${lineW}" height="${h}" fill="#ffffff"/>`;
+    art += `<text x="${x + 4}" y="${y - 6}" font-size="9" fill="${dim}" ${font}>start</text>`;
+    art += `<text x="${x + w - 4}" y="${y - 6}" text-anchor="end" font-size="9" fill="${dim}" ${font}>finish</text>`;
   } else {
     const cabinH = p.Cabin_Depth * s;
     const wall = Math.max(1.5, p.Wall_Thickness * s);

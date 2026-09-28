@@ -307,6 +307,556 @@ function previewAddCylinder(m, cx, cz, r, y0, y1, color, segs = 10) {
   }
 }
 
+/**
+ * A round tube between two points, in ANY direction — the 3D counterpart of
+ * SportifyRigGeometry.Tube in the add-in.
+ *
+ * previewAddCylinder above only stands up, which is all a tree trunk or a
+ * bollard needs. A rig is mostly horizontal: the bars are the part you grip and
+ * the part you see, so they cannot be the one thing this file could not draw.
+ *
+ * Built the same way as the Revit helper — an axis frame derived FROM the
+ * direction of travel — so a post and a bar are the same call. Eight segments,
+ * because at the size a 40 mm bar appears on screen a rounder one is more
+ * triangles for no visible gain.
+ */
+function previewAddTube(m, a, b, r, color, segs = 8) {
+  const d = previewSub(b, a), len = Math.hypot(d[0], d[1], d[2]);
+  if (!(len > 1e-6) || !(r > 1e-6)) return;
+  const dir = [d[0] / len, d[1] / len, d[2] / len];
+
+  // Any two axes across the run. Picking the world axis least aligned with the
+  // direction keeps the cross product well-conditioned when a tube is vertical.
+  const seed = Math.abs(dir[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+  const u = previewNormalize(previewCross(dir, seed));
+  const v = previewNormalize(previewCross(dir, u));
+
+  const ring = (p, i) => {
+    const t = i / segs * 2 * Math.PI, c = Math.cos(t), s = Math.sin(t);
+    const n = [u[0] * c + v[0] * s, u[1] * c + v[1] * s, u[2] * c + v[2] * s];
+    return { p: [p[0] + n[0] * r, p[1] + n[1] * r, p[2] + n[2] * r], n };
+  };
+
+  for (let i = 0; i < segs; i++) {
+    const a0 = ring(a, i), a1 = ring(a, i + 1), b0 = ring(b, i), b1 = ring(b, i + 1);
+    previewPushVertex(m, a0.p, a0.n, color); previewPushVertex(m, a1.p, a1.n, color); previewPushVertex(m, b1.p, b1.n, color);
+    previewPushVertex(m, a0.p, a0.n, color); previewPushVertex(m, b1.p, b1.n, color); previewPushVertex(m, b0.p, b0.n, color);
+    // Caps, so a tube seen end-on is not a hole.
+    previewPushTriangle(m, b, b0.p, b1.p, color, dir);
+    previewPushTriangle(m, a, a1.p, a0.p, color, [-dir[0], -dir[1], -dir[2]]);
+  }
+}
+
+/* ── Rigs, drawn as what they are ─────────────────────────────────────────
+ *
+ * Everything else in this file draws a piece as one volume, which is right for
+ * a court or a planter: they ARE volumes. A rig is not. A calisthenics rig
+ * drawn as a solid block is a 5.5 x 1.3 x 2.5 m brick where the real thing is
+ * a dozen 40 mm tubes you can see straight through, and no amount of colour
+ * fixes that.
+ *
+ * ── Why these agree with Revit ──
+ * They read `sourceJson`, which is the SAME object the add-in's builders read.
+ * Not a copy of the numbers, not a second table that has to be kept in step —
+ * the same payload, drawn twice. If the two ever disagree it is a bug in one
+ * of the two loops rather than a slow drift nobody notices.
+ *
+ * The part that cannot be shared is the loop itself, because one side speaks
+ * Revit's API and the other WebGL. So they are written to look alike: same
+ * order, same names, same derived values, so a change to one is obvious in the
+ * other.
+ *
+ * ── Footprint versus rig ──
+ * A piece's box on the board is the footprint INCLUDING the room round it —
+ * the safety area, the working room. The steel is a good deal smaller and sits
+ * inside, so every builder below insets before it starts. That inset is why
+ * these look right next to the 2D plan, which draws the same two rectangles.
+ */
+
+/** The rig colours, matching the Revit materials so the two read alike. */
+const PREVIEW_RIG = {
+  steel: [0.34, 0.37, 0.41, 1],
+  grip: [0.78, 0.57, 0.18, 1],
+  cup: [0.72, 0.26, 0.18, 1],
+};
+
+/**
+ * Draws a piece as a rig if it is one.
+ *
+ * Returns the height of the tallest part, or 0 when this piece is not a rig and
+ * the caller should fall back to its box.
+ */
+/**
+ * The height of a piece that is drawn as its parts, or 0 when it is not one and
+ * the caller should fall back to a box.
+ *
+ * Courts already had their own detail here long before this — padel's glass,
+ * volleyball's net, basketball's hoops are drawn a few dozen lines below and
+ * are NOT repeated. This covers what was still a brick.
+ */
+function previewRigHeight(it) {
+  const s = it && it.sourceJson;
+  if (!s) return 0;
+  if (s.calisthenics) return previewPos(s.calisthenics.frame_height_m, 2.5);
+  if (s.crossfit) return previewPos(s.crossfit.upright_height_m, 2.75);
+  if (s.trx) return previewPos(s.trx.frame_height_m, 2.45);
+  if (s.ping_pong) return previewPos(s.ping_pong.table_height_m, 0.76);
+  if (s.gardenBlock && s.gardenBlock.params) return previewPos(s.gardenBlock.params.capTop, 620) / 1000;
+  if (s.familyInstance) return previewFamilyHeight(s.familyInstance);
+  return 0;
+}
+
+/** How tall one of the design team's families stands, from its own parameters. */
+function previewFamilyHeight(fi) {
+  const p = fi.params || {}, mm = fi.units === "mm";
+  const u = v => (mm ? v / 1000 : v);
+  switch (fi.type) {
+    case "climbing_tower": return previewPos(p.Tower_Height, 12) + previewPos(p.Canopy_Thickness, 0.1);
+    case "yoga_deck": return p.Show_Roof ? previewPos(p.Roof_Height, 4) + previewPos(p.Roof_Thickness, 0.15) : 0.25;
+    case "locker_module": return previewPos(p.Module_Height, 2) + previewPos(p.Leg_Height, 0.15);
+    case "dressing_cabin": return previewPos(p.Total_Height, 2.5) + previewPos(p.Leg_Height, 0.15);
+    case "trampoline": return u(previewPos(p.Base_Height, 400)) + (p.Show_Net ? u(previewPos(p.Net_Height, 2100)) : 0.1);
+    case "urban_bocce": return u(previewPos(p.Bumper_Height, 250));
+    case "sprint_lane": return u(previewPos(p.Track_Thickness, 20));
+    default: return 0;
+  }
+}
+
+/**
+ * Where the steel actually is inside the piece's box.
+ *
+ * The box is the footprint with its room round it; the frame is smaller and
+ * usually not centred in it (a single-sided rig has working room on one face
+ * only). Used for the shadow, so an open frame does not shade its own clearance.
+ */
+function previewRigExtent(it, x0, z0, x1, z1) {
+  const s = it && it.sourceJson;
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const box = (L, W, centreZ) => ({
+    x0: cx - L / 2, x1: cx + L / 2,
+    z0: centreZ - W / 2, z1: centreZ + W / 2,
+  });
+
+  if (s && s.calisthenics) {
+    const r = s.calisthenics;
+    return box(previewPos(r.rig_length_m, x1 - x0), previewPos(r.rig_width_m, z1 - z0), cz);
+  }
+  if (s && s.crossfit) {
+    const r = s.crossfit;
+    const W = previewPos(r.rig_width_m, 1.18);
+    return box(previewPos(r.rig_length_m, x1 - x0), W, z0 + previewPos(r.working_depth_m, 2.0) + W / 2);
+  }
+  if (s && s.trx) {
+    const f = s.trx;
+    return box(previewPos(f.frame_length_m, x1 - x0), previewPos(f.frame_width_m, z1 - z0), cz);
+  }
+  if (s && s.ping_pong) {
+    const t = s.ping_pong;
+    return box(previewPos(t.table_length_m, 2.74), previewPos(t.table_width_m, 1.525), cz);
+  }
+  if (s && s.familyInstance) {
+    const fi = s.familyInstance, p = fi.params || {}, isMm = fi.units === "mm";
+    const u = v => (isMm ? previewPos(v, 0) / 1000 : previewPos(v, 0));
+    if (fi.type === "urban_bocce") return box(u(p.Court_Length) || (x1 - x0), u(p.Court_Width) || (z1 - z0), cz);
+    if (fi.type === "sprint_lane") return box(u(p.Lane_Length) || (x1 - x0), u(p.Lane_Width) || (z1 - z0), cz);
+    if (fi.type === "trampoline") {
+      const d = 2 * ((u(p.Jump_Radius) || 1.45) + (u(p.Pad_Width) || 0.3));
+      return box(d, d, cz);
+    }
+    if (fi.type === "yoga_deck") return box(previewPos(p.Deck_Length, x1 - x0), previewPos(p.Deck_Width, z1 - z0), cz);
+  }
+  return { x0, x1, z0, z1 };
+}
+
+function previewRigParts(m, it, x0, z0, x1, z1) {
+  const src = it && it.sourceJson;
+  if (!src) return 0;
+  if (src.calisthenics) return previewCalisthenicsParts(m, src.calisthenics, x0, z0, x1, z1);
+  if (src.crossfit) return previewCrossfitParts(m, src.crossfit, x0, z0, x1, z1);
+  if (src.trx) return previewTrxParts(m, src.trx, x0, z0, x1, z1);
+  if (src.ping_pong) return previewPingPongParts(m, src.ping_pong, x0, z0, x1, z1);
+  if (src.gardenBlock && src.gardenBlock.params) return previewPlanterParts(m, src.gardenBlock, x0, z0, x1, z1);
+  if (src.familyInstance) return previewFamilyParts(m, src.familyInstance, x0, z0, x1, z1);
+  return 0;
+}
+
+/** Mirrors SportifyCalisthenicsRigBuilder.BuildRig. */
+function previewCalisthenicsParts(m, r, x0, z0, x1, z1) {
+  const bays = Math.max(1, previewPos(r.bays, 3));
+  const bay = previewPos(r.bay_width_m, 1.8);
+  const depth = previewPos(r.rig_depth_m, 1.2);
+  const height = previewPos(r.frame_height_m, 2.5);
+  const postR = previewPos(r.post_diameter_m, 0.1143) / 2;
+  const barR = previewPos(r.bar_diameter_m, 0.04) / 2;
+
+  const span = bays * bay;
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const sx = cx - span / 2;
+  const za = cz - depth / 2, zb = cz + depth / 2;
+  const S = PREVIEW_RIG.steel, G = PREVIEW_RIG.grip;
+
+  for (let i = 0; i <= bays; i++) {
+    const x = sx + i * bay;
+    for (const z of [za, zb]) {
+      previewAddTube(m, [x, 0, z], [x, height, z], postR, S);
+      const p = postR * 2.2;
+      previewAddBox(m, x - p, 0, z - p, x + p, 0.012, z + p, S);
+    }
+  }
+  for (const z of [za, zb]) previewAddTube(m, [sx, height - postR, z], [sx + span, height - postR, z], postR, S);
+
+  if (r.monkey_bars && r.rung_count > 0) {
+    const monkeyBays = Math.max(1, previewPos(r.monkey_bays, 1));
+    const startX = sx + (bays >= 3 ? bay : 0);
+    const runSpan = monkeyBays * bay;
+    const y = height - postR * 2 - barR;
+    for (let i = 0; i < r.rung_count; i++) {
+      const t = r.rung_count > 1 ? i / (r.rung_count - 1) : 0.5;
+      const x = startX + t * runSpan;
+      previewAddTube(m, [x, y, za], [x, y, zb], barR, G);
+    }
+  }
+  if (r.pull_up_bars) {
+    const y = previewPos(r.pull_up_height_m, 2.4);
+    const ends = bays >= 2 ? [0, bays - 1] : [0];
+    for (const b of ends) {
+      const x = sx + (b + 0.5) * bay;
+      previewAddTube(m, [x, y, za], [x, y, zb], barR, G);
+    }
+  }
+  if (r.dip_bars) {
+    const y = previewPos(r.dip_height_m, 1.3);
+    const half = previewPos(r.dip_spacing_m, 0.6) / 2;
+    const b = bays >= 3 ? 1 : 0;
+    const xa = sx + b * bay, xb = xa + bay;
+    for (const z of [cz - half, cz + half]) previewAddTube(m, [xa, y, z], [xb, y, z], barR, G);
+  }
+  if (r.low_bar) {
+    const y = previewPos(r.low_bar_height_m, 0.9);
+    const x = sx + (bays - 0.5) * bay;
+    previewAddTube(m, [x, y, za], [x, y, zb], barR, G);
+  }
+  return height;
+}
+
+/** Mirrors SportifyCrossfitRigBuilder.BuildRig. Square uprights: that is the point of the thing. */
+function previewCrossfitParts(m, r, x0, z0, x1, z1) {
+  const bays = Math.max(1, previewPos(r.bays, 3));
+  const bay = previewPos(r.bay_width_m, 1.2);
+  const up = previewPos(r.upright_size_m, 0.075);
+  const height = previewPos(r.upright_height_m, 2.75);
+  const barR = previewPos(r.bar_diameter_m, 0.032) / 2;
+  const depth = previewPos(r.rig_depth_m, 1.1);
+
+  const span = bays * bay;
+  const cx = (x0 + x1) / 2, sx = cx - span / 2;
+  // Working room sits in FRONT of each face, so the steel starts that far in.
+  const cz = z0 + previewPos(r.working_depth_m, 2.0) + previewPos(r.rig_width_m, 1.18) / 2;
+  const rows = r.double_sided ? [cz - depth / 2, cz + depth / 2] : [cz];
+  const S = PREVIEW_RIG.steel, G = PREVIEW_RIG.grip, C = PREVIEW_RIG.cup;
+  const half = up / 2;
+
+  for (const z of rows) {
+    for (let i = 0; i <= bays; i++) {
+      const x = sx + i * bay;
+      previewAddBox(m, x - half, 0, z - half, x + half, height, z + half, S);
+      const p = up * 1.2;
+      previewAddBox(m, x - p, 0, z - p, x + p, 0.012, z + p, S);
+    }
+  }
+  if (r.pull_up_bars) {
+    const y = previewPos(r.pull_up_height_m, 2.4);
+    for (const z of rows)
+      for (let b = 0; b < bays; b++) {
+        const xa = sx + b * bay;
+        previewAddTube(m, [xa, y, z], [xa + bay, y, z], barR, G);
+      }
+  }
+  if (r.double_sided && rows.length === 2) {
+    const y = height - half;
+    for (let i = 0; i <= bays; i++) {
+      const x = sx + i * bay;
+      previewAddBox(m, x - half, y - half, rows[0], x + half, y + half, rows[1], S);
+    }
+  }
+  if (r.squat_stations) {
+    const y = previewPos(r.j_cup_height_m, 1.2);
+    const reach = up * 1.5;
+    for (const z of rows) {
+      const sign = r.double_sided ? (z < cz ? 1 : -1) : 1;
+      for (let i = 0; i <= bays; i++) {
+        const x = sx + i * bay;
+        const za = z + sign * half, zb = za + sign * reach;
+        previewAddBox(m, x - half, y, Math.min(za, zb), x + half, y + up * 0.8, Math.max(za, zb), C);
+      }
+    }
+  }
+  if (r.dip_bars) {
+    const y = previewPos(r.dip_height_m, 1.35);
+    const b = bays >= 2 ? 1 : 0;
+    const xa = sx + b * bay, xb = xa + bay;
+    const off = Math.min(0.3, depth / 4);
+    for (const z of [cz - off, cz + off]) previewAddTube(m, [xa, y, z], [xb, y, z], barR, G);
+  }
+  if (r.plate_storage) {
+    const y = previewPos(r.peg_height_m, 1.5);
+    const out = previewPos(r.peg_projection_m, 0.4);
+    for (const z of rows) {
+      const sign = r.double_sided ? (z < cz ? -1 : 1) : -1;
+      for (let i = 0; i <= bays; i++) {
+        const x = sx + i * bay;
+        previewAddTube(m, [x, y, z + sign * half], [x, y, z + sign * (half + out)], 0.025, S);
+      }
+    }
+  }
+  return height;
+}
+
+/** Mirrors SportifyTrxFrameBuilder.BuildFrame. The splay is the point: it is what resists the pull. */
+function previewTrxParts(m, f, x0, z0, x1, z1) {
+  const beam = previewPos(f.beam_length_m, 3.0);
+  const height = previewPos(f.frame_height_m, 2.45);
+  const spread = previewPos(f.leg_spread_m, 1.2);
+  const beamR = previewPos(f.beam_diameter_m, 0.089) / 2;
+  const legR = previewPos(f.leg_diameter_m, 0.076) / 2;
+
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const xa = cx - beam / 2, xb = cx + beam / 2;
+  const S = PREVIEW_RIG.steel, G = PREVIEW_RIG.grip;
+
+  previewAddTube(m, [xa, height, cz], [xb, height, cz], beamR, S);
+
+  const half = f.a_frame ? spread / 2 : 0;
+  for (const x of [xa, xb]) {
+    for (const sign of [-1, 1]) {
+      const zf = cz + sign * half;
+      previewAddTube(m, [x, 0, zf], [x, height, cz], legR, S);
+      const p = legR * 3;
+      previewAddBox(m, x - p, 0, zf - p, x + p, 0.014, zf + p, S);
+      if (!f.a_frame) break;
+    }
+  }
+  if (f.mid_rail) {
+    const y = Math.min(0.45, height / 4);
+    previewAddTube(m, [xa, y, cz], [xb, y, cz], legR * 0.8, S);
+  }
+
+  // The anchors, and a hint of the straps hanging from them — without those it
+  // reads as a goalpost rather than as something you train on.
+  const n = Math.max(1, previewPos(f.anchor_count, 5));
+  const usable = Math.max(0, beam - 0.3);
+  for (let i = 0; i < n; i++) {
+    const t = n > 1 ? i / (n - 1) : 0.5;
+    const x = xa + 0.15 + t * usable;
+    previewAddTube(m, [x, height - beamR, cz - 0.022], [x, height - beamR, cz + 0.022], 0.022, G);
+    previewAddTube(m, [x, height - beamR, cz], [x, height - 1.15, cz - 0.16], 0.012, G);
+    previewAddTube(m, [x, height - beamR, cz], [x, height - 1.15, cz + 0.16], 0.012, G);
+  }
+  return height;
+}
+
+/**
+ * A table tennis table.
+ *
+ * The worst brick of the lot: the piece's box is the PLAYING SPACE, so a
+ * recreational table was drawn as a 7.6 x 4.6 m slab where the real thing is a
+ * 2.74 x 1.5 m table you can walk round. Mirrors SportifyPingPongBuilder.
+ */
+function previewPingPongParts(m, t, x0, z0, x1, z1) {
+  const L = previewPos(t.table_length_m, 2.74), W = previewPos(t.table_width_m, 1.525);
+  const H = previewPos(t.table_height_m, 0.76), top = previewPos(t.table_top_thickness_m, 0.025);
+  const netH = previewPos(t.net_height_m, 0.1525), over = previewPos(t.net_overhang_m, 0.1525);
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const a = cx - L / 2, b = cx + L / 2, c = cz - W / 2, d = cz + W / 2;
+
+  const deck = [0.16, 0.36, 0.55, 1];          // ITTF tables are dark blue or green, matt
+  const line = [0.95, 0.95, 0.95, 1];
+  const frame = [0.28, 0.30, 0.34, 1];
+
+  previewAddBox(m, a, H - top, c, b, H, d, deck);
+  // The white edge lines and the centre line only doubles uses.
+  const lw = previewPos(t.line_width_m, 0.02);
+  previewAddBox(m, a, H, c, b, H + 0.002, c + lw, line);
+  previewAddBox(m, a, H, d - lw, b, H + 0.002, d, line);
+  previewAddBox(m, a, H, c, a + lw, H + 0.002, d, line);
+  previewAddBox(m, b - lw, H, c, b, H + 0.002, d, line);
+  previewAddBox(m, a, H, cz - lw / 2, b, H + 0.002, cz + lw / 2, line);
+
+  if (String(t.table || "") === "concrete") {
+    previewAddBox(m, cx - L * 0.2, 0, cz - W * 0.3, cx + L * 0.2, H - top, cz + W * 0.3, frame);
+  } else {
+    const leg = 0.06;
+    for (const lx of [a + 0.25, b - 0.25 - leg]) for (const lz of [c + 0.15, d - 0.15 - leg])
+      previewAddBox(m, lx, 0, lz, lx + leg, H - top, lz + leg, frame);
+  }
+  // The net, overhanging both sides — that overhang is in the Laws.
+  previewAddBox(m, cx - 0.008, H, c - over, cx + 0.008, H + netH, d + over, [0.9, 0.9, 0.9, 1]);
+  return H + netH;
+}
+
+/**
+ * A planter or garden block, from the family's own formula values.
+ *
+ * The box was close in size but told you nothing: a planter IS a rim with soil
+ * inside it, and the freeboard between the two is the thing the panel spends a
+ * whole warning on.
+ */
+function previewPlanterParts(m, block, x0, z0, x1, z1) {
+  const p = block.params || {};
+  const mm = v => previewPos(v, 0) / 1000;
+  const rim = mm(p.rimLevel), ped = mm(p.pedestalHeight), tray = mm(p.trayFloorTop);
+  const soil = mm(p.substrateTop), cap = mm(p.capTop) || rim + 0.07;
+  const wall = 0.06;
+
+  const body = [0.55, 0.50, 0.44, 1];
+  const earth = [0.31, 0.24, 0.16, 1];
+  const green = [0.25, 0.55, 0.30, 1];
+
+  // The pedestal it stands on, then the rim as four walls round an open tray.
+  if (ped > 0) previewAddBox(m, x0 + 0.1, 0, z0 + 0.1, x1 - 0.1, ped, z1 - 0.1, [0.4, 0.4, 0.42, 1]);
+  previewAddBox(m, x0, ped, z0, x1, cap, z0 + wall, body);
+  previewAddBox(m, x0, ped, z1 - wall, x1, cap, z1, body);
+  previewAddBox(m, x0, ped, z0, x0 + wall, cap, z1, body);
+  previewAddBox(m, x1 - wall, ped, z0, x1, cap, z1, body);
+  previewAddBox(m, x0 + wall, ped, z0 + wall, x1 - wall, tray, z1 - wall, body);
+  // The growing medium, stopping short of the rim: that gap is the freeboard.
+  if (soil > tray) previewAddBox(m, x0 + wall, tray, z0 + wall, x1 - wall, soil, z1 - wall, earth);
+  if (p.tree) {
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    previewAddCylinder(m, cx, cz, 0.07, soil, soil + 1.2, [0.42, 0.31, 0.19, 1], 8);
+    previewAddEllipsoid(m, cx, soil + 2.0, cz, 0.9, 0.8, 0.9, green);
+    return soil + 2.8;
+  }
+  return cap;
+}
+
+/**
+ * The design team's families, approximated from the parameters they expose.
+ *
+ * These are the one place the 3D CANNOT match Revit exactly, and it is worth
+ * being plain about why: Revit loads their authored .rfa and we have never seen
+ * its geometry — only the numbers on it. So these are built from those numbers
+ * and are a likeness, not a copy. A tower of the right height with the right
+ * taper beats a brick of the right height, and neither is the family.
+ */
+function previewFamilyParts(m, fi, x0, z0, x1, z1) {
+  const p = fi.params || {}, isMm = fi.units === "mm";
+  const u = v => (isMm ? previewPos(v, 0) / 1000 : previewPos(v, 0));
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const steel = [0.34, 0.37, 0.41, 1], timber = [0.55, 0.42, 0.28, 1];
+
+  switch (fi.type) {
+    case "climbing_tower": {
+      // Hexagonal and tapering: drawn as stacked rings so the taper reads.
+      const H = previewPos(p.Tower_Height, 12);
+      const rBase = previewPos(p.Tower_Base_Radio, 3), rTop = previewPos(p.Tower_Top_Radio, 4);
+      const rings = 6;
+      for (let i = 0; i < rings; i++) {
+        const y0 = H * i / rings, y1 = H * (i + 1) / rings;
+        const r0 = rBase + (rTop - rBase) * (i / rings);
+        const poly = [];
+        for (let k = 0; k < 6; k++) {
+          const a = k / 6 * 2 * Math.PI;
+          poly.push([cx + Math.cos(a) * r0, cz + Math.sin(a) * r0]);
+        }
+        previewAddPrism(m, poly, y0, y1, [0.42, 0.46, 0.52, 1], [0.34, 0.37, 0.41, 1]);
+      }
+      // Masts up the corners, so it reads as a frame and not a solid cone.
+      for (let k = 0; k < 6; k++) {
+        const a = k / 6 * 2 * Math.PI;
+        previewAddTube(m, [cx + Math.cos(a) * rBase, 0, cz + Math.sin(a) * rBase],
+                          [cx + Math.cos(a) * rTop, H, cz + Math.sin(a) * rTop], 0.09, steel);
+      }
+      const ct = previewPos(p.Canopy_Thickness, 0.1), cr = previewPos(p.Canopy_Radio, 2.1);
+      previewAddCylinder(m, cx, cz, cr + previewPos(p.Canopy_Overhang, 1), H, H + ct, [0.86, 0.36, 0.24, 1], 12);
+      return H + ct;
+    }
+    case "yoga_deck": {
+      const L = previewPos(p.Deck_Length, 10), W = previewPos(p.Deck_Width, 5);
+      const a = cx - L / 2, b = cx + L / 2, c = cz - W / 2, d = cz + W / 2;
+      previewAddBox(m, a, 0, c, b, 0.18, d, timber);
+      if (p.Show_Roof) {
+        const rh = previewPos(p.Roof_Height, 4), rt = previewPos(p.Roof_Thickness, 0.15);
+        for (const px of [a + 0.2, b - 0.2]) for (const pz of [c + 0.2, d - 0.2])
+          previewAddTube(m, [px, 0.18, pz], [px, rh, pz], 0.06, steel);
+        previewAddBox(m, a - 0.3, rh, c - 0.3, b + 0.3, rh + rt, d + 0.3, [0.78, 0.78, 0.80, 1]);
+        // Planters at the spacing, which is the count someone has to order.
+        const step = Math.max(0.3, previewPos(p.Planter_Spacing, 1.5));
+        for (let t = step / 2; t < L; t += step) {
+          for (const pz of [c, d]) previewAddBox(m, a + t - 0.18, 0.18, pz - 0.18, a + t + 0.18, 0.62, pz + 0.18, [0.25, 0.5, 0.3, 1]);
+        }
+        return rh + rt;
+      }
+      return 0.18;
+    }
+    case "locker_module": {
+      const n = Math.max(1, Math.round(previewPos(p.Column_Count, 1)));
+      const w = previewPos(p.Module_Width, 0.8), dep = previewPos(p.Module_Depth, 0.7);
+      const h = previewPos(p.Module_Height, 2), leg = previewPos(p.Leg_Height, 0.15);
+      const a = cx - (n * w) / 2, c = cz - dep / 2;
+      previewAddBox(m, a, leg, c, a + n * w, leg + h, c + dep, [0.45, 0.50, 0.58, 1]);
+      for (let i = 0; i <= n; i++) previewAddBox(m, a + i * w - 0.012, leg, c, a + i * w + 0.012, leg + h, c + dep + 0.004, [0.28, 0.31, 0.36, 1]);
+      for (const lx of [a + 0.05, a + n * w - 0.13]) for (const lz of [c + 0.05, c + dep - 0.13])
+        previewAddBox(m, lx, 0, lz, lx + 0.08, leg, lz + 0.08, steel);
+      return leg + h;
+    }
+    case "dressing_cabin": {
+      const w = previewPos(p.Cabin_Width, 2.1), dep = previewPos(p.Cabin_Depth, 1.8);
+      const h = previewPos(p.Cabin_Height, 2.1), tot = previewPos(p.Total_Height, 2.5);
+      const leg = previewPos(p.Leg_Height, 0.15), t = previewPos(p.Wall_Thickness, 0.15);
+      // The cabin sits at the back of its box when the clearance is shown.
+      const a = cx - w / 2, c = z0 + (p.Show_Clearance ? 0 : (z1 - z0 - dep) / 2);
+      const body = [0.62, 0.64, 0.68, 1];
+      previewAddBox(m, a, leg, c, a + w, leg + tot, c + t, body);
+      previewAddBox(m, a, leg, c + dep - t, a + w, leg + tot, c + dep, body);
+      previewAddBox(m, a, leg, c, a + t, leg + tot, c + dep, body);
+      previewAddBox(m, a + w - t, leg, c, a + w, leg + tot, c + dep, body);
+      previewAddBox(m, a, leg + h, c, a + w, leg + tot, c + dep, [0.72, 0.74, 0.78, 1]);
+      previewAddBox(m, a, 0, c, a + w, leg, c + dep, steel);
+      return leg + tot;
+    }
+    case "trampoline": {
+      // Round: the pit, the pad and the mat you land on.
+      const jump = u(p.Jump_Radius) || 1.45, pad = u(p.Pad_Width) || 0.3;
+      const baseH = u(p.Base_Height) || 0.4, bed = u(p.Bedding) || 0.05;
+      previewAddCylinder(m, cx, cz, jump + pad, 0, baseH, [0.80, 0.73, 0.55, 1], 20);
+      previewAddCylinder(m, cx, cz, jump + pad, baseH, baseH + bed, [0.72, 0.64, 0.45, 1], 20);
+      previewAddCylinder(m, cx, cz, jump, baseH + bed, baseH + bed + 0.04, [0.22, 0.24, 0.30, 1], 20);
+      if (p.Show_Net) {
+        const nh = u(p.Net_Height) || 2.1;
+        for (let k = 0; k < 10; k++) {
+          const a = k / 10 * 2 * Math.PI;
+          previewAddTube(m, [cx + Math.cos(a) * (jump + pad), baseH, cz + Math.sin(a) * (jump + pad)],
+                            [cx + Math.cos(a) * (jump + pad), baseH + nh, cz + Math.sin(a) * (jump + pad)], 0.03, steel);
+        }
+        return baseH + nh;
+      }
+      return baseH + bed + 0.04;
+    }
+    case "urban_bocce": {
+      // A boarded channel: the bumpers ARE the court.
+      const L = u(p.Court_Length) || 18, W = u(p.Court_Width) || 3;
+      const bt = u(p.Bumper_Thickness) || 0.15, bh = u(p.Bumper_Height) || 0.25;
+      const a = cx - L / 2 - bt, b = cx + L / 2 + bt, c = cz - W / 2 - bt, d = cz + W / 2 + bt;
+      previewAddBox(m, a + bt, 0, c + bt, b - bt, 0.05, d - bt, [0.78, 0.72, 0.55, 1]);
+      const board = [0.48, 0.36, 0.22, 1];
+      previewAddBox(m, a, 0, c, b, bh, c + bt, board);
+      previewAddBox(m, a, 0, d - bt, b, bh, d, board);
+      previewAddBox(m, a, 0, c, a + bt, bh, d, board);
+      previewAddBox(m, b - bt, 0, c, b, bh, d, board);
+      return bh;
+    }
+    case "sprint_lane": {
+      const L = u(p.Lane_Length) || 63, W = u(p.Lane_Width) || 1.2, t = u(p.Track_Thickness) || 0.02;
+      const a = cx - L / 2, c = cz - W / 2;
+      previewAddBox(m, a, 0, c, a + L, t, c + W, [0.72, 0.33, 0.20, 1]);
+      for (const lx of [a, a + L - 0.05]) previewAddBox(m, lx, t, c, lx + 0.05, t + 0.002, c + W, [0.95, 0.95, 0.95, 1]);
+      return t;
+    }
+    default: return 0;
+  }
+}
+
 function previewAddEllipsoid(m, cx, cy, cz, rx, ry, rz, color, lat = 6, lon = 12) {
   const at = (i, j) => {
     const th = i / lat * Math.PI, ph = j / lon * 2 * Math.PI;
@@ -408,15 +958,31 @@ function previewBuildScene(snapIn) {
     for (let z = Math.ceil(minZ / 5) * 5; z <= maxZ; z += 5) previewAddSegment(lines, [minX, 0.004, z], [maxX, 0.004, z], c);
   }
 
-  // ground zones: flat, coloured like their kind
+  // ground zones: flat, coloured like their kind — unless the zone is built in
+  // a tray, in which case it has real depth and a rim standing above the deck,
+  // and drawing it flat would hide the one thing the tray is for.
   for (const z of snap.zones || []) {
     const poly = (z.points || []).map(p => [previewNum(p.x_m, 0), previewNum(p.y_m, 0)]);
     if (previewCleanPolygon(poly).length < 3) continue;
-    previewAddPolygonFlat(opaque, poly, 0.008, previewHex(PREVIEW_ZONE_COLORS[z.kind] || "#4a9c5d"), 1);
+    const green = previewHex(PREVIEW_ZONE_COLORS[z.kind] || "#4a9c5d");
+
+    const fam = z.family && z.family.parameters;
+    if (fam) {
+      const mm = v => previewPos(v, 0) / 1000;
+      const rim = mm(fam.rimLevel), ped = mm(fam.pedestalHeight), soil = mm(fam.substrateTop);
+      // The tray as a solid to the rim, the build-up as its top surface, and the
+      // freeboard as the gap between them — the same section the Zones panel draws.
+      previewAddPrism(opaque, poly, 0, Math.max(0.02, rim), [0.58, 0.58, 0.60, 1], [0.46, 0.46, 0.48, 1]);
+      previewAddPolygonFlat(opaque, poly, Math.max(0.03, soil || rim * 0.85), green, 1);
+      if (ped > 0) previewAddLoop(lines, poly, ped, [0.3, 0.3, 0.33, 0.5]);
+    } else {
+      previewAddPolygonFlat(opaque, poly, 0.008, green, 1);
+    }
   }
 
   // the pieces
   let topY = 0;
+
   for (const it of snap.items || []) {
     const w = previewPos(it.w, 1), h = previewPos(it.h, 1), x0 = previewNum(it.x_m, 0), z0 = previewNum(it.y_m, 0), x1 = x0 + w, z1 = z0 + h, cx = x0 + w / 2, cz = z0 + h / 2;
     const spec = previewPieceSpec(it);
@@ -437,6 +1003,22 @@ function previewBuildScene(snapIn) {
       pts.push([cx, H, cz]);
       casters.push({ id: it.id, points: pts });
       topY = Math.max(topY, H);
+    } else if (previewRigHeight(it) > 0) {
+      // A rig is not a volume: drawn as its own tubes, with the room it needs
+      // shown as a footprint outline rather than filled in as if it were solid.
+      const H = previewRigParts(opaque, it, x0, z0, x1, z1);
+      previewAddLoop(lines, [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], 0.006, [base[0], base[1], base[2], 0.55]);
+
+      // Shadows come from the steel, not from the safety area — an open frame
+      // that shaded its whole clearance would be a lie in the sun study.
+      const r = previewRigExtent(it, x0, z0, x1, z1);
+      const pts = [[r.x0, 0, r.z0], [r.x1, 0, r.z0], [r.x1, 0, r.z1], [r.x0, 0, r.z1],
+                   [r.x0, H, r.z0], [r.x1, H, r.z0], [r.x1, H, r.z1], [r.x0, H, r.z1]];
+      casters.push({ id: it.id, points: pts });
+      pick.max = [x1, H, z1];
+      topY = Math.max(topY, H);
+      pieces.push({ id: it.id, label: String(it.label == null ? "" : it.label), kind: it.kind, category: spec.category, assumed: !!spec.assumed, box: pick });
+      continue;
     } else {
       const H = spec.heightM;
       const top = spec.category === "garden" ? previewHex("#3fbf7f") : previewHex(PREVIEW_KIND_COLORS[it.kind] || PREVIEW_KIND_COLORS.field);
@@ -469,6 +1051,34 @@ function previewBuildScene(snapIn) {
             else { previewAddBox(opaque, ex - 0.06, H, ez - 0.06, ex + 0.06, R + 0.3, ez + 0.06, post); previewAddBox(opaque, ex - 0.9, R - 0.35, ez + dir * 0.06, ex + 0.9, R + 0.7, ez + dir * 0.11, board); }
           }
           topOfPiece = Math.max(topOfPiece, R + 0.7);
+        } else if (it.sourceJson && it.sourceJson.football) {
+          // Goals, and the rebound boards when the court has them. Futsal goals
+          // are 3 x 2 m, which the payload carries rather than this assuming.
+          const f = it.sourceJson.football;
+          const gw = previewPos(f.goal_width_m, 3), gh = previewPos(f.goal_height_m, 2), post = 0.08;
+          const frame = [0.94, 0.94, 0.95, 1], net = [0.85, 0.87, 0.90, 0.5];
+          const ends = alongX ? [[x0 + 0.1, cz, 1], [x1 - 0.1, cz, -1]] : [[cx, z0 + 0.1, 1], [cx, z1 - 0.1, -1]];
+          for (const [ex, ez, dir] of ends) {
+            if (alongX) {
+              for (const gz of [ez - gw / 2, ez + gw / 2 - post])
+                previewAddBox(opaque, ex, H, gz, ex + post, H + gh, gz + post, frame);
+              previewAddBox(opaque, ex, H + gh, ez - gw / 2, ex + post, H + gh + post, ez + gw / 2, frame);
+              previewAddBox(glass, ex, H, ez - gw / 2, ex + dir * 0.9, H + gh, ez + gw / 2, net);
+            } else {
+              for (const gx of [ex - gw / 2, ex + gw / 2 - post])
+                previewAddBox(opaque, gx, H, ez, gx + post, H + gh, ez + post, frame);
+              previewAddBox(opaque, ex - gw / 2, H + gh, ez, ex + gw / 2, H + gh + post, ez + post, frame);
+              previewAddBox(glass, ex - gw / 2, H, ez, ex + gw / 2, H + gh, ez + dir * 0.9, net);
+            }
+          }
+          if (String(f.boards || "") === "low") {
+            const bh = previewPos(f.board_height_m, 1.0), bt = 0.08;
+            const boardC = [0.30, 0.34, 0.40, 1];
+            previewAddBox(opaque, x0, H, z0, x1, H + bh, z0 + bt, boardC);
+            previewAddBox(opaque, x0, H, z1 - bt, x1, H + bh, z1, boardC);
+            topOfPiece = Math.max(topOfPiece, H + bh);
+          }
+          topOfPiece = Math.max(topOfPiece, H + gh + post);
         }
         pick.max = [x1, topOfPiece, z1];
       }
