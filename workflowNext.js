@@ -1,6 +1,6 @@
 /**
  * workflowNext.js — a "Next" step through the app's own design workflow: Site, Structure inputs, Site conditions,
- * Sport, Garden, Combine, Results, Compare, Improve, Catalogue, Revit families, in that order (the same order the
+ * Sport, Garden, Combine, Results, Improve, Compare, Catalogue, Revit families, in that order (the same order the
  * mode rail lists them in). Not the tabs that frame the app rather than being a step of designing a roof (Overview,
  * Documents, Save Session, Profile) — those get no "Next", and are not a step something else leads to either.
  *
@@ -11,7 +11,7 @@
  * button always reflects whatever is actually on screen, including a mode a link jumped straight to.
  */
 
-const WORKFLOW_ORDER = ["site", "structure", "conditions", "sport", "gardenBlocks", "combine", "analysis", "compare", "postAnalysis", "data", "families"];
+const WORKFLOW_ORDER = ["site", "structure", "conditions", "sport", "gardenBlocks", "combine", "analysis", "postAnalysis", "compare", "data", "families"];
 
 /** The next workflow step after `mode` that the person's profile view actually shows (profileModeVisible — the same rule the tabs themselves follow), or null at the end of the chain, or off it entirely. */
 function workflowNextMode(mode) {

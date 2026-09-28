@@ -41,10 +41,10 @@ function page(profile) {
 // ---------------------------------------------------------------------------------------------------------------- workflowNextMode: the order, Advanced (nothing hidden)
 {
   const { run } = page({ view: "advanced", extras: [] });
-  check("Advanced: the order is exactly Site, Structure inputs, Site conditions, Sport, Garden, Combine, Results, Compare, Improve, Catalogue, Revit families",
-    run('WORKFLOW_ORDER.join(",")') === "site,structure,conditions,sport,gardenBlocks,combine,analysis,compare,postAnalysis,data,families");
-  const order = ["site", "structure", "conditions", "sport", "gardenBlocks", "combine", "analysis", "compare", "postAnalysis", "data"];
-  check("each step's next is exactly the one after it in that order, nothing skipped", order.every((m, i) => run(`workflowNextMode(${JSON.stringify(m)})`) === "families" || run(`workflowNextMode(${JSON.stringify(m)})`) === ["structure", "conditions", "sport", "gardenBlocks", "combine", "analysis", "compare", "postAnalysis", "data", "families"][i]));
+  check("Advanced: the order is exactly Site, Structure inputs, Site conditions, Sport, Garden, Combine, Results, Improve, Compare, Catalogue, Revit families",
+    run('WORKFLOW_ORDER.join(",")') === "site,structure,conditions,sport,gardenBlocks,combine,analysis,postAnalysis,compare,data,families");
+  const order = ["site", "structure", "conditions", "sport", "gardenBlocks", "combine", "analysis", "postAnalysis", "compare", "data"];
+  check("each step's next is exactly the one after it in that order, nothing skipped", order.every((m, i) => run(`workflowNextMode(${JSON.stringify(m)})`) === "families" || run(`workflowNextMode(${JSON.stringify(m)})`) === ["structure", "conditions", "sport", "gardenBlocks", "combine", "analysis", "postAnalysis", "compare", "data", "families"][i]));
   check("Revit families (the last step) has no next", run('workflowNextMode("families")') === null);
   check("a tab that frames the app rather than being a design step (Overview, Documents, Save Session, Profile) is not on the chain at all", ["guide", "deliverables", "session", "profile"].every(m => run(`workflowNextMode(${JSON.stringify(m)})`) === null));
   check("an unknown mode is quietly not on the chain either, never throws", run('workflowNextMode("nonsense")') === null);
@@ -63,7 +63,7 @@ function page(profile) {
 }
 {
   const { run } = page({ view: "simple", extras: ["postAnalysis"] });
-  check("Improve's own extra: Compare stays hidden (Results' next skips straight to Improve), and Improve's own next (Catalogue) is still hidden, so Improve is the end", run('workflowNextMode("analysis")') === "postAnalysis" && run('workflowNextMode("postAnalysis")') === null);
+  check("Improve's own extra: Results' next is Improve directly (it is right after Results in the order now), and Improve's own next (Compare, still hidden) is skipped too, so Improve is the end", run('workflowNextMode("analysis")') === "postAnalysis" && run('workflowNextMode("postAnalysis")') === null);
 }
 {
   const { run } = page({ view: "simple" });      // no extras array at all — must not throw
