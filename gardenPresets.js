@@ -107,6 +107,29 @@ function gardenOutlineReach(px, py, dx, dy) {
   return best;
 }
 
+/**
+ * Whether the roof boundary nearest (px, py) runs along x or along y. The planter rows themselves are always safely inside
+ * a straight run of the roof's own longest edge, so their rotation (ax.alongX) is fine as it is — but the two end pieces
+ * (calisthenics, yoga_deck) sit past the last planter, which can be near a corner where the roof tapers or steps rather than
+ * continuing the longest edge's own direction. Rotating those by the roof's single OVERALL axis put a piece's long side
+ * across a locally angled or perpendicular edge instead of along it (user, 2026-09-28, saw a Yoga Deck sit crosswise to a
+ * tapered corner in a live Revit import). This looks at the edge actually nearest the piece's own position instead.
+ */
+function edgeAlongXNear(px, py) {
+  const foot = gardenPresetFootprint();
+  let best = null;
+  foot.forEach((a, i) => {
+    const b = foot[(i + 1) % foot.length];
+    const dx = b[0] - a[0], dy = b[1] - a[1], len2 = dx * dx + dy * dy;
+    if (len2 < 1e-9) return;
+    const t = Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / len2));
+    const ex = a[0] + t * dx, ey = a[1] + t * dy;
+    const d = Math.hypot(ex - px, ey - py);
+    if (!best || d < best.d) best = { d, alongX: Math.abs(dx) >= Math.abs(dy) };
+  });
+  return best ? best.alongX : true;
+}
+
 /** Is anything on the board that a preset would clear (pieces, garden zones, indoor walls, the tray)? */
 function gardenBoardHasContent() {
   return combineState.items.length > 0 || (combineState.zones || []).length > 0 || (combineState.walls || []).length > 0 || (combineState.tray || []).length > 0;
@@ -206,13 +229,17 @@ function applyGardenPreset(key) {
     const along = e.end * (row / 2 + e.clear + len / 2);
     const across = ax.edgeLine + ax.inward * (sb + wid / 2);                 // its long side on the setback line
     const cxm = ax.alongX ? ax.cx + along : across, cym = ax.alongX ? across : ax.cy + along;
-    const w = ax.alongX ? len : wid, h = ax.alongX ? wid : len;
+    // Where it sits stays keyed to the roof's overall longest edge (the spec: "against the setback line of the roof's
+    // longest edge"); how it's turned follows whichever edge is actually nearest that spot, which can be a locally
+    // tapered or stepped corner rather than a plain continuation of that longest edge.
+    const alongXHere = edgeAlongXNear(cxm, cym);
+    const w = alongXHere ? len : wid, h = alongXHere ? wid : len;
     const sp = typeof AlgoPlacement !== "undefined" ? AlgoPlacement.SPORTS.find(x => x.name === e.engine) : null;
     const src = sp && typeof algoCatalogueSource === "function" ? algoCatalogueSource(e.engine, Object.assign({}, sp, { long: len, short: wid })) : {};
     const label = a.label;
     combineState.items.push({
       id: `preset_${key}_${stamp}_${n++}`, kind: "activity", label,
-      length_m: len, width_m: wid, rotation: ax.alongX ? 0 : 90,
+      length_m: len, width_m: wid, rotation: alongXHere ? 0 : 90,
       x_m: Math.round((cxm - w / 2) * 100) / 100, y_m: Math.round((cym - h / 2) * 100) / 100,
       preset: key, sourceJson: Object.assign({}, src, { generator: "Sportify-Garden-Preset", preset: key })
     });

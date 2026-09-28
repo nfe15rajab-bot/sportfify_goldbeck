@@ -235,6 +235,14 @@ function ruleBasedArrange(combineState, rules) {
     }
   }
 
+  // The "usable" rectangle above is the plain bounding box minus the setback — on a turned, L-shaped or stepped roof that rectangle
+  // can reach past the real outline (a notch, a tapered corner), so a row-packed spot that fits the rectangle can still land off
+  // the actual roof. boardRectOnRoof/algoFootprint (combineField.js/algoPlacementUI.js) are the same real-outline check the Rules
+  // tab already flags a piece red for; reusing them here means auto-arrange never hands back a spot that check would reject a
+  // moment later. On a plain rectangular roof algoFootprint() IS that rectangle, so this never rejects anything extra there.
+  const poly = typeof algoFootprint === "function" ? algoFootprint() : null;
+  const onRealRoof = (x, y, w, h) => !poly || typeof boardRectOnRoof !== "function" || boardRectOnRoof([x, y, x + w, y + h], poly);
+
   const placements = new Map();
   const unplaced = [];
 
@@ -247,7 +255,7 @@ function ruleBasedArrange(combineState, rules) {
       if (cx > zone.x0 && cx + fp.w > zone.x1 + 1e-6) {
         cx = zone.x0; cy += rowH + gap; rowH = 0;
       }
-      if (fp.w > zone.x1 - zone.x0 + 1e-6 || cy + fp.h > zone.y1 + 1e-6) {
+      if (fp.w > zone.x1 - zone.x0 + 1e-6 || cy + fp.h > zone.y1 + 1e-6 || !onRealRoof(cx, cy, fp.w, fp.h)) {
         unplaced.push(it);
         return;
       }
@@ -511,12 +519,17 @@ function suggestPositionsForItem(item, combineState, rules, topN = 3) {
   const setback = rules.boundarySetback_m, half = rules.clearance_m / 2;
   const cx = roof.length / 2, cy = roof.width / 2;
   const candidates = [];
+  // Same real-outline check ruleBasedArrange's packZone uses: a candidate clear of every rectangle test below can still be outside
+  // a turned/L-shaped/stepped roof's real boundary, which is exactly what suggested a spot the Rules tab then flagged red for.
+  const poly = typeof algoFootprint === "function" ? algoFootprint() : null;
+  const onRealRoof = (x, y, w, h) => !poly || typeof boardRectOnRoof !== "function" || boardRectOnRoof([x, y, x + w, y + h], poly);
 
   [0, 90].forEach(rotation => {
     const fp = getFootprint({ ...item, rotation });
     const stride = candidateStride(roof, fp.w, fp.h);
     for (let y = setback; y + fp.h <= roof.width - setback + 1e-6; y += stride) {
       for (let x = setback; x + fp.w <= roof.length - setback + 1e-6; x += stride) {
+        if (!onRealRoof(x, y, fp.w, fp.h)) continue;
         // Grow BOTH boxes by half the clearance gap each — the same
         // symmetric growth findOverlappingIds uses — so a candidate this
         // search calls "clear" can never be one the real overlap check
