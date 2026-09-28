@@ -120,8 +120,8 @@ const KINETICS = {
   },
   windbreak_screen: {
     label: "Wind-Break Screen", short: "Wind-break", icon: "ti-wind",
-    category: "edge", kineticKind: "windbreak", built: false,
-    hint: "A deployable screen on an edge flagged by the Wind & Erosion analysis, distinct from the roller fence (which stops balls, not wind). Placeable now; Revit has no wind-break mechanics yet.",
+    category: "edge", kineticKind: "windbreak", built: true,
+    hint: "The roller fence's own mechanism (guide rails, curtain, roller motor), sized against sustained wind on the net rather than a ball's impact — distinct from the roller fence, which is aimed at ball exits.",
     // Same rail-stock logic as the roller fence.
     variants: {
       compact: { length: 6.0, width: 0.3, note: "one rail run (6 m stock)" },

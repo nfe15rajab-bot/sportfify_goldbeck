@@ -209,13 +209,14 @@ const KINETIC_KIND_TEXT = {
   sail: { part: "Masts", open: "Size run to (× analysed)" },
   fence: { part: "Guide rails", open: "" },
   pv_canopy: { part: "Panels", open: "Tracking angle" },
+  windbreak: { part: "Guide rails", open: "" },
 };
 
 function renderKineticPiece(p) {
   const states = Array.isArray(p.states) ? p.states : [];
   const kind = KINETIC_KIND_TEXT[p.kind] ? p.kind : "overhead";
   const text = KINETIC_KIND_TEXT[kind];
-  const isFence = kind === "fence";
+  const isFence = kind === "fence" || kind === "windbreak";
   const size = isFence ? resNum(p.length_m, 1) + " m × " + resNum(p.height_m, 1) + " m" : (kind === "slats" || kind === "fins") ? resNum(p.length_m, 1) + " m × " + resNum(p.height_m, 1) + " m" : resNum(p.width_m, 1) + " × " + resNum(p.depth_m, 1) + " m";
   return `<div class="res-block">
     <label>${resEsc(p.equipment_name || "Dynamic unit")} <span class="res-pill state-entered">${resEsc(p.kind_label || "Overhead louvre")}</span>${p.phase ? ` <span class="res-pill state-accepted">${resEsc(p.phase)}</span>` : ""}</label>
