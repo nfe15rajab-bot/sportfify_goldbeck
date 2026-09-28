@@ -124,6 +124,13 @@ function drawActivity(activityId, dims, isDark) {
     if (typeof drawActivityFamilyPreview === "function") { drawActivityFamilyPreview(svg, activityId, isDark); return; }
   }
 
+  // The calisthenics rig, which is ours to model rather than the design team's
+  // to author — it is a frame of tubes, and tubes we can draw honestly.
+  if (typeof syncCalisthenicsPanel === "function" && syncCalisthenicsPanel(activityId)) {
+    if (typeof calisthenicsApplyFootprint === "function") calisthenicsApplyFootprint();
+    if (typeof drawCalisthenicsPreview === "function") { drawCalisthenicsPreview(svg, isDark); return; }
+  }
+
   // Table tennis: the table is fixed, so what it configures is the room round it.
   if (typeof syncPingPongPanel === "function" && syncPingPongPanel(activityId)) {
     if (typeof pingPongApplyFootprint === "function") pingPongApplyFootprint();
