@@ -36,7 +36,7 @@ function goldbeckCloneRealPayload(payload) {
 const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
   "version": "1.3", "generator": "Sportify-Combine",
   "roof_context": {
-    "length_m": 67.5, "width_m": 16.28, "program": null, "source": "revit",
+    "length_m": 67.5, "width_m": 16.28, "program": "sports", "source": "revit",
     "source_boundary_polygon": [
       { "x_m": 64.8, "y_m": 3.25 }, { "x_m": 67.5, "y_m": 3.25 }, { "x_m": 67.5, "y_m": 16.28 }, { "x_m": 0, "y_m": 16.28 },
       { "x_m": 0, "y_m": 4.41 }, { "x_m": 5.4, "y_m": 4.41 }, { "x_m": 5.4, "y_m": 5 }, { "x_m": 13.5, "y_m": 5 },

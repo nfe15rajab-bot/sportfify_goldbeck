@@ -408,6 +408,14 @@ presetCardsEl?.addEventListener("click", e => {
     applySessionSnapshot(payload, { goldbeckPresetId: preset.id });
     showToast(preset.title, `Loaded ${payload.placements.length} piece(s) on the Goldbeck roof. Fully editable — save a copy anytime.`);
     leaveSessionGate();
+    // These two are real Revit exports with a known roof type and how their pieces were placed (user, 2026-09-28) — go straight to where the
+    // work is instead of the roof-type prompt (the payload's own roof_context.program already skips that; the goldbeckPresetId list below is the
+    // ONE place this needs updating if a third real preset is ever added) and Combine's own manual/algorithmic sub-tab.
+    const GOLDBECK_LANDING = { lowRoofSports: "algo", highRoofGarden: "manual" };
+    if (GOLDBECK_LANDING[preset.id] && typeof setMode === "function") {
+      setMode("combine");
+      if (typeof algoSetMode === "function") algoSetMode(GOLDBECK_LANDING[preset.id]);
+    }
   } catch (err) {
     gateStatusEl.textContent = `Couldn't load that preset: ${err.message}`;
   }
