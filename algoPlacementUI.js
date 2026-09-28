@@ -1223,10 +1223,14 @@ async function algoApply() {
     ensureZoneState();
     const assembly = combineState.zoneAssembly || (typeof defaultAssemblyFor === "function" ? defaultAssemblyFor("green_roof") : null);
     withoutBuildUp = !assembly;
+    // The tray the designer picked in the Zones panel, same as a hand-drawn zone
+    // gets. Without this the algorithm's zones came out as bare floors while the
+    // one zone drawn by hand had a tray — the same roof described two ways.
+    const family = combineState.zoneFamily || null;
     const rects = (plan.bandRects || algoState.site.bandRects).concat(plan.pockets).filter(r => r[2] - r[0] >= 0.3 && r[3] - r[1] >= 0.3);
     rects.forEach((r, i) => {
       // A zone is a polygon (zones.js): `points` is the truth and the box is derived from it, so the pocket is made as the rectangle it is.
-      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
+      const zone = { id: `zone_algo_${stamp}_${i}`, kind: "green_roof", assemblyKey: assembly, familyKey: family, points: rectPoints(algoRound(r[0]), algoRound(r[1]), algoRound(r[2] - r[0]), algoRound(r[3] - r[1])), algorithmic: true };
       combineState.zones.push(syncZoneBounds(zone));
       zoneCount++;
     });

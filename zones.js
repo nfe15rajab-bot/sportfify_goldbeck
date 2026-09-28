@@ -531,6 +531,7 @@ function renderZonePanel() {
         <label>Selected: ${escapeHtml((ZONE_KINDS[selected.kind] || {}).label || selected.kind)}</label>
         <p class="hint">${selected.length_m.toFixed(1)} × ${selected.width_m.toFixed(1)} m —
            <strong>${(selected.length_m * selected.width_m).toFixed(0)} m²</strong></p>
+        ${selectedZoneFamilyHtml(selected)}
         <button class="btn-export" id="btn-delete-zone">
           <i class="ti ti-trash" aria-hidden="true"></i>Delete this zone
         </button>
@@ -593,6 +594,31 @@ function familySectionHtml() {
     </div>`;
 }
 
+/**
+ * The tray on a zone that is ALREADY drawn.
+ *
+ * The picker above sets what the next zone is drawn with; it does not reach back
+ * and change zones that exist. That is the right rule — changing a setting
+ * should not silently rebuild what you already placed — but without this it left
+ * no way at all to put a tray on a zone drawn before the choice was made, and a
+ * roof came out with one zone trayed and eight bare.
+ */
+function selectedZoneFamilyHtml(zone) {
+  if (typeof GREEN_ROOF_FAMILIES === "undefined") return "";
+  if ((ZONE_KINDS[zone.kind] || {}).family !== "green_roof") return "";
+
+  const keys = Object.keys(GREEN_ROOF_FAMILIES);
+  const options = `<option value=""${!zone.familyKey ? " selected" : ""}>None — build-up only, no tray</option>`
+    + keys.map(k => `<option value="${escapeHtml(k)}"${k === zone.familyKey ? " selected" : ""}>${escapeHtml(GREEN_ROOF_FAMILIES[k].label)}</option>`).join("");
+
+  return `
+    <label style="margin-top:8px">Tray for this zone</label>
+    <select id="zone-selected-family">${options}</select>
+    <button class="btn-export" id="btn-apply-family-all" style="margin-top:6px">
+      <i class="ti ti-copy" aria-hidden="true"></i>Use this tray on every green roof zone
+    </button>`;
+}
+
 /** A compact section through the build-up, so the choice is visible rather than just named. */
 function assemblyStripSvg(assembly) {
   const total = assemblyLayerTotalMm(assembly);
@@ -614,6 +640,38 @@ function wireZonePanel() {
     // The previous system may not suit the new kind, so fall back to one that does.
     const still = assembliesForKind(combineState.zoneKind).some(a => a.key === combineState.zoneAssembly);
     if (!still) combineState.zoneAssembly = defaultAssemblyFor(combineState.zoneKind);
+    renderZonePanel();
+  });
+
+  const selFam = document.getElementById("zone-selected-family");
+  if (selFam) selFam.addEventListener("change", () => {
+    const z = getZone(combineState.selectedId);
+    if (!z) return;
+    z.familyKey = selFam.value || null;
+    drawCombineCanvas();
+    renderZonePanel();
+  });
+
+  const applyAll = document.getElementById("btn-apply-family-all");
+  if (applyAll) applyAll.addEventListener("click", () => {
+    const z = getZone(combineState.selectedId);
+    if (!z) return;
+    let n = 0;
+    combineState.zones.forEach(other => {
+      if ((ZONE_KINDS[other.kind] || {}).family !== "green_roof") return;
+      if (other.familyKey === z.familyKey) return;
+      other.familyKey = z.familyKey;
+      n++;
+    });
+    // The algorithm's zones are the reason this button exists, so say how many
+    // it reached rather than leaving it to be counted in the import report.
+    if (typeof showToast === "function") {
+      const fam = typeof getGreenRoofFamily === "function" ? getGreenRoofFamily(z.familyKey) : null;
+      showToast(n ? `${n} zone(s) updated` : "Nothing to change",
+        n ? `Every green roof zone now uses ${fam ? fam.label : "no tray"}.`
+          : "They already use this tray.");
+    }
+    drawCombineCanvas();
     renderZonePanel();
   });
 
