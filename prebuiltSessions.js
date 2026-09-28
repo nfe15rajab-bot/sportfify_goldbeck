@@ -1,274 +1,84 @@
 /**
- * prebuiltSessions.js — Goldbeck IFC roof prebuilt sessions
- * Three layout patterns on the actual Goldbeck roof footprint (67.6 m x
- * 21.0 m — 67.62 m overall length read directly off the dimensioned
- * IFC/CAD plan; width estimated at ~21 m from the plan's summed vertical
- * dimension chains, since no single chain spans edge-to-edge) with 4 entry
- * points at the midpoint of each edge (matching the plan's own Nord/Süd/
- * West/Ost arrows -> top/bottom/left/right).
+ * prebuiltSessions.js — real Goldbeck IFC model sessions, one per roof
  *
- * GOLDBECK_PREBUILT_SESSIONS holds a generate() FUNCTION per pattern, not a
- * static payload — "Shuffle" (sessionGate.js's preset cards, and Combine's
- * own Shuffle Boundary button) calls generate() again for a fresh variant.
- * gardenBoundary/sportsBoundary vary their garden-vs-sport boundary band
- * depth within a range hand-verified to always leave enough room for a
- * badminton court plus real circulation margin (see BAND_DEPTH_RANGE
- * below); hybridChess keeps its grid geometry fixed (the checkerboard cells
- * are already at the minimum size a real court fits) and instead reshuffles
- * which theme/quality appears in each cell. Every generate() call is
- * validated against the app's OWN real getFootprint/findOverlappingIds/
- * findOutOfBoundsIds/computeCirculation (not a reimplementation) before
- * being handed back — on the rare chance a randomly chosen depth fails
- * (shouldn't happen inside the hand-verified range, but this is a real
- * safety net, not decoration), it retries a few times and finally falls
- * back to the pattern's own known-good default depth.
+ * The three synthetic hand-built patterns this file used to hold (a made-up
+ * 67.6 x 21.0 m roof, invented item mixes) are gone — replaced by real
+ * exports taken straight from the actual IFC model
+ * (thow_IFC_Modelifc.ifc_sample_nada.fenicheZPV24.RVT), one roof at a time,
+ * via the same live "Push to Sportify" + Algorithmic placement + Export
+ * Combined JSON path a planner uses themselves (user, 2026-09-28: "this
+ * exact roof boundary... this will be the standard goldbeck session").
  *
- * A generated payload is the same shape as buildCombinedPayload()
- * (combineController.js) and loads straight into applySessionSnapshot() —
- * indistinguishable from a planner's own saved session: fully editable
- * afterward, "Save Session" writes a normal local copy.
+ * Ten identical top-of-storey slabs exist in that model; the two used here
+ * are the top two: E10 (highest) and E9 (the one below it). Each entry's
+ * payload is the literal buildCombinedPayload() output captured live —
+ * real boundary polygon (12-point L/notched outline, 67.5 x 16.28 m), real
+ * entries (the model's own ramps), and a layout checked against the app's
+ * own real engine (0 unplaced, 0 overlaps) before being captured.
+ *
+ * GOLDBECK_PREBUILT_SESSIONS keeps the { id, title, tagline, generate() }
+ * shape sessionGate.js/compareController.js already read — generate()
+ * returns a fresh deep copy of the fixed payload every time (no randomness:
+ * this is real, not generated, data), so "Shuffle" on these cards is a
+ * harmless no-op rather than something that needs removing card-by-card.
+ * A generated payload is the same shape buildCombinedPayload()
+ * (combineController.js) produces and loads straight into
+ * applySessionSnapshot() — indistinguishable from a planner's own saved
+ * session: fully editable afterward, "Save Session" writes a normal local
+ * copy.
  */
 
-/* ---- real reference-data item factories (mirrors sportController.js/gardenController.js payload shapes) ---- */
-const GOLDBECK_FIELDS = {
-  badminton: { l: 13.4, w: 6.1, runoff: 2, h: 9, norm: "BWF / DIN 18032" },
-};
-const GOLDBECK_MATERIALS = {
-  low: { floor: "PVC sheet", marking: "Painted", gradin: "Steel basic" },
-  medium: { floor: "Sports vinyl (2-layer)", marking: "Adhesive tape", gradin: "Steel coated" },
-  high: { floor: "Hardwood parquet", marking: "Inlay wood", gradin: "Aluminum seating" },
-};
-const GOLDBECK_GARDEN_ITEMS = {
-  parcel: { label: "Standard Green Parcel", category: "functional" },
-  roof_trees: { label: "Roof Trees & Deep-Root Shrubbery", category: "vegetation" },
-  urban_farming: { label: "Farm Crops & Urban Agriculture", category: "vegetation" },
-  decorative_exotic: { label: "Decorative & Exotic Flora", category: "vegetation" },
-};
-const GOLDBECK_GARDEN_THEMES = {
-  custom: { label: "Custom Configuration", layers: { substrate: { thickness_m: 0.12, material: "Standard Growth Mix" }, drainage: { thickness_m: 0.04, material: "HDPE Drainage Core" } } },
-  japanese: { label: "Japanese Zen Garden", layers: { decorative_sand: { thickness_m: 0.05, material: "Fine Shirakawa Gravel Matrix" }, substrate: { thickness_m: 0.20, material: "Acidic Organo-Mineral Soil" }, drainage: { thickness_m: 0.06, material: "High-Capacity Reservoir Board" } } },
-  english: { label: "English Cottage Landscape", layers: { turf_topsoil: { thickness_m: 0.35, material: "Premium Loam-Rich Substrate" }, drainage: { thickness_m: 0.05, material: "Expanded Clay Aggregate Layer" } } },
-  classic: { label: "Classic Formal Garden", layers: { parterre_mix: { thickness_m: 0.25, material: "Calibrated Structural Landscape Soil" }, drainage: { thickness_m: 0.04, material: "Standard Dimpled Drainage Mat" } } },
-};
-const GOLDBECK_GARDEN_MATERIALS = {
-  low: { waterproofing: "Bitumen membrane, single layer", drainage: "Gravel bed drainage" },
-  medium: { waterproofing: "PVC membrane, root-resistant", drainage: "Standard HDPE board" },
-  high: { waterproofing: "Reinforced TPO membrane", drainage: "HDPE board + reservoir cups" },
-};
+function goldbeckCloneRealPayload(payload) {
+  return typeof structuredClone === "function" ? structuredClone(payload) : JSON.parse(JSON.stringify(payload));
+}
 
-function goldbeckFieldItem(sport, quality, x_m, y_m, idx) {
-  const d = GOLDBECK_FIELDS[sport]; const mat = GOLDBECK_MATERIALS[quality];
-  return {
-    id: `gb_item_${idx}`, kind: "field", label: `${sport[0].toUpperCase()}${sport.slice(1)} (standard)`,
-    length_m: d.l, width_m: d.w, rotation: 0, x_m, y_m,
-    sourceJson: {
-      version: "1.0", generator: "Sportify",
-      quality_key: `${sport.toUpperCase()}_STANDARD_${quality.toUpperCase()}`,
-      field: { sport, variant: "standard", norm: d.norm, dimensions: { length_m: d.l, width_m: d.w, runoff_m: d.runoff, min_height_m: d.h }, capacity: { seats: 0, side_stands: false } },
-      materials: { floor_surface: mat.floor, line_marking: mat.marking, gradin_type: mat.gradin, quality_level: quality, reference_material: null, reference_provider: null },
-      layers: ["field_boundary", "center_line", "run_off_zone"],
+/** Roof 2 — E9, the lower of the top two slabs (world_origin_z_m 12.481): the sports layout (8 courts, 0 unplaced). */
+const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
+  "version": "1.3", "generator": "Sportify-Combine",
+  "roof_context": {
+    "length_m": 67.5, "width_m": 16.28, "program": null, "source": "revit",
+    "source_boundary_polygon": [
+      { "x_m": 64.8, "y_m": 3.25 }, { "x_m": 67.5, "y_m": 3.25 }, { "x_m": 67.5, "y_m": 16.28 }, { "x_m": 0, "y_m": 16.28 },
+      { "x_m": 0, "y_m": 4.41 }, { "x_m": 5.4, "y_m": 4.41 }, { "x_m": 5.4, "y_m": 5 }, { "x_m": 13.5, "y_m": 5 },
+      { "x_m": 13.5, "y_m": 0 }, { "x_m": 56.7, "y_m": 0 }, { "x_m": 56.7, "y_m": 5 }, { "x_m": 64.8, "y_m": 5 },
+    ],
+    "world_origin_x_m": 0.109, "world_origin_y_m": 16.28, "rotation_deg": 0, "world_origin_z_m": 12.481,
+    "height_above_ground_m": 12.48, "height_source": "level \"Basisebene\" (nearest the project zero; no ground floor by name)",
+    "features": {
+      "source": "revit", "notes": [], "openings": [],
+      "entries": [
+        { "id": "ramp_1", "kind": "ramp", "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 7", "x_m": 58.86, "y_m": 12.55, "width_m": 0, "on_roof": true, "source_element_id": 2520305 },
+        { "id": "ramp_2", "kind": "ramp", "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 5", "x_m": 58.86, "y_m": 16.31, "width_m": 0, "on_roof": true, "source_element_id": 2520299 },
+        { "id": "ramp_3", "kind": "ramp", "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278", "x_m": 60.75, "y_m": 17.01, "width_m": 0, "on_roof": false, "source_element_id": 2520296 },
+        { "id": "ramp_4", "kind": "ramp", "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 6", "x_m": 62.64, "y_m": 12.55, "width_m": 0, "on_roof": true, "source_element_id": 2520308 },
+        { "id": "ramp_5", "kind": "ramp", "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 4", "x_m": 62.64, "y_m": 16.31, "width_m": 0, "on_roof": true, "source_element_id": 2520302 },
+      ],
+      "edges": [], "obstacles": [], "equipment": [], "drains": [], "slab": null, "levels": [],
     },
-  };
-}
-function goldbeckGardenItem(typeId, theme, quality, length_m, width_m, x_m, y_m, idx) {
-  const item = GOLDBECK_GARDEN_ITEMS[typeId]; const themeObj = GOLDBECK_GARDEN_THEMES[theme]; const mat = GOLDBECK_GARDEN_MATERIALS[quality];
-  return {
-    id: `gb_item_${idx}`, kind: "garden", label: `${item.label} (${themeObj.label})`,
-    length_m, width_m, rotation: 0, x_m, y_m,
-    sourceJson: {
-      version: "1.0", generator: "Sportify-Garden-Engine",
-      quality_key: `GARDEN_${typeId.toUpperCase()}_${theme.toUpperCase()}_${quality.toUpperCase()}`,
-      garden: {
-        type_id: typeId, category: item.category, theme,
-        dimensions: { length_m, width_m },
-        layers: Object.entries(themeObj.layers).map(([n, c]) => ({ layer_name: n, thickness_m: c.thickness_m, material: c.material })),
-        materials: { waterproofing: mat.waterproofing, drainage: mat.drainage, quality_level: quality, reference_material: null, reference_provider: null },
-      },
-    },
-  };
-}
-
-const GOLDBECK_ROOF = { length: 67.6, width: 21.0 };
-const GOLDBECK_RULES = { clearance_m: 1.0, boundary_setback_m: 1.5, circulation_width_m: 1.0, min_entry_points: 4, quiet_buffer_m: 3.0 };
-const GOLDBECK_ENTRY_POINTS = [
-  { x_m: GOLDBECK_ROOF.length / 2, y_m: 0, edge: "top" },
-  { x_m: GOLDBECK_ROOF.length / 2, y_m: GOLDBECK_ROOF.width, edge: "bottom" },
-  { x_m: 0, y_m: GOLDBECK_ROOF.width / 2, edge: "left" },
-  { x_m: GOLDBECK_ROOF.length, y_m: GOLDBECK_ROOF.width / 2, edge: "right" },
-];
-function goldbeckToPayload(items) {
-  const placements = items.map(it => ({
-    id: it.id, category: it.kind, label: it.label,
-    insertion_point: { center_x_m: it.x_m + it.length_m / 2, center_y_m: it.y_m + it.width_m / 2 },
-    bounding_box: { top_left_x_m: it.x_m, top_left_y_m: it.y_m, width_m: it.length_m, height_m: it.width_m },
-    transform: { rotation_deg: it.rotation },
-    parameters: it.sourceJson,
-  }));
-  return {
-    version: "1.3", generator: "Sportify-Combine",
-    // the Goldbeck roof carries both a sports area and a garden: a mixed roof
-    roof_context: { length_m: GOLDBECK_ROOF.length, width_m: GOLDBECK_ROOF.width, program: "mixed", source_boundary_polygon: null, world_origin_x_m: 0, world_origin_y_m: 0 },
-    design_rules: { ...GOLDBECK_RULES },
-    entry_points: GOLDBECK_ENTRY_POINTS.map(ep => ({ ...ep })),
-    circulation_paths: [],
-    site_location: null,
-    placements,
-  };
-}
-
-/* ---- live validation against the app's OWN real engine (rules.js/combineField.js) ---- */
-function goldbeckValidatePayload(payload) {
-  const roof = { length: payload.roof_context.length_m, width: payload.roof_context.width_m };
-  const items = payload.placements.map((pl, i) => ({
-    id: pl.id || `v_${i}`, kind: pl.category,
-    length_m: pl.bounding_box.width_m, width_m: pl.bounding_box.height_m,
-    rotation: pl.transform?.rotation_deg || 0,
-    x_m: pl.bounding_box.top_left_x_m, y_m: pl.bounding_box.top_left_y_m,
-  }));
-  const entryPoints = payload.entry_points;
-  const rules = { clearance_m: payload.design_rules.clearance_m, boundarySetback_m: payload.design_rules.boundary_setback_m, circulationWidth_m: payload.design_rules.circulation_width_m, minEntryPoints: payload.design_rules.min_entry_points };
-
-  const overlaps = findOverlappingIds(items, rules.clearance_m);
-  if (overlaps.size > 0) return false;
-  const oob = findOutOfBoundsIds(items, roof);
-  if (oob.size > 0) return false;
-  const setback = rules.boundarySetback_m;
-  for (const it of items) {
-    const fp = getFootprint(it);
-    if (it.x_m < setback - 1e-6 || it.y_m < setback - 1e-6 || it.x_m + fp.w > roof.length - setback + 1e-6 || it.y_m + fp.h > roof.width - setback + 1e-6) return false;
-  }
-  const circulation = computeCirculation({ roof, items, entryPoints }, rules);
-  return circulation.unreachable.size === 0;
-}
-
-/** Regenerates via generatorFn (no args -> random variant) until it passes the app's own real validation, retrying a few times before falling back to the pattern's own known-good default. */
-function goldbeckGenerateAndValidate(generatorFn, defaultFn, maxAttempts = 6) {
-  for (let i = 0; i < maxAttempts; i++) {
-    const payload = generatorFn();
-    if (goldbeckValidatePayload(payload)) return payload;
-  }
-  return defaultFn();
-}
-
-function goldbeckRandomInRange(min, max) { return min + Math.random() * (max - min); }
-function goldbeckPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function goldbeckShuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-
-/* ============ Garden Boundary, Sports Core — variable garden-band depth ============ */
-const GARDEN_BOUNDARY_DEPTH_RANGE = [2.0, 3.25]; // hand-verified: keeps the sports interior >=8.5m tall (badminton 6.1m + >=1.2m clear margin each side)
-const GARDEN_BOUNDARY_DEFAULT_DEPTH = 3.0;
-
-function buildGardenBoundaryPayload(bandDepthM) {
-  const d = bandDepthM;
-  const seam = 1.5;
-  const gardenThemeOrder = goldbeckShuffle(["custom", "japanese", "classic"]);
-  const gardenTypeOrder = goldbeckShuffle(["urban_farming", "roof_trees", "decorative_exotic"]);
-  const bottomThemeOrder = goldbeckShuffle(["japanese", "english", "classic"]);
-  const qualities = goldbeckShuffle(["low", "medium", "high", "medium"]);
-
-  let idx = 0;
-  const items = [];
-  // top garden band
-  [1.5, 22.5, 43.5].forEach((x, i) => items.push(goldbeckGardenItem(gardenTypeOrder[i], gardenThemeOrder[i], "medium", 20, d, x, 1.5, idx++)));
-  // bottom garden band
-  [1.5, 22.5, 43.5].forEach((x, i) => items.push(goldbeckGardenItem("parcel", bottomThemeOrder[i], "medium", 20, d, x, GOLDBECK_ROOF.width - 1.5 - d, idx++)));
-  // sports interior, vertically centered in the band left after both garden bands + seams
-  const interiorTop = 1.5 + d + seam;
-  const interiorH = GOLDBECK_ROOF.width - 1.5 - d - (1.5 + d + seam) - seam; // = 18 - 2d - 2*seam, restated explicitly for clarity
-  const yOff = interiorTop + (interiorH - 6.1) / 2;
-  [1.5, 15.9, 30.3, 44.7].forEach((x, i) => items.push(goldbeckFieldItem("badminton", qualities[i], x, yOff, idx++)));
-
-  return goldbeckToPayload(items);
-}
-function generateGardenBoundary() {
-  return goldbeckGenerateAndValidate(
-    () => buildGardenBoundaryPayload(goldbeckRandomInRange(...GARDEN_BOUNDARY_DEPTH_RANGE)),
-    () => buildGardenBoundaryPayload(GARDEN_BOUNDARY_DEFAULT_DEPTH),
-  );
-}
-
-/* ============ Sports Boundary, Garden Core — variable sport-band depth ============ */
-const SPORTS_BOUNDARY_DEPTH_RANGE = [6.3, 7.0]; // hand-verified: >=0.2m margin around a 6.1m badminton court, and leaves >=1.0m garden interior
-const SPORTS_BOUNDARY_DEFAULT_DEPTH = 6.5;
-
-function buildSportsBoundaryPayload(bandDepthM) {
-  const d = bandDepthM;
-  const seam = 1.5;
-  const qualitiesTop = goldbeckShuffle(["medium", "high", "medium", "low"]);
-  const qualitiesBot = goldbeckShuffle(["low", "medium", "high", "medium"]);
-  const gardenThemeOrder = goldbeckShuffle(["custom", "japanese"]);
-  const gardenTypeOrder = goldbeckShuffle(["urban_farming", "roof_trees"]);
-
-  let idx = 0;
-  const items = [];
-  const topY = 1.5 + (d - 6.1) / 2;
-  [1.5, 15.9, 30.3, 44.7].forEach((x, i) => items.push(goldbeckFieldItem("badminton", qualitiesTop[i], x, topY, idx++)));
-  const botBandY0 = GOLDBECK_ROOF.width - 1.5 - d;
-  const botY = botBandY0 + (d - 6.1) / 2;
-  [1.5, 15.9, 30.3, 44.7].forEach((x, i) => items.push(goldbeckFieldItem("badminton", qualitiesBot[i], x, botY, idx++)));
-
-  const gardenDepth = GOLDBECK_ROOF.width - 1.5 - d - (1.5 + d + seam) - seam; // = 18 - 2d - 2*seam
-  const gardenTop = 1.5 + d + seam;
-  const segW = (64.6 - 2.0) / 2;
-  items.push(goldbeckGardenItem(gardenTypeOrder[0], gardenThemeOrder[0], "medium", segW, gardenDepth, 1.5, gardenTop, idx++));
-  items.push(goldbeckGardenItem(gardenTypeOrder[1], gardenThemeOrder[1], "medium", segW, gardenDepth, 1.5 + segW + 2.0, gardenTop, idx++));
-
-  return goldbeckToPayload(items);
-}
-function generateSportsBoundary() {
-  return goldbeckGenerateAndValidate(
-    () => buildSportsBoundaryPayload(goldbeckRandomInRange(...SPORTS_BOUNDARY_DEPTH_RANGE)),
-    () => buildSportsBoundaryPayload(SPORTS_BOUNDARY_DEFAULT_DEPTH),
-  );
-}
-
-/* ============ Hybrid Chess — fixed grid geometry (already at minimum court size), shuffles theme/quality per cell ============ */
-function buildHybridChessPayload() {
-  const cols = 4, rows = 2, gap = 1.5;
-  const U = { x0: 1.5, y0: 1.5, x1: GOLDBECK_ROOF.length - 1.5, y1: GOLDBECK_ROOF.width - 1.5 };
-  const cellW = (U.x1 - U.x0 - (cols - 1) * gap) / cols;
-  const cellH = (U.y1 - U.y0 - (rows - 1) * gap) / rows;
-  const gardenThemes = goldbeckShuffle(["japanese", "english", "classic", "custom"]);
-  const gardenTypes = goldbeckShuffle(["roof_trees", "parcel", "decorative_exotic", "urban_farming"]);
-  const sportQualities = goldbeckShuffle(["medium", "high", "medium", "low"]);
-
-  let idx = 0, gi = 0, si = 0;
-  const items = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const cx = U.x0 + c * (cellW + gap);
-      const cy = U.y0 + r * (cellH + gap);
-      const isSport = (r + c) % 2 === 0;
-      if (isSport) {
-        const bx = cx + (cellW - 13.4) / 2, by = cy + (cellH - 6.1) / 2;
-        items.push(goldbeckFieldItem("badminton", sportQualities[si++ % sportQualities.length], bx, by, idx++));
-      } else {
-        items.push(goldbeckGardenItem(gardenTypes[gi % gardenTypes.length], gardenThemes[gi % gardenThemes.length], "medium", cellW, cellH, cx, cy, idx++));
-        gi++;
-      }
-    }
-  }
-  return goldbeckToPayload(items);
-}
-function generateHybridChess() {
-  return goldbeckGenerateAndValidate(buildHybridChessPayload, buildHybridChessPayload);
-}
+  },
+  "design_rules": { "clearance_m": 1, "boundary_setback_m": 1.5, "circulation_width_m": 1.2, "min_entry_points": 1, "quiet_buffer_m": 3 },
+  "entry_points": [
+    { "x_m": 58.86, "y_m": 11.28, "edge": "bottom" }, { "x_m": 56.7, "y_m": 16.28, "edge": "bottom" },
+    { "x_m": 62.64, "y_m": 11.28, "edge": "bottom" }, { "x_m": 64.8, "y_m": 13.03, "edge": "bottom" },
+  ],
+  "placements": [
+    { "id": "gb_low_0", "category": "activity", "label": "Locker & Dressing Room Module", "insertion_point": { "center_x_m": 50.2, "center_y_m": 10.2 }, "bounding_box": { "top_left_x_m": 45.2, "top_left_y_m": 7.7, "width_m": 10, "height_m": 5 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_LOCKER_ROOM", "activity": { "type_id": "locker_room", "category": "service", "norm": "Reference sheet", "dimensions": { "length_m": 10, "width_m": 5 } }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null } } },
+    { "id": "gb_low_1", "category": "activity", "label": "Bathroom & Shower Module", "insertion_point": { "center_x_m": 38.2, "center_y_m": 10.2 }, "bounding_box": { "top_left_x_m": 33.2, "top_left_y_m": 7.7, "width_m": 10, "height_m": 5 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_BATHROOM_MODULE", "activity": { "type_id": "bathroom_module", "category": "service", "norm": "Reference sheet", "dimensions": { "length_m": 10, "width_m": 5 } }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null } } },
+    { "id": "gb_low_2", "category": "activity", "label": "Ping Pong Station", "insertion_point": { "center_x_m": 27.4, "center_y_m": 7.8 }, "bounding_box": { "top_left_x_m": 23.6, "top_left_y_m": 5.5, "width_m": 7.6, "height_m": 4.6 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_PING_PONG", "activity": { "type_id": "ping_pong", "category": "court", "norm": "Reference sheet", "dimensions": { "length_m": 7.6, "width_m": 4.6 } }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null }, "ping_pong": { "playing_space": "recreational", "table": "steel_composite", "net": "permanent", "surface": "existing", "appearance_hex": null, "texture": "flat", "length_m": 7.6, "width_m": 4.6, "table_length_m": 2.74, "table_width_m": 1.525, "table_height_m": 0.76, "table_top_thickness_m": 0.025, "net_height_m": 0.1525, "net_overhang_m": 0.1525, "line_width_m": 0.02, "centre_line_width_m": 0.003, "clearance_end_m": 2.43, "clearance_side_m": 1.54, "clear_height_min_m": 5, "weight_kg": 0, "weight_kg_m2": 0, "source": "Casual play — below any ITTF minimum" } } },
+    { "id": "gb_low_3", "category": "activity", "label": "Ping Pong Station", "insertion_point": { "center_x_m": 27.4, "center_y_m": 12.4 }, "bounding_box": { "top_left_x_m": 23.6, "top_left_y_m": 10.1, "width_m": 7.6, "height_m": 4.6 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_PING_PONG", "activity": { "type_id": "ping_pong", "category": "court", "norm": "Reference sheet", "dimensions": { "length_m": 7.6, "width_m": 4.6 } }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null }, "ping_pong": { "playing_space": "recreational", "table": "steel_composite", "net": "permanent", "surface": "existing", "appearance_hex": null, "texture": "flat", "length_m": 7.6, "width_m": 4.6, "table_length_m": 2.74, "table_width_m": 1.525, "table_height_m": 0.76, "table_top_thickness_m": 0.025, "net_height_m": 0.1525, "net_overhang_m": 0.1525, "line_width_m": 0.02, "centre_line_width_m": 0.003, "clearance_end_m": 2.43, "clearance_side_m": 1.54, "clear_height_min_m": 5, "weight_kg": 0, "weight_kg_m2": 0, "source": "Casual play — below any ITTF minimum" } } },
+    { "id": "gb_low_4", "category": "activity", "label": "Padel Tennis Court", "insertion_point": { "center_x_m": 11.5, "center_y_m": 4.5 }, "bounding_box": { "top_left_x_m": 1.5, "top_left_y_m": 1.5, "width_m": 20, "height_m": 6 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_PADEL_COURT", "activity": { "type_id": "padel_court", "category": "court", "norm": "FIP (singles court)", "dimensions": { "length_m": 20, "width_m": 6 }, "variant": "mini" }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null } } },
+    { "id": "gb_low_5", "category": "activity", "label": "Modular Tower Slide", "insertion_point": { "center_x_m": 62.5, "center_y_m": 5.2 }, "bounding_box": { "top_left_x_m": 59, "top_left_y_m": 2.7, "width_m": 7, "height_m": 5 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_MODULAR_TOWER_SLIDE", "activity": { "type_id": "modular_tower_slide", "category": "playground", "norm": "Reference sheet", "dimensions": { "length_m": 7, "width_m": 5 } }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null } } },
+    { "id": "gb_low_6", "category": "activity", "label": "Sand Pit", "insertion_point": { "center_x_m": 35.2, "center_y_m": 3.5 }, "bounding_box": { "top_left_x_m": 33.2, "top_left_y_m": 1.5, "width_m": 4, "height_m": 4 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_SAND_PIT", "activity": { "type_id": "sand_pit", "category": "playground", "norm": "Reference sheet", "dimensions": { "length_m": 4, "width_m": 4 } }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null } } },
+    { "id": "gb_low_7", "category": "activity", "label": "Trampoline", "insertion_point": { "center_x_m": 41.2, "center_y_m": 3.5 }, "bounding_box": { "top_left_x_m": 39.2, "top_left_y_m": 1.5, "width_m": 4, "height_m": 4 }, "transform": { "rotation_deg": 0 }, "parameters": { "version": "1.0", "generator": "Sportify-Algorithmic-Placement", "quality_key": "ACTIVITY_TRAMPOLINE", "activity": { "type_id": "trampoline", "category": "playground", "norm": "Reference sheet", "dimensions": { "length_m": 4, "width_m": 4 } }, "materials": { "surface": "Reinforced synthetic surface", "structure": "Galvanized steel", "quality_level": "medium", "reference_material": null, "reference_provider": null }, "familyInstance": { "type": "trampoline", "label": "Trampoline in a Sand Pit", "family": "Trampoline-SandPit", "units": "mm", "params": { "Jump_Radius": 1450, "Pad_Width": 300, "Base_Height": 400, "Bedding": 50, "Net_Height": 2100, "Show_Net": false } } } },
+  ],
+};
 
 /* ---- public registry — sessionGate.js / compareController.js call .generate() on demand, never read a precomputed field ---- */
 const GOLDBECK_PREBUILT_SESSIONS = {
-  gardenBoundary: {
-    id: "gardenBoundary", title: "Garden Boundary, Sports Core",
-    tagline: "A green perimeter frames four badminton courts running the length of the roof.",
-    generate: generateGardenBoundary,
+  lowRoofSports: {
+    id: "lowRoofSports", title: "Goldbeck — Low Roof, Sports",
+    tagline: "8 courts on the real E9 slab: Padel, 2 Ping Pong, Sand Pit, Trampoline, Modular Tower Slide, Locker & Bathroom modules.",
+    generate: () => goldbeckCloneRealPayload(GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD),
   },
-  sportsBoundary: {
-    id: "sportsBoundary", title: "Sports Boundary, Garden Core",
-    tagline: "Eight courts form the outer bands; garden strips run through the middle.",
-    generate: generateSportsBoundary,
-  },
-  hybridChess: {
-    id: "hybridChess", title: "Hybrid — Chess Pattern",
-    tagline: "Sport and garden cells alternate across a 4×2 grid, like a chessboard.",
-    generate: generateHybridChess,
-  },
+  // highRoofGarden: the E10 slab (the highest of the two), a garden preset — added once that roof is pushed and captured the same way.
 };
