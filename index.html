@@ -844,6 +844,18 @@
               <p class="hint session-names-preview" id="session-names-preview"></p>
             </div>
 
+            <!-- The workspace folder's own name on the user's machine (workspaceBridge.js POST /workspace/rename) — a real folder rename, not just a setting -->
+            <div class="session-names" id="workspace-name">
+              <div class="deliverable-group-title"><i class="ti ti-folder-cog" aria-hidden="true"></i>Workspace folder name</div>
+              <p class="hint">The folder itself, on your machine (currently <code id="workspace-name-current">Sportify Workspace</code>) — rename it to the session's own name instead of leaving it generic. Renaming moves everything already saved along with it.</p>
+              <div class="session-names-row">
+                <label>Folder name<input type="text" id="workspace-name-input" maxlength="120" autocomplete="off" spellcheck="false" placeholder="e.g. Workspace Submission (Goldbeck - Gardens and Sports)" /></label>
+                <button class="btn-export" type="button" id="workspace-name-inherit" title="Fill in the session name above">Use session name</button>
+                <button class="btn-export primary" type="button" id="workspace-name-apply">Rename</button>
+              </div>
+              <p class="hint" id="workspace-name-status"></p>
+            </div>
+
             <div class="deliverables-grid">
               <div class="deliverable-group">
                 <div class="deliverable-group-title"><i class="ti ti-ball-basketball" aria-hidden="true"></i>Sport</div>

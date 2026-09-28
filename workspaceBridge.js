@@ -66,7 +66,49 @@ function workspaceChanged() {
   if (typeof renderAnalysisIfShowingResults === "function") renderAnalysisIfShowingResults();
   if (typeof updateRevitLayersUI === "function") updateRevitLayersUI();
   if (typeof landingPreview3dCheck === "function") landingPreview3dCheck();      // connected/disconnected: the landing page's live 3D preview vs. its slideshow
+  workspaceNameShowCurrent();
 }
+
+// ------------------------------------------------------------------------------------------------ the workspace folder's own name
+
+/** The current folder's own name (its last path segment), from whichever slash the add-in's path uses. */
+function workspaceNameShowCurrent() {
+  const el = document.getElementById("workspace-name-current");
+  if (!el) return;
+  const folder = workspaceState.folder || "";
+  const leaf = folder.split(/[\\/]/).filter(Boolean).pop() || "Sportify Workspace";
+  el.textContent = leaf;
+}
+
+function workspaceNameInit() {
+  const input = document.getElementById("workspace-name-input");
+  const inherit = document.getElementById("workspace-name-inherit");
+  const apply = document.getElementById("workspace-name-apply");
+  const status = document.getElementById("workspace-name-status");
+  if (!input || !apply) return;
+
+  inherit?.addEventListener("click", () => {
+    if (typeof sessionNames !== "undefined" && sessionNames.name) input.value = sessionNames.name;
+    else if (status) status.textContent = "No session name is set above yet — type one there first, or type the workspace's name directly here.";
+  });
+
+  apply.addEventListener("click", async () => {
+    const name = input.value.trim();
+    if (!name) { if (status) status.textContent = "Type a name first."; return; }
+    if (workspaceState.connected !== true) { if (status) status.textContent = "Revit not open: open a project in Revit with the Sportify add-in loaded, then try again."; return; }
+    apply.disabled = true;
+    const r = await localApi("/workspace/rename?name=" + encodeURIComponent(name), { method: "POST" });
+    apply.disabled = false;
+    if (r.ok) {
+      input.value = "";
+      if (status) status.textContent = "Renamed. Everything already saved moved with it.";
+      if (typeof showToast === "function") showToast("Workspace renamed", (r.json && r.json.folder) || name);
+      workspaceRefresh();
+    } else if (status) status.textContent = r.error || "Couldn't rename the workspace folder.";
+  });
+}
+document.addEventListener("DOMContentLoaded", workspaceNameInit);
+if (document.readyState !== "loading") workspaceNameInit();
 
 async function workspaceRefresh() {
   const ws = await localApi("/workspace");
