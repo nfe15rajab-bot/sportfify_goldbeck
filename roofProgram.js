@@ -95,13 +95,30 @@ function roofProgramAfterTour() {
   if (waiting && !combineState.roof.program && !document.getElementById("roof-program-prompt")) openRoofProgramPrompt(waiting.detail);
 }
 
+/** Is there anything on the Manual board a new roof type would clear: pieces, the tray, walls, or zones other than the default setback beds. */
+function roofBoardHasWork() {
+  return combineState.items.length > 0 || (combineState.tray || []).length > 0 || (combineState.walls || []).length > 0
+    || (combineState.zones || []).some(z => !z.defaultBed);
+}
+
 function setRoofProgram(key) {
   if (!ROOF_PROGRAMS[key]) return;
+  const prev = combineState.roof.program;
+  // Changing the type midway to Sports Core or Garden Core gives a fresh Manual board (user, 2026-09-28): what was placed for the other type (garden
+  // pieces on a sports roof, courts on a garden roof) should not stay. A move TO Mixed keeps the board - both kinds belong there. Asked first.
+  const fresh = !!prev && prev !== key && key !== "mixed" && roofBoardHasWork();
+  if (fresh && !window.confirm(`Changing the roof type to ${ROOF_PROGRAMS[key].label} clears the Manual board (pieces, green zones, walls and the pushed pieces; the entry points stay). Continue?`)) return;
   combineState.roof.program = key;
   closeRoofProgramPrompt();
   updateRoofSetupUI();
+  if (fresh && typeof gardenClearBoard === "function") {
+    gardenClearBoard();
+    if (typeof renderCombineTray === "function") renderCombineTray();
+    if (typeof defaultSetbackBeds === "function") defaultSetbackBeds();      // a fresh board starts like a new session: the default green roof in the setback
+    else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  }
   // Garden Core: only Calisthenics and Yoga from the Sport tab (sportController.js) - others leave the board, and the Push buttons follow
-  if (key === "garden" && typeof removeNonGardenSportPieces === "function") removeNonGardenSportPieces();
+  else if (key === "garden" && typeof removeNonGardenSportPieces === "function") removeNonGardenSportPieces();
   if (typeof syncSportPushButtons === "function") syncSportPushButtons();
   if (typeof showToast === "function") showToast("Roof type set", `${roofEsc(ROOF_PROGRAMS[key].label)}. It is saved with the session.`);
 }
