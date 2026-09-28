@@ -30,6 +30,7 @@ const PROFILE_MODES = {
   site:         { button: "modeSite",         label: "Site",            title: "Site" },
   structure:    { button: "modeStructure",    label: "Structure inputs", title: "Structure inputs — grid, columns, deck capacity, natural frequency" },
   conditions:   { button: "modeConditions",   label: "Site conditions", title: "Site conditions — wind, snow, use over the day, sun and shade (inputs of the analyses)" },
+  roofAccess:   { button: "modeRoofAccess",   label: "Roof & Access",   title: "Roof Type and Accessibility — what the roof is for, and where people come in" },
   sport:        { button: "modeSport",        label: "Sport",           title: "Sport" },
   facilities:   { button: "modeFacilities",   label: "Facilities",      title: "Facilities — lockers, bathrooms and rest areas" },
   combine:      { button: "modeCombine",      label: "Combine",         title: "Combine" },
@@ -51,7 +52,7 @@ const PROFILE_VIEWS = {
   simple: {
     title: "Simple",
     tagline: "The main path: set the site, choose the sports and the garden, place them on the roof, check the layout, and take your documents.",
-    modes: ["guide", "site", "sport", "facilities", "combine", "analysis", "deliverables", "session", "profile"]
+    modes: ["guide", "site", "roofAccess", "sport", "facilities", "combine", "analysis", "deliverables", "session", "profile"]
   },
   advanced: {
     title: "Advanced",

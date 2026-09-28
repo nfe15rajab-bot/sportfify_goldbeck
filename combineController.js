@@ -320,6 +320,8 @@ document.getElementById("btn-add-entry").addEventListener("click", () => {
 // #combine-entry-cta) instead of the Rules tab — one source of truth for
 // what "Add Entry Point" actually does.
 document.getElementById("btn-add-entry-cta")?.addEventListener("click", () => {
+  // entry points are added in the Roof Type and Accessibility tab now (user, 2026-09-28)
+  if (typeof setMode === "function") { setMode("roofAccess"); return; }
   document.getElementById("btn-add-entry").click();
 });
 

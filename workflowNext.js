@@ -11,7 +11,7 @@
  * button always reflects whatever is actually on screen, including a mode a link jumped straight to.
  */
 
-const WORKFLOW_ORDER = ["site", "structure", "conditions", "sport", "gardenBlocks", "combine", "analysis", "compare", "postAnalysis", "data", "families"];
+const WORKFLOW_ORDER = ["site", "structure", "conditions", "roofAccess", "sport", "facilities", "combine", "analysis", "compare", "postAnalysis", "data", "families"];
 
 /** The next workflow step after `mode` that the person's profile view actually shows (profileModeVisible — the same rule the tabs themselves follow), or null at the end of the chain, or off it entirely. */
 function workflowNextMode(mode) {

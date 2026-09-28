@@ -469,7 +469,7 @@ function algoBuildPanel() {
           <p class="hint">The whole roof footprint is available. The pathway network starts at the <strong>entry points</strong> you placed on the roof edge in Manual placement: it crosses the garden band from each door and joins them into one.</p>
           <div id="algo-blocks" class="algo-blocks"></div>
           <div class="algo-row-buttons">
-            <button class="btn-export" data-act="back"><i class="ti ti-door-enter" aria-hidden="true"></i>Edit entry points in Manual placement</button>
+            <button class="btn-export" data-act="entries"><i class="ti ti-door-enter" aria-hidden="true"></i>Edit entry points</button>
           </div>
         </section>
         <section class="algo-card"><h3>2 · Settings</h3>
@@ -533,6 +533,7 @@ function algoBindPanel(panel) {
     else if (act === "shuffle") algoShuffle();
     else if (act === "clear-applied") algoClearApplied(true);
     else if (act === "back") algoSetMode("manual");
+    else if (act === "entries" && typeof setMode === "function") setMode("roofAccess");      // entry points live in Roof Type and Accessibility
   });
   panel.addEventListener("input", e => {
     const t = e.target;

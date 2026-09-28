@@ -65,6 +65,7 @@ document.getElementById("modeProfile").addEventListener("click", () => setMode("
 document.getElementById("modeSite").addEventListener("click", () => setMode("site"));
 document.getElementById("modeStructure").addEventListener("click", () => setMode("structure"));
 document.getElementById("modeConditions").addEventListener("click", () => setMode("conditions"));
+document.getElementById("modeRoofAccess")?.addEventListener("click", () => setMode("roofAccess"));
 document.getElementById("modeSport").addEventListener("click", () => setMode("sport"));
 document.getElementById("modeFacilities")?.addEventListener("click", () => setMode("facilities"));
 // Garden is no longer a workspace — planting is drawn as a zone in Combine.
@@ -130,6 +131,7 @@ function setMode(mode) {
   const isSite = mode === "site";
   const isStructure = mode === "structure";
   const isConditions = mode === "conditions";
+  const isRoofAccess = mode === "roofAccess";           // Roof Type and Accessibility (roofAccess.js)
   const isDeliverables = mode === "deliverables";
   const isSession = mode === "session";
   const isProfile = mode === "profile";
@@ -163,12 +165,13 @@ function setMode(mode) {
   // Site, and Guide keep the sidebar visible/hidden per their own
   // minimal needs. Analysis uses the rail for the groups of results Revit
   // sends (analysisResults.js).
-  document.getElementById("activity-bar").style.display = (isCombine || isData || isCompare || isGuide || isSite || isStructure || isConditions || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
+  document.getElementById("activity-bar").style.display = (isCombine || isData || isCompare || isGuide || isSite || isStructure || isConditions || isRoofAccess || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
   document.querySelector(".panel").style.display = (isCombine || isGuide || isDeliverables || isSession || isProfile || isFamilies) ? "none" : "flex";
 
   document.getElementById("siteConfigurator").style.display = isSite ? "block" : "none";
   document.getElementById("structureConfigurator").style.display = isStructure ? "block" : "none";
   document.getElementById("conditionsConfigurator").style.display = isConditions ? "block" : "none";
+  document.getElementById("roofAccessConfigurator").style.display = isRoofAccess ? "block" : "none";
   document.getElementById("sportConfigurator").style.display = isSport ? "block" : "none";
   document.getElementById("gardenConfigurator").style.display = isGarden ? "block" : "none";
   // combineConfigurator is itself a flex row (roof pane + step pane) now,
@@ -187,6 +190,7 @@ function setMode(mode) {
   document.getElementById("site-content").style.display = isSite ? "block" : "none";
   document.getElementById("structure-content").style.display = isStructure ? "block" : "none";
   document.getElementById("conditions-content").style.display = isConditions ? "block" : "none";
+  document.getElementById("roofAccess-content").style.display = isRoofAccess ? "block" : "none";
   document.getElementById("data-content").style.display = isData ? "block" : "none";
   document.getElementById("analysis-content").style.display = isAnalysis ? "block" : "none";
   document.getElementById("postAnalysis-content").style.display = isPostAnalysis ? "block" : "none";
@@ -206,6 +210,7 @@ function setMode(mode) {
   document.getElementById("modeSite").classList.toggle("active", isSite);
   document.getElementById("modeStructure").classList.toggle("active", isStructure);
   document.getElementById("modeConditions").classList.toggle("active", isConditions);
+  document.getElementById("modeRoofAccess")?.classList.toggle("active", isRoofAccess);
   document.getElementById("modeSport").classList.toggle("active", isSport && !isFacilities);
   document.getElementById("modeFacilities")?.classList.toggle("active", isFacilities);
   document.getElementById("modeGarden")?.classList.toggle("active", isGarden);
@@ -231,6 +236,7 @@ function setMode(mode) {
   else if (isCompare && typeof updateCompareUI === "function") updateCompareUI();
   else if (isFamilies && typeof updateFamiliesUI === "function") updateFamiliesUI();
   else if (isStructure && typeof updateStructureTabUI === "function") { updateStructureUI(); updateAssumptionsUI(); updateStructureTabUI(); }
+  else if (isRoofAccess) { if (typeof updateRoofSetupUI === "function") updateRoofSetupUI(); if (typeof renderRoofAccess === "function") renderRoofAccess(); }
   else if (isConditions && typeof updateConditionsTabUI === "function") { updateSiteUI(); updateAssumptionsUI(); updateConditionsTabUI(); }
   else if (isSite && typeof initSiteMap === "function") {
     initSiteMap(); // no-ops after the first call (siteMap already exists)
