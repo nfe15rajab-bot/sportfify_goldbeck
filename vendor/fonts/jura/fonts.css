@@ -1,0 +1,8 @@
+/* Jura (SIL Open Font License 1.1, see OFL.txt): the variable font (weights 300-700) from Google Fonts, served from here so the page loads no font from another site. Used by the welcome screen. */
+@font-face {
+  font-family: 'Jura';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url(./Jura-VariableFont_wght.ttf) format('truetype');
+}

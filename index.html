@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-mode="dark">
 <head>
-  <script src="themeInit.js?v=2026-09-28-merge-moamen-sukriti"></script>
+  <script src="themeInit.js?v=2026-09-28-welcome"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sportify — Indoor Field Configurator</title>
@@ -14,7 +14,9 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' http://localhost:5679 http://127.0.0.1:5679 http://localhost:5107 http://127.0.0.1:5107 http://localhost:5108 http://127.0.0.1:5108 https://nominatim.openstreetmap.org https://archive-api.open-meteo.com; media-src 'self' blob: http://localhost:5679 http://127.0.0.1:5679; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <link rel="stylesheet" href="vendor/fonts/titillium-web/fonts.css" />
-  <link rel="stylesheet" href="style.css?v=2026-09-28-merge-moamen-sukriti" />
+  <link rel="stylesheet" href="vendor/fonts/jura/fonts.css" />
+  <link rel="stylesheet" href="vendor/fonts/bruno-ace/fonts.css" />
+  <link rel="stylesheet" href="style.css?v=2026-09-28-welcome" />
   <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.css" />
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 </head>
@@ -22,6 +24,16 @@
   <div class="app">
     <canvas id="bg-canvas"></canvas>
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- The welcome screen (welcome.js): shown first on every start, over the start card; Continue fades it away -->
+    <div id="welcomeScreen" class="welcome-screen" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+      <div class="welcome-center">
+        <p class="welcome-to">Welcome to</p>
+        <h1 class="welcome-word" id="welcomeTitle" aria-label="Sportify"><span aria-hidden="true" class="welcome-letters"><span style="--i:0">S</span><span style="--i:1">P</span><span style="--i:2">O</span><span style="--i:3">R</span><span style="--i:4">T</span><span style="--i:5">I</span><span style="--i:6">F</span><span style="--i:7">Y</span></span></h1>
+        <span class="welcome-streak" aria-hidden="true"></span>
+      </div>
+      <button type="button" class="welcome-continue" id="btn-welcome-continue">Continue</button>
+    </div>
 
     <div id="sessionGate" class="session-gate">
       <div class="session-gate-card session-gate-landing" id="sessionGateCard">
@@ -1271,88 +1283,89 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/suncalc/suncalc.js"></script>
-  <script src="escape.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="apiSession.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="data.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="carbon.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="activitiesData.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="vegetation.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="furnitureElevation.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="components.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="furniture.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="kineticsCatalog.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="kineticsCombine.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="canvasFlyouts.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="zones.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="roofFinish.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="assumptions.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="roofFeatures.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="structure.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="assemblies.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="gardenData.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="prebuiltSessions.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="rules.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="sunPosition.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="balls.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="field.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="footballCourt.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="basketballCourt.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="volleyballCourt.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="activityField.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="planters.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="gardenPresets.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="greenRoof.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="activityFamilies.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="pingPongTable.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="calisthenics.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="crossfitRig.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="trxFrame.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="climbingTower.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="padelCourt.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="gardenField.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="combineField.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="previewCore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="preview.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="siteField.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="siteWeather.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="buildupEditor.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="dataTab.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="localSession.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="revitBridge.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="sportController.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="pushTray.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="gardenController.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="windZones.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="siteController.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="combineController.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="resultsStoreCore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="analysisController.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="analysisResults.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="resultsStore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="siteTabs.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="roofProgram.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="workspaceBridge.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="sessionNames.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="algoPlacementCore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="algoPlacementUI.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="roofAccess.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="revitLayers.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="compareController.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="designPanel.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="inspector.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="combineHistory.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="revitFamiliesTab.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="profileCore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="profile.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="quizCore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="quiz.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="tourCore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="tour.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="whereCore.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="where.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="landingPreview3d.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="sessionGate.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="workflowNext.js?v=2026-09-28-merge-moamen-sukriti"></script>
-  <script src="main.js?v=2026-09-28-merge-moamen-sukriti"></script>
+  <script src="escape.js?v=2026-09-28-welcome"></script>
+  <script src="apiSession.js?v=2026-09-28-welcome"></script>
+  <script src="data.js?v=2026-09-28-welcome"></script>
+  <script src="carbon.js?v=2026-09-28-welcome"></script>
+  <script src="activitiesData.js?v=2026-09-28-welcome"></script>
+  <script src="vegetation.js?v=2026-09-28-welcome"></script>
+  <script src="furnitureElevation.js?v=2026-09-28-welcome"></script>
+  <script src="components.js?v=2026-09-28-welcome"></script>
+  <script src="furniture.js?v=2026-09-28-welcome"></script>
+  <script src="kineticsCatalog.js?v=2026-09-28-welcome"></script>
+  <script src="kineticsCombine.js?v=2026-09-28-welcome"></script>
+  <script src="canvasFlyouts.js?v=2026-09-28-welcome"></script>
+  <script src="zones.js?v=2026-09-28-welcome"></script>
+  <script src="roofFinish.js?v=2026-09-28-welcome"></script>
+  <script src="assumptions.js?v=2026-09-28-welcome"></script>
+  <script src="roofFeatures.js?v=2026-09-28-welcome"></script>
+  <script src="structure.js?v=2026-09-28-welcome"></script>
+  <script src="assemblies.js?v=2026-09-28-welcome"></script>
+  <script src="gardenData.js?v=2026-09-28-welcome"></script>
+  <script src="prebuiltSessions.js?v=2026-09-28-welcome"></script>
+  <script src="rules.js?v=2026-09-28-welcome"></script>
+  <script src="sunPosition.js?v=2026-09-28-welcome"></script>
+  <script src="balls.js?v=2026-09-28-welcome"></script>
+  <script src="field.js?v=2026-09-28-welcome"></script>
+  <script src="footballCourt.js?v=2026-09-28-welcome"></script>
+  <script src="basketballCourt.js?v=2026-09-28-welcome"></script>
+  <script src="volleyballCourt.js?v=2026-09-28-welcome"></script>
+  <script src="activityField.js?v=2026-09-28-welcome"></script>
+  <script src="planters.js?v=2026-09-28-welcome"></script>
+  <script src="gardenPresets.js?v=2026-09-28-welcome"></script>
+  <script src="greenRoof.js?v=2026-09-28-welcome"></script>
+  <script src="activityFamilies.js?v=2026-09-28-welcome"></script>
+  <script src="pingPongTable.js?v=2026-09-28-welcome"></script>
+  <script src="calisthenics.js?v=2026-09-28-welcome"></script>
+  <script src="crossfitRig.js?v=2026-09-28-welcome"></script>
+  <script src="trxFrame.js?v=2026-09-28-welcome"></script>
+  <script src="climbingTower.js?v=2026-09-28-welcome"></script>
+  <script src="padelCourt.js?v=2026-09-28-welcome"></script>
+  <script src="gardenField.js?v=2026-09-28-welcome"></script>
+  <script src="combineField.js?v=2026-09-28-welcome"></script>
+  <script src="previewCore.js?v=2026-09-28-welcome"></script>
+  <script src="preview.js?v=2026-09-28-welcome"></script>
+  <script src="siteField.js?v=2026-09-28-welcome"></script>
+  <script src="siteWeather.js?v=2026-09-28-welcome"></script>
+  <script src="buildupEditor.js?v=2026-09-28-welcome"></script>
+  <script src="dataTab.js?v=2026-09-28-welcome"></script>
+  <script src="localSession.js?v=2026-09-28-welcome"></script>
+  <script src="revitBridge.js?v=2026-09-28-welcome"></script>
+  <script src="sportController.js?v=2026-09-28-welcome"></script>
+  <script src="pushTray.js?v=2026-09-28-welcome"></script>
+  <script src="gardenController.js?v=2026-09-28-welcome"></script>
+  <script src="windZones.js?v=2026-09-28-welcome"></script>
+  <script src="siteController.js?v=2026-09-28-welcome"></script>
+  <script src="combineController.js?v=2026-09-28-welcome"></script>
+  <script src="resultsStoreCore.js?v=2026-09-28-welcome"></script>
+  <script src="analysisController.js?v=2026-09-28-welcome"></script>
+  <script src="analysisResults.js?v=2026-09-28-welcome"></script>
+  <script src="resultsStore.js?v=2026-09-28-welcome"></script>
+  <script src="siteTabs.js?v=2026-09-28-welcome"></script>
+  <script src="roofProgram.js?v=2026-09-28-welcome"></script>
+  <script src="workspaceBridge.js?v=2026-09-28-welcome"></script>
+  <script src="sessionNames.js?v=2026-09-28-welcome"></script>
+  <script src="algoPlacementCore.js?v=2026-09-28-welcome"></script>
+  <script src="algoPlacementUI.js?v=2026-09-28-welcome"></script>
+  <script src="roofAccess.js?v=2026-09-28-welcome"></script>
+  <script src="revitLayers.js?v=2026-09-28-welcome"></script>
+  <script src="compareController.js?v=2026-09-28-welcome"></script>
+  <script src="designPanel.js?v=2026-09-28-welcome"></script>
+  <script src="inspector.js?v=2026-09-28-welcome"></script>
+  <script src="combineHistory.js?v=2026-09-28-welcome"></script>
+  <script src="revitFamiliesTab.js?v=2026-09-28-welcome"></script>
+  <script src="profileCore.js?v=2026-09-28-welcome"></script>
+  <script src="profile.js?v=2026-09-28-welcome"></script>
+  <script src="quizCore.js?v=2026-09-28-welcome"></script>
+  <script src="quiz.js?v=2026-09-28-welcome"></script>
+  <script src="tourCore.js?v=2026-09-28-welcome"></script>
+  <script src="tour.js?v=2026-09-28-welcome"></script>
+  <script src="whereCore.js?v=2026-09-28-welcome"></script>
+  <script src="where.js?v=2026-09-28-welcome"></script>
+  <script src="landingPreview3d.js?v=2026-09-28-welcome"></script>
+  <script src="welcome.js?v=2026-09-28-welcome"></script>
+  <script src="sessionGate.js?v=2026-09-28-welcome"></script>
+  <script src="workflowNext.js?v=2026-09-28-welcome"></script>
+  <script src="main.js?v=2026-09-28-welcome"></script>
 </body>
 </html>
