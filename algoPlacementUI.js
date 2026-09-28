@@ -97,11 +97,11 @@ const ALGO_LISTS = [
   { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] },
-  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] },
-  { heading: "Kinetic elements", names: ["Overhead Louvre (Pergola)", "Tensile Sail (Movable Pillars)", "Solar-Tracking PV Canopy", "Retractable Membrane Roof", "Kinetic Green Screen"] }
+  { heading: "Garden blocks", names: ["Planter S", "Planter T", "Park Bench and Table"] }
+  // (the Kinetic elements are no longer offered here (user, 2026-09-28); their engine entries and ALGO_CATALOGUE mapping stay for the Kinetics tab)
 ];
 /** Which headings each roof type shows. Garden Core keeps only the garden activities and blocks; Mixed and a roof with no type yet show everything. Kinetic elements (shade/PV/screening) are relevant to both. */
-const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services", "Kinetic elements"], garden: ["Garden activities", "Garden blocks", "Kinetic elements"] };
+const ALGO_ROOF_HEADINGS = { sports: ["Sports on Sportify", "Indoor services"], garden: ["Garden activities", "Garden blocks"] };
 
 /** The lists the current roof type offers: [{ heading, names }]. */
 function algoListsForRoof() {
