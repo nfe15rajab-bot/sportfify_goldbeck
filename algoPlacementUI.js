@@ -209,8 +209,9 @@ function algoAdoptSpecifiedSizes() {
     if (!sp || ALGO_SPECIFIED[name]) continue;
     const act = cat.kind === "activity" && typeof ACTIVITIES !== "undefined" ? ACTIVITIES[cat.id] : null;
     if (!tier && !act) continue;
+    const mod = cat.kind === "activity" ? algoActivityModuleSize(cat.id) : null;     // an activity Moamen's module sizes: as the Sport tab does
     const d = cat.kind === "field" ? (typeof FIELDS !== "undefined" && FIELDS[cat.sport] && FIELDS[cat.sport][tier])
-                                   : act && (tier ? act.variants && act.variants[tier] : { l: act.length, w: act.width });
+                                   : mod || (act && (tier ? act.variants && act.variants[tier] : { l: act.length, w: act.width }));
     if (!d) continue;
     const run = cat.kind === "field" ? (d.runoff || 0) * 2 : 0;
     const long = algoRound(Math.max(d.l, d.w) + run), short = algoRound(Math.min(d.l, d.w) + run);
@@ -1141,6 +1142,17 @@ function algoFieldRunoff(name) {
   return { ends: d ? d.runoff || 0 : 0, sides: d ? d.runoff || 0 : 0 };
 }
 
+/**
+ * An activity whose Sport tab size comes from its own module (Moamen's), in metres { l, w }, or null: Algorithmic placement follows the Sport
+ * tab (user, 2026-09-28). Ping Pong = the chosen playing space round the ITTF table (pingPongTable.js); Climbing Tower = the family's widest
+ * radius across (climbingTower.js). The Ping Pong pair is worked out from the single table's size, so it follows too.
+ */
+function algoActivityModuleSize(id) {
+  if (id === "ping_pong" && typeof pingPongFootprint === "function") { const f = pingPongFootprint(); return { l: f.length_m, w: f.width_m }; }
+  if (id === "climbing_tower" && typeof towerFootprintM === "function") { const f = towerFootprintM(); return { l: f.length_m, w: f.width_m }; }
+  return null;
+}
+
 /** A Garden tab block's size in metres, { l, w }, as the Garden tab has it now; null if planters.js is not loaded. */
 function algoGardenBlockSize(id) {
   if (typeof GARDEN_BENCH !== "undefined" && id === GARDEN_BENCH.id) return { l: GARDEN_BENCH.length / 1000, w: GARDEN_BENCH.width / 1000 };
@@ -1195,7 +1207,11 @@ function algoCatalogueSource(name, sp) {
     quality_key: typeof getActivityQualityKey === "function" ? getActivityQualityKey(cat.id) : "",
     activity: Object.assign({ type_id: cat.id, category: a ? a.category : "court", norm: a ? a.norm : "", dimensions: { length_m: sp.long, width_m: sp.short } },
       algoTierOf(name) && a && a.variants ? { variant: algoTierOf(name), norm: a.variants[algoTierOf(name)].norm } : {}),
-    materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null }
+    materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null },
+    // what the Sport tab's own push carries for a module-sized activity, so Revit gets the same settings (sportController.js buildActivityPayload)
+    ping_pong: cat.id === "ping_pong" && typeof pingPongPlacementPayload === "function" ? pingPongPlacementPayload() : undefined,
+    familyInstance: cat.id === "climbing_tower" && typeof climbingTowerPayload === "function" ? climbingTowerPayload()
+      : (typeof isActivityFamily === "function" && isActivityFamily(cat.id) && typeof activityFamilyPayload === "function") ? activityFamilyPayload(cat.id) : undefined
   };
 }
 

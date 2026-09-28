@@ -169,8 +169,10 @@ function refreshSuggestions() {
   // Switched off in Tools → no suggestions computed, so none are drawn on the
   // roof and none are listed. Off means off, not "hidden but still there".
   const suggestionsOn = typeof suggestionsEnabled === "undefined" || suggestionsEnabled;
-  combineState.suggestions = suggestionsOn && item && typeof suggestPositionsForItem === "function"
-    ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 1) : [];
+  // only a spot the board's rules (the Algorithmic placement's, boardSpotOk in combineField.js) accept is offered
+  const spots = suggestionsOn && item && typeof suggestPositionsForItem === "function"
+    ? suggestPositionsForItem(item, combineState, DESIGN_RULES, 60) : [];
+  combineState.suggestions = (typeof boardSpotOk === "function" ? spots.filter(c => boardSpotOk(item, c.x_m, c.y_m, c.rotation)) : spots).slice(0, 1);
   if (typeof drawCombineCanvas === "function") drawCombineCanvas();
 }
 
@@ -448,7 +450,7 @@ function buildCombinedPayload() {
   // Same grid+BFS pass the canvas already draws from (computeCirculation is
   // pure/cheap to call again here) — so the exported paths are exactly what
   // the marching-ants show, not a re-derived approximation.
-  const circulation = computeCirculation(combineState, DESIGN_RULES);
+  const circulation = typeof boardRuleCheck === "function" ? boardRuleCheck(combineState.items).circulation : computeCirculation(combineState, DESIGN_RULES);
 
   const payload = {
     version: "1.3",
