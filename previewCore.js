@@ -307,6 +307,310 @@ function previewAddCylinder(m, cx, cz, r, y0, y1, color, segs = 10) {
   }
 }
 
+/**
+ * A round tube between two points, in ANY direction — the 3D counterpart of
+ * SportifyRigGeometry.Tube in the add-in.
+ *
+ * previewAddCylinder above only stands up, which is all a tree trunk or a
+ * bollard needs. A rig is mostly horizontal: the bars are the part you grip and
+ * the part you see, so they cannot be the one thing this file could not draw.
+ *
+ * Built the same way as the Revit helper — an axis frame derived FROM the
+ * direction of travel — so a post and a bar are the same call. Eight segments,
+ * because at the size a 40 mm bar appears on screen a rounder one is more
+ * triangles for no visible gain.
+ */
+function previewAddTube(m, a, b, r, color, segs = 8) {
+  const d = previewSub(b, a), len = Math.hypot(d[0], d[1], d[2]);
+  if (!(len > 1e-6) || !(r > 1e-6)) return;
+  const dir = [d[0] / len, d[1] / len, d[2] / len];
+
+  // Any two axes across the run. Picking the world axis least aligned with the
+  // direction keeps the cross product well-conditioned when a tube is vertical.
+  const seed = Math.abs(dir[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+  const u = previewNormalize(previewCross(dir, seed));
+  const v = previewNormalize(previewCross(dir, u));
+
+  const ring = (p, i) => {
+    const t = i / segs * 2 * Math.PI, c = Math.cos(t), s = Math.sin(t);
+    const n = [u[0] * c + v[0] * s, u[1] * c + v[1] * s, u[2] * c + v[2] * s];
+    return { p: [p[0] + n[0] * r, p[1] + n[1] * r, p[2] + n[2] * r], n };
+  };
+
+  for (let i = 0; i < segs; i++) {
+    const a0 = ring(a, i), a1 = ring(a, i + 1), b0 = ring(b, i), b1 = ring(b, i + 1);
+    previewPushVertex(m, a0.p, a0.n, color); previewPushVertex(m, a1.p, a1.n, color); previewPushVertex(m, b1.p, b1.n, color);
+    previewPushVertex(m, a0.p, a0.n, color); previewPushVertex(m, b1.p, b1.n, color); previewPushVertex(m, b0.p, b0.n, color);
+    // Caps, so a tube seen end-on is not a hole.
+    previewPushTriangle(m, b, b0.p, b1.p, color, dir);
+    previewPushTriangle(m, a, a1.p, a0.p, color, [-dir[0], -dir[1], -dir[2]]);
+  }
+}
+
+/* ── Rigs, drawn as what they are ─────────────────────────────────────────
+ *
+ * Everything else in this file draws a piece as one volume, which is right for
+ * a court or a planter: they ARE volumes. A rig is not. A calisthenics rig
+ * drawn as a solid block is a 5.5 x 1.3 x 2.5 m brick where the real thing is
+ * a dozen 40 mm tubes you can see straight through, and no amount of colour
+ * fixes that.
+ *
+ * ── Why these agree with Revit ──
+ * They read `sourceJson`, which is the SAME object the add-in's builders read.
+ * Not a copy of the numbers, not a second table that has to be kept in step —
+ * the same payload, drawn twice. If the two ever disagree it is a bug in one
+ * of the two loops rather than a slow drift nobody notices.
+ *
+ * The part that cannot be shared is the loop itself, because one side speaks
+ * Revit's API and the other WebGL. So they are written to look alike: same
+ * order, same names, same derived values, so a change to one is obvious in the
+ * other.
+ *
+ * ── Footprint versus rig ──
+ * A piece's box on the board is the footprint INCLUDING the room round it —
+ * the safety area, the working room. The steel is a good deal smaller and sits
+ * inside, so every builder below insets before it starts. That inset is why
+ * these look right next to the 2D plan, which draws the same two rectangles.
+ */
+
+/** The rig colours, matching the Revit materials so the two read alike. */
+const PREVIEW_RIG = {
+  steel: [0.34, 0.37, 0.41, 1],
+  grip: [0.78, 0.57, 0.18, 1],
+  cup: [0.72, 0.26, 0.18, 1],
+};
+
+/**
+ * Draws a piece as a rig if it is one.
+ *
+ * Returns the height of the tallest part, or 0 when this piece is not a rig and
+ * the caller should fall back to its box.
+ */
+/** The rig's own height, or 0 when the piece is not a rig — asked before drawing, so the caller can branch. */
+function previewRigHeight(it) {
+  const s = it && it.sourceJson;
+  if (!s) return 0;
+  if (s.calisthenics) return previewPos(s.calisthenics.frame_height_m, 2.5);
+  if (s.crossfit) return previewPos(s.crossfit.upright_height_m, 2.75);
+  if (s.trx) return previewPos(s.trx.frame_height_m, 2.45);
+  return 0;
+}
+
+/**
+ * Where the steel actually is inside the piece's box.
+ *
+ * The box is the footprint with its room round it; the frame is smaller and
+ * usually not centred in it (a single-sided rig has working room on one face
+ * only). Used for the shadow, so an open frame does not shade its own clearance.
+ */
+function previewRigExtent(it, x0, z0, x1, z1) {
+  const s = it && it.sourceJson;
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const box = (L, W, centreZ) => ({
+    x0: cx - L / 2, x1: cx + L / 2,
+    z0: centreZ - W / 2, z1: centreZ + W / 2,
+  });
+
+  if (s && s.calisthenics) {
+    const r = s.calisthenics;
+    return box(previewPos(r.rig_length_m, x1 - x0), previewPos(r.rig_width_m, z1 - z0), cz);
+  }
+  if (s && s.crossfit) {
+    const r = s.crossfit;
+    const W = previewPos(r.rig_width_m, 1.18);
+    return box(previewPos(r.rig_length_m, x1 - x0), W, z0 + previewPos(r.working_depth_m, 2.0) + W / 2);
+  }
+  if (s && s.trx) {
+    const f = s.trx;
+    return box(previewPos(f.frame_length_m, x1 - x0), previewPos(f.frame_width_m, z1 - z0), cz);
+  }
+  return { x0, x1, z0, z1 };
+}
+
+function previewRigParts(m, it, x0, z0, x1, z1) {
+  const src = it && it.sourceJson;
+  if (!src) return 0;
+  if (src.calisthenics) return previewCalisthenicsParts(m, src.calisthenics, x0, z0, x1, z1);
+  if (src.crossfit) return previewCrossfitParts(m, src.crossfit, x0, z0, x1, z1);
+  if (src.trx) return previewTrxParts(m, src.trx, x0, z0, x1, z1);
+  return 0;
+}
+
+/** Mirrors SportifyCalisthenicsRigBuilder.BuildRig. */
+function previewCalisthenicsParts(m, r, x0, z0, x1, z1) {
+  const bays = Math.max(1, previewPos(r.bays, 3));
+  const bay = previewPos(r.bay_width_m, 1.8);
+  const depth = previewPos(r.rig_depth_m, 1.2);
+  const height = previewPos(r.frame_height_m, 2.5);
+  const postR = previewPos(r.post_diameter_m, 0.1143) / 2;
+  const barR = previewPos(r.bar_diameter_m, 0.04) / 2;
+
+  const span = bays * bay;
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const sx = cx - span / 2;
+  const za = cz - depth / 2, zb = cz + depth / 2;
+  const S = PREVIEW_RIG.steel, G = PREVIEW_RIG.grip;
+
+  for (let i = 0; i <= bays; i++) {
+    const x = sx + i * bay;
+    for (const z of [za, zb]) {
+      previewAddTube(m, [x, 0, z], [x, height, z], postR, S);
+      const p = postR * 2.2;
+      previewAddBox(m, x - p, 0, z - p, x + p, 0.012, z + p, S);
+    }
+  }
+  for (const z of [za, zb]) previewAddTube(m, [sx, height - postR, z], [sx + span, height - postR, z], postR, S);
+
+  if (r.monkey_bars && r.rung_count > 0) {
+    const monkeyBays = Math.max(1, previewPos(r.monkey_bays, 1));
+    const startX = sx + (bays >= 3 ? bay : 0);
+    const runSpan = monkeyBays * bay;
+    const y = height - postR * 2 - barR;
+    for (let i = 0; i < r.rung_count; i++) {
+      const t = r.rung_count > 1 ? i / (r.rung_count - 1) : 0.5;
+      const x = startX + t * runSpan;
+      previewAddTube(m, [x, y, za], [x, y, zb], barR, G);
+    }
+  }
+  if (r.pull_up_bars) {
+    const y = previewPos(r.pull_up_height_m, 2.4);
+    const ends = bays >= 2 ? [0, bays - 1] : [0];
+    for (const b of ends) {
+      const x = sx + (b + 0.5) * bay;
+      previewAddTube(m, [x, y, za], [x, y, zb], barR, G);
+    }
+  }
+  if (r.dip_bars) {
+    const y = previewPos(r.dip_height_m, 1.3);
+    const half = previewPos(r.dip_spacing_m, 0.6) / 2;
+    const b = bays >= 3 ? 1 : 0;
+    const xa = sx + b * bay, xb = xa + bay;
+    for (const z of [cz - half, cz + half]) previewAddTube(m, [xa, y, z], [xb, y, z], barR, G);
+  }
+  if (r.low_bar) {
+    const y = previewPos(r.low_bar_height_m, 0.9);
+    const x = sx + (bays - 0.5) * bay;
+    previewAddTube(m, [x, y, za], [x, y, zb], barR, G);
+  }
+  return height;
+}
+
+/** Mirrors SportifyCrossfitRigBuilder.BuildRig. Square uprights: that is the point of the thing. */
+function previewCrossfitParts(m, r, x0, z0, x1, z1) {
+  const bays = Math.max(1, previewPos(r.bays, 3));
+  const bay = previewPos(r.bay_width_m, 1.2);
+  const up = previewPos(r.upright_size_m, 0.075);
+  const height = previewPos(r.upright_height_m, 2.75);
+  const barR = previewPos(r.bar_diameter_m, 0.032) / 2;
+  const depth = previewPos(r.rig_depth_m, 1.1);
+
+  const span = bays * bay;
+  const cx = (x0 + x1) / 2, sx = cx - span / 2;
+  // Working room sits in FRONT of each face, so the steel starts that far in.
+  const cz = z0 + previewPos(r.working_depth_m, 2.0) + previewPos(r.rig_width_m, 1.18) / 2;
+  const rows = r.double_sided ? [cz - depth / 2, cz + depth / 2] : [cz];
+  const S = PREVIEW_RIG.steel, G = PREVIEW_RIG.grip, C = PREVIEW_RIG.cup;
+  const half = up / 2;
+
+  for (const z of rows) {
+    for (let i = 0; i <= bays; i++) {
+      const x = sx + i * bay;
+      previewAddBox(m, x - half, 0, z - half, x + half, height, z + half, S);
+      const p = up * 1.2;
+      previewAddBox(m, x - p, 0, z - p, x + p, 0.012, z + p, S);
+    }
+  }
+  if (r.pull_up_bars) {
+    const y = previewPos(r.pull_up_height_m, 2.4);
+    for (const z of rows)
+      for (let b = 0; b < bays; b++) {
+        const xa = sx + b * bay;
+        previewAddTube(m, [xa, y, z], [xa + bay, y, z], barR, G);
+      }
+  }
+  if (r.double_sided && rows.length === 2) {
+    const y = height - half;
+    for (let i = 0; i <= bays; i++) {
+      const x = sx + i * bay;
+      previewAddBox(m, x - half, y - half, rows[0], x + half, y + half, rows[1], S);
+    }
+  }
+  if (r.squat_stations) {
+    const y = previewPos(r.j_cup_height_m, 1.2);
+    const reach = up * 1.5;
+    for (const z of rows) {
+      const sign = r.double_sided ? (z < cz ? 1 : -1) : 1;
+      for (let i = 0; i <= bays; i++) {
+        const x = sx + i * bay;
+        const za = z + sign * half, zb = za + sign * reach;
+        previewAddBox(m, x - half, y, Math.min(za, zb), x + half, y + up * 0.8, Math.max(za, zb), C);
+      }
+    }
+  }
+  if (r.dip_bars) {
+    const y = previewPos(r.dip_height_m, 1.35);
+    const b = bays >= 2 ? 1 : 0;
+    const xa = sx + b * bay, xb = xa + bay;
+    const off = Math.min(0.3, depth / 4);
+    for (const z of [cz - off, cz + off]) previewAddTube(m, [xa, y, z], [xb, y, z], barR, G);
+  }
+  if (r.plate_storage) {
+    const y = previewPos(r.peg_height_m, 1.5);
+    const out = previewPos(r.peg_projection_m, 0.4);
+    for (const z of rows) {
+      const sign = r.double_sided ? (z < cz ? -1 : 1) : -1;
+      for (let i = 0; i <= bays; i++) {
+        const x = sx + i * bay;
+        previewAddTube(m, [x, y, z + sign * half], [x, y, z + sign * (half + out)], 0.025, S);
+      }
+    }
+  }
+  return height;
+}
+
+/** Mirrors SportifyTrxFrameBuilder.BuildFrame. The splay is the point: it is what resists the pull. */
+function previewTrxParts(m, f, x0, z0, x1, z1) {
+  const beam = previewPos(f.beam_length_m, 3.0);
+  const height = previewPos(f.frame_height_m, 2.45);
+  const spread = previewPos(f.leg_spread_m, 1.2);
+  const beamR = previewPos(f.beam_diameter_m, 0.089) / 2;
+  const legR = previewPos(f.leg_diameter_m, 0.076) / 2;
+
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const xa = cx - beam / 2, xb = cx + beam / 2;
+  const S = PREVIEW_RIG.steel, G = PREVIEW_RIG.grip;
+
+  previewAddTube(m, [xa, height, cz], [xb, height, cz], beamR, S);
+
+  const half = f.a_frame ? spread / 2 : 0;
+  for (const x of [xa, xb]) {
+    for (const sign of [-1, 1]) {
+      const zf = cz + sign * half;
+      previewAddTube(m, [x, 0, zf], [x, height, cz], legR, S);
+      const p = legR * 3;
+      previewAddBox(m, x - p, 0, zf - p, x + p, 0.014, zf + p, S);
+      if (!f.a_frame) break;
+    }
+  }
+  if (f.mid_rail) {
+    const y = Math.min(0.45, height / 4);
+    previewAddTube(m, [xa, y, cz], [xb, y, cz], legR * 0.8, S);
+  }
+
+  // The anchors, and a hint of the straps hanging from them — without those it
+  // reads as a goalpost rather than as something you train on.
+  const n = Math.max(1, previewPos(f.anchor_count, 5));
+  const usable = Math.max(0, beam - 0.3);
+  for (let i = 0; i < n; i++) {
+    const t = n > 1 ? i / (n - 1) : 0.5;
+    const x = xa + 0.15 + t * usable;
+    previewAddTube(m, [x, height - beamR, cz - 0.022], [x, height - beamR, cz + 0.022], 0.022, G);
+    previewAddTube(m, [x, height - beamR, cz], [x, height - 1.15, cz - 0.16], 0.012, G);
+    previewAddTube(m, [x, height - beamR, cz], [x, height - 1.15, cz + 0.16], 0.012, G);
+  }
+  return height;
+}
+
 function previewAddEllipsoid(m, cx, cy, cz, rx, ry, rz, color, lat = 6, lon = 12) {
   const at = (i, j) => {
     const th = i / lat * Math.PI, ph = j / lon * 2 * Math.PI;
@@ -417,6 +721,7 @@ function previewBuildScene(snapIn) {
 
   // the pieces
   let topY = 0;
+
   for (const it of snap.items || []) {
     const w = previewPos(it.w, 1), h = previewPos(it.h, 1), x0 = previewNum(it.x_m, 0), z0 = previewNum(it.y_m, 0), x1 = x0 + w, z1 = z0 + h, cx = x0 + w / 2, cz = z0 + h / 2;
     const spec = previewPieceSpec(it);
@@ -437,6 +742,22 @@ function previewBuildScene(snapIn) {
       pts.push([cx, H, cz]);
       casters.push({ id: it.id, points: pts });
       topY = Math.max(topY, H);
+    } else if (previewRigHeight(it) > 0) {
+      // A rig is not a volume: drawn as its own tubes, with the room it needs
+      // shown as a footprint outline rather than filled in as if it were solid.
+      const H = previewRigParts(opaque, it, x0, z0, x1, z1);
+      previewAddLoop(lines, [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], 0.006, [base[0], base[1], base[2], 0.55]);
+
+      // Shadows come from the steel, not from the safety area — an open frame
+      // that shaded its whole clearance would be a lie in the sun study.
+      const r = previewRigExtent(it, x0, z0, x1, z1);
+      const pts = [[r.x0, 0, r.z0], [r.x1, 0, r.z0], [r.x1, 0, r.z1], [r.x0, 0, r.z1],
+                   [r.x0, H, r.z0], [r.x1, H, r.z0], [r.x1, H, r.z1], [r.x0, H, r.z1]];
+      casters.push({ id: it.id, points: pts });
+      pick.max = [x1, H, z1];
+      topY = Math.max(topY, H);
+      pieces.push({ id: it.id, label: String(it.label == null ? "" : it.label), kind: it.kind, category: spec.category, assumed: !!spec.assumed, box: pick });
+      continue;
     } else {
       const H = spec.heightM;
       const top = spec.category === "garden" ? previewHex("#3fbf7f") : previewHex(PREVIEW_KIND_COLORS[it.kind] || PREVIEW_KIND_COLORS.field);
