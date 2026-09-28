@@ -73,6 +73,1929 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
   ],
 };
 
+/** Roof 1 — E10, the higher of the top two slabs (world_origin_z_m 13.856): the Quiet Garden preset (20 items: 6 Planter T, 12 Planter S, 1 Calisthenics, 1 Yoga deck; 6 green-roof zones; 0 failures on import). */
+const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
+  "version": "1.3",
+  "generator": "Sportify-Combine",
+  "roof_context": {
+    "length_m": 67.5,
+    "width_m": 16.28,
+    "program": "garden",
+    "source": "revit",
+    "source_boundary_polygon": [
+      {
+        "x_m": 5.4,
+        "y_m": 11.88
+      },
+      {
+        "x_m": 0,
+        "y_m": 11.88
+      },
+      {
+        "x_m": 0,
+        "y_m": 0
+      },
+      {
+        "x_m": 67.5,
+        "y_m": 0
+      },
+      {
+        "x_m": 67.5,
+        "y_m": 13.03
+      },
+      {
+        "x_m": 64.8,
+        "y_m": 13.03
+      },
+      {
+        "x_m": 64.8,
+        "y_m": 11.28
+      },
+      {
+        "x_m": 56.7,
+        "y_m": 11.28
+      },
+      {
+        "x_m": 56.7,
+        "y_m": 16.28
+      },
+      {
+        "x_m": 13.5,
+        "y_m": 16.28
+      },
+      {
+        "x_m": 13.5,
+        "y_m": 11.28
+      },
+      {
+        "x_m": 5.4,
+        "y_m": 11.28
+      }
+    ],
+    "world_origin_x_m": 0.109,
+    "world_origin_y_m": 0,
+    "rotation_deg": 0,
+    "world_origin_z_m": 13.856,
+    "height_above_ground_m": 13.86,
+    "height_source": "level \"Basisebene\" (nearest the project zero; no ground floor by name)",
+    "features": {
+      "source": "revit",
+      "notes": [],
+      "openings": [],
+      "entries": [
+        {
+          "id": "ramp_1",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 4",
+          "x_m": 7.56,
+          "y_m": -0.03,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2519521
+        },
+        {
+          "id": "ramp_2",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 6",
+          "x_m": 7.56,
+          "y_m": 3.74,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2519527
+        },
+        {
+          "id": "ramp_3",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386",
+          "x_m": 8.97,
+          "y_m": 0.33,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2519515
+        },
+        {
+          "id": "ramp_4",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 5",
+          "x_m": 11.34,
+          "y_m": -0.03,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2519518
+        },
+        {
+          "id": "ramp_5",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 7",
+          "x_m": 11.34,
+          "y_m": 3.73,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2519524
+        }
+      ],
+      "edges": [
+        {
+          "index": 0,
+          "start_m": {
+            "x_m": 5.4,
+            "y_m": 4.41
+          },
+          "end_m": {
+            "x_m": 0,
+            "y_m": 4.41
+          },
+          "length_m": 5.4,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 1,
+          "start_m": {
+            "x_m": 0,
+            "y_m": 4.41
+          },
+          "end_m": {
+            "x_m": 0,
+            "y_m": 16.28
+          },
+          "length_m": 11.88,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 2,
+          "start_m": {
+            "x_m": 0,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 67.5,
+            "y_m": 16.28
+          },
+          "length_m": 67.5,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 3,
+          "start_m": {
+            "x_m": 67.5,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 67.5,
+            "y_m": 3.25
+          },
+          "length_m": 13.03,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 4,
+          "start_m": {
+            "x_m": 67.5,
+            "y_m": 3.25
+          },
+          "end_m": {
+            "x_m": 64.8,
+            "y_m": 3.25
+          },
+          "length_m": 2.7,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 5,
+          "start_m": {
+            "x_m": 64.8,
+            "y_m": 3.25
+          },
+          "end_m": {
+            "x_m": 64.8,
+            "y_m": 5
+          },
+          "length_m": 1.75,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 6,
+          "start_m": {
+            "x_m": 64.8,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.7,
+            "y_m": 5
+          },
+          "length_m": 8.1,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 7,
+          "start_m": {
+            "x_m": 56.7,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.7,
+            "y_m": 0
+          },
+          "length_m": 5,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 8,
+          "start_m": {
+            "x_m": 56.7,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.5,
+            "y_m": 0
+          },
+          "length_m": 43.2,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 9,
+          "start_m": {
+            "x_m": 13.5,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.5,
+            "y_m": 5
+          },
+          "length_m": 5,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 10,
+          "start_m": {
+            "x_m": 13.5,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.4,
+            "y_m": 5
+          },
+          "length_m": 8.1,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 11,
+          "start_m": {
+            "x_m": 5.4,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.4,
+            "y_m": 4.41
+          },
+          "length_m": 0.59,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        }
+      ],
+      "obstacles": [],
+      "equipment": [],
+      "drains": [],
+      "slab": null,
+      "levels": [
+        {
+          "name": "OK FU Achse A",
+          "elevation_m": -0.3,
+          "above_ground_m": -0.3,
+          "is_roof_level": false
+        },
+        {
+          "name": "OK FU Achse H",
+          "elevation_m": -0.14,
+          "above_ground_m": -0.14,
+          "is_roof_level": false
+        },
+        {
+          "name": "Basisebene",
+          "elevation_m": 0,
+          "above_ground_m": 0,
+          "is_roof_level": false
+        },
+        {
+          "name": "E0 TP",
+          "elevation_m": 0,
+          "above_ground_m": 0,
+          "is_roof_level": false
+        },
+        {
+          "name": "E1 TP",
+          "elevation_m": 1.375,
+          "above_ground_m": 1.375,
+          "is_roof_level": false
+        },
+        {
+          "name": "E2 TP",
+          "elevation_m": 2.75,
+          "above_ground_m": 2.75,
+          "is_roof_level": false
+        },
+        {
+          "name": "E3 TP",
+          "elevation_m": 4.125,
+          "above_ground_m": 4.125,
+          "is_roof_level": false
+        },
+        {
+          "name": "E4 TP",
+          "elevation_m": 5.5,
+          "above_ground_m": 5.5,
+          "is_roof_level": false
+        },
+        {
+          "name": "E5 TP",
+          "elevation_m": 6.875,
+          "above_ground_m": 6.875,
+          "is_roof_level": false
+        },
+        {
+          "name": "E6 TP",
+          "elevation_m": 8.25,
+          "above_ground_m": 8.25,
+          "is_roof_level": false
+        },
+        {
+          "name": "E7 TP",
+          "elevation_m": 9.625,
+          "above_ground_m": 9.625,
+          "is_roof_level": false
+        },
+        {
+          "name": "E8 TP",
+          "elevation_m": 11,
+          "above_ground_m": 11,
+          "is_roof_level": false
+        },
+        {
+          "name": "E9 TP",
+          "elevation_m": 12.375,
+          "above_ground_m": 12.375,
+          "is_roof_level": false
+        },
+        {
+          "name": "E10 TP",
+          "elevation_m": 13.75,
+          "above_ground_m": 13.75,
+          "is_roof_level": true
+        },
+        {
+          "name": "Bauteilgruppenebene (BTGE)",
+          "elevation_m": 50,
+          "above_ground_m": 50,
+          "is_roof_level": false
+        }
+      ]
+    }
+  },
+  "design_rules": {
+    "clearance_m": 1,
+    "boundary_setback_m": 1.5,
+    "circulation_width_m": 1,
+    "min_entry_points": 4,
+    "quiet_buffer_m": 3
+  },
+  "entry_points": [
+    {
+      "x_m": 2.3025579012047994,
+      "y_m": 4.4,
+      "edge": "top"
+    },
+    {
+      "x_m": 9.18890997023449,
+      "y_m": 5.000000000000002,
+      "edge": "top"
+    },
+    {
+      "x_m": 60.98625379380562,
+      "y_m": 5.000000000000002,
+      "edge": "top"
+    },
+    {
+      "x_m": 66.12606729460316,
+      "y_m": 3.2500000000000018,
+      "edge": "top"
+    }
+  ],
+  "placements": [
+    {
+      "id": "gb_high_0",
+      "category": "gardenBlock",
+      "label": "Planter T",
+      "insertion_point": {
+        "center_x_m": 21.5,
+        "center_y_m": 8.14
+      },
+      "bounding_box": {
+        "top_left_x_m": 20.3,
+        "top_left_y_m": 6.94,
+        "width_m": 2.4,
+        "height_m": 2.4
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_t",
+          "label": "Planter T",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 2400,
+            "rimHeight": 900,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 1000,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 530,
+            "capTop": 1070,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_1",
+      "category": "gardenBlock",
+      "label": "Planter T",
+      "insertion_point": {
+        "center_x_m": 26.4,
+        "center_y_m": 8.14
+      },
+      "bounding_box": {
+        "top_left_x_m": 25.2,
+        "top_left_y_m": 6.94,
+        "width_m": 2.4,
+        "height_m": 2.4
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_t",
+          "label": "Planter T",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 2400,
+            "rimHeight": 900,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 1000,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 530,
+            "capTop": 1070,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_2",
+      "category": "gardenBlock",
+      "label": "Planter T",
+      "insertion_point": {
+        "center_x_m": 31.3,
+        "center_y_m": 8.14
+      },
+      "bounding_box": {
+        "top_left_x_m": 30.1,
+        "top_left_y_m": 6.94,
+        "width_m": 2.4,
+        "height_m": 2.4
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_t",
+          "label": "Planter T",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 2400,
+            "rimHeight": 900,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 1000,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 530,
+            "capTop": 1070,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_3",
+      "category": "gardenBlock",
+      "label": "Planter T",
+      "insertion_point": {
+        "center_x_m": 36.2,
+        "center_y_m": 8.14
+      },
+      "bounding_box": {
+        "top_left_x_m": 35,
+        "top_left_y_m": 6.94,
+        "width_m": 2.4,
+        "height_m": 2.4
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_t",
+          "label": "Planter T",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 2400,
+            "rimHeight": 900,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 1000,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 530,
+            "capTop": 1070,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_4",
+      "category": "gardenBlock",
+      "label": "Planter T",
+      "insertion_point": {
+        "center_x_m": 41.1,
+        "center_y_m": 8.14
+      },
+      "bounding_box": {
+        "top_left_x_m": 39.9,
+        "top_left_y_m": 6.94,
+        "width_m": 2.4,
+        "height_m": 2.4
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_t",
+          "label": "Planter T",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 2400,
+            "rimHeight": 900,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 1000,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 530,
+            "capTop": 1070,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_5",
+      "category": "gardenBlock",
+      "label": "Planter T",
+      "insertion_point": {
+        "center_x_m": 46,
+        "center_y_m": 8.14
+      },
+      "bounding_box": {
+        "top_left_x_m": 44.8,
+        "top_left_y_m": 6.94,
+        "width_m": 2.4,
+        "height_m": 2.4
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_t",
+          "label": "Planter T",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 2400,
+            "rimHeight": 900,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 1000,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 530,
+            "capTop": 1070,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_6",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 21.5,
+        "center_y_m": 3.44
+      },
+      "bounding_box": {
+        "top_left_x_m": 20.3,
+        "top_left_y_m": 2.94,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_7",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 26.4,
+        "center_y_m": 3.44
+      },
+      "bounding_box": {
+        "top_left_x_m": 25.2,
+        "top_left_y_m": 2.94,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_8",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 31.3,
+        "center_y_m": 3.44
+      },
+      "bounding_box": {
+        "top_left_x_m": 30.1,
+        "top_left_y_m": 2.94,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_9",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 36.2,
+        "center_y_m": 3.44
+      },
+      "bounding_box": {
+        "top_left_x_m": 35,
+        "top_left_y_m": 2.94,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_10",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 41.1,
+        "center_y_m": 3.44
+      },
+      "bounding_box": {
+        "top_left_x_m": 39.9,
+        "top_left_y_m": 2.94,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_11",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 46,
+        "center_y_m": 3.44
+      },
+      "bounding_box": {
+        "top_left_x_m": 44.8,
+        "top_left_y_m": 2.94,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_12",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 21.5,
+        "center_y_m": 12.84
+      },
+      "bounding_box": {
+        "top_left_x_m": 20.3,
+        "top_left_y_m": 12.34,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_13",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 26.4,
+        "center_y_m": 12.84
+      },
+      "bounding_box": {
+        "top_left_x_m": 25.2,
+        "top_left_y_m": 12.34,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_14",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 31.3,
+        "center_y_m": 12.84
+      },
+      "bounding_box": {
+        "top_left_x_m": 30.1,
+        "top_left_y_m": 12.34,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_15",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 36.2,
+        "center_y_m": 12.84
+      },
+      "bounding_box": {
+        "top_left_x_m": 35,
+        "top_left_y_m": 12.34,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_16",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 41.1,
+        "center_y_m": 12.84
+      },
+      "bounding_box": {
+        "top_left_x_m": 39.9,
+        "top_left_y_m": 12.34,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_17",
+      "category": "gardenBlock",
+      "label": "Planter S",
+      "insertion_point": {
+        "center_x_m": 46,
+        "center_y_m": 12.84
+      },
+      "bounding_box": {
+        "top_left_x_m": 44.8,
+        "top_left_y_m": 12.34,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "preset": "quiet_garden",
+        "gardenBlock": {
+          "type": "planter_s",
+          "label": "Planter S",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
+      }
+    },
+    {
+      "id": "gb_high_18",
+      "category": "activity",
+      "label": "Calisthenics",
+      "insertion_point": {
+        "center_x_m": 13.3,
+        "center_y_m": 11.78
+      },
+      "bounding_box": {
+        "top_left_x_m": 9.3,
+        "top_left_y_m": 8.78,
+        "width_m": 8,
+        "height_m": 6
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "quality_key": "ACTIVITY_CALISTHENICS",
+        "activity": {
+          "type_id": "calisthenics",
+          "category": "fitness",
+          "norm": "Reference sheet",
+          "dimensions": {
+            "length_m": 8,
+            "width_m": 6
+          }
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        },
+        "preset": "quiet_garden"
+      }
+    },
+    {
+      "id": "gb_high_19",
+      "category": "activity",
+      "label": "Yoga / Stretching Deck",
+      "insertion_point": {
+        "center_x_m": 55.2,
+        "center_y_m": 12.28
+      },
+      "bounding_box": {
+        "top_left_x_m": 50.2,
+        "top_left_y_m": 9.78,
+        "width_m": 10,
+        "height_m": 5
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Garden-Preset",
+        "quality_key": "ACTIVITY_YOGA_DECK",
+        "activity": {
+          "type_id": "yoga_deck",
+          "category": "wellness",
+          "norm": "Reference sheet",
+          "dimensions": {
+            "length_m": 10,
+            "width_m": 5
+          }
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        },
+        "familyInstance": {
+          "type": "yoga_deck",
+          "label": "Yoga / Stretching Deck",
+          "family": "Yoga Deck",
+          "units": "m",
+          "params": {
+            "Deck_Length": 10,
+            "Deck_Width": 5,
+            "Roof_Height": 4,
+            "Roof_Thickness": 0.15,
+            "Planter_Spacing": 1.5,
+            "Default Elevation": 0,
+            "Show_Roof": true
+          }
+        },
+        "preset": "quiet_garden"
+      }
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_gb_high_0",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 0,
+        "top_left_y_m": 14.78,
+        "width_m": 67.5,
+        "height_m": 1.5000000000000018
+      },
+      "points": [
+        {
+          "x_m": 0,
+          "y_m": 14.78
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 14.78
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 16.28
+        },
+        {
+          "x_m": 0,
+          "y_m": 16.28
+        }
+      ],
+      "area_m2": 101.25000000000011,
+      "assembly_key": null,
+      "family": {
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 5,
+          "drainageDepth": 25,
+          "filterFleece": 5,
+          "substrateDepth": 80,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 170,
+          "length": 67500,
+          "width": 1500,
+          "rimLevel": 270,
+          "trayFloorTop": 120,
+          "matTop": 125,
+          "drainageTop": 150,
+          "fleeceTop": 155,
+          "substrateTop": 235,
+          "freeboard": 35,
+          "capTop": 340,
+          "outletTop": 155
+        },
+        "strip_generic_model": false,
+        "floor_top_mm": 235,
+        "trayed_mm": 115,
+        "untrayed_layers": []
+      }
+    },
+    {
+      "id": "zone_gb_high_1",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 13.5,
+        "top_left_y_m": 0,
+        "width_m": 43.2,
+        "height_m": 1.5
+      },
+      "points": [
+        {
+          "x_m": 13.5,
+          "y_m": 0
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 0
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 1.5
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 1.5
+        }
+      ],
+      "area_m2": 64.80000000000001,
+      "assembly_key": null,
+      "family": {
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 5,
+          "drainageDepth": 25,
+          "filterFleece": 5,
+          "substrateDepth": 80,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 170,
+          "length": 43200,
+          "width": 1500,
+          "rimLevel": 270,
+          "trayFloorTop": 120,
+          "matTop": 125,
+          "drainageTop": 150,
+          "fleeceTop": 155,
+          "substrateTop": 235,
+          "freeboard": 35,
+          "capTop": 340,
+          "outletTop": 155
+        },
+        "strip_generic_model": false,
+        "floor_top_mm": 235,
+        "trayed_mm": 115,
+        "untrayed_layers": []
+      }
+    },
+    {
+      "id": "zone_gb_high_2",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 66,
+        "top_left_y_m": 3.25,
+        "width_m": 1.5,
+        "height_m": 11.53
+      },
+      "points": [
+        {
+          "x_m": 66,
+          "y_m": 3.25
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 3.25
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 14.78
+        },
+        {
+          "x_m": 66,
+          "y_m": 14.78
+        }
+      ],
+      "area_m2": 17.295000000000073,
+      "assembly_key": null,
+      "family": {
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 5,
+          "drainageDepth": 25,
+          "filterFleece": 5,
+          "substrateDepth": 80,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 170,
+          "length": 1500,
+          "width": 11530,
+          "rimLevel": 270,
+          "trayFloorTop": 120,
+          "matTop": 125,
+          "drainageTop": 150,
+          "fleeceTop": 155,
+          "substrateTop": 235,
+          "freeboard": 35,
+          "capTop": 340,
+          "outletTop": 155
+        },
+        "strip_generic_model": false,
+        "floor_top_mm": 235,
+        "trayed_mm": 115,
+        "untrayed_layers": []
+      }
+    },
+    {
+      "id": "zone_gb_high_3",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 0,
+        "top_left_y_m": 4.4,
+        "width_m": 1.5,
+        "height_m": 10.38
+      },
+      "points": [
+        {
+          "x_m": 0,
+          "y_m": 4.4
+        },
+        {
+          "x_m": 1.5,
+          "y_m": 4.4
+        },
+        {
+          "x_m": 1.5,
+          "y_m": 14.780000000000001
+        },
+        {
+          "x_m": 0,
+          "y_m": 14.780000000000001
+        }
+      ],
+      "area_m2": 15.57,
+      "assembly_key": null,
+      "family": {
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 5,
+          "drainageDepth": 25,
+          "filterFleece": 5,
+          "substrateDepth": 80,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 170,
+          "length": 1500,
+          "width": 10380,
+          "rimLevel": 270,
+          "trayFloorTop": 120,
+          "matTop": 125,
+          "drainageTop": 150,
+          "fleeceTop": 155,
+          "substrateTop": 235,
+          "freeboard": 35,
+          "capTop": 340,
+          "outletTop": 155
+        },
+        "strip_generic_model": false,
+        "floor_top_mm": 235,
+        "trayed_mm": 115,
+        "untrayed_layers": []
+      }
+    },
+    {
+      "id": "zone_gb_high_4",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 1.5,
+        "top_left_y_m": 10.78,
+        "width_m": 4,
+        "height_m": 4
+      },
+      "points": [
+        {
+          "x_m": 1.5,
+          "y_m": 10.78
+        },
+        {
+          "x_m": 5.5,
+          "y_m": 10.78
+        },
+        {
+          "x_m": 5.5,
+          "y_m": 14.78
+        },
+        {
+          "x_m": 1.5,
+          "y_m": 14.78
+        }
+      ],
+      "area_m2": 15.99999999999999,
+      "assembly_key": null,
+      "family": {
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 5,
+          "drainageDepth": 25,
+          "filterFleece": 5,
+          "substrateDepth": 80,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 170,
+          "length": 4000,
+          "width": 4000,
+          "rimLevel": 270,
+          "trayFloorTop": 120,
+          "matTop": 125,
+          "drainageTop": 150,
+          "fleeceTop": 155,
+          "substrateTop": 235,
+          "freeboard": 35,
+          "capTop": 340,
+          "outletTop": 155
+        },
+        "strip_generic_model": false,
+        "floor_top_mm": 235,
+        "trayed_mm": 115,
+        "untrayed_layers": []
+      }
+    },
+    {
+      "id": "zone_gb_high_5",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 62,
+        "top_left_y_m": 10.78,
+        "width_m": 4,
+        "height_m": 4
+      },
+      "points": [
+        {
+          "x_m": 62,
+          "y_m": 10.78
+        },
+        {
+          "x_m": 66,
+          "y_m": 10.78
+        },
+        {
+          "x_m": 66,
+          "y_m": 14.78
+        },
+        {
+          "x_m": 62,
+          "y_m": 14.78
+        }
+      ],
+      "area_m2": 16,
+      "assembly_key": null,
+      "family": {
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 5,
+          "drainageDepth": 25,
+          "filterFleece": 5,
+          "substrateDepth": 80,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 170,
+          "length": 4000,
+          "width": 4000,
+          "rimLevel": 270,
+          "trayFloorTop": 120,
+          "matTop": 125,
+          "drainageTop": 150,
+          "fleeceTop": 155,
+          "substrateTop": 235,
+          "freeboard": 35,
+          "capTop": 340,
+          "outletTop": 155
+        },
+        "strip_generic_model": false,
+        "floor_top_mm": 235,
+        "trayed_mm": 115,
+        "untrayed_layers": []
+      }
+    }
+  ]
+};
+
 /* ---- public registry — sessionGate.js / compareController.js call .generate() on demand, never read a precomputed field ---- */
 const GOLDBECK_PREBUILT_SESSIONS = {
   lowRoofSports: {
@@ -80,5 +2003,9 @@ const GOLDBECK_PREBUILT_SESSIONS = {
     tagline: "8 courts on the real E9 slab: Padel, 2 Ping Pong, Sand Pit, Trampoline, Modular Tower Slide, Locker & Bathroom modules.",
     generate: () => goldbeckCloneRealPayload(GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD),
   },
-  // highRoofGarden: the E10 slab (the highest of the two), a garden preset — added once that roof is pushed and captured the same way.
+  highRoofGarden: {
+    id: "highRoofGarden", title: "Goldbeck — High Roof, Garden",
+    tagline: "Quiet Garden preset on the real E10 slab: 6 Planter T, 12 Planter S, Calisthenics and a Yoga deck, with green-roof zones.",
+    generate: () => goldbeckCloneRealPayload(GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD),
+  },
 };
