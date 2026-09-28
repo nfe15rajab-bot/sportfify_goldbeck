@@ -199,6 +199,16 @@ const ACTIVITIES = {
     category: "service",
     norm: "Revit family — Locker Bank",
   },
+  // The locker ROOM (user, 2026-09-28): the 10 x 5 m Locker & Dressing Room module as it was before the Locker Bank family took the old
+  // locker_module id. Algorithmic placement's "Locker & Dressing Room Module" (service corner, 2 m lobby, indoor zone) takes its size from here.
+  locker_room: {
+    label: "Locker Room",
+    short: "Locker Room",
+    icon: "ti-square-rounded",
+    length: 10.00, width: 5.00,
+    category: "service",
+    norm: "Reference sheet",
+  },
   dressing_cabin: {
     label: "Dressing Cabin",
     short: "Cabin",

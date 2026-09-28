@@ -273,7 +273,7 @@ document.getElementById("btn-remove-selected").addEventListener("click", deleteS
 /** Is this board piece the Locker & Dressing Room or the Bathroom & Shower module (the ones the indoor zone's wall stands round)? */
 function isServiceModuleItem(item) {
   const id = item && item.sourceJson && item.sourceJson.activity && item.sourceJson.activity.type_id;
-  return id === "locker_module" || id === "bathroom_module";
+  return id === "locker_room" || id === "bathroom_module";          // the Locker Room (not the Locker Bank family) and the Bathroom module
 }
 
 /**

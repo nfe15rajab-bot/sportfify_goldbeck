@@ -242,6 +242,7 @@ function setMode(mode) {
 
   activeMode = mode;
   if (typeof workflowNextUpdate === "function") workflowNextUpdate(mode);
+  if (typeof renderPushTray === "function") renderPushTray();          // the "Pushed to Combine" tray: Sport and Facilities tabs only
 }
 
 /* ── Role toggle (Planner / Client) ──

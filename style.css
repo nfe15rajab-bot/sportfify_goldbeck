@@ -1526,3 +1526,25 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
   border-radius: 6px;
   background: var(--surface-1);
 }
+
+/* "Pushed to Combine" tray, Sport and Facilities tabs (pushTray.js): on the right, above the floating Next button */
+.push-tray { position: fixed; right: 18px; bottom: 74px; z-index: 39; width: 290px; max-height: calc(100vh - 190px); display: flex; flex-direction: column; background: var(--surface-2); border: 0.5px solid var(--border-strong); border-radius: var(--radius); box-shadow: 0 6px 20px rgba(0,0,0,0.18); font-size: 12px; }
+.push-tray[hidden] { display: none; }
+.push-tray-head { display: flex; align-items: center; gap: 6px; padding: 9px 11px; font-weight: 700; color: var(--text-primary); border-bottom: 0.5px solid var(--border); }
+.push-tray-head i { color: var(--text-accent); font-size: 14px; }
+.push-tray-total { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.push-tray-list { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 6px; display: flex; flex-direction: column; gap: 2px; }
+.push-tray-row { display: flex; align-items: center; gap: 6px; padding: 5px 5px; border-radius: 4px; color: var(--text-primary); }
+.push-tray-row.flash { animation: push-tray-flash 1.2s ease-out; }
+@keyframes push-tray-flash { from { background: rgba(34,197,94,0.28); } to { background: transparent; } }
+.push-tray-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.push-tray-size { font-size: 10.5px; color: var(--text-secondary); white-space: nowrap; }
+.push-tray-count { font-weight: 700; color: var(--text-accent); white-space: nowrap; }
+.push-tray-remove { width: 20px; height: 20px; border: none; border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; }
+.push-tray-remove:hover { background: var(--surface-1); color: var(--text-fail); }
+.push-tray-empty { margin: 6px 4px; font-size: 11px; color: var(--text-muted); }
+.push-tray-actions { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; border-top: 0.5px solid var(--border); }
+.push-tray-actions .btn-export { justify-content: center; }
+
+/* "× n" on a pushed piece picked n times (combineField.js renderCombineTray): bottom right of its thumbnail */
+.tray-thumb-count { position: absolute; top: 38px; right: 4px; min-width: 20px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--fill-accent); color: var(--on-accent); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.25); pointer-events: none; }

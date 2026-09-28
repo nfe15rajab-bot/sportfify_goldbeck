@@ -52,7 +52,7 @@ const OUTDOOR_GROUPS = [
  * different questions. They have their own tab now; the same configurator
  * serves them, because a facility is still an activity underneath.
  */
-const FACILITY_IDS = ["locker_module", "dressing_cabin", "bathroom_module", "rest_area"];
+const FACILITY_IDS = ["locker_room", "locker_module", "dressing_cabin", "bathroom_module", "rest_area"];   // + the Locker Room (user, 2026-09-28)
 
 /** One activity-bar button, field or activity — the two data shapes share label/short/icon, so one template covers both. */
 function activityIconHtml(kind, id, activeId, item) {
@@ -201,7 +201,7 @@ function updateUI() {
 }
 
 /* ── Garden Core roof: only Calisthenics and Yoga from the Sport tab (user, 2026-09-27) ── */
-const GARDEN_CORE_SPORT_TAB_OK = ["calisthenics", "yoga_deck", "locker_module", "bathroom_module"];   // + the locker and bathroom modules (user, same day)
+const GARDEN_CORE_SPORT_TAB_OK = ["calisthenics", "yoga_deck", "locker_room", "locker_module", "bathroom_module"];   // + the locker and bathroom modules (user, same day)
 
 function isGardenCoreRoof() {
   const p = typeof getRoofProgram === "function" ? getRoofProgram() : null;
@@ -488,12 +488,14 @@ document.getElementById("activityQuantity").addEventListener("input", e => { sta
 document.getElementById("btn-push-activity").addEventListener("click", () => {
   if (isGardenCoreRoof() && !GARDEN_CORE_SPORT_TAB_OK.includes(state.activityId)) return;   // Garden Core: Calisthenics and Yoga only
   const a = ACTIVITIES[state.activityId];
+  let last = null;
   for (let i = 0; i < Math.max(1, state.activityQuantity); i++) {
     // We pass the full built payload into sourceJson so Combine can export it later
     const sourceJson = typeof buildActivityPayload === "function" ? buildActivityPayload() : {};
-    addCombineItem({ kind: "activity", label: a.label, length_m: state.activityLength, width_m: state.activityWidth, sourceJson });
+    last = addCombineItem({ kind: "activity", label: a.label, length_m: state.activityLength, width_m: state.activityWidth, sourceJson });
   }
-  setMode("combine");
+  // stay in this tab (user, 2026-09-28): the tray on the right lists it, and its buttons go on to Combine / Garden Components
+  if (typeof pushTrayAdded === "function") pushTrayAdded(last); else setMode("combine");
 });
 
 document.getElementById("btn-push-sport").addEventListener("click", () => {
@@ -505,10 +507,11 @@ document.getElementById("btn-push-sport").addEventListener("click", () => {
   // (basketball likewise: its competition area already includes the free zone, so the run-off is not added twice)
   const fp = sportFootprint();
 
-  addCombineItem({
+  const item = addCombineItem({
     kind: "field", label: `${state.sport} (${state.variant})`,
     length_m: fp.length_m, width_m: fp.width_m,
     sourceJson: buildSportPayload(),
   });
-  setMode("combine");
+  // stay in this tab (user, 2026-09-28): the tray on the right lists it
+  if (typeof pushTrayAdded === "function") pushTrayAdded(item); else setMode("combine");
 });

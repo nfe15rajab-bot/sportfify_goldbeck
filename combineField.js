@@ -1008,12 +1008,22 @@ function renderCombineTray() {
     wrap.innerHTML = `<p class="hint combine-tray-empty">Push a sport, activity, or garden piece — it lands here first, then drag it onto the roof.</p>`;
     return;
   }
-  wrap.innerHTML = tray.map(it => {
+  // identical pieces (same kind, label and size) are ONE thumbnail with "× n" at its bottom right (user, 2026-09-28): dragging it out or its ×
+  // takes the last copy, so the count goes down one at a time
+  const groups = new Map();
+  tray.forEach(it => {
+    const key = [it.kind, it.label, Number(it.length_m).toFixed(2), Number(it.width_m).toFixed(2)].join("|");
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(it);
+  });
+  wrap.innerHTML = [...groups.values()].map(copies => {
+    const it = copies[copies.length - 1], n = copies.length;
     const colors = KIND_COLORS[it.kind] || KIND_COLORS.field;
     return `
-      <div class="tray-thumb" data-tray-id="${escapeHtml(it.id)}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${escapeHtml(it.label)} — ${it.length_m}m × ${it.width_m}m">
-        <button class="tray-thumb-remove" data-tray-remove="${escapeHtml(it.id)}" title="Remove"><i class="ti ti-x" aria-hidden="true"></i></button>
+      <div class="tray-thumb" data-tray-id="${escapeHtml(it.id)}" style="--thumb-fill:${colors.fill};--thumb-stroke:${colors.stroke}" title="${escapeHtml(it.label)} — ${it.length_m}m × ${it.width_m}m${n > 1 ? " — " + n + " copies" : ""}">
+        <button class="tray-thumb-remove" data-tray-remove="${escapeHtml(it.id)}" title="Remove one"><i class="ti ti-x" aria-hidden="true"></i></button>
         <div class="tray-thumb-box">${trayThumbSvg(it, 64, 50)}</div>
+        ${n > 1 ? `<span class="tray-thumb-count">× ${n}</span>` : ""}
         <span class="tray-thumb-label">${escapeHtml(it.label)}</span>
       </div>`;
   }).join("");
