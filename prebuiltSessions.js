@@ -5206,41 +5206,53 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
         }
       ],
       "area_m2": 101.25000000000011,
-      "assembly_key": null,
+      "assembly_key": "bauder_extensive_sedum",
       "family": {
+        "key": null,
         "family": "Sportify_GreenRoofModule",
         "type": "Green Roof Module",
         "units": "mm",
         "parameters": {
           "defaultElevation": 0,
           "pedestalHeight": 100,
-          "protectionMat": 5,
-          "drainageDepth": 25,
-          "filterFleece": 5,
-          "substrateDepth": 80,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
           "outletHeight": 30,
           "outletBottomOffset": 25,
           "outletTopOffset": 55,
           "centreRow": true,
           "seatCap": false,
           "tree": false,
-          "rimHeight": 170,
+          "rimHeight": 95,
           "length": 67500,
           "width": 1500,
-          "rimLevel": 270,
+          "rimLevel": 195,
           "trayFloorTop": 120,
-          "matTop": 125,
-          "drainageTop": 150,
-          "fleeceTop": 155,
-          "substrateTop": 235,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
           "freeboard": 35,
-          "capTop": 340,
-          "outletTop": 155
+          "capTop": 265,
+          "outletTop": 150
         },
-        "strip_generic_model": false,
-        "floor_top_mm": 235,
-        "trayed_mm": 115,
-        "untrayed_layers": []
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
       }
     },
     {
@@ -5272,41 +5284,53 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
         }
       ],
       "area_m2": 64.80000000000001,
-      "assembly_key": null,
+      "assembly_key": "bauder_extensive_sedum",
       "family": {
+        "key": null,
         "family": "Sportify_GreenRoofModule",
         "type": "Green Roof Module",
         "units": "mm",
         "parameters": {
           "defaultElevation": 0,
           "pedestalHeight": 100,
-          "protectionMat": 5,
-          "drainageDepth": 25,
-          "filterFleece": 5,
-          "substrateDepth": 80,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
           "outletHeight": 30,
           "outletBottomOffset": 25,
           "outletTopOffset": 55,
           "centreRow": true,
           "seatCap": false,
           "tree": false,
-          "rimHeight": 170,
+          "rimHeight": 95,
           "length": 43200,
           "width": 1500,
-          "rimLevel": 270,
+          "rimLevel": 195,
           "trayFloorTop": 120,
-          "matTop": 125,
-          "drainageTop": 150,
-          "fleeceTop": 155,
-          "substrateTop": 235,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
           "freeboard": 35,
-          "capTop": 340,
-          "outletTop": 155
+          "capTop": 265,
+          "outletTop": 150
         },
-        "strip_generic_model": false,
-        "floor_top_mm": 235,
-        "trayed_mm": 115,
-        "untrayed_layers": []
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
       }
     },
     {
@@ -5338,41 +5362,53 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
         }
       ],
       "area_m2": 17.295000000000073,
-      "assembly_key": null,
+      "assembly_key": "bauder_extensive_sedum",
       "family": {
+        "key": null,
         "family": "Sportify_GreenRoofModule",
         "type": "Green Roof Module",
         "units": "mm",
         "parameters": {
           "defaultElevation": 0,
           "pedestalHeight": 100,
-          "protectionMat": 5,
-          "drainageDepth": 25,
-          "filterFleece": 5,
-          "substrateDepth": 80,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
           "outletHeight": 30,
           "outletBottomOffset": 25,
           "outletTopOffset": 55,
           "centreRow": true,
           "seatCap": false,
           "tree": false,
-          "rimHeight": 170,
+          "rimHeight": 95,
           "length": 1500,
           "width": 11530,
-          "rimLevel": 270,
+          "rimLevel": 195,
           "trayFloorTop": 120,
-          "matTop": 125,
-          "drainageTop": 150,
-          "fleeceTop": 155,
-          "substrateTop": 235,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
           "freeboard": 35,
-          "capTop": 340,
-          "outletTop": 155
+          "capTop": 265,
+          "outletTop": 150
         },
-        "strip_generic_model": false,
-        "floor_top_mm": 235,
-        "trayed_mm": 115,
-        "untrayed_layers": []
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
       }
     },
     {
@@ -5404,41 +5440,53 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
         }
       ],
       "area_m2": 15.57,
-      "assembly_key": null,
+      "assembly_key": "bauder_extensive_sedum",
       "family": {
+        "key": null,
         "family": "Sportify_GreenRoofModule",
         "type": "Green Roof Module",
         "units": "mm",
         "parameters": {
           "defaultElevation": 0,
           "pedestalHeight": 100,
-          "protectionMat": 5,
-          "drainageDepth": 25,
-          "filterFleece": 5,
-          "substrateDepth": 80,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
           "outletHeight": 30,
           "outletBottomOffset": 25,
           "outletTopOffset": 55,
           "centreRow": true,
           "seatCap": false,
           "tree": false,
-          "rimHeight": 170,
+          "rimHeight": 95,
           "length": 1500,
           "width": 10380,
-          "rimLevel": 270,
+          "rimLevel": 195,
           "trayFloorTop": 120,
-          "matTop": 125,
-          "drainageTop": 150,
-          "fleeceTop": 155,
-          "substrateTop": 235,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
           "freeboard": 35,
-          "capTop": 340,
-          "outletTop": 155
+          "capTop": 265,
+          "outletTop": 150
         },
-        "strip_generic_model": false,
-        "floor_top_mm": 235,
-        "trayed_mm": 115,
-        "untrayed_layers": []
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
       }
     },
     {
@@ -5470,41 +5518,53 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
         }
       ],
       "area_m2": 15.99999999999999,
-      "assembly_key": null,
+      "assembly_key": "bauder_extensive_sedum",
       "family": {
+        "key": null,
         "family": "Sportify_GreenRoofModule",
         "type": "Green Roof Module",
         "units": "mm",
         "parameters": {
           "defaultElevation": 0,
           "pedestalHeight": 100,
-          "protectionMat": 5,
-          "drainageDepth": 25,
-          "filterFleece": 5,
-          "substrateDepth": 80,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
           "outletHeight": 30,
           "outletBottomOffset": 25,
           "outletTopOffset": 55,
           "centreRow": true,
           "seatCap": false,
           "tree": false,
-          "rimHeight": 170,
+          "rimHeight": 95,
           "length": 4000,
           "width": 4000,
-          "rimLevel": 270,
+          "rimLevel": 195,
           "trayFloorTop": 120,
-          "matTop": 125,
-          "drainageTop": 150,
-          "fleeceTop": 155,
-          "substrateTop": 235,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
           "freeboard": 35,
-          "capTop": 340,
-          "outletTop": 155
+          "capTop": 265,
+          "outletTop": 150
         },
-        "strip_generic_model": false,
-        "floor_top_mm": 235,
-        "trayed_mm": 115,
-        "untrayed_layers": []
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
       }
     },
     {
@@ -5536,44 +5596,138 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
         }
       ],
       "area_m2": 16,
-      "assembly_key": null,
+      "assembly_key": "bauder_extensive_sedum",
       "family": {
+        "key": null,
         "family": "Sportify_GreenRoofModule",
         "type": "Green Roof Module",
         "units": "mm",
         "parameters": {
           "defaultElevation": 0,
           "pedestalHeight": 100,
-          "protectionMat": 5,
-          "drainageDepth": 25,
-          "filterFleece": 5,
-          "substrateDepth": 80,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
           "outletHeight": 30,
           "outletBottomOffset": 25,
           "outletTopOffset": 55,
           "centreRow": true,
           "seatCap": false,
           "tree": false,
-          "rimHeight": 170,
+          "rimHeight": 95,
           "length": 4000,
           "width": 4000,
-          "rimLevel": 270,
+          "rimLevel": 195,
           "trayFloorTop": 120,
-          "matTop": 125,
-          "drainageTop": 150,
-          "fleeceTop": 155,
-          "substrateTop": 235,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
           "freeboard": 35,
-          "capTop": 340,
-          "outletTop": 155
+          "capTop": 265,
+          "outletTop": 150
         },
-        "strip_generic_model": false,
-        "floor_top_mm": 235,
-        "trayed_mm": 115,
-        "untrayed_layers": []
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
       }
     }
-  ]
+  ],
+  "assemblies": [
+    {
+      "key": "bauder_extensive_sedum",
+      "provider": "Bauder",
+      "provider_country": "Germany",
+      "system_name": "BauderEXTENSIVE Lightweight Sedum",
+      "category": "extensive",
+      "revit_type_name": "Sportify - Bauder BauderEXTENSIVE Lightweight Sedum",
+      "build_up_mm": null,
+      "saturated_kg_m2": null,
+      "water_storage_l_m2": null,
+      "source_url": "https://www.bauder.co.uk/green-and-blue-roofs/green-roofs/extensive-lightweight-sedum",
+      "total_thickness_m": 0.069,
+      "layers": [
+        {
+          "order": 0,
+          "name": "Mature sedum blanket",
+          "function": "vegetation",
+          "thickness_m": 0.025,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 1,
+          "name": "Extensive substrate",
+          "function": "substrate",
+          "thickness_m": 0.02,
+          "thickness_source": "published"
+        },
+        {
+          "order": 2,
+          "name": "Water retention and filter layer",
+          "function": "drainage",
+          "thickness_m": 0.02,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 3,
+          "name": "Root-resistant waterproofing",
+          "function": "waterproofing",
+          "thickness_m": 0.004,
+          "thickness_source": "typical"
+        }
+      ]
+    },
+    {
+      "key": "gravel_ballast",
+      "provider": "Generic",
+      "provider_country": "Germany",
+      "system_name": "Washed Gravel Ballast",
+      "category": "finish",
+      "revit_type_name": "Sportify - Generic Washed Gravel Ballast",
+      "build_up_mm": null,
+      "saturated_kg_m2": null,
+      "water_storage_l_m2": null,
+      "source_url": null,
+      "total_thickness_m": 0.057,
+      "layers": [
+        {
+          "order": 0,
+          "name": "Washed round gravel 16/32",
+          "function": "wearing",
+          "thickness_m": 0.05,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 1,
+          "name": "Filter fleece",
+          "function": "filter",
+          "thickness_m": 0.002,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 2,
+          "name": "Protection mat",
+          "function": "protection",
+          "thickness_m": 0.005,
+          "thickness_source": "typical"
+        }
+      ]
+    }
+  ],
+  "unresolved_assemblies": []
 };
 
 /**
@@ -6344,7 +6498,87 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
       "altitude_set": false,
       "day_schedule": null
     },
-    "assemblies": [],
+    "assemblies": [
+      {
+        "key": "bauder_extensive_sedum",
+        "provider": "Bauder",
+        "provider_country": "Germany",
+        "system_name": "BauderEXTENSIVE Lightweight Sedum",
+        "category": "extensive",
+        "revit_type_name": "Sportify - Bauder BauderEXTENSIVE Lightweight Sedum",
+        "build_up_mm": null,
+        "saturated_kg_m2": null,
+        "water_storage_l_m2": null,
+        "source_url": "https://www.bauder.co.uk/green-and-blue-roofs/green-roofs/extensive-lightweight-sedum",
+        "total_thickness_m": 0.069,
+        "layers": [
+          {
+            "order": 0,
+            "name": "Mature sedum blanket",
+            "function": "vegetation",
+            "thickness_m": 0.025,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 1,
+            "name": "Extensive substrate",
+            "function": "substrate",
+            "thickness_m": 0.02,
+            "thickness_source": "published"
+          },
+          {
+            "order": 2,
+            "name": "Water retention and filter layer",
+            "function": "drainage",
+            "thickness_m": 0.02,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 3,
+            "name": "Root-resistant waterproofing",
+            "function": "waterproofing",
+            "thickness_m": 0.004,
+            "thickness_source": "typical"
+          }
+        ]
+      },
+      {
+        "key": "gravel_ballast",
+        "provider": "Generic",
+        "provider_country": "Germany",
+        "system_name": "Washed Gravel Ballast",
+        "category": "finish",
+        "revit_type_name": "Sportify - Generic Washed Gravel Ballast",
+        "build_up_mm": null,
+        "saturated_kg_m2": null,
+        "water_storage_l_m2": null,
+        "source_url": null,
+        "total_thickness_m": 0.057,
+        "layers": [
+          {
+            "order": 0,
+            "name": "Washed round gravel 16/32",
+            "function": "wearing",
+            "thickness_m": 0.05,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 1,
+            "name": "Filter fleece",
+            "function": "filter",
+            "thickness_m": 0.002,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 2,
+            "name": "Protection mat",
+            "function": "protection",
+            "thickness_m": 0.005,
+            "thickness_source": "typical"
+          }
+        ]
+      }
+    ],
     "unresolved_assemblies": [],
     "roof_finish": null,
     "zones": [
@@ -6377,7 +6611,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 101.25000000000011,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6386,33 +6620,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 67500,
             "width": 1500,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6444,7 +6689,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 64.80000000000001,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6453,33 +6698,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 43200,
             "width": 1500,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6511,7 +6767,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 17.295000000000073,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6520,33 +6776,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 1500,
             "width": 11530,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6578,7 +6845,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 15.57,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6587,33 +6854,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 1500,
             "width": 10380,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6645,7 +6923,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 41.03999999999999,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6654,33 +6932,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 17100,
             "width": 2400,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6712,7 +7001,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 5.8559999999999945,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6721,33 +7010,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 2400,
             "width": 2440,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6779,7 +7079,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 5.8559999999999945,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6788,33 +7088,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 2400,
             "width": 2440,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6846,7 +7157,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 5.8559999999999945,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6855,33 +7166,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 2400,
             "width": 2440,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6913,7 +7235,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 5.8559999999999945,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6922,33 +7244,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 2400,
             "width": 2440,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -6980,7 +7313,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 15.99999999999999,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -6989,33 +7322,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 4000,
             "width": 4000,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -7047,7 +7391,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 16,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -7056,33 +7400,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 4000,
             "width": 4000,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       }
     ],
@@ -10207,7 +10562,87 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
       "altitude_set": false,
       "day_schedule": null
     },
-    "assemblies": [],
+    "assemblies": [
+      {
+        "key": "bauder_extensive_sedum",
+        "provider": "Bauder",
+        "provider_country": "Germany",
+        "system_name": "BauderEXTENSIVE Lightweight Sedum",
+        "category": "extensive",
+        "revit_type_name": "Sportify - Bauder BauderEXTENSIVE Lightweight Sedum",
+        "build_up_mm": null,
+        "saturated_kg_m2": null,
+        "water_storage_l_m2": null,
+        "source_url": "https://www.bauder.co.uk/green-and-blue-roofs/green-roofs/extensive-lightweight-sedum",
+        "total_thickness_m": 0.069,
+        "layers": [
+          {
+            "order": 0,
+            "name": "Mature sedum blanket",
+            "function": "vegetation",
+            "thickness_m": 0.025,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 1,
+            "name": "Extensive substrate",
+            "function": "substrate",
+            "thickness_m": 0.02,
+            "thickness_source": "published"
+          },
+          {
+            "order": 2,
+            "name": "Water retention and filter layer",
+            "function": "drainage",
+            "thickness_m": 0.02,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 3,
+            "name": "Root-resistant waterproofing",
+            "function": "waterproofing",
+            "thickness_m": 0.004,
+            "thickness_source": "typical"
+          }
+        ]
+      },
+      {
+        "key": "gravel_ballast",
+        "provider": "Generic",
+        "provider_country": "Germany",
+        "system_name": "Washed Gravel Ballast",
+        "category": "finish",
+        "revit_type_name": "Sportify - Generic Washed Gravel Ballast",
+        "build_up_mm": null,
+        "saturated_kg_m2": null,
+        "water_storage_l_m2": null,
+        "source_url": null,
+        "total_thickness_m": 0.057,
+        "layers": [
+          {
+            "order": 0,
+            "name": "Washed round gravel 16/32",
+            "function": "wearing",
+            "thickness_m": 0.05,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 1,
+            "name": "Filter fleece",
+            "function": "filter",
+            "thickness_m": 0.002,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 2,
+            "name": "Protection mat",
+            "function": "protection",
+            "thickness_m": 0.005,
+            "thickness_source": "typical"
+          }
+        ]
+      }
+    ],
     "unresolved_assemblies": [],
     "roof_finish": null,
     "zones": [
@@ -10240,7 +10675,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 101.25000000000011,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -10249,33 +10684,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 67500,
             "width": 1500,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -10307,7 +10753,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 64.80000000000001,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -10316,33 +10762,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 43200,
             "width": 1500,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -10374,7 +10831,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 17.295000000000073,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -10383,33 +10840,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 1500,
             "width": 11530,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -10441,7 +10909,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 15.57,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -10450,33 +10918,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 1500,
             "width": 10380,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -10508,7 +10987,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 15.99999999999999,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -10517,33 +10996,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 4000,
             "width": 4000,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -10575,7 +11065,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 16,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -10584,33 +11074,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 4000,
             "width": 4000,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       }
     ],
@@ -14047,7 +14548,87 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
       "altitude_set": false,
       "day_schedule": null
     },
-    "assemblies": [],
+    "assemblies": [
+      {
+        "key": "bauder_extensive_sedum",
+        "provider": "Bauder",
+        "provider_country": "Germany",
+        "system_name": "BauderEXTENSIVE Lightweight Sedum",
+        "category": "extensive",
+        "revit_type_name": "Sportify - Bauder BauderEXTENSIVE Lightweight Sedum",
+        "build_up_mm": null,
+        "saturated_kg_m2": null,
+        "water_storage_l_m2": null,
+        "source_url": "https://www.bauder.co.uk/green-and-blue-roofs/green-roofs/extensive-lightweight-sedum",
+        "total_thickness_m": 0.069,
+        "layers": [
+          {
+            "order": 0,
+            "name": "Mature sedum blanket",
+            "function": "vegetation",
+            "thickness_m": 0.025,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 1,
+            "name": "Extensive substrate",
+            "function": "substrate",
+            "thickness_m": 0.02,
+            "thickness_source": "published"
+          },
+          {
+            "order": 2,
+            "name": "Water retention and filter layer",
+            "function": "drainage",
+            "thickness_m": 0.02,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 3,
+            "name": "Root-resistant waterproofing",
+            "function": "waterproofing",
+            "thickness_m": 0.004,
+            "thickness_source": "typical"
+          }
+        ]
+      },
+      {
+        "key": "gravel_ballast",
+        "provider": "Generic",
+        "provider_country": "Germany",
+        "system_name": "Washed Gravel Ballast",
+        "category": "finish",
+        "revit_type_name": "Sportify - Generic Washed Gravel Ballast",
+        "build_up_mm": null,
+        "saturated_kg_m2": null,
+        "water_storage_l_m2": null,
+        "source_url": null,
+        "total_thickness_m": 0.057,
+        "layers": [
+          {
+            "order": 0,
+            "name": "Washed round gravel 16/32",
+            "function": "wearing",
+            "thickness_m": 0.05,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 1,
+            "name": "Filter fleece",
+            "function": "filter",
+            "thickness_m": 0.002,
+            "thickness_source": "typical"
+          },
+          {
+            "order": 2,
+            "name": "Protection mat",
+            "function": "protection",
+            "thickness_m": 0.005,
+            "thickness_source": "typical"
+          }
+        ]
+      }
+    ],
     "unresolved_assemblies": [],
     "roof_finish": null,
     "zones": [
@@ -14080,7 +14661,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 101.25000000000011,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -14089,33 +14670,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 67500,
             "width": 1500,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -14147,7 +14739,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 64.80000000000001,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -14156,33 +14748,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 43200,
             "width": 1500,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -14214,7 +14817,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 17.295000000000073,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -14223,33 +14826,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 1500,
             "width": 11530,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -14281,7 +14895,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 15.57,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -14290,33 +14904,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 1500,
             "width": 10380,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -14348,7 +14973,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 15.99999999999999,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -14357,33 +14982,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 4000,
             "width": 4000,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       },
       {
@@ -14415,7 +15051,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           }
         ],
         "area_m2": 16,
-        "assembly_key": null,
+        "assembly_key": "bauder_extensive_sedum",
         "family": {
           "key": "green_roof_module",
           "family": "Sportify_GreenRoofModule",
@@ -14424,33 +15060,44 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
           "parameters": {
             "defaultElevation": 0,
             "pedestalHeight": 100,
-            "protectionMat": 5,
-            "drainageDepth": 25,
-            "filterFleece": 5,
-            "substrateDepth": 80,
+            "protectionMat": 0,
+            "drainageDepth": 20,
+            "filterFleece": 0,
+            "substrateDepth": 20,
             "outletHeight": 30,
             "outletBottomOffset": 25,
             "outletTopOffset": 55,
             "centreRow": true,
             "seatCap": false,
             "tree": false,
-            "rimHeight": 170,
+            "rimHeight": 95,
             "length": 4000,
             "width": 4000,
-            "rimLevel": 270,
+            "rimLevel": 195,
             "trayFloorTop": 120,
-            "matTop": 125,
-            "drainageTop": 150,
-            "fleeceTop": 155,
-            "substrateTop": 235,
+            "matTop": 120,
+            "drainageTop": 140,
+            "fleeceTop": 140,
+            "substrateTop": 160,
             "freeboard": 35,
-            "capTop": 340,
-            "outletTop": 155
+            "capTop": 265,
+            "outletTop": 150
           },
-          "strip_generic_model": false,
-          "floor_top_mm": 235,
-          "trayed_mm": 115,
-          "untrayed_layers": []
+          "strip_generic_model": true,
+          "floor_top_mm": 160,
+          "trayed_mm": 40,
+          "untrayed_layers": [
+            {
+              "name": "Mature sedum blanket",
+              "fn": "vegetation",
+              "mm": 25
+            },
+            {
+              "name": "Root-resistant waterproofing",
+              "fn": "waterproofing",
+              "mm": 4
+            }
+          ]
         }
       }
     ],
