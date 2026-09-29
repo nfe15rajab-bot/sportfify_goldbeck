@@ -242,7 +242,7 @@ function greenRoofFamilyPayload(familyKey, assembly, length_m, width_m) {
   if (!fam || !params) return null;
 
   return {
-    key: familyKey,
+    key: familyKey || GREEN_ROOF_DEFAULT_FAMILY,      // the tray getGreenRoofFamily fell back to: its key, not undefined (Revit skipped a tray sent without one)
     family: fam.family,
     type: fam.type,
     units: "mm",

@@ -264,7 +264,7 @@ async function sendIterationsToRevit() {
       body: JSON.stringify(savedCompareConfigs),
     });
     if (!res.ok) throw new Error("the add-in refused the request");
-    showToast("Sent to Revit", `${savedCompareConfigs.length} iteration${savedCompareConfigs.length === 1 ? "" : "s"} sent — run "Import Iterations as Design Options" (BIM & Documentation panel) in Revit to build them.`);
+    showToast("Sent to Revit", `${savedCompareConfigs.length} iteration${savedCompareConfigs.length === 1 ? "" : "s"} sent — in Revit, edit a design option and run "Import Iterations as Design Options" to put one into it (once per option); from the Main Model it builds them all on worksets instead.`);
   } catch (err) {
     showToast("Revit not open", "Open the project in Revit with Sportify running, then try again.");
   } finally {
