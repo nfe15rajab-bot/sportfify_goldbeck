@@ -216,6 +216,35 @@ function towerApplyFootprint() {
 /* ── The preview ──────────────────────────────────────────────────────────── */
 
 /**
+ * The tower in plan: concentric triangles, largest first so each reads, centred on (cx, cy) and scaled so the widest part has radius r. Shared by the
+ * Sport tab's preview (drawClimbingTowerPreview) and the Combine board (combineField.js sportTabPieceSvg), so a change made here shows in both.
+ * `p` = the family's parameters (towerParams(), or a placed tower's own).
+ */
+function towerPlanSvg(p, cx, cy, r, isDark) {
+  const ink = isDark ? "#c9cbe0" : "#3a3f4b";
+  const steel   = isDark ? "#6f7d8c" : "#9fb0bf";
+  const deck    = isDark ? "#5b4a3a" : "#c8b49a";
+  const canopy  = isDark ? "#9c8a6a" : "#d8c3a0";
+  const widestPlan = Math.max(p.Base_Radius, p.Tower_Top_Radio, p.Canopy_Radio + p.Canopy_Overhang);
+  const ps = r / Math.max(0.001, widestPlan);
+
+  // A triangle of circumradius R, point up, about the plan's centre.
+  const tri = (R, fill, op, stroke, dash) => {
+    const pts = [0, 120, 240].map(a => {
+      const rad = (a - 90) * Math.PI / 180;
+      return `${(cx + Math.cos(rad) * R * ps).toFixed(1)},${(cy + Math.sin(rad) * R * ps).toFixed(1)}`;
+    }).join(" ");
+    return `<polygon points="${pts}" fill="${fill}" fill-opacity="${op}" stroke="${stroke}" stroke-width="1.2"${dash ? ` stroke-dasharray="${dash}"` : ""}/>`;
+  };
+
+  let plan = tri(p.Base_Radius, deck, 0.5, ink);                       // the platform it stands on
+  plan += tri(p.Canopy_Radio + p.Canopy_Overhang, canopy, 0.35, ink, "5 4");  // canopy, above
+  plan += tri(p.Tower_Top_Radio, steel, 0.30, ink, "5 4");             // the top, wider
+  plan += tri(p.Tower_Base_Radio, steel, 0.80, ink);                   // where it meets the deck
+  return plan;
+}
+
+/**
  * The tower in plan and in elevation.
  *
  * A plan alone cannot show this family: what makes it a climbing tower is that
@@ -241,23 +270,10 @@ function drawClimbingTowerPreview(svg, isDark) {
   const planBox = { cx: 118, cy: 160, r: 88 };
   const elevBox = { x: 250, w: 170, bottom: 250, top: 52 };
 
-  /* ── plan: concentric triangles, largest first so each reads ── */
+  /* ── plan: towerPlanSvg below (shared with the Combine board) ── */
   const widestPlan = Math.max(p.Base_Radius, p.Tower_Top_Radio, p.Canopy_Radio + p.Canopy_Overhang);
   const ps = planBox.r / Math.max(0.001, widestPlan);
-
-  // A triangle of circumradius R, point up, about the plan's centre.
-  const tri = (R, fill, op, stroke, dash) => {
-    const pts = [0, 120, 240].map(a => {
-      const rad = (a - 90) * Math.PI / 180;
-      return `${(planBox.cx + Math.cos(rad) * R * ps).toFixed(1)},${(planBox.cy + Math.sin(rad) * R * ps).toFixed(1)}`;
-    }).join(" ");
-    return `<polygon points="${pts}" fill="${fill}" fill-opacity="${op}" stroke="${stroke}" stroke-width="1.2"${dash ? ` stroke-dasharray="${dash}"` : ""}/>`;
-  };
-
-  let plan = tri(p.Base_Radius, deck, 0.5, ink);                       // the platform it stands on
-  plan += tri(p.Canopy_Radio + p.Canopy_Overhang, canopy, 0.35, ink, "5 4");  // canopy, above
-  plan += tri(p.Tower_Top_Radio, steel, 0.30, ink, "5 4");             // the top, wider
-  plan += tri(p.Tower_Base_Radio, steel, 0.80, ink);                   // where it meets the deck
+  let plan = towerPlanSvg(p, planBox.cx, planBox.cy, planBox.r, isDark);
 
   /* ── elevation: the flare is the whole point ── */
   const totalH = p.Tower_Height + p.Canopy_Thickness;

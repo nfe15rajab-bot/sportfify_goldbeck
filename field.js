@@ -76,14 +76,6 @@ function drawField(sport, variant, capacity, isDark) {
   const fw = scale * d.l, fh = scale * d.w;
   const ox = (VW - fw) / 2, oy = (VH - fh) / 2;
 
-  // Warm, energetic court tones — these are all fast-paced team/court
-  // sports (there's no "zen" entry among the FIELDS presets; that
-  // distinction lives in the activity categories instead, see
-  // ACTIVITY_CATEGORY_COLORS in activityField.js).
-  const floorFill  = isDark ? "#4a2a12" : "#ffcc9e";
-  const floorGrid  = isDark ? "#6b3f1c" : "#ffb366";
-  const fieldStroke = isDark ? "#aaa" : "#555";
-  const runoffStroke = isDark ? "#555" : "#aaa";
   const dimColor   = isDark ? "#aaa" : "#666";
   const standFill  = isDark ? "#3a2e22" : "#f5e6d8";
   const standStroke = isDark ? "#8a6a3f" : "#d9a876";
@@ -99,23 +91,9 @@ function drawField(sport, variant, capacity, isDark) {
     `;
   }
 
-  // Run-off zone
+  // Run-off zone, field surface and the sport's lines: fieldCourtSvg below, shared with the Combine board
   const roW = d.runoff * scale, roH = d.runoff * scale;
-  // the band is tinted so the run-off reads as floor the players use, not just a line: it is what differs between the size variants of a court
-  const runoffFill = isDark ? "rgba(255,179,102,0.10)" : "rgba(255,179,102,0.18)";
-  const runoffEl = `
-    <rect x="${ox - roW}" y="${oy - roH}" width="${fw + roW * 2}" height="${fh + roH * 2}"
-          fill="${runoffFill}" stroke="${runoffStroke}" stroke-width="0.7" stroke-dasharray="4,3" rx="2"/>
-  `;
-
-  // Field surface
-  const fieldEl = `
-    <rect x="${ox}" y="${oy}" width="${fw}" height="${fh}"
-          fill="url(#floor)" stroke="${fieldStroke}" stroke-width="1.5"/>
-  `;
-
-  // Sport-specific lines
-  const linesEl = getFieldLines(sport, ox, oy, fw, fh, isDark);
+  const court = fieldCourtSvg(sport, ox, oy, fw, fh, roW, roH, isDark, "floor");
 
   // Dimension labels: the dashed outline carries the total (court + run-off), and a line under it says what that total is made of
   const m = v => String(Math.round(v * 100) / 100);
@@ -141,19 +119,50 @@ function drawField(sport, variant, capacity, isDark) {
   // whatever viewBox a previous court left behind (drawn hugely oversized/cropped otherwise).
   svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
   svg.innerHTML = `
+    ${court.defs}
+    ${standsEl}
+    ${court.runoff}
+    ${court.field}
+    ${court.lines}
+    ${dimsEl}
+  `;
+}
+
+/**
+ * The court as the Sport tab draws it, in any box: the run-off band, the floor and the sport's lines. (ox, oy, fw, fh) is the court itself, roW / roH the
+ * run-off at its ends / sides, in the caller's units. Shared by the Sport tab (drawField above) and the Combine board (combineField.js
+ * sportTabPieceSvg), so a change made here shows in both. Returned in parts so drawField keeps its stands between the floor pattern and the run-off.
+ */
+function fieldCourtSvg(sport, ox, oy, fw, fh, roW, roH, isDark, patternId = "floor") {
+  // Warm, energetic court tones — these are all fast-paced team/court
+  // sports (there's no "zen" entry among the FIELDS presets; that
+  // distinction lives in the activity categories instead, see
+  // ACTIVITY_CATEGORY_COLORS in activityField.js).
+  const floorFill  = isDark ? "#4a2a12" : "#ffcc9e";
+  const floorGrid  = isDark ? "#6b3f1c" : "#ffb366";
+  const fieldStroke = isDark ? "#aaa" : "#555";
+  const runoffStroke = isDark ? "#555" : "#aaa";
+  // the band is tinted so the run-off reads as floor the players use, not just a line: it is what differs between the size variants of a court
+  const runoffFill = isDark ? "rgba(255,179,102,0.10)" : "rgba(255,179,102,0.18)";
+  return {
+    defs: `
     <defs>
-      <pattern id="floor" patternUnits="userSpaceOnUse" width="20" height="20">
+      <pattern id="${patternId}" patternUnits="userSpaceOnUse" width="20" height="20">
         <rect width="20" height="20" fill="${floorFill}"/>
         <line x1="0" y1="0" x2="20" y2="0" stroke="${floorGrid}" stroke-width="0.5"/>
         <line x1="0" y1="0" x2="0"  y2="20" stroke="${floorGrid}" stroke-width="0.5"/>
       </pattern>
-    </defs>
-    ${standsEl}
-    ${runoffEl}
-    ${fieldEl}
-    ${linesEl}
-    ${dimsEl}
-  `;
+    </defs>`,
+    runoff: `
+    <rect x="${ox - roW}" y="${oy - roH}" width="${fw + roW * 2}" height="${fh + roH * 2}"
+          fill="${runoffFill}" stroke="${runoffStroke}" stroke-width="0.7" stroke-dasharray="4,3" rx="2"/>
+  `,
+    field: `
+    <rect x="${ox}" y="${oy}" width="${fw}" height="${fh}"
+          fill="url(#${patternId})" stroke="${fieldStroke}" stroke-width="1.5"/>
+  `,
+    lines: getFieldLines(sport, ox, oy, fw, fh, isDark),
+  };
 }
 
 /**
