@@ -410,6 +410,8 @@ presetCardsEl?.addEventListener("click", e => {
     // with "Goldbeck — Low Roof, Sports - ..." (DeliverableNaming) — without this, the two built-in Goldbeck
     // sessions' own deliverables were indistinguishable from each other and from a hand-built layout's.
     if (typeof sessionNamesApply === "function") sessionNamesApply({ name: preset.title, iteration: "" });
+    // A preset with saved iterations of its own (the High Roof's planted / social / quiet) arrives with them already in Compare.
+    if (typeof preset.iterations === "function" && typeof loadBuiltInIterations === "function") loadBuiltInIterations(preset.iterations());
     showToast(preset.title, `Loaded ${payload.placements.length} piece(s) on the Goldbeck roof. Fully editable — save a copy anytime.`);
     leaveSessionGate();
     // These two are real Revit exports with a known roof type and how their pieces were placed (user, 2026-09-28) — go straight to where the

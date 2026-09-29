@@ -679,6 +679,8 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.originXm = rc.world_origin_x_m || 0;
   combineState.roof.originYm = rc.world_origin_y_m || 0;
   combineState.roof.rotationDeg = rc.rotation_deg || 0;
+  // Never read back before: every reloaded session re-exported at Z=0, so its Revit import landed on the ground instead of on the roof.
+  combineState.roof.originZm = rc.world_origin_z_m || 0;
   combineState.roof.program = typeof ROOF_PROGRAMS === "object" && ROOF_PROGRAMS[rc.program] ? rc.program : null;
   combineState.roof.source = rc.source === "revit" || (rc.source == null && rc.source_boundary_polygon) ? "revit" : "manual";
   combineState.roofFeatures = typeof roofFeaturesFromPayload === "function" ? roofFeaturesFromPayload(rc.features) : null;
@@ -795,7 +797,8 @@ function applySessionSnapshot(payload, opts = {}) {
   if (typeof applyDynamicSite === "function") applyDynamicSite(payload);
   if (typeof applyAnalysisAssumptions === "function") applyAnalysisAssumptions(payload);
   if (typeof structureFromPayload === "function") {
-    combineState.structure = structureFromPayload(payload.structure);
+    // An export carries it top-level; the bundled Goldbeck sessions (prebuiltSessions.js) carry it where a Revit push puts it, under roof_context.
+    combineState.structure = structureFromPayload(payload.structure || rc.structure);
     combineState.deckCapacityKnM2 = payload.structure && payload.structure.deck_capacity_kn_m2 > 0 ? payload.structure.deck_capacity_kn_m2 : null;
   }
 

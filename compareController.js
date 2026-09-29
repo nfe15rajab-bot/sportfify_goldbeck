@@ -116,12 +116,27 @@ let savedCompareConfigs = [];
 // Still real entries (same shape as savedCompareConfigs, still clickable to load back into Combine), just out of the way.
 let archivedCompareConfigs = [];
 
-function saveConfigToCompare(payload) {
+function savedCompareTagline(payload) {
   const sportCount = payload.placements.filter(pl => pl.category === "field" || pl.category === "activity").length;
   // "garden" and "vegetation" (a plant) and "gardenBlock" (a Garden tab block — Planter S/T, Park Bench and Table,
   // Picknickset — combineController.js pushes these with category = item.kind, which is "gardenBlock", not "garden")
   // are all garden pieces; counting only "garden" undercounted every layout built from garden blocks as "0 garden."
   const gardenCount = payload.placements.filter(pl => pl.category === "garden" || pl.category === "vegetation" || pl.category === "gardenBlock").length;
+  return `Saved from Combine — ${sportCount} sport, ${gardenCount} garden piece(s) on ${payload.roof_context.length_m}×${payload.roof_context.width_m} m.`;
+}
+
+/**
+ * A built-in session's own saved iterations (prebuiltSessions.js, e.g. the High Roof's planted / social / quiet), put in place as if the planner had
+ * saved them: they replace whatever was saved before (loading a session starts a new one), and without any, the list is left alone.
+ */
+function loadBuiltInIterations(list) {
+  if (!Array.isArray(list) || list.length === 0) return;
+  savedCompareConfigs = list.slice(0, 3).map(it => ({ id: it.id, name: it.name, tagline: savedCompareTagline(it.payload), payload: it.payload, mode: it.mode || "manual" }));
+  archivedCompareConfigs = [];
+  renderIterationsPanels();
+}
+
+function saveConfigToCompare(payload) {
   const defaultName = `Saved Layout ${savedCompareConfigs.length + 1}`;
   // A name of their own, not just a running number that looks the same across sessions once the oldest is
   // replaced (three "Saved Layout 4"-ish cards in a row told nothing apart at a glance). Cancelling keeps the
@@ -131,7 +146,7 @@ function saveConfigToCompare(payload) {
   const entry = {
     id: `saved_${Date.now()}`,
     name,
-    tagline: `Saved from Combine — ${sportCount} sport, ${gardenCount} garden piece(s) on ${payload.roof_context.length_m}×${payload.roof_context.width_m} m.`,
+    tagline: savedCompareTagline(payload),
     payload,
     // Which of Manual/Algorithmic placement was open when this was saved — restored on load (below) instead of
     // always landing back on Manual, so an iteration built by the algorithm still shows its own panel afterward.

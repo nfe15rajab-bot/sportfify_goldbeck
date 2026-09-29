@@ -5576,6 +5576,11487 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
   ]
 };
 
+/**
+ * The High Roof session's three saved iterations (user, 2026-09-29: "make these iterations saved and built in"): the Garden
+ * Core presets (gardenPresets.js) laid out on this same E10 roof, exactly as Combine's "Save for Compare" keeps them. Captured
+ * from the app itself: this session loaded, each preset applied, buildCombinedPayload() taken, so they carry the roof's real
+ * elevation and structural grid like any saved layout. Loading the High Roof session puts them in Compare (and the Iterations
+ * panels) as already saved, in this order.
+ */
+const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
+  { id: "builtin_highRoofGarden_planted", name: "iteration 1 planted", payload: {
+    "version": "1.3",
+    "generator": "Sportify-Combine",
+    "roof_context": {
+      "length_m": 67.5,
+      "width_m": 16.28,
+      "program": "garden",
+      "source": "revit",
+      "source_boundary_polygon": [
+        {
+          "x_m": 5.4,
+          "y_m": 11.88
+        },
+        {
+          "x_m": 0,
+          "y_m": 11.88
+        },
+        {
+          "x_m": 0,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 13.03
+        },
+        {
+          "x_m": 64.8,
+          "y_m": 13.03
+        },
+        {
+          "x_m": 64.8,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 16.28
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 16.28
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 5.4,
+          "y_m": 11.28
+        }
+      ],
+      "world_origin_x_m": 0.109,
+      "world_origin_y_m": 0,
+      "rotation_deg": 0,
+      "world_origin_z_m": 13.856,
+      "height_above_ground_m": 13.86,
+      "height_source": "level \"Basisebene\" (nearest the project zero; no ground floor by name)",
+      "features": {
+        "source": "revit",
+        "notes": [],
+        "openings": [],
+        "entries": [
+          {
+            "id": "ramp_1",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 4",
+            "x_m": 7.56,
+            "y_m": -0.03,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519521
+          },
+          {
+            "id": "ramp_2",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 6",
+            "x_m": 7.56,
+            "y_m": 3.74,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519527
+          },
+          {
+            "id": "ramp_3",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386",
+            "x_m": 8.97,
+            "y_m": 0.33,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519515
+          },
+          {
+            "id": "ramp_4",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 5",
+            "x_m": 11.34,
+            "y_m": -0.03,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519518
+          },
+          {
+            "id": "ramp_5",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 7",
+            "x_m": 11.34,
+            "y_m": 3.73,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519524
+          }
+        ],
+        "edges": [
+          {
+            "index": 0,
+            "start_m": {
+              "x_m": 5.4,
+              "y_m": 4.41
+            },
+            "end_m": {
+              "x_m": 0,
+              "y_m": 4.41
+            },
+            "length_m": 5.4,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 1,
+            "start_m": {
+              "x_m": 0,
+              "y_m": 4.41
+            },
+            "end_m": {
+              "x_m": 0,
+              "y_m": 16.28
+            },
+            "length_m": 11.88,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 2,
+            "start_m": {
+              "x_m": 0,
+              "y_m": 16.28
+            },
+            "end_m": {
+              "x_m": 67.5,
+              "y_m": 16.28
+            },
+            "length_m": 67.5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 3,
+            "start_m": {
+              "x_m": 67.5,
+              "y_m": 16.28
+            },
+            "end_m": {
+              "x_m": 67.5,
+              "y_m": 3.25
+            },
+            "length_m": 13.03,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 4,
+            "start_m": {
+              "x_m": 67.5,
+              "y_m": 3.25
+            },
+            "end_m": {
+              "x_m": 64.8,
+              "y_m": 3.25
+            },
+            "length_m": 2.7,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 5,
+            "start_m": {
+              "x_m": 64.8,
+              "y_m": 3.25
+            },
+            "end_m": {
+              "x_m": 64.8,
+              "y_m": 5
+            },
+            "length_m": 1.75,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 6,
+            "start_m": {
+              "x_m": 64.8,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 56.7,
+              "y_m": 5
+            },
+            "length_m": 8.1,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 7,
+            "start_m": {
+              "x_m": 56.7,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 56.7,
+              "y_m": 0
+            },
+            "length_m": 5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 8,
+            "start_m": {
+              "x_m": 56.7,
+              "y_m": 0
+            },
+            "end_m": {
+              "x_m": 13.5,
+              "y_m": 0
+            },
+            "length_m": 43.2,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 9,
+            "start_m": {
+              "x_m": 13.5,
+              "y_m": 0
+            },
+            "end_m": {
+              "x_m": 13.5,
+              "y_m": 5
+            },
+            "length_m": 5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 10,
+            "start_m": {
+              "x_m": 13.5,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 5.4,
+              "y_m": 5
+            },
+            "length_m": 8.1,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 11,
+            "start_m": {
+              "x_m": 5.4,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 5.4,
+              "y_m": 4.41
+            },
+            "length_m": 0.59,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          }
+        ],
+        "obstacles": [],
+        "equipment": [],
+        "drains": [],
+        "slab": null,
+        "levels": [
+          {
+            "name": "OK FU Achse A",
+            "elevation_m": -0.3,
+            "above_ground_m": -0.3,
+            "is_roof_level": false
+          },
+          {
+            "name": "OK FU Achse H",
+            "elevation_m": -0.14,
+            "above_ground_m": -0.14,
+            "is_roof_level": false
+          },
+          {
+            "name": "Basisebene",
+            "elevation_m": 0,
+            "above_ground_m": 0,
+            "is_roof_level": false
+          },
+          {
+            "name": "E0 TP",
+            "elevation_m": 0,
+            "above_ground_m": 0,
+            "is_roof_level": false
+          },
+          {
+            "name": "E1 TP",
+            "elevation_m": 1.375,
+            "above_ground_m": 1.375,
+            "is_roof_level": false
+          },
+          {
+            "name": "E2 TP",
+            "elevation_m": 2.75,
+            "above_ground_m": 2.75,
+            "is_roof_level": false
+          },
+          {
+            "name": "E3 TP",
+            "elevation_m": 4.125,
+            "above_ground_m": 4.125,
+            "is_roof_level": false
+          },
+          {
+            "name": "E4 TP",
+            "elevation_m": 5.5,
+            "above_ground_m": 5.5,
+            "is_roof_level": false
+          },
+          {
+            "name": "E5 TP",
+            "elevation_m": 6.875,
+            "above_ground_m": 6.875,
+            "is_roof_level": false
+          },
+          {
+            "name": "E6 TP",
+            "elevation_m": 8.25,
+            "above_ground_m": 8.25,
+            "is_roof_level": false
+          },
+          {
+            "name": "E7 TP",
+            "elevation_m": 9.625,
+            "above_ground_m": 9.625,
+            "is_roof_level": false
+          },
+          {
+            "name": "E8 TP",
+            "elevation_m": 11,
+            "above_ground_m": 11,
+            "is_roof_level": false
+          },
+          {
+            "name": "E9 TP",
+            "elevation_m": 12.375,
+            "above_ground_m": 12.375,
+            "is_roof_level": false
+          },
+          {
+            "name": "E10 TP",
+            "elevation_m": 13.75,
+            "above_ground_m": 13.75,
+            "is_roof_level": true
+          },
+          {
+            "name": "Bauteilgruppenebene (BTGE)",
+            "elevation_m": 50,
+            "above_ground_m": 50,
+            "is_roof_level": false
+          }
+        ]
+      }
+    },
+    "design_rules": {
+      "clearance_m": 1,
+      "boundary_setback_m": 1.5,
+      "circulation_width_m": 1,
+      "min_entry_points": 4,
+      "quiet_buffer_m": 3
+    },
+    "entry_points": [
+      {
+        "x_m": 2.3025579012047994,
+        "y_m": 4.4,
+        "edge": "top"
+      },
+      {
+        "x_m": 9.18890997023449,
+        "y_m": 5.000000000000002,
+        "edge": "top"
+      },
+      {
+        "x_m": 60.98625379380562,
+        "y_m": 5.000000000000002,
+        "edge": "top"
+      },
+      {
+        "x_m": 66.12606729460316,
+        "y_m": 3.2500000000000018,
+        "edge": "top"
+      }
+    ],
+    "circulation_paths": [
+      {
+        "item_id": "preset_planted_garden_1790676438242_0",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.5,
+            "y_m": 6.2
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_1",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 6.2
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_2",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_3",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_4",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_5",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_6",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 10.700000000000001
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_7",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_8",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_9",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 10.700000000000001
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_10",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 18.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 18.3,
+            "y_m": 7.9
+          }
+        ]
+      },
+      {
+        "item_id": "preset_planted_garden_1790676438242_11",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 49.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 49.2,
+            "y_m": 8.9
+          }
+        ]
+      }
+    ],
+    "site_location": null,
+    "site_conditions": {
+      "wind_zone": null,
+      "wind_zone_manual": false,
+      "wind_zone_confidence": "none",
+      "wind_zone_source": null,
+      "north_deg": null,
+      "north_set": false,
+      "snow_zone": null,
+      "altitude_m": null,
+      "altitude_set": false,
+      "day_schedule": null
+    },
+    "assemblies": [],
+    "unresolved_assemblies": [],
+    "roof_finish": null,
+    "zones": [
+      {
+        "id": "zone_preset_planted_garden_1790676438242_0",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 0,
+          "top_left_y_m": 14.78,
+          "width_m": 67.5,
+          "height_m": 1.5000000000000018
+        },
+        "points": [
+          {
+            "x_m": 0,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 16.28
+          },
+          {
+            "x_m": 0,
+            "y_m": 16.28
+          }
+        ],
+        "area_m2": 101.25000000000011,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 67500,
+            "width": 1500,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_1",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 13.5,
+          "top_left_y_m": 0,
+          "width_m": 43.2,
+          "height_m": 1.5
+        },
+        "points": [
+          {
+            "x_m": 13.5,
+            "y_m": 0
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 0
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 13.5,
+            "y_m": 1.5
+          }
+        ],
+        "area_m2": 64.80000000000001,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 43200,
+            "width": 1500,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_2",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 66,
+          "top_left_y_m": 3.25,
+          "width_m": 1.5,
+          "height_m": 11.53
+        },
+        "points": [
+          {
+            "x_m": 66,
+            "y_m": 3.25
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 3.25
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 17.295000000000073,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 1500,
+            "width": 11530,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_3",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 0,
+          "top_left_y_m": 4.4,
+          "width_m": 1.5,
+          "height_m": 10.38
+        },
+        "points": [
+          {
+            "x_m": 0,
+            "y_m": 4.4
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 4.4
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 14.780000000000001
+          },
+          {
+            "x_m": 0,
+            "y_m": 14.780000000000001
+          }
+        ],
+        "area_m2": 15.57,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 1500,
+            "width": 10380,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_bed0",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 6.94,
+          "width_m": 17.099999999999998,
+          "height_m": 2.3999999999999995
+        },
+        "points": [
+          {
+            "x_m": 25.2,
+            "y_m": 6.94
+          },
+          {
+            "x_m": 42.3,
+            "y_m": 6.94
+          },
+          {
+            "x_m": 42.3,
+            "y_m": 9.34
+          },
+          {
+            "x_m": 25.2,
+            "y_m": 9.34
+          }
+        ],
+        "area_m2": 41.03999999999999,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 17100,
+            "width": 2400,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_bed1",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 1.5,
+          "width_m": 2.3999999999999986,
+          "height_m": 2.44
+        },
+        "points": [
+          {
+            "x_m": 25.2,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 27.599999999999998,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 27.599999999999998,
+            "y_m": 3.94
+          },
+          {
+            "x_m": 25.2,
+            "y_m": 3.94
+          }
+        ],
+        "area_m2": 5.8559999999999945,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 2400,
+            "width": 2440,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_bed2",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 1.5,
+          "width_m": 2.3999999999999986,
+          "height_m": 2.44
+        },
+        "points": [
+          {
+            "x_m": 39.9,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 42.3,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 42.3,
+            "y_m": 3.94
+          },
+          {
+            "x_m": 39.9,
+            "y_m": 3.94
+          }
+        ],
+        "area_m2": 5.8559999999999945,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 2400,
+            "width": 2440,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_bed3",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 12.34,
+          "width_m": 2.3999999999999986,
+          "height_m": 2.4399999999999995
+        },
+        "points": [
+          {
+            "x_m": 25.2,
+            "y_m": 12.34
+          },
+          {
+            "x_m": 27.599999999999998,
+            "y_m": 12.34
+          },
+          {
+            "x_m": 27.599999999999998,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 25.2,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 5.8559999999999945,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 2400,
+            "width": 2440,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_bed4",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 12.34,
+          "width_m": 2.3999999999999986,
+          "height_m": 2.4399999999999995
+        },
+        "points": [
+          {
+            "x_m": 39.9,
+            "y_m": 12.34
+          },
+          {
+            "x_m": 42.3,
+            "y_m": 12.34
+          },
+          {
+            "x_m": 42.3,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 39.9,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 5.8559999999999945,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 2400,
+            "width": 2440,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_corner0",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 1.5,
+          "top_left_y_m": 10.78,
+          "width_m": 4,
+          "height_m": 4
+        },
+        "points": [
+          {
+            "x_m": 1.5,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 5.5,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 5.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 15.99999999999999,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 4000,
+            "width": 4000,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_planted_garden_1790676438242_corner1",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 62,
+          "top_left_y_m": 10.78,
+          "width_m": 4,
+          "height_m": 4
+        },
+        "points": [
+          {
+            "x_m": 62,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 62,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 16,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 4000,
+            "width": 4000,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      }
+    ],
+    "algo_blocks": [],
+    "walls": [],
+    "structure": {
+      "source": "revit",
+      "deck_capacity_kn_m2": null,
+      "natural_frequency_hz": null,
+      "grid_lines": [
+        {
+          "name": "1",
+          "start_m": {
+            "x_m": -0.109,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": -0.109,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "10",
+          "start_m": {
+            "x_m": 24.3,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 24.3,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "11",
+          "start_m": {
+            "x_m": 27,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 27,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "12",
+          "start_m": {
+            "x_m": 29.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 29.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "13",
+          "start_m": {
+            "x_m": 32.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 32.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "14",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "15",
+          "start_m": {
+            "x_m": 37.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 37.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "16",
+          "start_m": {
+            "x_m": 40.5,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 40.5,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "17",
+          "start_m": {
+            "x_m": 43.2,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 43.2,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "18",
+          "start_m": {
+            "x_m": 45.9,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 45.9,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "19",
+          "start_m": {
+            "x_m": 48.6,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 48.6,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "2",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "20",
+          "start_m": {
+            "x_m": 51.3,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 51.3,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "21",
+          "start_m": {
+            "x_m": 54,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 54,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "22",
+          "start_m": {
+            "x_m": 56.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 56.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "22'",
+          "start_m": {
+            "x_m": 56.833,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 56.833,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "23",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "24",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "24'",
+          "start_m": {
+            "x_m": 64.667,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 64.667,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "25",
+          "start_m": {
+            "x_m": 64.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 64.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "26",
+          "start_m": {
+            "x_m": 67.609,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 67.609,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "3",
+          "start_m": {
+            "x_m": 5.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 5.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "3'",
+          "start_m": {
+            "x_m": 5.533,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 5.533,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "4",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "5",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "5'",
+          "start_m": {
+            "x_m": 13.367,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 13.367,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "6",
+          "start_m": {
+            "x_m": 13.5,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 13.5,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "7",
+          "start_m": {
+            "x_m": 16.2,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 16.2,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "8",
+          "start_m": {
+            "x_m": 18.9,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 18.9,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "9",
+          "start_m": {
+            "x_m": 21.6,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 21.6,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "A",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 16.28
+          }
+        },
+        {
+          "name": "B",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 13.78
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 13.78
+          }
+        },
+        {
+          "name": "C",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 11.28
+          }
+        },
+        {
+          "name": "D",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 9.19
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 9.19
+          }
+        },
+        {
+          "name": "E",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 7.09
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 7.09
+          }
+        },
+        {
+          "name": "F",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 5
+          }
+        },
+        {
+          "name": "F'",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 4.405
+          },
+          "end_m": {
+            "x_m": 5.6,
+            "y_m": 4.405
+          }
+        },
+        {
+          "name": "F''",
+          "start_m": {
+            "x_m": 64.6,
+            "y_m": 3.25
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 3.25
+          }
+        },
+        {
+          "name": "G",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 2.5
+          }
+        },
+        {
+          "name": "H",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 0
+          }
+        }
+      ],
+      "columns": [
+        {
+          "label": "16792094",
+          "x_m": -0.109,
+          "y_m": 4.405
+        },
+        {
+          "label": "16791902",
+          "x_m": -0.109,
+          "y_m": 5
+        },
+        {
+          "label": "16791892",
+          "x_m": -0.109,
+          "y_m": 7.09
+        },
+        {
+          "label": "16791889",
+          "x_m": -0.109,
+          "y_m": 9.19
+        },
+        {
+          "label": "16791899",
+          "x_m": -0.109,
+          "y_m": 11.28
+        },
+        {
+          "label": "16791895",
+          "x_m": -0.109,
+          "y_m": 13.78
+        },
+        {
+          "label": "16791943",
+          "x_m": -0.109,
+          "y_m": 16.295
+        },
+        {
+          "label": "16792117",
+          "x_m": 2.7,
+          "y_m": 4.42
+        },
+        {
+          "label": "16791983",
+          "x_m": 2.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791989",
+          "x_m": 5.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792105",
+          "x_m": 5.509,
+          "y_m": 4.405
+        },
+        {
+          "label": "16791833",
+          "x_m": 5.533,
+          "y_m": 0
+        },
+        {
+          "label": "16791826",
+          "x_m": 5.533,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791863",
+          "x_m": 5.533,
+          "y_m": 5
+        },
+        {
+          "label": "16791994",
+          "x_m": 8.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791998",
+          "x_m": 10.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791842",
+          "x_m": 13.367,
+          "y_m": 0
+        },
+        {
+          "label": "16791839",
+          "x_m": 13.367,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791870",
+          "x_m": 13.367,
+          "y_m": 5
+        },
+        {
+          "label": "16792002",
+          "x_m": 13.5,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791953",
+          "x_m": 16.2,
+          "y_m": 0
+        },
+        {
+          "label": "16792006",
+          "x_m": 16.2,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791956",
+          "x_m": 18.9,
+          "y_m": 0
+        },
+        {
+          "label": "16792010",
+          "x_m": 18.9,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791959",
+          "x_m": 21.6,
+          "y_m": 0
+        },
+        {
+          "label": "16792014",
+          "x_m": 21.6,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791961",
+          "x_m": 24.3,
+          "y_m": 0
+        },
+        {
+          "label": "16792018",
+          "x_m": 24.3,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791963",
+          "x_m": 27,
+          "y_m": 0
+        },
+        {
+          "label": "16792022",
+          "x_m": 27,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791965",
+          "x_m": 29.7,
+          "y_m": 0
+        },
+        {
+          "label": "16792026",
+          "x_m": 29.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791967",
+          "x_m": 32.4,
+          "y_m": 0
+        },
+        {
+          "label": "16792030",
+          "x_m": 32.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792092",
+          "x_m": 35.1,
+          "y_m": 0
+        },
+        {
+          "label": "16792084",
+          "x_m": 35.1,
+          "y_m": 2.5
+        },
+        {
+          "label": "16792082",
+          "x_m": 35.1,
+          "y_m": 5
+        },
+        {
+          "label": "16792034",
+          "x_m": 35.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791969",
+          "x_m": 37.8,
+          "y_m": 0
+        },
+        {
+          "label": "16792038",
+          "x_m": 37.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791971",
+          "x_m": 40.5,
+          "y_m": 0
+        },
+        {
+          "label": "16792042",
+          "x_m": 40.5,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791973",
+          "x_m": 43.2,
+          "y_m": 0
+        },
+        {
+          "label": "16792046",
+          "x_m": 43.2,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791975",
+          "x_m": 45.9,
+          "y_m": 0
+        },
+        {
+          "label": "16792050",
+          "x_m": 45.9,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791977",
+          "x_m": 48.6,
+          "y_m": 0
+        },
+        {
+          "label": "16792054",
+          "x_m": 48.6,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791979",
+          "x_m": 51.3,
+          "y_m": 0
+        },
+        {
+          "label": "16792058",
+          "x_m": 51.3,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791981",
+          "x_m": 54,
+          "y_m": 0
+        },
+        {
+          "label": "16792062",
+          "x_m": 54,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792066",
+          "x_m": 56.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791850",
+          "x_m": 56.833,
+          "y_m": 0
+        },
+        {
+          "label": "16791848",
+          "x_m": 56.833,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791875",
+          "x_m": 56.833,
+          "y_m": 5
+        },
+        {
+          "label": "16792070",
+          "x_m": 59.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792074",
+          "x_m": 62.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791857",
+          "x_m": 64.667,
+          "y_m": 0
+        },
+        {
+          "label": "16791854",
+          "x_m": 64.667,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791879",
+          "x_m": 64.667,
+          "y_m": 5
+        },
+        {
+          "label": "16792111",
+          "x_m": 64.691,
+          "y_m": 3.25
+        },
+        {
+          "label": "16792078",
+          "x_m": 64.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792099",
+          "x_m": 67.609,
+          "y_m": 3.25
+        },
+        {
+          "label": "16791930",
+          "x_m": 67.609,
+          "y_m": 5
+        },
+        {
+          "label": "16791927",
+          "x_m": 67.609,
+          "y_m": 7.09
+        },
+        {
+          "label": "16791925",
+          "x_m": 67.609,
+          "y_m": 9.19
+        },
+        {
+          "label": "16791923",
+          "x_m": 67.609,
+          "y_m": 11.28
+        },
+        {
+          "label": "16791920",
+          "x_m": 67.609,
+          "y_m": 13.78
+        },
+        {
+          "label": "16791948",
+          "x_m": 67.609,
+          "y_m": 16.295
+        }
+      ],
+      "beams": [
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16791404",
+          "start_m": {
+            "x_m": -0.109,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": -0.109,
+            "y_m": 5
+          },
+          "width_m": 0.18,
+          "depth_m": 2.97,
+          "top_elevation_m": 2.97
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793544",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.404
+          },
+          "width_m": 0.226,
+          "depth_m": 0.156,
+          "top_elevation_m": 5.656
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793533",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.404
+          },
+          "width_m": 0.226,
+          "depth_m": 0.156,
+          "top_elevation_m": 2.906
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793541",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 5.65
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793528",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 2.9
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793538",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.587
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793514",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.837
+        },
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16793068",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": 4.4
+          },
+          "width_m": 0.18,
+          "depth_m": 0.622,
+          "top_elevation_m": 5.619
+        },
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16793064",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": 4.4
+          },
+          "width_m": 0.18,
+          "depth_m": 0.622,
+          "top_elevation_m": 2.869
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793698",
+          "start_m": {
+            "x_m": 5.408,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.408,
+            "y_m": 4.404
+          },
+          "width_m": 0.25,
+          "depth_m": 0.156,
+          "top_elevation_m": 5.656
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793692",
+          "start_m": {
+            "x_m": 5.408,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.408,
+            "y_m": 4.404
+          },
+          "width_m": 0.25,
+          "depth_m": 0.156,
+          "top_elevation_m": 2.906
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791335",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 4.896
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791317",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 2.146
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791336",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 5.271
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791318",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 2.521
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791337",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 5.506
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791319",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 2.756
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792944",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792915",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792947",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792931",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793776",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 0.001
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.25
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 4.325
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793728",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.7
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793722",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.95
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793137",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 0.003
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.25
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 4.288
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793113",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.003
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 5.663
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793110",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.003
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 2.913
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793097",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 2.497
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 5.638
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793093",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 2.497
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 2.888
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792950",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792935",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793755",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 0.001
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.25
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 4.325
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793701",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.7
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793695",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.95
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791245",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 6.271
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791205",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 3.521
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791243",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 5.896
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791203",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 3.146
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791244",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 5.506
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791204",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 2.756
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792953",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792938",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792956",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792941",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793731",
+          "start_m": {
+            "x_m": 64.792,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.792,
+            "y_m": 3.249
+          },
+          "width_m": 0.25,
+          "depth_m": 0.167,
+          "top_elevation_m": 5.667
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793725",
+          "start_m": {
+            "x_m": 64.792,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.792,
+            "y_m": 3.249
+          },
+          "width_m": 0.25,
+          "depth_m": 0.167,
+          "top_elevation_m": 2.917
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793620",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 3.249
+          },
+          "width_m": 0.226,
+          "depth_m": 0.167,
+          "top_elevation_m": 5.667
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793610",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 3.249
+          },
+          "width_m": 0.226,
+          "depth_m": 0.167,
+          "top_elevation_m": 2.917
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793623",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 5.65
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793614",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 2.9
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793626",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 16.294
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.587
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793617",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 16.294
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.837
+        }
+      ]
+    },
+    "placements": [
+      {
+        "id": "preset_planted_garden_1790676438242_0",
+        "category": "gardenBlock",
+        "label": "Park Bench and Table",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.5,
+          "top_left_y_m": 7.14,
+          "width_m": 2,
+          "height_m": 2
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "park_bench_table",
+            "label": "Park Bench and Table",
+            "family": null,
+            "length_mm": 2000,
+            "width_mm": 2000
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_1",
+        "category": "gardenBlock",
+        "label": "Park Bench and Table",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 45,
+          "top_left_y_m": 7.14,
+          "width_m": 2,
+          "height_m": 2
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "park_bench_table",
+            "label": "Park Bench and Table",
+            "family": null,
+            "length_mm": 2000,
+            "width_mm": 2000
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_2",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 3.4400000000000004
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.3,
+          "top_left_y_m": 2.24,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_3",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.1,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_4",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 35,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_5",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 3.4400000000000004
+        },
+        "bounding_box": {
+          "top_left_x_m": 44.8,
+          "top_left_y_m": 2.24,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_6",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.3,
+          "top_left_y_m": 11.64,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_7",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.1,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_8",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 35,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_9",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 44.8,
+          "top_left_y_m": 11.64,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "planted_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_10",
+        "category": "activity",
+        "label": "Calisthenics",
+        "insertion_point": {
+          "center_x_m": 13.3,
+          "center_y_m": 11.78
+        },
+        "bounding_box": {
+          "top_left_x_m": 9.3,
+          "top_left_y_m": 8.78,
+          "width_m": 8,
+          "height_m": 6
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "quality_key": "ACTIVITY_CALISTHENICS",
+          "activity": {
+            "type_id": "calisthenics",
+            "category": "fitness",
+            "norm": "Reference sheet",
+            "dimensions": {
+              "length_m": 8,
+              "width_m": 6
+            }
+          },
+          "materials": {
+            "surface": "Reinforced synthetic surface",
+            "structure": "Galvanized steel",
+            "quality_level": "medium",
+            "reference_material": null,
+            "reference_provider": null
+          },
+          "preset": "planted_garden"
+        }
+      },
+      {
+        "id": "preset_planted_garden_1790676438242_11",
+        "category": "activity",
+        "label": "Yoga / Stretching Deck",
+        "insertion_point": {
+          "center_x_m": 55.2,
+          "center_y_m": 12.28
+        },
+        "bounding_box": {
+          "top_left_x_m": 50.2,
+          "top_left_y_m": 9.78,
+          "width_m": 10,
+          "height_m": 5
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "quality_key": "ACTIVITY_YOGA_DECK",
+          "activity": {
+            "type_id": "yoga_deck",
+            "category": "wellness",
+            "norm": "Reference sheet",
+            "dimensions": {
+              "length_m": 10,
+              "width_m": 5
+            }
+          },
+          "materials": {
+            "surface": "Reinforced synthetic surface",
+            "structure": "Galvanized steel",
+            "quality_level": "medium",
+            "reference_material": null,
+            "reference_provider": null
+          },
+          "familyInstance": {
+            "type": "yoga_deck",
+            "label": "Yoga / Stretching Deck",
+            "family": "Yoga Deck",
+            "units": "m",
+            "params": {
+              "Deck_Length": 10,
+              "Deck_Width": 5,
+              "Roof_Height": 4,
+              "Roof_Thickness": 0.15,
+              "Planter_Spacing": 1.5,
+              "Default Elevation": 0,
+              "Show_Roof": true
+            }
+          },
+          "preset": "planted_garden"
+        }
+      }
+    ]
+  } },
+  { id: "builtin_highRoofGarden_social", name: "iteration 2 social", payload: {
+    "version": "1.3",
+    "generator": "Sportify-Combine",
+    "roof_context": {
+      "length_m": 67.5,
+      "width_m": 16.28,
+      "program": "garden",
+      "source": "revit",
+      "source_boundary_polygon": [
+        {
+          "x_m": 5.4,
+          "y_m": 11.88
+        },
+        {
+          "x_m": 0,
+          "y_m": 11.88
+        },
+        {
+          "x_m": 0,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 13.03
+        },
+        {
+          "x_m": 64.8,
+          "y_m": 13.03
+        },
+        {
+          "x_m": 64.8,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 16.28
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 16.28
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 5.4,
+          "y_m": 11.28
+        }
+      ],
+      "world_origin_x_m": 0.109,
+      "world_origin_y_m": 0,
+      "rotation_deg": 0,
+      "world_origin_z_m": 13.856,
+      "height_above_ground_m": 13.86,
+      "height_source": "level \"Basisebene\" (nearest the project zero; no ground floor by name)",
+      "features": {
+        "source": "revit",
+        "notes": [],
+        "openings": [],
+        "entries": [
+          {
+            "id": "ramp_1",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 4",
+            "x_m": 7.56,
+            "y_m": -0.03,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519521
+          },
+          {
+            "id": "ramp_2",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 6",
+            "x_m": 7.56,
+            "y_m": 3.74,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519527
+          },
+          {
+            "id": "ramp_3",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386",
+            "x_m": 8.97,
+            "y_m": 0.33,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519515
+          },
+          {
+            "id": "ramp_4",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 5",
+            "x_m": 11.34,
+            "y_m": -0.03,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519518
+          },
+          {
+            "id": "ramp_5",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 7",
+            "x_m": 11.34,
+            "y_m": 3.73,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519524
+          }
+        ],
+        "edges": [
+          {
+            "index": 0,
+            "start_m": {
+              "x_m": 5.4,
+              "y_m": 4.41
+            },
+            "end_m": {
+              "x_m": 0,
+              "y_m": 4.41
+            },
+            "length_m": 5.4,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 1,
+            "start_m": {
+              "x_m": 0,
+              "y_m": 4.41
+            },
+            "end_m": {
+              "x_m": 0,
+              "y_m": 16.28
+            },
+            "length_m": 11.88,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 2,
+            "start_m": {
+              "x_m": 0,
+              "y_m": 16.28
+            },
+            "end_m": {
+              "x_m": 67.5,
+              "y_m": 16.28
+            },
+            "length_m": 67.5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 3,
+            "start_m": {
+              "x_m": 67.5,
+              "y_m": 16.28
+            },
+            "end_m": {
+              "x_m": 67.5,
+              "y_m": 3.25
+            },
+            "length_m": 13.03,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 4,
+            "start_m": {
+              "x_m": 67.5,
+              "y_m": 3.25
+            },
+            "end_m": {
+              "x_m": 64.8,
+              "y_m": 3.25
+            },
+            "length_m": 2.7,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 5,
+            "start_m": {
+              "x_m": 64.8,
+              "y_m": 3.25
+            },
+            "end_m": {
+              "x_m": 64.8,
+              "y_m": 5
+            },
+            "length_m": 1.75,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 6,
+            "start_m": {
+              "x_m": 64.8,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 56.7,
+              "y_m": 5
+            },
+            "length_m": 8.1,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 7,
+            "start_m": {
+              "x_m": 56.7,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 56.7,
+              "y_m": 0
+            },
+            "length_m": 5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 8,
+            "start_m": {
+              "x_m": 56.7,
+              "y_m": 0
+            },
+            "end_m": {
+              "x_m": 13.5,
+              "y_m": 0
+            },
+            "length_m": 43.2,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 9,
+            "start_m": {
+              "x_m": 13.5,
+              "y_m": 0
+            },
+            "end_m": {
+              "x_m": 13.5,
+              "y_m": 5
+            },
+            "length_m": 5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 10,
+            "start_m": {
+              "x_m": 13.5,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 5.4,
+              "y_m": 5
+            },
+            "length_m": 8.1,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 11,
+            "start_m": {
+              "x_m": 5.4,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 5.4,
+              "y_m": 4.41
+            },
+            "length_m": 0.59,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          }
+        ],
+        "obstacles": [],
+        "equipment": [],
+        "drains": [],
+        "slab": null,
+        "levels": [
+          {
+            "name": "OK FU Achse A",
+            "elevation_m": -0.3,
+            "above_ground_m": -0.3,
+            "is_roof_level": false
+          },
+          {
+            "name": "OK FU Achse H",
+            "elevation_m": -0.14,
+            "above_ground_m": -0.14,
+            "is_roof_level": false
+          },
+          {
+            "name": "Basisebene",
+            "elevation_m": 0,
+            "above_ground_m": 0,
+            "is_roof_level": false
+          },
+          {
+            "name": "E0 TP",
+            "elevation_m": 0,
+            "above_ground_m": 0,
+            "is_roof_level": false
+          },
+          {
+            "name": "E1 TP",
+            "elevation_m": 1.375,
+            "above_ground_m": 1.375,
+            "is_roof_level": false
+          },
+          {
+            "name": "E2 TP",
+            "elevation_m": 2.75,
+            "above_ground_m": 2.75,
+            "is_roof_level": false
+          },
+          {
+            "name": "E3 TP",
+            "elevation_m": 4.125,
+            "above_ground_m": 4.125,
+            "is_roof_level": false
+          },
+          {
+            "name": "E4 TP",
+            "elevation_m": 5.5,
+            "above_ground_m": 5.5,
+            "is_roof_level": false
+          },
+          {
+            "name": "E5 TP",
+            "elevation_m": 6.875,
+            "above_ground_m": 6.875,
+            "is_roof_level": false
+          },
+          {
+            "name": "E6 TP",
+            "elevation_m": 8.25,
+            "above_ground_m": 8.25,
+            "is_roof_level": false
+          },
+          {
+            "name": "E7 TP",
+            "elevation_m": 9.625,
+            "above_ground_m": 9.625,
+            "is_roof_level": false
+          },
+          {
+            "name": "E8 TP",
+            "elevation_m": 11,
+            "above_ground_m": 11,
+            "is_roof_level": false
+          },
+          {
+            "name": "E9 TP",
+            "elevation_m": 12.375,
+            "above_ground_m": 12.375,
+            "is_roof_level": false
+          },
+          {
+            "name": "E10 TP",
+            "elevation_m": 13.75,
+            "above_ground_m": 13.75,
+            "is_roof_level": true
+          },
+          {
+            "name": "Bauteilgruppenebene (BTGE)",
+            "elevation_m": 50,
+            "above_ground_m": 50,
+            "is_roof_level": false
+          }
+        ]
+      }
+    },
+    "design_rules": {
+      "clearance_m": 1,
+      "boundary_setback_m": 1.5,
+      "circulation_width_m": 1,
+      "min_entry_points": 4,
+      "quiet_buffer_m": 3
+    },
+    "entry_points": [
+      {
+        "x_m": 2.3025579012047994,
+        "y_m": 4.4,
+        "edge": "top"
+      },
+      {
+        "x_m": 9.18890997023449,
+        "y_m": 5.000000000000002,
+        "edge": "top"
+      },
+      {
+        "x_m": 60.98625379380562,
+        "y_m": 5.000000000000002,
+        "edge": "top"
+      },
+      {
+        "x_m": 66.12606729460316,
+        "y_m": 3.2500000000000018,
+        "edge": "top"
+      }
+    ],
+    "circulation_paths": [
+      {
+        "item_id": "preset_social_garden_1790676438297_0",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.5,
+            "y_m": 6.2
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_1",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_2",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.300000000000004,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.300000000000004,
+            "y_m": 6.2
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_3",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.2,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.2,
+            "y_m": 6.2
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_4",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_5",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 6.2
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_6",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_7",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_8",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_9",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_10",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 6.1000000000000005
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_11",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_12",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_13",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_14",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.5,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 24.200000000000003,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_15",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_16",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 10.100000000000001
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_17",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_18",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 18.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 18.3,
+            "y_m": 7.9
+          }
+        ]
+      },
+      {
+        "item_id": "preset_social_garden_1790676438297_19",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 49.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 49.2,
+            "y_m": 8.9
+          }
+        ]
+      }
+    ],
+    "site_location": null,
+    "site_conditions": {
+      "wind_zone": null,
+      "wind_zone_manual": false,
+      "wind_zone_confidence": "none",
+      "wind_zone_source": null,
+      "north_deg": null,
+      "north_set": false,
+      "snow_zone": null,
+      "altitude_m": null,
+      "altitude_set": false,
+      "day_schedule": null
+    },
+    "assemblies": [],
+    "unresolved_assemblies": [],
+    "roof_finish": null,
+    "zones": [
+      {
+        "id": "zone_preset_social_garden_1790676438297_0",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 0,
+          "top_left_y_m": 14.78,
+          "width_m": 67.5,
+          "height_m": 1.5000000000000018
+        },
+        "points": [
+          {
+            "x_m": 0,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 16.28
+          },
+          {
+            "x_m": 0,
+            "y_m": 16.28
+          }
+        ],
+        "area_m2": 101.25000000000011,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 67500,
+            "width": 1500,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_social_garden_1790676438297_1",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 13.5,
+          "top_left_y_m": 0,
+          "width_m": 43.2,
+          "height_m": 1.5
+        },
+        "points": [
+          {
+            "x_m": 13.5,
+            "y_m": 0
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 0
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 13.5,
+            "y_m": 1.5
+          }
+        ],
+        "area_m2": 64.80000000000001,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 43200,
+            "width": 1500,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_social_garden_1790676438297_2",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 66,
+          "top_left_y_m": 3.25,
+          "width_m": 1.5,
+          "height_m": 11.53
+        },
+        "points": [
+          {
+            "x_m": 66,
+            "y_m": 3.25
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 3.25
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 17.295000000000073,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 1500,
+            "width": 11530,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_social_garden_1790676438297_3",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 0,
+          "top_left_y_m": 4.4,
+          "width_m": 1.5,
+          "height_m": 10.38
+        },
+        "points": [
+          {
+            "x_m": 0,
+            "y_m": 4.4
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 4.4
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 14.780000000000001
+          },
+          {
+            "x_m": 0,
+            "y_m": 14.780000000000001
+          }
+        ],
+        "area_m2": 15.57,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 1500,
+            "width": 10380,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_social_garden_1790676438297_corner0",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 1.5,
+          "top_left_y_m": 10.78,
+          "width_m": 4,
+          "height_m": 4
+        },
+        "points": [
+          {
+            "x_m": 1.5,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 5.5,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 5.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 15.99999999999999,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 4000,
+            "width": 4000,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_social_garden_1790676438297_corner1",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 62,
+          "top_left_y_m": 10.78,
+          "width_m": 4,
+          "height_m": 4
+        },
+        "points": [
+          {
+            "x_m": 62,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 62,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 16,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 4000,
+            "width": 4000,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      }
+    ],
+    "algo_blocks": [],
+    "walls": [],
+    "structure": {
+      "source": "revit",
+      "deck_capacity_kn_m2": null,
+      "natural_frequency_hz": null,
+      "grid_lines": [
+        {
+          "name": "1",
+          "start_m": {
+            "x_m": -0.109,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": -0.109,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "10",
+          "start_m": {
+            "x_m": 24.3,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 24.3,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "11",
+          "start_m": {
+            "x_m": 27,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 27,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "12",
+          "start_m": {
+            "x_m": 29.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 29.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "13",
+          "start_m": {
+            "x_m": 32.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 32.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "14",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "15",
+          "start_m": {
+            "x_m": 37.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 37.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "16",
+          "start_m": {
+            "x_m": 40.5,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 40.5,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "17",
+          "start_m": {
+            "x_m": 43.2,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 43.2,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "18",
+          "start_m": {
+            "x_m": 45.9,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 45.9,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "19",
+          "start_m": {
+            "x_m": 48.6,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 48.6,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "2",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "20",
+          "start_m": {
+            "x_m": 51.3,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 51.3,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "21",
+          "start_m": {
+            "x_m": 54,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 54,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "22",
+          "start_m": {
+            "x_m": 56.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 56.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "22'",
+          "start_m": {
+            "x_m": 56.833,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 56.833,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "23",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "24",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "24'",
+          "start_m": {
+            "x_m": 64.667,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 64.667,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "25",
+          "start_m": {
+            "x_m": 64.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 64.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "26",
+          "start_m": {
+            "x_m": 67.609,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 67.609,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "3",
+          "start_m": {
+            "x_m": 5.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 5.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "3'",
+          "start_m": {
+            "x_m": 5.533,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 5.533,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "4",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "5",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "5'",
+          "start_m": {
+            "x_m": 13.367,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 13.367,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "6",
+          "start_m": {
+            "x_m": 13.5,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 13.5,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "7",
+          "start_m": {
+            "x_m": 16.2,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 16.2,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "8",
+          "start_m": {
+            "x_m": 18.9,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 18.9,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "9",
+          "start_m": {
+            "x_m": 21.6,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 21.6,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "A",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 16.28
+          }
+        },
+        {
+          "name": "B",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 13.78
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 13.78
+          }
+        },
+        {
+          "name": "C",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 11.28
+          }
+        },
+        {
+          "name": "D",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 9.19
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 9.19
+          }
+        },
+        {
+          "name": "E",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 7.09
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 7.09
+          }
+        },
+        {
+          "name": "F",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 5
+          }
+        },
+        {
+          "name": "F'",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 4.405
+          },
+          "end_m": {
+            "x_m": 5.6,
+            "y_m": 4.405
+          }
+        },
+        {
+          "name": "F''",
+          "start_m": {
+            "x_m": 64.6,
+            "y_m": 3.25
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 3.25
+          }
+        },
+        {
+          "name": "G",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 2.5
+          }
+        },
+        {
+          "name": "H",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 0
+          }
+        }
+      ],
+      "columns": [
+        {
+          "label": "16792094",
+          "x_m": -0.109,
+          "y_m": 4.405
+        },
+        {
+          "label": "16791902",
+          "x_m": -0.109,
+          "y_m": 5
+        },
+        {
+          "label": "16791892",
+          "x_m": -0.109,
+          "y_m": 7.09
+        },
+        {
+          "label": "16791889",
+          "x_m": -0.109,
+          "y_m": 9.19
+        },
+        {
+          "label": "16791899",
+          "x_m": -0.109,
+          "y_m": 11.28
+        },
+        {
+          "label": "16791895",
+          "x_m": -0.109,
+          "y_m": 13.78
+        },
+        {
+          "label": "16791943",
+          "x_m": -0.109,
+          "y_m": 16.295
+        },
+        {
+          "label": "16792117",
+          "x_m": 2.7,
+          "y_m": 4.42
+        },
+        {
+          "label": "16791983",
+          "x_m": 2.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791989",
+          "x_m": 5.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792105",
+          "x_m": 5.509,
+          "y_m": 4.405
+        },
+        {
+          "label": "16791833",
+          "x_m": 5.533,
+          "y_m": 0
+        },
+        {
+          "label": "16791826",
+          "x_m": 5.533,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791863",
+          "x_m": 5.533,
+          "y_m": 5
+        },
+        {
+          "label": "16791994",
+          "x_m": 8.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791998",
+          "x_m": 10.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791842",
+          "x_m": 13.367,
+          "y_m": 0
+        },
+        {
+          "label": "16791839",
+          "x_m": 13.367,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791870",
+          "x_m": 13.367,
+          "y_m": 5
+        },
+        {
+          "label": "16792002",
+          "x_m": 13.5,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791953",
+          "x_m": 16.2,
+          "y_m": 0
+        },
+        {
+          "label": "16792006",
+          "x_m": 16.2,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791956",
+          "x_m": 18.9,
+          "y_m": 0
+        },
+        {
+          "label": "16792010",
+          "x_m": 18.9,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791959",
+          "x_m": 21.6,
+          "y_m": 0
+        },
+        {
+          "label": "16792014",
+          "x_m": 21.6,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791961",
+          "x_m": 24.3,
+          "y_m": 0
+        },
+        {
+          "label": "16792018",
+          "x_m": 24.3,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791963",
+          "x_m": 27,
+          "y_m": 0
+        },
+        {
+          "label": "16792022",
+          "x_m": 27,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791965",
+          "x_m": 29.7,
+          "y_m": 0
+        },
+        {
+          "label": "16792026",
+          "x_m": 29.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791967",
+          "x_m": 32.4,
+          "y_m": 0
+        },
+        {
+          "label": "16792030",
+          "x_m": 32.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792092",
+          "x_m": 35.1,
+          "y_m": 0
+        },
+        {
+          "label": "16792084",
+          "x_m": 35.1,
+          "y_m": 2.5
+        },
+        {
+          "label": "16792082",
+          "x_m": 35.1,
+          "y_m": 5
+        },
+        {
+          "label": "16792034",
+          "x_m": 35.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791969",
+          "x_m": 37.8,
+          "y_m": 0
+        },
+        {
+          "label": "16792038",
+          "x_m": 37.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791971",
+          "x_m": 40.5,
+          "y_m": 0
+        },
+        {
+          "label": "16792042",
+          "x_m": 40.5,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791973",
+          "x_m": 43.2,
+          "y_m": 0
+        },
+        {
+          "label": "16792046",
+          "x_m": 43.2,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791975",
+          "x_m": 45.9,
+          "y_m": 0
+        },
+        {
+          "label": "16792050",
+          "x_m": 45.9,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791977",
+          "x_m": 48.6,
+          "y_m": 0
+        },
+        {
+          "label": "16792054",
+          "x_m": 48.6,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791979",
+          "x_m": 51.3,
+          "y_m": 0
+        },
+        {
+          "label": "16792058",
+          "x_m": 51.3,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791981",
+          "x_m": 54,
+          "y_m": 0
+        },
+        {
+          "label": "16792062",
+          "x_m": 54,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792066",
+          "x_m": 56.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791850",
+          "x_m": 56.833,
+          "y_m": 0
+        },
+        {
+          "label": "16791848",
+          "x_m": 56.833,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791875",
+          "x_m": 56.833,
+          "y_m": 5
+        },
+        {
+          "label": "16792070",
+          "x_m": 59.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792074",
+          "x_m": 62.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791857",
+          "x_m": 64.667,
+          "y_m": 0
+        },
+        {
+          "label": "16791854",
+          "x_m": 64.667,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791879",
+          "x_m": 64.667,
+          "y_m": 5
+        },
+        {
+          "label": "16792111",
+          "x_m": 64.691,
+          "y_m": 3.25
+        },
+        {
+          "label": "16792078",
+          "x_m": 64.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792099",
+          "x_m": 67.609,
+          "y_m": 3.25
+        },
+        {
+          "label": "16791930",
+          "x_m": 67.609,
+          "y_m": 5
+        },
+        {
+          "label": "16791927",
+          "x_m": 67.609,
+          "y_m": 7.09
+        },
+        {
+          "label": "16791925",
+          "x_m": 67.609,
+          "y_m": 9.19
+        },
+        {
+          "label": "16791923",
+          "x_m": 67.609,
+          "y_m": 11.28
+        },
+        {
+          "label": "16791920",
+          "x_m": 67.609,
+          "y_m": 13.78
+        },
+        {
+          "label": "16791948",
+          "x_m": 67.609,
+          "y_m": 16.295
+        }
+      ],
+      "beams": [
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16791404",
+          "start_m": {
+            "x_m": -0.109,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": -0.109,
+            "y_m": 5
+          },
+          "width_m": 0.18,
+          "depth_m": 2.97,
+          "top_elevation_m": 2.97
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793544",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.404
+          },
+          "width_m": 0.226,
+          "depth_m": 0.156,
+          "top_elevation_m": 5.656
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793533",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.404
+          },
+          "width_m": 0.226,
+          "depth_m": 0.156,
+          "top_elevation_m": 2.906
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793541",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 5.65
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793528",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 2.9
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793538",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.587
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793514",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.837
+        },
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16793068",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": 4.4
+          },
+          "width_m": 0.18,
+          "depth_m": 0.622,
+          "top_elevation_m": 5.619
+        },
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16793064",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": 4.4
+          },
+          "width_m": 0.18,
+          "depth_m": 0.622,
+          "top_elevation_m": 2.869
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793698",
+          "start_m": {
+            "x_m": 5.408,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.408,
+            "y_m": 4.404
+          },
+          "width_m": 0.25,
+          "depth_m": 0.156,
+          "top_elevation_m": 5.656
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793692",
+          "start_m": {
+            "x_m": 5.408,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.408,
+            "y_m": 4.404
+          },
+          "width_m": 0.25,
+          "depth_m": 0.156,
+          "top_elevation_m": 2.906
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791335",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 4.896
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791317",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 2.146
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791336",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 5.271
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791318",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 2.521
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791337",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 5.506
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791319",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 2.756
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792944",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792915",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792947",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792931",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793776",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 0.001
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.25
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 4.325
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793728",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.7
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793722",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.95
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793137",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 0.003
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.25
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 4.288
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793113",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.003
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 5.663
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793110",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.003
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 2.913
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793097",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 2.497
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 5.638
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793093",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 2.497
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 2.888
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792950",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792935",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793755",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 0.001
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.25
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 4.325
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793701",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.7
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793695",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.95
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791245",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 6.271
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791205",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 3.521
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791243",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 5.896
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791203",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 3.146
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791244",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 5.506
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791204",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 2.756
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792953",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792938",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792956",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792941",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793731",
+          "start_m": {
+            "x_m": 64.792,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.792,
+            "y_m": 3.249
+          },
+          "width_m": 0.25,
+          "depth_m": 0.167,
+          "top_elevation_m": 5.667
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793725",
+          "start_m": {
+            "x_m": 64.792,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.792,
+            "y_m": 3.249
+          },
+          "width_m": 0.25,
+          "depth_m": 0.167,
+          "top_elevation_m": 2.917
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793620",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 3.249
+          },
+          "width_m": 0.226,
+          "depth_m": 0.167,
+          "top_elevation_m": 5.667
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793610",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 3.249
+          },
+          "width_m": 0.226,
+          "depth_m": 0.167,
+          "top_elevation_m": 2.917
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793623",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 5.65
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793614",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 2.9
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793626",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 16.294
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.587
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793617",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 16.294
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.837
+        }
+      ]
+    },
+    "placements": [
+      {
+        "id": "preset_social_garden_1790676438297_0",
+        "category": "gardenBlock",
+        "label": "Park Bench and Table",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.5,
+          "top_left_y_m": 7.14,
+          "width_m": 2,
+          "height_m": 2
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "park_bench_table",
+            "label": "Park Bench and Table",
+            "family": null,
+            "length_mm": 2000,
+            "width_mm": 2000
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_1",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 26.4,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_2",
+        "category": "gardenBlock",
+        "label": "Park Bench and Table",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.3,
+          "top_left_y_m": 7.14,
+          "width_m": 2,
+          "height_m": 2
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "park_bench_table",
+            "label": "Park Bench and Table",
+            "family": null,
+            "length_mm": 2000,
+            "width_mm": 2000
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_3",
+        "category": "gardenBlock",
+        "label": "Park Bench and Table",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 35.2,
+          "top_left_y_m": 7.14,
+          "width_m": 2,
+          "height_m": 2
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "park_bench_table",
+            "label": "Park Bench and Table",
+            "family": null,
+            "length_mm": 2000,
+            "width_mm": 2000
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_4",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 41.1,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_5",
+        "category": "gardenBlock",
+        "label": "Park Bench and Table",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 45,
+          "top_left_y_m": 7.14,
+          "width_m": 2,
+          "height_m": 2
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "park_bench_table",
+            "label": "Park Bench and Table",
+            "family": null,
+            "length_mm": 2000,
+            "width_mm": 2000
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_6",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.3,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_7",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 26.4,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_8",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.1,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_9",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 35,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_10",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 41.1,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_11",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 44.8,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_12",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.3,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_13",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 26.4,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_14",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.1,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_15",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 35,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_16",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 41.1,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_17",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 44.8,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "social_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_18",
+        "category": "activity",
+        "label": "Calisthenics",
+        "insertion_point": {
+          "center_x_m": 13.3,
+          "center_y_m": 11.78
+        },
+        "bounding_box": {
+          "top_left_x_m": 9.3,
+          "top_left_y_m": 8.78,
+          "width_m": 8,
+          "height_m": 6
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "quality_key": "ACTIVITY_CALISTHENICS",
+          "activity": {
+            "type_id": "calisthenics",
+            "category": "fitness",
+            "norm": "Reference sheet",
+            "dimensions": {
+              "length_m": 8,
+              "width_m": 6
+            }
+          },
+          "materials": {
+            "surface": "Reinforced synthetic surface",
+            "structure": "Galvanized steel",
+            "quality_level": "medium",
+            "reference_material": null,
+            "reference_provider": null
+          },
+          "preset": "social_garden"
+        }
+      },
+      {
+        "id": "preset_social_garden_1790676438297_19",
+        "category": "activity",
+        "label": "Yoga / Stretching Deck",
+        "insertion_point": {
+          "center_x_m": 55.2,
+          "center_y_m": 12.28
+        },
+        "bounding_box": {
+          "top_left_x_m": 50.2,
+          "top_left_y_m": 9.78,
+          "width_m": 10,
+          "height_m": 5
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "quality_key": "ACTIVITY_YOGA_DECK",
+          "activity": {
+            "type_id": "yoga_deck",
+            "category": "wellness",
+            "norm": "Reference sheet",
+            "dimensions": {
+              "length_m": 10,
+              "width_m": 5
+            }
+          },
+          "materials": {
+            "surface": "Reinforced synthetic surface",
+            "structure": "Galvanized steel",
+            "quality_level": "medium",
+            "reference_material": null,
+            "reference_provider": null
+          },
+          "familyInstance": {
+            "type": "yoga_deck",
+            "label": "Yoga / Stretching Deck",
+            "family": "Yoga Deck",
+            "units": "m",
+            "params": {
+              "Deck_Length": 10,
+              "Deck_Width": 5,
+              "Roof_Height": 4,
+              "Roof_Thickness": 0.15,
+              "Planter_Spacing": 1.5,
+              "Default Elevation": 0,
+              "Show_Roof": true
+            }
+          },
+          "preset": "social_garden"
+        }
+      }
+    ]
+  } },
+  { id: "builtin_highRoofGarden_quiet", name: "iteration 3 quiet", payload: {
+    "version": "1.3",
+    "generator": "Sportify-Combine",
+    "roof_context": {
+      "length_m": 67.5,
+      "width_m": 16.28,
+      "program": "garden",
+      "source": "revit",
+      "source_boundary_polygon": [
+        {
+          "x_m": 5.4,
+          "y_m": 11.88
+        },
+        {
+          "x_m": 0,
+          "y_m": 11.88
+        },
+        {
+          "x_m": 0,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 13.03
+        },
+        {
+          "x_m": 64.8,
+          "y_m": 13.03
+        },
+        {
+          "x_m": 64.8,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 16.28
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 16.28
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 11.28
+        },
+        {
+          "x_m": 5.4,
+          "y_m": 11.28
+        }
+      ],
+      "world_origin_x_m": 0.109,
+      "world_origin_y_m": 0,
+      "rotation_deg": 0,
+      "world_origin_z_m": 13.856,
+      "height_above_ground_m": 13.86,
+      "height_source": "level \"Basisebene\" (nearest the project zero; no ground floor by name)",
+      "features": {
+        "source": "revit",
+        "notes": [],
+        "openings": [],
+        "entries": [
+          {
+            "id": "ramp_1",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 4",
+            "x_m": 7.56,
+            "y_m": -0.03,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519521
+          },
+          {
+            "id": "ramp_2",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 6",
+            "x_m": 7.56,
+            "y_m": 3.74,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519527
+          },
+          {
+            "id": "ramp_3",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386",
+            "x_m": 8.97,
+            "y_m": 0.33,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519515
+          },
+          {
+            "id": "ramp_4",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 5",
+            "x_m": 11.34,
+            "y_m": -0.03,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519518
+          },
+          {
+            "id": "ramp_5",
+            "kind": "ramp",
+            "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791386 7",
+            "x_m": 11.34,
+            "y_m": 3.73,
+            "width_m": 0,
+            "on_roof": true,
+            "source_element_id": 2519524
+          }
+        ],
+        "edges": [
+          {
+            "index": 0,
+            "start_m": {
+              "x_m": 5.4,
+              "y_m": 4.41
+            },
+            "end_m": {
+              "x_m": 0,
+              "y_m": 4.41
+            },
+            "length_m": 5.4,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 1,
+            "start_m": {
+              "x_m": 0,
+              "y_m": 4.41
+            },
+            "end_m": {
+              "x_m": 0,
+              "y_m": 16.28
+            },
+            "length_m": 11.88,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 2,
+            "start_m": {
+              "x_m": 0,
+              "y_m": 16.28
+            },
+            "end_m": {
+              "x_m": 67.5,
+              "y_m": 16.28
+            },
+            "length_m": 67.5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 3,
+            "start_m": {
+              "x_m": 67.5,
+              "y_m": 16.28
+            },
+            "end_m": {
+              "x_m": 67.5,
+              "y_m": 3.25
+            },
+            "length_m": 13.03,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 4,
+            "start_m": {
+              "x_m": 67.5,
+              "y_m": 3.25
+            },
+            "end_m": {
+              "x_m": 64.8,
+              "y_m": 3.25
+            },
+            "length_m": 2.7,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 5,
+            "start_m": {
+              "x_m": 64.8,
+              "y_m": 3.25
+            },
+            "end_m": {
+              "x_m": 64.8,
+              "y_m": 5
+            },
+            "length_m": 1.75,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 6,
+            "start_m": {
+              "x_m": 64.8,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 56.7,
+              "y_m": 5
+            },
+            "length_m": 8.1,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 7,
+            "start_m": {
+              "x_m": 56.7,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 56.7,
+              "y_m": 0
+            },
+            "length_m": 5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 8,
+            "start_m": {
+              "x_m": 56.7,
+              "y_m": 0
+            },
+            "end_m": {
+              "x_m": 13.5,
+              "y_m": 0
+            },
+            "length_m": 43.2,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 9,
+            "start_m": {
+              "x_m": 13.5,
+              "y_m": 0
+            },
+            "end_m": {
+              "x_m": 13.5,
+              "y_m": 5
+            },
+            "length_m": 5,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 10,
+            "start_m": {
+              "x_m": 13.5,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 5.4,
+              "y_m": 5
+            },
+            "length_m": 8.1,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          },
+          {
+            "index": 11,
+            "start_m": {
+              "x_m": 5.4,
+              "y_m": 5
+            },
+            "end_m": {
+              "x_m": 5.4,
+              "y_m": 4.41
+            },
+            "length_m": 0.59,
+            "kind": "open",
+            "height_m": 0,
+            "thickness_m": 0,
+            "parapet_coverage": 0,
+            "railing_coverage": 0
+          }
+        ],
+        "obstacles": [],
+        "equipment": [],
+        "drains": [],
+        "slab": null,
+        "levels": [
+          {
+            "name": "OK FU Achse A",
+            "elevation_m": -0.3,
+            "above_ground_m": -0.3,
+            "is_roof_level": false
+          },
+          {
+            "name": "OK FU Achse H",
+            "elevation_m": -0.14,
+            "above_ground_m": -0.14,
+            "is_roof_level": false
+          },
+          {
+            "name": "Basisebene",
+            "elevation_m": 0,
+            "above_ground_m": 0,
+            "is_roof_level": false
+          },
+          {
+            "name": "E0 TP",
+            "elevation_m": 0,
+            "above_ground_m": 0,
+            "is_roof_level": false
+          },
+          {
+            "name": "E1 TP",
+            "elevation_m": 1.375,
+            "above_ground_m": 1.375,
+            "is_roof_level": false
+          },
+          {
+            "name": "E2 TP",
+            "elevation_m": 2.75,
+            "above_ground_m": 2.75,
+            "is_roof_level": false
+          },
+          {
+            "name": "E3 TP",
+            "elevation_m": 4.125,
+            "above_ground_m": 4.125,
+            "is_roof_level": false
+          },
+          {
+            "name": "E4 TP",
+            "elevation_m": 5.5,
+            "above_ground_m": 5.5,
+            "is_roof_level": false
+          },
+          {
+            "name": "E5 TP",
+            "elevation_m": 6.875,
+            "above_ground_m": 6.875,
+            "is_roof_level": false
+          },
+          {
+            "name": "E6 TP",
+            "elevation_m": 8.25,
+            "above_ground_m": 8.25,
+            "is_roof_level": false
+          },
+          {
+            "name": "E7 TP",
+            "elevation_m": 9.625,
+            "above_ground_m": 9.625,
+            "is_roof_level": false
+          },
+          {
+            "name": "E8 TP",
+            "elevation_m": 11,
+            "above_ground_m": 11,
+            "is_roof_level": false
+          },
+          {
+            "name": "E9 TP",
+            "elevation_m": 12.375,
+            "above_ground_m": 12.375,
+            "is_roof_level": false
+          },
+          {
+            "name": "E10 TP",
+            "elevation_m": 13.75,
+            "above_ground_m": 13.75,
+            "is_roof_level": true
+          },
+          {
+            "name": "Bauteilgruppenebene (BTGE)",
+            "elevation_m": 50,
+            "above_ground_m": 50,
+            "is_roof_level": false
+          }
+        ]
+      }
+    },
+    "design_rules": {
+      "clearance_m": 1,
+      "boundary_setback_m": 1.5,
+      "circulation_width_m": 1,
+      "min_entry_points": 4,
+      "quiet_buffer_m": 3
+    },
+    "entry_points": [
+      {
+        "x_m": 2.3025579012047994,
+        "y_m": 4.4,
+        "edge": "top"
+      },
+      {
+        "x_m": 9.18890997023449,
+        "y_m": 5.000000000000002,
+        "edge": "top"
+      },
+      {
+        "x_m": 60.98625379380562,
+        "y_m": 5.000000000000002,
+        "edge": "top"
+      },
+      {
+        "x_m": 66.12606729460316,
+        "y_m": 3.2500000000000018,
+        "edge": "top"
+      }
+    ],
+    "circulation_paths": [
+      {
+        "item_id": "preset_quiet_garden_1790676438320_0",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_1",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_2",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_3",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_4",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_5",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 6
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_6",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_7",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_8",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_9",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_10",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 5.9
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_11",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 2.5
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_12",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 23.700000000000003,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_13",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 28.6,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_14",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 19.3,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 33.5,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_15",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 38.400000000000006,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_16",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 43.300000000000004,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_17",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 48.2,
+            "y_m": 11.4
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_18",
+        "points_m": [
+          {
+            "x_m": 11.4,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 18.3,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 18.3,
+            "y_m": 7.9
+          }
+        ]
+      },
+      {
+        "item_id": "preset_quiet_garden_1790676438320_19",
+        "points_m": [
+          {
+            "x_m": 58.800000000000004,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 49.2,
+            "y_m": 7.5
+          },
+          {
+            "x_m": 49.2,
+            "y_m": 8.9
+          }
+        ]
+      }
+    ],
+    "site_location": null,
+    "site_conditions": {
+      "wind_zone": null,
+      "wind_zone_manual": false,
+      "wind_zone_confidence": "none",
+      "wind_zone_source": null,
+      "north_deg": null,
+      "north_set": false,
+      "snow_zone": null,
+      "altitude_m": null,
+      "altitude_set": false,
+      "day_schedule": null
+    },
+    "assemblies": [],
+    "unresolved_assemblies": [],
+    "roof_finish": null,
+    "zones": [
+      {
+        "id": "zone_preset_quiet_garden_1790676438320_0",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 0,
+          "top_left_y_m": 14.78,
+          "width_m": 67.5,
+          "height_m": 1.5000000000000018
+        },
+        "points": [
+          {
+            "x_m": 0,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 16.28
+          },
+          {
+            "x_m": 0,
+            "y_m": 16.28
+          }
+        ],
+        "area_m2": 101.25000000000011,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 67500,
+            "width": 1500,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_quiet_garden_1790676438320_1",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 13.5,
+          "top_left_y_m": 0,
+          "width_m": 43.2,
+          "height_m": 1.5
+        },
+        "points": [
+          {
+            "x_m": 13.5,
+            "y_m": 0
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 0
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 13.5,
+            "y_m": 1.5
+          }
+        ],
+        "area_m2": 64.80000000000001,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 43200,
+            "width": 1500,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_quiet_garden_1790676438320_2",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 66,
+          "top_left_y_m": 3.25,
+          "width_m": 1.5,
+          "height_m": 11.53
+        },
+        "points": [
+          {
+            "x_m": 66,
+            "y_m": 3.25
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 3.25
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 17.295000000000073,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 1500,
+            "width": 11530,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_quiet_garden_1790676438320_3",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 0,
+          "top_left_y_m": 4.4,
+          "width_m": 1.5,
+          "height_m": 10.38
+        },
+        "points": [
+          {
+            "x_m": 0,
+            "y_m": 4.4
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 4.4
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 14.780000000000001
+          },
+          {
+            "x_m": 0,
+            "y_m": 14.780000000000001
+          }
+        ],
+        "area_m2": 15.57,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 1500,
+            "width": 10380,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_quiet_garden_1790676438320_corner0",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 1.5,
+          "top_left_y_m": 10.78,
+          "width_m": 4,
+          "height_m": 4
+        },
+        "points": [
+          {
+            "x_m": 1.5,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 5.5,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 5.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 15.99999999999999,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 4000,
+            "width": 4000,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      },
+      {
+        "id": "zone_preset_quiet_garden_1790676438320_corner1",
+        "kind": "green_roof",
+        "label": "Green roof",
+        "bounding_box": {
+          "top_left_x_m": 62,
+          "top_left_y_m": 10.78,
+          "width_m": 4,
+          "height_m": 4
+        },
+        "points": [
+          {
+            "x_m": 62,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 10.78
+          },
+          {
+            "x_m": 66,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 62,
+            "y_m": 14.78
+          }
+        ],
+        "area_m2": 16,
+        "assembly_key": null,
+        "family": {
+          "key": "green_roof_module",
+          "family": "Sportify_GreenRoofModule",
+          "type": "Green Roof Module",
+          "units": "mm",
+          "parameters": {
+            "defaultElevation": 0,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 25,
+            "filterFleece": 5,
+            "substrateDepth": 80,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": false,
+            "tree": false,
+            "rimHeight": 170,
+            "length": 4000,
+            "width": 4000,
+            "rimLevel": 270,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 150,
+            "fleeceTop": 155,
+            "substrateTop": 235,
+            "freeboard": 35,
+            "capTop": 340,
+            "outletTop": 155
+          },
+          "strip_generic_model": false,
+          "floor_top_mm": 235,
+          "trayed_mm": 115,
+          "untrayed_layers": []
+        }
+      }
+    ],
+    "algo_blocks": [],
+    "walls": [],
+    "structure": {
+      "source": "revit",
+      "deck_capacity_kn_m2": null,
+      "natural_frequency_hz": null,
+      "grid_lines": [
+        {
+          "name": "1",
+          "start_m": {
+            "x_m": -0.109,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": -0.109,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "10",
+          "start_m": {
+            "x_m": 24.3,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 24.3,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "11",
+          "start_m": {
+            "x_m": 27,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 27,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "12",
+          "start_m": {
+            "x_m": 29.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 29.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "13",
+          "start_m": {
+            "x_m": 32.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 32.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "14",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "15",
+          "start_m": {
+            "x_m": 37.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 37.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "16",
+          "start_m": {
+            "x_m": 40.5,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 40.5,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "17",
+          "start_m": {
+            "x_m": 43.2,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 43.2,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "18",
+          "start_m": {
+            "x_m": 45.9,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 45.9,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "19",
+          "start_m": {
+            "x_m": 48.6,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 48.6,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "2",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "20",
+          "start_m": {
+            "x_m": 51.3,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 51.3,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "21",
+          "start_m": {
+            "x_m": 54,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 54,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "22",
+          "start_m": {
+            "x_m": 56.7,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 56.7,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "22'",
+          "start_m": {
+            "x_m": 56.833,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 56.833,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "23",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "24",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "24'",
+          "start_m": {
+            "x_m": 64.667,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 64.667,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "25",
+          "start_m": {
+            "x_m": 64.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 64.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "26",
+          "start_m": {
+            "x_m": 67.609,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 67.609,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "3",
+          "start_m": {
+            "x_m": 5.4,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 5.4,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "3'",
+          "start_m": {
+            "x_m": 5.533,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 5.533,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "4",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "5",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "5'",
+          "start_m": {
+            "x_m": 13.367,
+            "y_m": 5.5
+          },
+          "end_m": {
+            "x_m": 13.367,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "6",
+          "start_m": {
+            "x_m": 13.5,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 13.5,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "7",
+          "start_m": {
+            "x_m": 16.2,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 16.2,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "8",
+          "start_m": {
+            "x_m": 18.9,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 18.9,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "9",
+          "start_m": {
+            "x_m": 21.6,
+            "y_m": 16.53
+          },
+          "end_m": {
+            "x_m": 21.6,
+            "y_m": -0.25
+          }
+        },
+        {
+          "name": "A",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 16.28
+          }
+        },
+        {
+          "name": "B",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 13.78
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 13.78
+          }
+        },
+        {
+          "name": "C",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 11.28
+          }
+        },
+        {
+          "name": "D",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 9.19
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 9.19
+          }
+        },
+        {
+          "name": "E",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 7.09
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 7.09
+          }
+        },
+        {
+          "name": "F",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 5
+          }
+        },
+        {
+          "name": "F'",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 4.405
+          },
+          "end_m": {
+            "x_m": 5.6,
+            "y_m": 4.405
+          }
+        },
+        {
+          "name": "F''",
+          "start_m": {
+            "x_m": 64.6,
+            "y_m": 3.25
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 3.25
+          }
+        },
+        {
+          "name": "G",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 2.5
+          }
+        },
+        {
+          "name": "H",
+          "start_m": {
+            "x_m": -0.25,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 67.75,
+            "y_m": 0
+          }
+        }
+      ],
+      "columns": [
+        {
+          "label": "16792094",
+          "x_m": -0.109,
+          "y_m": 4.405
+        },
+        {
+          "label": "16791902",
+          "x_m": -0.109,
+          "y_m": 5
+        },
+        {
+          "label": "16791892",
+          "x_m": -0.109,
+          "y_m": 7.09
+        },
+        {
+          "label": "16791889",
+          "x_m": -0.109,
+          "y_m": 9.19
+        },
+        {
+          "label": "16791899",
+          "x_m": -0.109,
+          "y_m": 11.28
+        },
+        {
+          "label": "16791895",
+          "x_m": -0.109,
+          "y_m": 13.78
+        },
+        {
+          "label": "16791943",
+          "x_m": -0.109,
+          "y_m": 16.295
+        },
+        {
+          "label": "16792117",
+          "x_m": 2.7,
+          "y_m": 4.42
+        },
+        {
+          "label": "16791983",
+          "x_m": 2.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791989",
+          "x_m": 5.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792105",
+          "x_m": 5.509,
+          "y_m": 4.405
+        },
+        {
+          "label": "16791833",
+          "x_m": 5.533,
+          "y_m": 0
+        },
+        {
+          "label": "16791826",
+          "x_m": 5.533,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791863",
+          "x_m": 5.533,
+          "y_m": 5
+        },
+        {
+          "label": "16791994",
+          "x_m": 8.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791998",
+          "x_m": 10.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791842",
+          "x_m": 13.367,
+          "y_m": 0
+        },
+        {
+          "label": "16791839",
+          "x_m": 13.367,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791870",
+          "x_m": 13.367,
+          "y_m": 5
+        },
+        {
+          "label": "16792002",
+          "x_m": 13.5,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791953",
+          "x_m": 16.2,
+          "y_m": 0
+        },
+        {
+          "label": "16792006",
+          "x_m": 16.2,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791956",
+          "x_m": 18.9,
+          "y_m": 0
+        },
+        {
+          "label": "16792010",
+          "x_m": 18.9,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791959",
+          "x_m": 21.6,
+          "y_m": 0
+        },
+        {
+          "label": "16792014",
+          "x_m": 21.6,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791961",
+          "x_m": 24.3,
+          "y_m": 0
+        },
+        {
+          "label": "16792018",
+          "x_m": 24.3,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791963",
+          "x_m": 27,
+          "y_m": 0
+        },
+        {
+          "label": "16792022",
+          "x_m": 27,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791965",
+          "x_m": 29.7,
+          "y_m": 0
+        },
+        {
+          "label": "16792026",
+          "x_m": 29.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791967",
+          "x_m": 32.4,
+          "y_m": 0
+        },
+        {
+          "label": "16792030",
+          "x_m": 32.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792092",
+          "x_m": 35.1,
+          "y_m": 0
+        },
+        {
+          "label": "16792084",
+          "x_m": 35.1,
+          "y_m": 2.5
+        },
+        {
+          "label": "16792082",
+          "x_m": 35.1,
+          "y_m": 5
+        },
+        {
+          "label": "16792034",
+          "x_m": 35.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791969",
+          "x_m": 37.8,
+          "y_m": 0
+        },
+        {
+          "label": "16792038",
+          "x_m": 37.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791971",
+          "x_m": 40.5,
+          "y_m": 0
+        },
+        {
+          "label": "16792042",
+          "x_m": 40.5,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791973",
+          "x_m": 43.2,
+          "y_m": 0
+        },
+        {
+          "label": "16792046",
+          "x_m": 43.2,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791975",
+          "x_m": 45.9,
+          "y_m": 0
+        },
+        {
+          "label": "16792050",
+          "x_m": 45.9,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791977",
+          "x_m": 48.6,
+          "y_m": 0
+        },
+        {
+          "label": "16792054",
+          "x_m": 48.6,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791979",
+          "x_m": 51.3,
+          "y_m": 0
+        },
+        {
+          "label": "16792058",
+          "x_m": 51.3,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791981",
+          "x_m": 54,
+          "y_m": 0
+        },
+        {
+          "label": "16792062",
+          "x_m": 54,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792066",
+          "x_m": 56.7,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791850",
+          "x_m": 56.833,
+          "y_m": 0
+        },
+        {
+          "label": "16791848",
+          "x_m": 56.833,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791875",
+          "x_m": 56.833,
+          "y_m": 5
+        },
+        {
+          "label": "16792070",
+          "x_m": 59.4,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792074",
+          "x_m": 62.1,
+          "y_m": 16.28
+        },
+        {
+          "label": "16791857",
+          "x_m": 64.667,
+          "y_m": 0
+        },
+        {
+          "label": "16791854",
+          "x_m": 64.667,
+          "y_m": 2.5
+        },
+        {
+          "label": "16791879",
+          "x_m": 64.667,
+          "y_m": 5
+        },
+        {
+          "label": "16792111",
+          "x_m": 64.691,
+          "y_m": 3.25
+        },
+        {
+          "label": "16792078",
+          "x_m": 64.8,
+          "y_m": 16.28
+        },
+        {
+          "label": "16792099",
+          "x_m": 67.609,
+          "y_m": 3.25
+        },
+        {
+          "label": "16791930",
+          "x_m": 67.609,
+          "y_m": 5
+        },
+        {
+          "label": "16791927",
+          "x_m": 67.609,
+          "y_m": 7.09
+        },
+        {
+          "label": "16791925",
+          "x_m": 67.609,
+          "y_m": 9.19
+        },
+        {
+          "label": "16791923",
+          "x_m": 67.609,
+          "y_m": 11.28
+        },
+        {
+          "label": "16791920",
+          "x_m": 67.609,
+          "y_m": 13.78
+        },
+        {
+          "label": "16791948",
+          "x_m": 67.609,
+          "y_m": 16.295
+        }
+      ],
+      "beams": [
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16791404",
+          "start_m": {
+            "x_m": -0.109,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": -0.109,
+            "y_m": 5
+          },
+          "width_m": 0.18,
+          "depth_m": 2.97,
+          "top_elevation_m": 2.97
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793544",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.404
+          },
+          "width_m": 0.226,
+          "depth_m": 0.156,
+          "top_elevation_m": 5.656
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793533",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.404
+          },
+          "width_m": 0.226,
+          "depth_m": 0.156,
+          "top_elevation_m": 2.906
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793541",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 5.65
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793528",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 2.9
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793538",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.587
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793514",
+          "start_m": {
+            "x_m": 0.004,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 0.004,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.837
+        },
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16793068",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": 4.4
+          },
+          "width_m": 0.18,
+          "depth_m": 0.622,
+          "top_elevation_m": 5.619
+        },
+        {
+          "name": "IPE-Träger:IPE 400-Träger:16793064",
+          "start_m": {
+            "x_m": 2.7,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 2.7,
+            "y_m": 4.4
+          },
+          "width_m": 0.18,
+          "depth_m": 0.622,
+          "top_elevation_m": 2.869
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793698",
+          "start_m": {
+            "x_m": 5.408,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.408,
+            "y_m": 4.404
+          },
+          "width_m": 0.25,
+          "depth_m": 0.156,
+          "top_elevation_m": 5.656
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793692",
+          "start_m": {
+            "x_m": 5.408,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 5.408,
+            "y_m": 4.404
+          },
+          "width_m": 0.25,
+          "depth_m": 0.156,
+          "top_elevation_m": 2.906
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791335",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 4.896
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791317",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 2.146
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791336",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 5.271
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791318",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 2.521
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791337",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 5.506
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791319",
+          "start_m": {
+            "x_m": 5.633,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.267,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 2.756
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792944",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792915",
+          "start_m": {
+            "x_m": 8.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 8.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792947",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792931",
+          "start_m": {
+            "x_m": 10.8,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 10.8,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793776",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 0.001
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.25
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 4.325
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793728",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.7
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793722",
+          "start_m": {
+            "x_m": 13.49,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 13.49,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.95
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793137",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 0.003
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.25
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 4.288
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793113",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.003
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 5.663
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793110",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": -0.003
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 2.913
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793097",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 2.497
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 5.638
+        },
+        {
+          "name": "HEA-Träger:HEA 180-Träger:16793093",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 2.497
+          },
+          "width_m": 0.18,
+          "depth_m": 0.299,
+          "top_elevation_m": 2.888
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792950",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792935",
+          "start_m": {
+            "x_m": 35.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 35.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793755",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 0.001
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.25
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 4.325
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793701",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.7
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793695",
+          "start_m": {
+            "x_m": 56.711,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 56.711,
+            "y_m": -0.001
+          },
+          "width_m": 0.245,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.95
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791245",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 6.271
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791205",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 0
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 3.521
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791243",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 5.896
+        },
+        {
+          "name": "HEX-RPT:HEA 200 - RPT:16791203",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 2.5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 2.5
+          },
+          "width_m": 0.226,
+          "depth_m": 0.218,
+          "top_elevation_m": 3.146
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791244",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 5.506
+        },
+        {
+          "name": "ABF-RPT:SPR 360 - RPT:16791204",
+          "start_m": {
+            "x_m": 56.933,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.567,
+            "y_m": 5
+          },
+          "width_m": 0.19,
+          "depth_m": 0.36,
+          "top_elevation_m": 2.756
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792953",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792938",
+          "start_m": {
+            "x_m": 59.4,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 59.4,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792956",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 5.613
+        },
+        {
+          "name": "IPE-Träger:IPE 360-Träger:16792941",
+          "start_m": {
+            "x_m": 62.1,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 62.1,
+            "y_m": 4.995
+          },
+          "width_m": 0.17,
+          "depth_m": 0.576,
+          "top_elevation_m": 2.863
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793731",
+          "start_m": {
+            "x_m": 64.792,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.792,
+            "y_m": 3.249
+          },
+          "width_m": 0.25,
+          "depth_m": 0.167,
+          "top_elevation_m": 5.667
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793725",
+          "start_m": {
+            "x_m": 64.792,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 64.792,
+            "y_m": 3.249
+          },
+          "width_m": 0.25,
+          "depth_m": 0.167,
+          "top_elevation_m": 2.917
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793620",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 3.249
+          },
+          "width_m": 0.226,
+          "depth_m": 0.167,
+          "top_elevation_m": 5.667
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793610",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 5
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 3.249
+          },
+          "width_m": 0.226,
+          "depth_m": 0.167,
+          "top_elevation_m": 2.917
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793623",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 5.65
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793614",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 4.999
+          },
+          "width_m": 0.226,
+          "depth_m": 0.213,
+          "top_elevation_m": 2.9
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793626",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 16.294
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 5.587
+        },
+        {
+          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793617",
+          "start_m": {
+            "x_m": 67.496,
+            "y_m": 16.294
+          },
+          "end_m": {
+            "x_m": 67.496,
+            "y_m": 11.279
+          },
+          "width_m": 0.226,
+          "depth_m": 0.2,
+          "top_elevation_m": 2.837
+        }
+      ]
+    },
+    "placements": [
+      {
+        "id": "preset_quiet_garden_1790676438320_0",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.3,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_1",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 26.4,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_2",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.1,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_3",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 35,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_4",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 41.1,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_5",
+        "category": "gardenBlock",
+        "label": "Planter T",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 8.14
+        },
+        "bounding_box": {
+          "top_left_x_m": 44.8,
+          "top_left_y_m": 6.94,
+          "width_m": 2.4,
+          "height_m": 2.4
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_t",
+            "label": "Planter T",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 2400,
+              "rimHeight": 900,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 1000,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 530,
+              "capTop": 1070,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_6",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.3,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_7",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 26.4,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_8",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.1,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_9",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 35,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_10",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 41.1,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_11",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 3.44
+        },
+        "bounding_box": {
+          "top_left_x_m": 44.8,
+          "top_left_y_m": 2.94,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_12",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 21.5,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 20.3,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_13",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 26.4,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 25.2,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_14",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 31.3,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 30.1,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_15",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 36.2,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 35,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_16",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 41.1,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 39.9,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": false,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_17",
+        "category": "gardenBlock",
+        "label": "Planter S",
+        "insertion_point": {
+          "center_x_m": 46,
+          "center_y_m": 12.84
+        },
+        "bounding_box": {
+          "top_left_x_m": 44.8,
+          "top_left_y_m": 12.34,
+          "width_m": 2.4,
+          "height_m": 1
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "preset": "quiet_garden",
+          "gardenBlock": {
+            "type": "planter_s",
+            "label": "Planter S",
+            "family": "Planter",
+            "params": {
+              "defaultElevation": 0,
+              "length": 2400,
+              "width": 1000,
+              "rimHeight": 450,
+              "pedestalHeight": 100,
+              "protectionMat": 5,
+              "drainageDepth": 40,
+              "filterFleece": 5,
+              "substrateDepth": 300,
+              "outletHeight": 30,
+              "outletBottomOffset": 25,
+              "outletTopOffset": 55,
+              "centreRow": true,
+              "seatCap": true,
+              "tree": true,
+              "rimLevel": 550,
+              "trayFloorTop": 120,
+              "matTop": 125,
+              "drainageTop": 165,
+              "fleeceTop": 170,
+              "substrateTop": 470,
+              "freeboard": 80,
+              "capTop": 620,
+              "outletTop": 155
+            }
+          }
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_18",
+        "category": "activity",
+        "label": "Calisthenics",
+        "insertion_point": {
+          "center_x_m": 13.3,
+          "center_y_m": 11.78
+        },
+        "bounding_box": {
+          "top_left_x_m": 9.3,
+          "top_left_y_m": 8.78,
+          "width_m": 8,
+          "height_m": 6
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "quality_key": "ACTIVITY_CALISTHENICS",
+          "activity": {
+            "type_id": "calisthenics",
+            "category": "fitness",
+            "norm": "Reference sheet",
+            "dimensions": {
+              "length_m": 8,
+              "width_m": 6
+            }
+          },
+          "materials": {
+            "surface": "Reinforced synthetic surface",
+            "structure": "Galvanized steel",
+            "quality_level": "medium",
+            "reference_material": null,
+            "reference_provider": null
+          },
+          "preset": "quiet_garden"
+        }
+      },
+      {
+        "id": "preset_quiet_garden_1790676438320_19",
+        "category": "activity",
+        "label": "Yoga / Stretching Deck",
+        "insertion_point": {
+          "center_x_m": 55.2,
+          "center_y_m": 12.28
+        },
+        "bounding_box": {
+          "top_left_x_m": 50.2,
+          "top_left_y_m": 9.78,
+          "width_m": 10,
+          "height_m": 5
+        },
+        "transform": {
+          "rotation_deg": 0
+        },
+        "parameters": {
+          "version": "1.0",
+          "generator": "Sportify-Garden-Preset",
+          "quality_key": "ACTIVITY_YOGA_DECK",
+          "activity": {
+            "type_id": "yoga_deck",
+            "category": "wellness",
+            "norm": "Reference sheet",
+            "dimensions": {
+              "length_m": 10,
+              "width_m": 5
+            }
+          },
+          "materials": {
+            "surface": "Reinforced synthetic surface",
+            "structure": "Galvanized steel",
+            "quality_level": "medium",
+            "reference_material": null,
+            "reference_provider": null
+          },
+          "familyInstance": {
+            "type": "yoga_deck",
+            "label": "Yoga / Stretching Deck",
+            "family": "Yoga Deck",
+            "units": "m",
+            "params": {
+              "Deck_Length": 10,
+              "Deck_Width": 5,
+              "Roof_Height": 4,
+              "Roof_Thickness": 0.15,
+              "Planter_Spacing": 1.5,
+              "Default Elevation": 0,
+              "Show_Roof": true
+            }
+          },
+          "preset": "quiet_garden"
+        }
+      }
+    ]
+  } },
+];
+
 /* ---- public registry — sessionGate.js / compareController.js call .generate() on demand, never read a precomputed field ---- */
 const GOLDBECK_PREBUILT_SESSIONS = {
   lowRoofSports: {
@@ -5585,7 +17066,9 @@ const GOLDBECK_PREBUILT_SESSIONS = {
   },
   highRoofGarden: {
     id: "highRoofGarden", title: "Goldbeck — High Roof, Garden",
-    tagline: "Quiet Garden preset on the real E10 slab: 6 Planter T, 12 Planter S, Calisthenics and a Yoga deck, with green-roof zones.",
+    tagline: "Quiet Garden preset on the real E10 slab: 6 Planter T, 12 Planter S, Calisthenics and a Yoga deck, with green-roof zones. Comes with 3 saved iterations: planted, social, quiet.",
     generate: () => goldbeckCloneRealPayload(GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD),
+    // its saved iterations, fresh copies each time (compareController.js's loadBuiltInIterations)
+    iterations: () => GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS.map(it => Object.assign({}, it, { payload: goldbeckCloneRealPayload(it.payload) })),
   },
 };
