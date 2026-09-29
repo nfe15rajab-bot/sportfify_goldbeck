@@ -852,8 +852,8 @@ function updateCompareUI() {
 
     document.getElementById("compare-heading").textContent = "Compare Guide";
     if (usingGoldbeck) {
-      document.getElementById("field-label").textContent = "Compare Guide — Goldbeck IFC roof, 3 layout variants";
-      document.getElementById("compare-intro").textContent = "A worked example, not your own data: three real layouts on the actual Goldbeck roof (67.6 × 21 m) — garden-boundary, sports-boundary, and a hybrid chess pattern.";
+      document.getElementById("field-label").textContent = "Compare Guide — Goldbeck IFC roofs, 2 real sessions";
+      document.getElementById("compare-intro").textContent = "A worked example, not your own data: the two real Goldbeck sessions side by side — sports on the lower roof, gardens on the higher one (both 67.5 × 16.28 m).";
       document.getElementById("compare-roof-hint").textContent = "This example's own roof — from the loaded Goldbeck IFC prebuilt session, not the generic demo roof.";
     } else {
       document.getElementById("field-label").textContent = "Compare Guide — predefined roof configurations";
