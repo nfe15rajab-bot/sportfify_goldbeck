@@ -1242,6 +1242,25 @@ function algoCatalogueSource(name, sp) {
 }
 
 /**
+ * The colour a piece has in the Algorithmic placement's plan (the packing library's own colour for it, algoPlacementCore.js SPORTS), as "#rrggbb", or null.
+ * Found by the piece's name, else by what it is (its activity, garden block or sport); a piece the library does not have gets null, and Revit's diagrams
+ * give it the colour of its kind. Exported with the piece (diagram_color) so the diagrams in Revit look like this plan.
+ */
+function diagramColorOf(item) {
+  const sports = typeof AlgoPlacement !== "undefined" ? AlgoPlacement.SPORTS : [];
+  const byName = n => sports.find(s => s.name === n || s.label === n);
+  let sp = item && byName(item.label);
+  if (!sp && item && typeof ALGO_CATALOGUE !== "undefined") {
+    const src = item.sourceJson || {};
+    const id = (src.activity && src.activity.type_id) || (src.gardenBlock && src.gardenBlock.type) || (src.field && src.field.sport) || null;
+    const name = id ? Object.keys(ALGO_CATALOGUE).find(n => ALGO_CATALOGUE[n].id === id || ALGO_CATALOGUE[n].sport === id) : null;
+    sp = name ? byName(name) : null;
+  }
+  if (!sp || !Array.isArray(sp.color) || sp.color.length < 3) return null;
+  return "#" + sp.color.slice(0, 3).map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+}
+
+/**
  * The Padel panel's settings, with the court type the packing placed: a 20 x 6 m court is the singles court, a 20 x 10 m one the doubles, whatever the panel
  * shows (the builder builds the court from the payload's own size, so it has to be the size on the board).
  */
@@ -1270,6 +1289,7 @@ function algoClearApplied(announce) {
   combineState.zones = (combineState.zones || []).filter(z => !z.algorithmic);
   combineState.entryPoints = combineState.entryPoints.filter(p => !p.algorithmic);
   combineState.walls = (combineState.walls || []).filter(w => !w.algorithmic);
+  combineState.algoPaths = [];
   combineState.selectedId = null; combineState.selectedKind = null;
   const removed = before - (combineState.items.length + combineState.zones.length + combineState.entryPoints.length);
   if (announce && typeof showToast === "function") showToast(removed ? "Cleared" : "Nothing to clear", removed ? `${removed} piece${removed === 1 ? "" : "s"} placed by the algorithm removed from the board.` : "The board has nothing the algorithm placed.");
@@ -1350,6 +1370,9 @@ async function algoApply() {
   if (plan.wall) {
     combineState.walls.push({ id: `wall_algo_${stamp}`, thicknessM: plan.wall.thicknessM, rects: plan.wall.rects, door: plan.wall.door, algorithmic: true });
   }
+  // The pathways as planned, each as wide as it is (the primary network and the paths inside the zones): Revit's accessibility diagram shows these widths.
+  const sameRect = (a, b) => a.every((v, i) => Math.abs(v - b[i]) < 1e-6);
+  combineState.algoPaths = (plan.pathRects || []).map(r => ({ x0: r[0], y0: r[1], x1: r[2], y1: r[3], primary: (plan.primaryRects || []).some(p => sameRect(p, r)) }));
 
   combineState.selectedId = null; combineState.selectedKind = null;
   algoSetMode("manual");

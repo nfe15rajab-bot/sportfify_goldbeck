@@ -26,6 +26,8 @@ const combineState = {
   structure: null, deckCapacityKnM2: null, showStructure: true,
   // Ball-stop fences along the roof edges, taken from the ball analysis's proposal (ballFences.js): [{ edge, from_m, to_m, height_m }].
   ballFences: [],
+  // The Algorithmic placement's pathways from its last Apply: [{ x0, y0, x1, y1, primary }] in plan metres (exported as path_rects).
+  algoPaths: [],
   // Combine's "Revit layers" switch (revitLayers.js): off until turned on; `shown` holds the layers the designer switched on or off by hand.
   revitLayers: { on: false, shown: {} },
   // What the Revit model says about the roof besides its outline and structure (openings, entries, edge, drains, slab, levels): see roofFeatures.js.
@@ -296,7 +298,7 @@ document.addEventListener("keydown", e => {
   e.preventDefault();
   deleteSelectedEntity();
 });
-document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.tray = []; combineState.walls = []; combineState.ballFences = []; combineState.selectedId = null; combineState.selectedKind = null; activeGoldbeckPresetId = null; updateGoldbeckShuffleVisibility(); if(typeof resetCombineView === "function") resetCombineView(); if(typeof renderCombineTray === "function") renderCombineTray(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.tray = []; combineState.walls = []; combineState.ballFences = []; combineState.algoPaths = []; combineState.selectedId = null; combineState.selectedKind = null; activeGoldbeckPresetId = null; updateGoldbeckShuffleVisibility(); if(typeof resetCombineView === "function") resetCombineView(); if(typeof renderCombineTray === "function") renderCombineTray(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 function autoPlace(direction) {
   if (combineState.selectedKind !== "item") return;
@@ -446,7 +448,11 @@ function buildCombinedPayload() {
       },
 
       // Deep parameters mapped from the sidebars
-      parameters: item.sourceJson
+      parameters: item.sourceJson,
+
+      // The colour the Algorithmic placement's plan gives this piece (algoPlacementUI.js diagramColorOf): Revit's diagrams draw the plan in the same
+      // style (SportifyDiagramViews), a little less saturated. Null when the piece has none there.
+      diagram_color: typeof diagramColorOf === "function" ? diagramColorOf(item) : null
     };
   });
 
@@ -557,6 +563,9 @@ function buildCombinedPayload() {
     // The indoor zone's wall + door (combineState.walls, from Apply's algoPlacementCore.js buildIndoorWall) — a Save/Resume otherwise loses it, same gap
     // algo_blocks was added to close. Purely visual on the board, so this is the only place it travels besides the live canvas.
     walls: (combineState.walls || []).map(w => ({ thickness_m: w.thicknessM, rects_m: w.rects, door: w.door })),
+    // The Algorithmic placement's pathways as it planned them (Apply keeps them, combineState.algoPaths): rectangles in plan metres, each as wide as the
+    // path is, the primary ones marked. What Revit's accessibility diagram measures the circulation by (SportifyDiagramViews). Only when there are some.
+    ...((combineState.algoPaths || []).length ? { path_rects: combineState.algoPaths.map(p => ({ x0: p.x0, y0: p.y0, x1: p.x1, y1: p.y1, primary: !!p.primary })) } : {}),
     // The structural grid and columns (in the roof's canvas coordinates, like the placements) and the deck capacity, for the
     // structural load analysis. Absent when there is neither.
     ...(typeof structurePayload === "function" && structurePayload() ? { structure: structurePayload() } : {}),
@@ -689,6 +698,8 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.source = rc.source === "revit" || (rc.source == null && rc.source_boundary_polygon) ? "revit" : "manual";
   combineState.roofFeatures = typeof roofFeaturesFromPayload === "function" ? roofFeaturesFromPayload(rc.features) : null;
   combineState.ballFences = typeof ballFencesFromPayload === "function" ? ballFencesFromPayload(payload.ball_fences) : [];
+  combineState.algoPaths = Array.isArray(payload.path_rects)
+    ? payload.path_rects.filter(p => p && [p.x0, p.y0, p.x1, p.y1].every(Number.isFinite)).map(p => ({ x0: p.x0, y0: p.y0, x1: p.x1, y1: p.y1, primary: !!p.primary })) : [];
 
   if (payload.design_rules) {
     DESIGN_RULES.clearance_m = payload.design_rules.clearance_m ?? DESIGN_RULES.clearance_m;

@@ -136,7 +136,7 @@ function gardenBoardHasContent() {
 }
 
 function gardenClearBoard() {
-  combineState.items = []; combineState.zones = []; combineState.walls = []; combineState.tray = [];
+  combineState.items = []; combineState.zones = []; combineState.walls = []; combineState.tray = []; combineState.algoPaths = [];
   combineState.selectedId = null; combineState.selectedKind = null;
   if (typeof activeGoldbeckPresetId !== "undefined") { activeGoldbeckPresetId = null; if (typeof updateGoldbeckShuffleVisibility === "function") updateGoldbeckShuffleVisibility(); }
 }
