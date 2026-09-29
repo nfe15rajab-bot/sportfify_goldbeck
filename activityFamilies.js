@@ -361,19 +361,12 @@ function activityFamilyPayload(activityId) {
 
 /* ── The preview ─────────────────────────────────────────────────────────── */
 
-/** In plan, to scale — a bank of lockers reads as its columns, a cabin as a room. */
-function drawActivityFamilyPreview(svg, activityId, isDark) {
-  if (!svg || !isActivityFamily(activityId)) return;
-  const f = ACTIVITY_FAMILIES[activityId];
-  const p = activityFamilyParams(activityId), fp = activityFamilyFootprintM(activityId);
-
-  const VW = 420, VH = 260, PAD = 50;
-  const aspect = fp.length_m / fp.width_m;
-  let w = VW - PAD * 2, h = w / aspect;
-  if (h > VH - PAD * 2) { h = VH - PAD * 2; w = h * aspect; }
-  const x = (VW - w) / 2, y = (VH - h) / 2;
-  const s = w / fp.length_m;
-
+/**
+ * A family in plan, to scale, in the box x, y, w, h (s = px per metre): a bank of lockers reads as its columns, a cabin as a room, a deck as a deck with
+ * its planters. Shared by the Sport tab's preview (drawActivityFamilyPreview) and the Combine board (combineField.js sportTabPieceSvg), so a change made
+ * here shows in both. `labels` = the small notes written in the drawing (the board leaves them out at its scale). `p` = the family's parameters.
+ */
+function activityFamilyPlanSvg(activityId, p, x, y, w, h, s, isDark, labels = true) {
   const ink = isDark ? "#c9cbe0" : "#3a3f4b";
   const dim = isDark ? "#a0a3c9" : "#62658a";
   const body = isDark ? "#6f7d8c" : "#9fb0bf";
@@ -394,7 +387,7 @@ function drawActivityFamilyPreview(svg, activityId, isDark) {
       const over = Math.min(10, s * 0.3);
       art += `<rect x="${x - over}" y="${y - over}" width="${w + over * 2}" height="${h + over * 2}"
                     fill="none" stroke="${ink}" stroke-width="1" stroke-dasharray="6 4"/>`;
-      art += `<text x="${x + w - 4}" y="${y - over - 5}" text-anchor="end" font-size="9" fill="${dim}" ${font}>roof over, ${p.Roof_Height} m clear</text>`;
+      if (labels) art += `<text x="${x + w - 4}" y="${y - over - 5}" text-anchor="end" font-size="9" fill="${dim}" ${font}>roof over, ${p.Roof_Height} m clear</text>`;
     }
     // A planter at each spacing round the perimeter.
     const r = Math.max(2, Math.min(6, p.Planter_Spacing * s * 0.22));
@@ -466,7 +459,7 @@ function drawActivityFamilyPreview(svg, activityId, isDark) {
     if (p.Show_Clearance) {
       art += `<rect x="${x}" y="${y + cabinH}" width="${w}" height="${h - cabinH}"
                     fill="${body}" fill-opacity="0.18" stroke="${ink}" stroke-width="0.8" stroke-dasharray="5 4"/>`;
-      art += `<text x="${x + w / 2}" y="${y + cabinH + (h - cabinH) / 2 + 4}" text-anchor="middle"
+      if (labels) art += `<text x="${x + w / 2}" y="${y + cabinH + (h - cabinH) / 2 + 4}" text-anchor="middle"
                     font-size="9" fill="${dim}" ${font}>clearance ${p.Clearance_Depth} m</text>`;
     }
     art += `<rect x="${x}" y="${y}" width="${w}" height="${cabinH}" fill="${body}" fill-opacity="0.75" stroke="${ink}" stroke-width="1.2"/>`;
@@ -478,6 +471,27 @@ function drawActivityFamilyPreview(svg, activityId, isDark) {
     art += `<path d="M ${x + w * 0.25} ${y + cabinH} A ${w * 0.5} ${w * 0.5} 0 0 0 ${x + w * 0.25} ${y + cabinH - w * 0.5}"
                   fill="none" stroke="${ink}" stroke-width="0.7" stroke-dasharray="3 3"/>`;
   }
+
+  return art;
+}
+
+/** In plan, to scale — a bank of lockers reads as its columns, a cabin as a room. */
+function drawActivityFamilyPreview(svg, activityId, isDark) {
+  if (!svg || !isActivityFamily(activityId)) return;
+  const f = ACTIVITY_FAMILIES[activityId];
+  const p = activityFamilyParams(activityId), fp = activityFamilyFootprintM(activityId);
+
+  const VW = 420, VH = 260, PAD = 50;
+  const aspect = fp.length_m / fp.width_m;
+  let w = VW - PAD * 2, h = w / aspect;
+  if (h > VH - PAD * 2) { h = VH - PAD * 2; w = h * aspect; }
+  const x = (VW - w) / 2, y = (VH - h) / 2;
+  const s = w / fp.length_m;
+
+  const ink = isDark ? "#c9cbe0" : "#3a3f4b";
+  const dim = isDark ? "#a0a3c9" : "#62658a";
+  const font = `font-family="'Titillium Web', Arial, sans-serif"`;
+  const art = activityFamilyPlanSvg(activityId, p, x, y, w, h, s, isDark, true);
 
   svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
   svg.innerHTML = `

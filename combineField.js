@@ -571,6 +571,55 @@ function setbackGuideSvg(roof, scale, roofOx, roofOy) {
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#bbb" stroke-width="1" stroke-dasharray="2,4" opacity="0.6"/>`;
 }
 
+/**
+ * A court or activity on the board drawn the way the Sport tab draws it (user, 2026-09-29). Every drawing here is the Sport tab's own function, called and
+ * never copied (field.js fieldCourtSvg, footballCourt.js footballCourtSvg, pingPongTable.js pingPongCourtSvg, activityField.js activityCourtSvg /
+ * activityFloorSvg, climbingTower.js towerPlanSvg, activityFamilies.js activityFamilyPlanSvg), so when a teammate changes how the Sport tab draws an
+ * element, the board follows by itself. A placed piece is drawn with the settings its Push carried (its own court type, playing space, family values),
+ * falling back to the panel's. Drawn in the piece's own frame (its length along x) and turned with it. "" = no Sport tab drawing for it.
+ * (Basketball, volleyball and padel keep their own branches in drawCombineCanvas, which already use the Sport tab's renderers.)
+ */
+function sportTabPieceSvg(item, x, y, w, h, scale) {
+  const dark = typeof isDarkMode === "function" && isDarkMode();
+  const L = item.length_m * scale, W = item.width_m * scale;
+  const src = item.sourceJson || {};
+  let inner = "";
+  try {
+    if (item.kind === "field") {
+      const sport = src.field?.sport;
+      if (sport === "football" && typeof footballCourtSvg === "function") {
+        inner = footballCourtSvg(0, 0, L, W, typeof footballStateForItem === "function" ? footballStateForItem(item) : footballState, "full", dark);
+      } else if (sport && typeof fieldCourtSvg === "function") {
+        // the court inside its run-off: the footprint less the court the Push recorded
+        const d = src.field?.dimensions || {};
+        const re = d.length_m ? Math.max(0, (item.length_m - d.length_m) / 2) * scale : 0;
+        const rs = d.width_m ? Math.max(0, (item.width_m - d.width_m) / 2) * scale : 0;
+        const c = fieldCourtSvg(sport, re, rs, L - 2 * re, W - 2 * rs, re, rs, dark, `boardFloor-${dark ? "d" : "l"}`);
+        inner = c.defs + c.runoff + c.field + c.lines;
+      }
+    } else if (item.kind === "activity" && typeof ACTIVITIES !== "undefined") {
+      const id = src.activity?.type_id, a = ACTIVITIES[id];
+      const fam = src.familyInstance;
+      if (!a) return "";
+      if (id === "climbing_tower" && typeof towerPlanSvg === "function") {
+        inner = towerPlanSvg(fam?.params || towerParams(), L / 2, W / 2, Math.min(L, W) / 2, dark);
+      } else if (typeof isActivityFamily === "function" && isActivityFamily(id) && typeof activityFamilyPlanSvg === "function") {
+        inner = activityFamilyPlanSvg(id, fam?.params || activityFamilyParams(id), 0, 0, L, W, scale, dark, false);
+      } else if (id === "ping_pong" && typeof pingPongCourtSvg === "function") {
+        inner = pingPongCourtSvg(0, 0, L, W, typeof pingPongStateForItem === "function" ? pingPongStateForItem(item) : pingPongState, "full", dark);
+      } else if (a.play && item.length_m > a.play.l && item.width_m > a.play.w && typeof activityCourtSvg === "function") {
+        inner = activityCourtSvg(Object.assign({}, a, { length: item.length_m, width: item.width_m }), 0, 0, L, W, dark).svg;
+      } else if (typeof activityFloorSvg === "function") {
+        inner = activityFloorSvg(a, 0, 0, L, W, dark);
+      }
+    }
+  } catch (e) { inner = ""; }
+  if (!inner) return "";
+  // turned a quarter: the piece's length runs down the board, so its frame is rotated about the box's top-right corner
+  const tf = (item.rotation % 180) !== 0 ? `translate(${x + w} ${y}) rotate(90)` : `translate(${x} ${y})`;
+  return `<g transform="${tf}" pointer-events="none">${inner}</g>`;
+}
+
 let entryCounter = 0;
 
 /** Keeps the "Add Entry Point" button + hint text in sync with combineState.tool. */
@@ -873,6 +922,19 @@ function drawCombineCanvas() {
                 stroke-dasharray="${warn || cutOff ? "4,2" : "none"}"
                 style="cursor:${isPlanner ? "grab" : "pointer"}"/>
         </g>`;
+      return;
+    }
+
+    // Every other court and activity: the Sport tab's own drawing of it (sportTabPieceSvg), under a clear outline that keeps the selection, the flags
+    // and the dragging exactly as they were. A piece the Sport tab has no drawing for keeps the plain filled box.
+    const drawn = !isCrown ? sportTabPieceSvg(item, x, y, w, h, scale) : "";
+    if (drawn) {
+      el += `${drawn}
+      <rect data-id="${escapeHtml(item.id)}" x="${x}" y="${y}" width="${w}" height="${h}"
+            fill="transparent" stroke="${strokeColor}"
+            stroke-width="${selected ? 2.5 : 1.5}"
+            stroke-dasharray="${warn || cutOff ? '4,2' : 'none'}"
+            style="cursor:${isPlanner ? 'grab' : 'pointer'}"/>`;
       return;
     }
 

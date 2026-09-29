@@ -103,6 +103,28 @@ function drawActivityWithRunoff(svg, a, length, width, isDark) {
           font-family="'Titillium Web', Arial, sans-serif">${what} ${m(p.l)} × ${m(p.w)} m + ${around}</text>`;
 }
 
+/**
+ * An activity's floor as the Sport tab draws it, in any box: its category's colour with the grid, and the outline. Shared by the Sport tab (drawActivity
+ * below) and the Combine board (combineField.js sportTabPieceSvg), so a change made here shows in both.
+ */
+function activityFloorSvg(a, ox, oy, fw, fh, isDark) {
+  const colors = ACTIVITY_CATEGORY_COLORS[a.category] || ACTIVITY_CATEGORY_COLORS.court;
+  const floorFill = isDark ? colors.dark : colors.light;
+  const floorGrid = isDark ? "#333" : colors.grid;
+  const stroke = isDark ? "#aaa" : "#555";
+  const id = `activityFloor-${a.category || "court"}-${isDark ? "d" : "l"}`;     // one pattern per colour, so every board piece can use its own
+  return `
+    <defs>
+      <pattern id="${id}" patternUnits="userSpaceOnUse" width="20" height="20">
+        <rect width="20" height="20" fill="${floorFill}"/>
+        <line x1="0" y1="0" x2="20" y2="0" stroke="${floorGrid}" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="0"  y2="20" stroke="${floorGrid}" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect x="${ox}" y="${oy}" width="${fw}" height="${fh}"
+          fill="url(#${id})" stroke="${stroke}" stroke-width="1.5"/>`;
+}
+
 function drawActivity(activityId, dims, isDark) {
   const a = ACTIVITIES[activityId];
   if (!a) return;
@@ -173,9 +195,6 @@ function drawActivity(activityId, dims, isDark) {
   }
   const ox = (VW - fw) / 2, oy = (VH - fh) / 2;
 
-  const colors = ACTIVITY_CATEGORY_COLORS[a.category] || ACTIVITY_CATEGORY_COLORS.court;
-  const floorFill = isDark ? colors.dark : colors.light;
-  const floorGrid = isDark ? "#333" : colors.grid;
   const stroke = isDark ? "#aaa" : "#555";
   const dimColor = isDark ? "#aaa" : "#666";
 
@@ -184,15 +203,7 @@ function drawActivity(activityId, dims, isDark) {
   // for VW x VH, so it must own that assumption explicitly (see field.js's drawField).
   svg.setAttribute("viewBox", `0 0 ${VW} ${VH}`);
   svg.innerHTML = `
-    <defs>
-      <pattern id="activityFloor" patternUnits="userSpaceOnUse" width="20" height="20">
-        <rect width="20" height="20" fill="${floorFill}"/>
-        <line x1="0" y1="0" x2="20" y2="0" stroke="${floorGrid}" stroke-width="0.5"/>
-        <line x1="0" y1="0" x2="0"  y2="20" stroke="${floorGrid}" stroke-width="0.5"/>
-      </pattern>
-    </defs>
-    <rect x="${ox}" y="${oy}" width="${fw}" height="${fh}"
-          fill="url(#activityFloor)" stroke="${stroke}" stroke-width="1.5"/>
+    ${activityFloorSvg(a, ox, oy, fw, fh, isDark)}
     <text x="${ox + fw / 2}" y="${oy + fh / 2}"
           text-anchor="middle" dominant-baseline="middle"
           font-size="13" font-weight="600" fill="${stroke}" font-family="'Titillium Web', Arial, sans-serif">

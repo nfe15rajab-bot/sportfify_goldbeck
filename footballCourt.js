@@ -400,6 +400,19 @@ function syncFootballPanel(sport) {
 
 /* ── What a placed court carries ─────────────────────────────────────────── */
 
+/** A placed court's own settings (what its Push carried), over the panel's, so a setting added later still has a value. */
+function footballStateForItem(item) {
+  const f = item?.sourceJson?.football;
+  if (!f) return footballState;
+  return Object.assign({}, footballState, {
+    courtType: f.court_type || footballState.courtType,
+    surface: f.surface || footballState.surface,
+    courtColour: f.court_colour || footballState.courtColour,
+    boards: f.boards || footballState.boards,
+    goals: f.goals || footballState.goals,
+  });
+}
+
 function footballPlacementPayload(state = footballState) {
   const t = footballType(state), fp = footballFootprint(state);
   const w = footballWeight(state), a = footballAppearance(state);

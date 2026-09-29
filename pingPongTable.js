@@ -186,6 +186,18 @@ function pingPongCourtSvg(x, y, w, h, state = pingPongState, detail = "full", is
   return out;
 }
 
+/** A placed table's own settings (what its Push carried), over the panel's, so a setting added later still has a value. */
+function pingPongStateForItem(item) {
+  const p = item?.sourceJson?.ping_pong;
+  if (!p) return pingPongState;
+  return Object.assign({}, pingPongState, {
+    playingSpace: p.playing_space || pingPongState.playingSpace,
+    table: p.table || pingPongState.table,
+    net: p.net || pingPongState.net,
+    surface: p.surface || pingPongState.surface,
+  });
+}
+
 /** The Sport tab preview: the space, the table in it, and what is left over. */
 function drawPingPongPreview(svg, isDark) {
   if (!svg) return;
