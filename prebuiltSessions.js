@@ -1986,6 +1986,58 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "quality_level": "medium",
           "reference_material": null,
           "reference_provider": null
+        },
+        "padel": {
+          "court_type": "single",
+          "wall_system": "panoramic",
+          "surface": "artificial_grass",
+          "surface_colour": "blue",
+          "appearance_hex": "#366daa",
+          "length_m": 20,
+          "width_m": 6,
+          "net_centre_height_m": 0.88,
+          "net_post_height_m": 0.92,
+          "service_line_from_net_m": 6.95,
+          "back_wall_glass_height_m": 3,
+          "back_wall_mesh_height_m": 1,
+          "side_corner_glass": {
+            "length_m": 2,
+            "height_m": 3
+          },
+          "side_step_glass": {
+            "length_m": 2,
+            "height_m": 2
+          },
+          "side_centre_mesh_height_m": 3,
+          "glass_thickness_mm": 12,
+          "clear_height_min_m": 6,
+          "clear_height_recommended_m": 8,
+          "weight_kg": 5646,
+          "weight_kg_m2": 47.1,
+          "weight_breakdown": [
+            {
+              "part": "Tempered glass",
+              "kg": 2280
+            },
+            {
+              "part": "Mesh panels",
+              "kg": 406
+            },
+            {
+              "part": "Steel frame",
+              "kg": 1080
+            },
+            {
+              "part": "Net and posts",
+              "kg": 80
+            },
+            {
+              "part": "Playing surface",
+              "kg": 1800
+            }
+          ],
+          "weight_basis": "estimated",
+          "source": "FIP Rules of Padel (2026 revision)"
         }
       }
     },
@@ -5117,7 +5169,34 @@ const GOLDBECK_HIGH_ROOF_GARDEN_PAYLOAD = {
           "reference_material": null,
           "reference_provider": null
         },
-        "preset": "quiet_garden"
+        "preset": "quiet_garden",
+        "calisthenics": {
+          "bays": 3,
+          "bay_width_m": 1.8,
+          "rig_depth_m": 1.2,
+          "frame_height_m": 2.5,
+          "pull_up_height_m": 2.4,
+          "post_diameter_m": 0.1143,
+          "bar_diameter_m": 0.04,
+          "rung_spacing_m": 0.38,
+          "dip_height_m": 1.3,
+          "dip_spacing_m": 0.6,
+          "low_bar_height_m": 0.9,
+          "monkey_bars": true,
+          "pull_up_bars": true,
+          "dip_bars": true,
+          "low_bar": false,
+          "monkey_bays": 1,
+          "rung_count": 5,
+          "rig_length_m": 5.51,
+          "rig_width_m": 1.31,
+          "length_m": 8.51,
+          "width_m": 4.31,
+          "safety_margin_m": 1.5,
+          "weight_kg": 412,
+          "weight_kg_m2": 11.2,
+          "source": "DIN EN 16630 — Permanently installed outdoor fitness equipment"
+        }
       }
     },
     {
@@ -9502,7 +9581,34 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
             "reference_material": null,
             "reference_provider": null
           },
-          "preset": "planted_garden"
+          "preset": "planted_garden",
+          "calisthenics": {
+            "bays": 3,
+            "bay_width_m": 1.8,
+            "rig_depth_m": 1.2,
+            "frame_height_m": 2.5,
+            "pull_up_height_m": 2.4,
+            "post_diameter_m": 0.1143,
+            "bar_diameter_m": 0.04,
+            "rung_spacing_m": 0.38,
+            "dip_height_m": 1.3,
+            "dip_spacing_m": 0.6,
+            "low_bar_height_m": 0.9,
+            "monkey_bars": true,
+            "pull_up_bars": true,
+            "dip_bars": true,
+            "low_bar": false,
+            "monkey_bays": 1,
+            "rung_count": 5,
+            "rig_length_m": 5.51,
+            "rig_width_m": 1.31,
+            "length_m": 8.51,
+            "width_m": 4.31,
+            "safety_margin_m": 1.5,
+            "weight_kg": 412,
+            "weight_kg_m2": 11.2,
+            "source": "DIN EN 16630 — Permanently installed outdoor fitness equipment"
+          }
         }
       },
       {
@@ -13560,7 +13666,34 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
             "reference_material": null,
             "reference_provider": null
           },
-          "preset": "social_garden"
+          "preset": "social_garden",
+          "calisthenics": {
+            "bays": 3,
+            "bay_width_m": 1.8,
+            "rig_depth_m": 1.2,
+            "frame_height_m": 2.5,
+            "pull_up_height_m": 2.4,
+            "post_diameter_m": 0.1143,
+            "bar_diameter_m": 0.04,
+            "rung_spacing_m": 0.38,
+            "dip_height_m": 1.3,
+            "dip_spacing_m": 0.6,
+            "low_bar_height_m": 0.9,
+            "monkey_bars": true,
+            "pull_up_bars": true,
+            "dip_bars": true,
+            "low_bar": false,
+            "monkey_bays": 1,
+            "rung_count": 5,
+            "rig_length_m": 5.51,
+            "rig_width_m": 1.31,
+            "length_m": 8.51,
+            "width_m": 4.31,
+            "safety_margin_m": 1.5,
+            "weight_kg": 412,
+            "weight_kg_m2": 11.2,
+            "source": "DIN EN 16630 — Permanently installed outdoor fitness equipment"
+          }
         }
       },
       {
@@ -17642,7 +17775,34 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
             "reference_material": null,
             "reference_provider": null
           },
-          "preset": "quiet_garden"
+          "preset": "quiet_garden",
+          "calisthenics": {
+            "bays": 3,
+            "bay_width_m": 1.8,
+            "rig_depth_m": 1.2,
+            "frame_height_m": 2.5,
+            "pull_up_height_m": 2.4,
+            "post_diameter_m": 0.1143,
+            "bar_diameter_m": 0.04,
+            "rung_spacing_m": 0.38,
+            "dip_height_m": 1.3,
+            "dip_spacing_m": 0.6,
+            "low_bar_height_m": 0.9,
+            "monkey_bars": true,
+            "pull_up_bars": true,
+            "dip_bars": true,
+            "low_bar": false,
+            "monkey_bays": 1,
+            "rung_count": 5,
+            "rig_length_m": 5.51,
+            "rig_width_m": 1.31,
+            "length_m": 8.51,
+            "width_m": 4.31,
+            "safety_margin_m": 1.5,
+            "weight_kg": 412,
+            "weight_kg_m2": 11.2,
+            "source": "DIN EN 16630 — Permanently installed outdoor fitness equipment"
+          }
         }
       },
       {

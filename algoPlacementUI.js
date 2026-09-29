@@ -1232,9 +1232,28 @@ function algoCatalogueSource(name, sp) {
     materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null },
     // what the Sport tab's own push carries for a module-sized activity, so Revit gets the same settings (sportController.js buildActivityPayload)
     ping_pong: cat.id === "ping_pong" && typeof pingPongPlacementPayload === "function" ? pingPongPlacementPayload() : undefined,
+    // ... and for a specified court or rig: without these Revit's own builders (SportifyPadelCourtBuilder, the calisthenics / CrossFit / TRX rigs) never run and
+    // the piece arrives as a generated slab of its footprint (found 2026-09-29: the Goldbeck sports roof's padel court, placed here, was a flat box in Revit).
+    padel: cat.id === "padel_court" && typeof padelPlacementPayload === "function" ? padelPlacementPayload(algoPadelState(sp)) : undefined,
+    calisthenics: cat.id === "calisthenics" && typeof calisthenicsPayload === "function" ? calisthenicsPayload() : undefined,
+    crossfit: cat.id === "crossfit_rig" && typeof crossfitPayload === "function" ? crossfitPayload() : undefined,
+    trx: cat.id === "trx_frame" && typeof trxPayload === "function" ? trxPayload() : undefined,
     familyInstance: cat.id === "climbing_tower" && typeof climbingTowerPayload === "function" ? climbingTowerPayload()
       : (typeof isActivityFamily === "function" && isActivityFamily(cat.id) && typeof activityFamilyPayload === "function") ? activityFamilyPayload(cat.id) : undefined
   };
+}
+
+/**
+ * The Padel panel's settings, with the court type the packing placed: a 20 x 6 m court is the singles court, a 20 x 10 m one the doubles, whatever the panel
+ * shows (the builder builds the court from the payload's own size, so it has to be the size on the board).
+ */
+function algoPadelState(sp) {
+  const base = typeof padelState !== "undefined" ? padelState : {};
+  const width = Math.min(Number(sp && sp.long) || 0, Number(sp && sp.short) || 0);
+  const types = typeof PADEL !== "undefined" ? ["single", "double"].filter(t => PADEL[t]) : [];
+  if (!width || !types.length) return base;
+  const nearest = types.reduce((best, t) => Math.abs(PADEL[t].width_m - width) < Math.abs(PADEL[best].width_m - width) ? t : best, types[0]);
+  return Object.assign({}, base, { courtType: nearest });
 }
 
 /** Garden zones went on the board with no build-up: say why in words, instead of leaving zones that look finished and are skipped by Revit. */
