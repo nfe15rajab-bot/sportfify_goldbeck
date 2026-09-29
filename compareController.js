@@ -74,7 +74,15 @@ function cmpGardenItem(itemId, theme, quality, length_m, width_m, refMaterial, r
 function snapshotToDef(id, name, tagline, payload, goldbeckPresetId) {
   return {
     id, name, tagline, goldbeckPresetId: goldbeckPresetId || null,
-    roof: { length: payload.roof_context.length_m, width: payload.roof_context.width_m },
+    // The exact payload this config came from, preferred by layoutAndScoreConfig's rawSnapshot over its own
+    // reconstruction (stateToSnapshot only ever rebuilds roof/placements/entries — zones, structure, site data and
+    // everything else a real push carries would otherwise be silently dropped on "click to load into Combine").
+    originalPayload: payload,
+    // boundary: the roof's real outline (source_boundary_polygon, {x_m,y_m} points, Revit's convention — roofOutlinePlan
+    // does the y-flip), when the layout it was saved from actually pushed one. Without this a non-rectangular roof
+    // (a notch, an L-shape) got silently treated as its own bounding-box rectangle everywhere downstream: the
+    // out-of-bounds check and the mini preview.
+    roof: { length: payload.roof_context.length_m, width: payload.roof_context.width_m, boundary: payload.roof_context.source_boundary_polygon || null },
     prePositioned: true,
     entryPoints: payload.entry_points,
     items: payload.placements.map(pl => ({
@@ -110,7 +118,10 @@ let archivedCompareConfigs = [];
 
 function saveConfigToCompare(payload) {
   const sportCount = payload.placements.filter(pl => pl.category === "field" || pl.category === "activity").length;
-  const gardenCount = payload.placements.filter(pl => pl.category === "garden").length;
+  // "garden" and "vegetation" (a plant) and "gardenBlock" (a Garden tab block — Planter S/T, Park Bench and Table,
+  // Picknickset — combineController.js pushes these with category = item.kind, which is "gardenBlock", not "garden")
+  // are all garden pieces; counting only "garden" undercounted every layout built from garden blocks as "0 garden."
+  const gardenCount = payload.placements.filter(pl => pl.category === "garden" || pl.category === "vegetation" || pl.category === "gardenBlock").length;
   const defaultName = `Saved Layout ${savedCompareConfigs.length + 1}`;
   // A name of their own, not just a running number that looks the same across sessions once the oldest is
   // replaced (three "Saved Layout 4"-ish cards in a row told nothing apart at a glance). Cancelling keeps the
@@ -365,7 +376,15 @@ function miniRoofSvg(state) {
   const rw = state.roof.length * scale, rh = state.roof.width * scale;
   const ox = (VW - rw) / 2, oy = (VH - rh) / 2;
   let svg = `<svg viewBox="0 0 ${VW} ${VH}" class="compare-roof-svg" xmlns="http://www.w3.org/2000/svg">`;
-  svg += `<rect x="${ox}" y="${oy}" width="${rw}" height="${rh}" fill="none" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+  // The real outline (a notch, an L-shape) when the layout has one, not just its bounding-box rectangle — a plain
+  // rectangle here for a roof that isn't one is exactly what read as "the roof is messed up."
+  const outline = roofOutlinePlan(state.roof);
+  if (outline) {
+    const pts = outline.map(p => `${ox + p.x * scale},${oy + p.y * scale}`).join(" ");
+    svg += `<polygon points="${pts}" fill="none" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+  } else {
+    svg += `<rect x="${ox}" y="${oy}" width="${rw}" height="${rh}" fill="none" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+  }
   state.items.forEach(it => {
     const fp = getFootprint(it);
     const colors = KIND_COLORS[it.kind] || KIND_COLORS.field;
@@ -394,7 +413,10 @@ function miniRoofSvg(state) {
 function layoutAndScoreConfig(def) {
   const roof = def.roof || COMPARE_ROOF;
   const state = {
-    roof: { ...roof, boundary: null, originXm: 0, originYm: 0, rotationDeg: 0 },
+    // boundary carries through from def.roof (snapshotToDef) when the saved layout actually pushed a real, non-
+    // rectangular outline; the built-in demo configs (buildCompareConfigDefs) never set one, so this is null for
+    // them exactly as before — not a behavior change for those.
+    roof: { ...roof, boundary: roof.boundary || null, originXm: 0, originYm: 0, rotationDeg: 0 },
     items: def.items.map((it, i) => ({ ...it, id: `${def.id}_item_${i}`, rotation: it.rotation || 0, x_m: it.x_m ?? 0, y_m: it.y_m ?? 0 })),
     entryPoints: [],
   };
@@ -438,7 +460,9 @@ function layoutAndScoreConfig(def) {
     checklistHtml: checklist.map(c => `<div class="compare-rule-row ${c.pass ? "pass" : "fail"}"><i class="ti ${c.pass ? "ti-check" : "ti-x"}" aria-hidden="true"></i>${escapeHtml(c.label)}</div>`).join(""),
     statsLine: `${Math.round(totalItemAreaM2)} m² programmed · ${water.totalAreaM2 ? Math.round(water.totalAreaM2) + " m² garden (" + water.retentionPercent + "% retention)" : "no garden coverage"} · ${maxDist.toFixed(1)} m longest route to an entrance`,
     roofSvg: miniRoofSvg(state),
-    rawSnapshot: stateToSnapshot(state),
+    // The exact original payload when there is one (a saved-from-Combine or Goldbeck config) — everything about it
+    // survives "click to load into Combine" this way, not just what this scoring pass happened to rebuild.
+    rawSnapshot: def.originalPayload || stateToSnapshot(state),
   };
 }
 
@@ -453,7 +477,7 @@ function stateToSnapshot(state) {
   }));
   return {
     version: "1.3", generator: "Sportify-Combine",
-    roof_context: { length_m: state.roof.length, width_m: state.roof.width, source_boundary_polygon: null, world_origin_x_m: 0, world_origin_y_m: 0 },
+    roof_context: { length_m: state.roof.length, width_m: state.roof.width, source_boundary_polygon: state.roof.boundary || null, world_origin_x_m: 0, world_origin_y_m: 0 },
     design_rules: { clearance_m: DESIGN_RULES.clearance_m, boundary_setback_m: DESIGN_RULES.boundarySetback_m, circulation_width_m: DESIGN_RULES.circulationWidth_m, min_entry_points: DESIGN_RULES.minEntryPoints, quiet_buffer_m: DESIGN_RULES.quietBufferM },
     entry_points: state.entryPoints.map(ep => ({ x_m: ep.x_m, y_m: ep.y_m, edge: ep.edge })),
     circulation_paths: [],

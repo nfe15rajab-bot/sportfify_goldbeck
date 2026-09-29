@@ -462,12 +462,24 @@ function computeCirculation(combineState, rules) {
  * does rather than inventing a parallel grid.
  */
 
-/** Mirrors the out-of-bounds test drawCombineCanvas computes inline, so the canvas and the rules checklist never disagree. */
+/** Mirrors the out-of-bounds test drawCombineCanvas computes inline (boardRectOnRoof, combineField.js), so the canvas
+ * and the rules checklist never disagree — including on a real, non-rectangular roof (a notch, an L-shape): a
+ * plain-rectangle test alone would pass a piece sitting in a corner a real outline doesn't actually cover there. */
 function findOutOfBoundsIds(items, roof) {
+  const P = roofOutlinePlan(roof);
   const ids = new Set();
   items.forEach(it => {
     const fp = getFootprint(it);
-    if (it.x_m < 0 || it.y_m < 0 || it.x_m + fp.w > roof.length || it.y_m + fp.h > roof.width) ids.add(it.id);
+    const x0 = it.x_m, y0 = it.y_m, x1 = it.x_m + fp.w, y1 = it.y_m + fp.h;
+    if (!P) {
+      if (x0 < 0 || y0 < 0 || x1 > roof.length || y1 > roof.width) ids.add(it.id);
+      return;
+    }
+    const eps = 1e-6;
+    const cornersIn = [[x0 + eps, y0 + eps], [x1 - eps, y0 + eps], [x0 + eps, y1 - eps], [x1 - eps, y1 - eps]]
+      .every(([x, y]) => pointInPolygon(P, x, y));
+    const notchPokesIn = P.some(p => p.x > x0 + eps && p.x < x1 - eps && p.y > y0 + eps && p.y < y1 - eps);
+    if (!cornersIn || notchPokesIn) ids.add(it.id);
   });
   return ids;
 }
