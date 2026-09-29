@@ -1189,6 +1189,11 @@ html[data-mode="dark"] .revit-layers-stale { color: #fbbf24; }
 .combine-3d canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
 .combine-3d canvas:active { cursor: grabbing; }
 .combine-3d canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--text-accent); }
+.family-preview-3d { position: relative; width: 100%; height: 280px; border-radius: var(--radius); overflow: hidden; background: var(--surface-1); border: 0.5px solid var(--border); margin-top: 6px; }
+.family-preview-3d canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
+.family-preview-3d canvas:active { cursor: grabbing; }
+.family-preview-3d canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--text-accent); }
+.family-preview-btn[aria-current="true"] { border-color: var(--text-accent); color: var(--text-accent); }
 .combine-canvas-wrap[data-view="3d"] #combine-canvas, .combine-canvas-wrap[data-view="3d"] .combine-zoom-controls, .combine-canvas-wrap[data-view="3d"] .revit-layers { display: none; }
 .combine-canvas-wrap:has(.combine-legend.open) .combine-3d { right: 242px; }
 .combine-3d-tip { position: absolute; z-index: 3; pointer-events: none; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--surface-2); color: var(--text-primary); border: 0.5px solid var(--border-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.18); white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }

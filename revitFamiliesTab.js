@@ -23,6 +23,8 @@ const familiesState = {
   payload: null,
   /** Per-type user edits, keyed "familyName::typeName" → { paramName: value }. */
   edits: {},
+  /** Which family/type the 3D preview is currently showing (familyEditKey), or null before the first fetch. */
+  previewKey: null,
 };
 
 function familyEditKey(familyName, typeName) {
@@ -58,6 +60,10 @@ async function fetchRevitFamilies() {
     } else {
       familiesState.payload = await res.json();
       familiesState.status = "ok";
+      // Something to look at without having to click first: whatever came back first.
+      const firstFam = (familiesState.payload.families || [])[0];
+      const firstType = firstFam && (firstFam.types || [])[0];
+      familiesState.previewKey = firstFam && firstType ? familyEditKey(firstFam.family_name, firstType.type_name) : null;
     }
   } catch (err) {
     familiesState.status = "offline";
@@ -80,6 +86,40 @@ function familiesHeaderHtml() {
         <i class="ti ti-refresh" aria-hidden="true"></i>Fetch from Revit
       </button>
       ${p ? `<p class="hint" style="margin-top:8px"><strong>${count}</strong> famil${count === 1 ? "y" : "ies"} from <code>${p.document || "—"}</code></p>` : ""}
+    </div>`;
+}
+
+/** Looks up the family/type objects a familyEditKey names, from the current payload. */
+function familyByKey(key) {
+  const p = familiesState.payload;
+  if (!p || !key) return null;
+  for (const fam of p.families || []) {
+    for (const type of fam.types || []) {
+      if (familyEditKey(fam.family_name, type.type_name) === key) return { fam, type };
+    }
+  }
+  return null;
+}
+
+/**
+ * The 3D preview block: one shared canvas (not one per family — a real project can have dozens of family types,
+ * far more than a browser allows live WebGL contexts for), showing whichever family/type was last clicked. A known
+ * kind of equipment (a CrossFit rig, a TRX frame, one of the design team's own kit items) previews as a likeness of
+ * its real shape; anything else previews as a box of its own measured size. Either way it is built from this app's
+ * own defaults and the measured footprint, not the family's real Revit geometry, which this app has never seen.
+ */
+function familyPreviewBlockHtml() {
+  const picked = familyByKey(familiesState.previewKey);
+  const caption = picked
+    ? `${escapeHtml(picked.fam.family_name)} — ${escapeHtml(picked.type.type_name)}`
+    : "Pick a family below to preview it";
+  return `
+    <div class="section span-2">
+      <label>3D preview</label>
+      <div class="family-preview-3d" id="family-preview-3d">
+        <canvas id="family-preview-canvas" tabindex="0" aria-label="3D preview of the selected family. Drag to turn it, scroll to zoom."></canvas>
+      </div>
+      <p class="hint">${caption} — a likeness built from this app's own defaults and the family's measured size, not its real Revit geometry.</p>
     </div>`;
 }
 
@@ -166,6 +206,12 @@ function familyTypeHtml(fam, type) {
       <div class="dims">${dimHtml}</div>
       ${matHtml}
       <p class="hint" style="margin-top:10px">${(type.parameters || []).length} parameters in total · ${dims.length} drivable · ${mats.length} material slots · ${type.is_resizable ? "resizable" : "fixed size"}</p>
+      <button class="btn-export family-preview-btn" style="margin-top:8px"
+              data-fam="${escapeAttr(fam.family_name)}"
+              data-type="${escapeAttr(type.type_name)}"
+              ${key === familiesState.previewKey ? 'aria-current="true"' : ""}>
+        <i class="ti ti-box-multiple" aria-hidden="true"></i>${key === familiesState.previewKey ? "Previewing" : "Preview in 3D"}
+      </button>
       <button class="btn-export accent family-push-btn" style="margin-top:8px"
               data-fam="${escapeAttr(fam.family_name)}"
               data-type="${escapeAttr(type.type_name)}">
@@ -253,11 +299,12 @@ function renderFamiliesContent() {
   if (!el) return;
 
   const msg = familiesMessageHtml();
+  const preview = (familiesState.status === "ok" && familiesState.payload) ? familyPreviewBlockHtml() : "";
   const body = (familiesState.status === "ok" && familiesState.payload)
     ? (familiesState.payload.families || []).map(familyCardHtml).join("")
     : "";
 
-  el.innerHTML = `<div class="step-grid">${familiesHeaderHtml()}${msg}${body}</div>`;
+  el.innerHTML = `<div class="step-grid">${familiesHeaderHtml()}${msg}${preview}${body}</div>`;
 
   const btn = document.getElementById("btn-families-fetch");
   if (btn) btn.addEventListener("click", fetchRevitFamilies);
@@ -267,6 +314,13 @@ function renderFamiliesContent() {
       const k = familyEditKey(input.dataset.fam, input.dataset.type);
       if (!familiesState.edits[k]) familiesState.edits[k] = {};
       familiesState.edits[k][input.dataset.param] = parseFloat(input.value) || 0;
+    });
+  });
+
+  el.querySelectorAll(".family-preview-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      familiesState.previewKey = familyEditKey(btn.dataset.fam, btn.dataset.type);
+      renderFamiliesContent();
     });
   });
 
@@ -285,6 +339,14 @@ function renderFamiliesContent() {
       renderFamiliesContent();
     });
   });
+
+  if (typeof familyPreviewInitInteraction === "function") {
+    const picked = familyByKey(familiesState.previewKey);
+    if (picked) {
+      familyPreviewInitInteraction();
+      familyPreviewShow(picked.fam, picked.type);
+    }
+  }
 }
 
 /**
