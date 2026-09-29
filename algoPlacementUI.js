@@ -38,7 +38,6 @@ const ALGO_CATALOGUE = {
   "Bouldering Wall": { kind: "activity", id: "bouldering_wall" },
   "Pickleball Court": { kind: "activity", id: "pickleball_court" },
   "CrossFit Training Rig": { kind: "activity", id: "crossfit_rig" },
-  "TRX Suspension Frame": { kind: "activity", id: "trx_frame" },
   "HIIT Turf Grid": { kind: "activity", id: "hiit_turf_grid" },
   "Multipurpose Sport Area": { kind: "activity", id: "multipurpose_court" },
   "Trampoline": { kind: "activity", id: "trampoline" },
@@ -104,7 +103,7 @@ const ALGO_PRIMARY_MAX_M = 2.5;
  * engine, whose Rhino-parity and zoning tests use their names).
  */
 const ALGO_LISTS = [
-  { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
+  { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] },
   // (the tab's smaller pieces - benches, bins, bollards, lights - are placed by hand: under the existing rules an item needs a long side of 2 m to be reached)
@@ -1232,12 +1231,11 @@ function algoCatalogueSource(name, sp) {
     materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null },
     // what the Sport tab's own push carries for a module-sized activity, so Revit gets the same settings (sportController.js buildActivityPayload)
     ping_pong: cat.id === "ping_pong" && typeof pingPongPlacementPayload === "function" ? pingPongPlacementPayload() : undefined,
-    // ... and for a specified court or rig: without these Revit's own builders (SportifyPadelCourtBuilder, the calisthenics / CrossFit / TRX rigs) never run and
+    // ... and for a specified court or rig: without these Revit's own builders (SportifyPadelCourtBuilder, the calisthenics / CrossFit rigs) never run and
     // the piece arrives as a generated slab of its footprint (found 2026-09-29: the Goldbeck sports roof's padel court, placed here, was a flat box in Revit).
     padel: cat.id === "padel_court" && typeof padelPlacementPayload === "function" ? padelPlacementPayload(algoPadelState(sp)) : undefined,
     calisthenics: cat.id === "calisthenics" && typeof calisthenicsPayload === "function" ? calisthenicsPayload() : undefined,
     crossfit: cat.id === "crossfit_rig" && typeof crossfitPayload === "function" ? crossfitPayload() : undefined,
-    trx: cat.id === "trx_frame" && typeof trxPayload === "function" ? trxPayload() : undefined,
     familyInstance: cat.id === "climbing_tower" && typeof climbingTowerPayload === "function" ? climbingTowerPayload()
       : (typeof isActivityFamily === "function" && isActivityFamily(cat.id) && typeof activityFamilyPayload === "function") ? activityFamilyPayload(cat.id) : undefined
   };

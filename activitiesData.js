@@ -173,14 +173,6 @@ const ACTIVITIES = {
     category: "fitness",
     norm: "Reference sheet",
   },
-  trx_frame: {
-    label: "TRX Suspension Frame",
-    short: "TRX",
-    icon: "ti-square-rounded",
-    length: 6.00, width: 3.00,
-    category: "fitness",
-    norm: "Reference sheet",
-  },
   hiit_turf_grid: {
     label: "HIIT Turf Grid",
     short: "HIIT",

@@ -181,7 +181,7 @@ const run = async (s, settings, siteExtra) => {
 
   // zoning: garden items (Yoga, Calisthenics) are not placed dead last every attempt - a big outdoor cluster on a roof with room to spare must not starve them of a spot
   const gRoof = A.makeSite({ foot: rect(67.6, 21), setback: 1.5, entries: [[1.5, 9, 4, 11.5]], anchors: [[1.5, 9, 4, 11.5]], zoning: true });
-  const gQty = { "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 2, "Bouldering Wall": 1, "Pickleball Court": 1, "Modular Tower Slide": 1, "Teqball Table": 1, "CrossFit Training Rig": 1, "Balance Logs": 1, "TRX Suspension Frame": 1, "HIIT Turf Grid": 1, "Sandpit": 1, "Yoga": 1, "Calisthenics": 1 };
+  const gQty = { "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Ping Pong": 2, "Bouldering Wall": 1, "Pickleball Court": 1, "Modular Tower Slide": 1, "Teqball Table": 1, "CrossFit Training Rig": 1, "Balance Logs": 1, "HIIT Turf Grid": 1, "Sandpit": 1, "Yoga": 1, "Calisthenics": 1 };
   for (const seed of [1, 2, 3]) {
     const gPlan = await A.planLayout(gRoof, requests(gQty), { timeLimit: 8, seed, zoning: true, pathW: 2.5, minPathW: 2.0, strictGap: true, rules: { serviceCorners: true, gridLines: [] } });
     check("zoning: seed " + seed + ": garden items are not starved by the outdoor cluster (everything placed)", gPlan.unplaced.length === 0 && gPlan.issues.length === 0, gPlan.unplaced.map(u => u.name + ": " + u.reason).join("; ") + " " + gPlan.issues.join("; "));
@@ -224,7 +224,7 @@ const run = async (s, settings, siteExtra) => {
   // the court library: the reference-sheet items, the courts that are not in the sheet, and (2026-09-26) the Sport tab's Football and outdoor Badminton and the outdoor Ping Pong table, so
   // every sport the Sport tab offers can be placed; the Multi Sport Court is the Sport tab's Polyvalent court and takes the sheet's multipurpose figures
   const lib = A.SPORTS;
-  check("the library has 43 entries with unique names", lib.length === 43 && new Set(lib.map(s => s.name)).size === 43, lib.length + " entries");
+  check("the library has 42 entries with unique names (TRX removed 2026-09-29)", lib.length === 42 && new Set(lib.map(s => s.name)).size === 42, lib.length + " entries");
   check("every entry has a label, a known group and a colour", lib.every(s => s.label && A.GROUPS.includes(s.group) && Array.isArray(s.color) && s.color.length === 3));
   check("only the four courts outside the reference sheet and the Garden tab's blocks have no dead load", lib.filter(s => s.deadLoad == null).map(s => s.name).sort().join("|") === "Basketball Court|Football|Handball|Park Bench and Table|Picknickset|Planter S|Planter S (with pedestal)|Planter T|Planter T (with pedestal)|Volleyball");
   const sheet = { "Sprint Lane": [63.77, 1.22, 77.8, 1, 0.20], "Padel Tennis Court": [20, 10, 200, 4, 0.80], "Bocce Court": [18, 3, 54, 4, 2.50], "Multipurpose Sport Area": [22, 12, 264, 12, 0.35], "Sandpit": [4, 4, 16, null, 1.50] };
@@ -376,7 +376,7 @@ const run = async (s, settings, siteExtra) => {
   const nFoot = [[64.8, 13.03], [67.5, 13.03], [67.5, 0], [0, 0], [0, 11.87], [5.4, 11.87], [5.4, 11.28], [13.5, 11.28], [13.5, 16.28], [56.7, 16.28], [56.7, 11.28], [64.8, 11.28]];
   const nDoors = [[2.95, 9.97, 5.45, 11.87], [5.1, 9.78, 7.6, 11.28], [62.25, 9.78, 64.75, 11.28]];
   const nSite = A.makeSite({ foot: nFoot, setback: 1.5, entries: nDoors, anchors: nDoors, zoning: true });
-  const nPlan = await A.planLayout(nSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Padel Tennis Court": 1, "Pickleball Court": 1, "HIIT Turf Grid": 1, "TRX Suspension Frame": 1 }), zSettings);
+  const nPlan = await A.planLayout(nSite, requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Padel Tennis Court": 1, "Pickleball Court": 1, "HIIT Turf Grid": 1 }), zSettings);
   const nPadel = nPlan.courts.find(c => c.name === "Padel Tennis Court");
   const nSvc = nPlan.courts.filter(c => /Locker|Bathroom/.test(c.name)), nz = nPlan.indoorZone;
   const nLobbyShort = nz ? nSvc.flatMap(c => [c.rect[1] - nz[1], nz[3] - c.rect[3], c.rect[0] - nz[0], nz[2] - c.rect[2]].filter(g => g > EPS && g < 2.0 - EPS)) : ["no indoor zone"];
@@ -395,7 +395,7 @@ const run = async (s, settings, siteExtra) => {
     nSvc.map(c => c.rect.map(v => +v.toFixed(1)).join(",")).join(" | ") + " zone " + (nz ? nz.map(v => +v.toFixed(1)).join(",") : "none") + " front " + nFront.toFixed(2));
   // garden never where people walk: in every shuffled variant the indoor zone's door opens onto path (no garden pocket in the 1.5 m in front of it), and
   // nothing breaks a rule
-  const gRe = requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Teqball Table": 1, "TRX Suspension Frame": 1, "Pickleball Court": 1, "3x3 Streetbasketball": 1, "Trampoline": 1, "CrossFit Training Rig": 1, "Sandpit": 1 });
+  const gRe = requests({ "Locker & Dressing Room Module": 1, "Bathroom & Shower Module": 1, "Teqball Table": 1, "Balance Logs": 1, "Pickleball Court": 1, "3x3 Streetbasketball": 1, "Trampoline": 1, "CrossFit Training Rig": 1, "Sandpit": 1 });
   const gBad = [];
   for (const [seed, variant] of [[1, 1], [1, 2], [2, 3], [3, 4]]) {
     const gp = await A.planLayout(nSite, gRe, Object.assign({}, zSettings, { seed, shuffle: true, variant }));
