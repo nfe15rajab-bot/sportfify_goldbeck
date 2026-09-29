@@ -24,6 +24,8 @@ const combineState = {
   // The roof's structural grid and columns (from a Revit push or a loaded session; see structure.js), and the deck
   // capacity the structural engineer gave, in kN/m². null = none / not entered.
   structure: null, deckCapacityKnM2: null, showStructure: true,
+  // Ball-stop fences along the roof edges, taken from the ball analysis's proposal (ballFences.js): [{ edge, from_m, to_m, height_m }].
+  ballFences: [],
   // Combine's "Revit layers" switch (revitLayers.js): off until turned on; `shown` holds the layers the designer switched on or off by hand.
   revitLayers: { on: false, shown: {} },
   // What the Revit model says about the roof besides its outline and structure (openings, entries, edge, drains, slab, levels): see roofFeatures.js.
@@ -294,7 +296,7 @@ document.addEventListener("keydown", e => {
   e.preventDefault();
   deleteSelectedEntity();
 });
-document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.tray = []; combineState.walls = []; combineState.selectedId = null; combineState.selectedKind = null; activeGoldbeckPresetId = null; updateGoldbeckShuffleVisibility(); if(typeof resetCombineView === "function") resetCombineView(); if(typeof renderCombineTray === "function") renderCombineTray(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
+document.getElementById("btn-clear-all").addEventListener("click", () => { combineState.items = []; combineState.tray = []; combineState.walls = []; combineState.ballFences = []; combineState.selectedId = null; combineState.selectedKind = null; activeGoldbeckPresetId = null; updateGoldbeckShuffleVisibility(); if(typeof resetCombineView === "function") resetCombineView(); if(typeof renderCombineTray === "function") renderCombineTray(); if(typeof refreshSuggestions === "function") refreshSuggestions(); else if(typeof drawCombineCanvas === "function") drawCombineCanvas(); });
 
 function autoPlace(direction) {
   if (combineState.selectedKind !== "item") return;
@@ -560,6 +562,8 @@ function buildCombinedPayload() {
     ...(typeof structurePayload === "function" && structurePayload() ? { structure: structurePayload() } : {}),
     // Which built-in assumptions of the structural analyses the designer accepted, and the comfort limits they set (assumptions.js).
     ...(typeof analysisAssumptionsPayload === "function" && analysisAssumptionsPayload() ? { analysis_assumptions: analysisAssumptionsPayload() } : {}),
+    // only when the design has some, so a layout without fences keeps the identity (and the Revit results) it always had
+    ...(typeof ballFencesPayload === "function" && ballFencesPayload() ? { ball_fences: ballFencesPayload() } : {}),
     // The names of the session and of the iteration the files are called after (sessionNames.js). In a saved or exported file only: the layout sent to the add-in as it changes leaves them out.
     ...(typeof sessionNamesPayload === "function" && sessionNamesPayload() ? { session: sessionNamesPayload() } : {}),
     placements
@@ -684,6 +688,7 @@ function applySessionSnapshot(payload, opts = {}) {
   combineState.roof.program = typeof ROOF_PROGRAMS === "object" && ROOF_PROGRAMS[rc.program] ? rc.program : null;
   combineState.roof.source = rc.source === "revit" || (rc.source == null && rc.source_boundary_polygon) ? "revit" : "manual";
   combineState.roofFeatures = typeof roofFeaturesFromPayload === "function" ? roofFeaturesFromPayload(rc.features) : null;
+  combineState.ballFences = typeof ballFencesFromPayload === "function" ? ballFencesFromPayload(payload.ball_fences) : [];
 
   if (payload.design_rules) {
     DESIGN_RULES.clearance_m = payload.design_rules.clearance_m ?? DESIGN_RULES.clearance_m;

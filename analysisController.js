@@ -62,12 +62,15 @@ function pathLengthM(points) {
 
 /* ── Layout-wide summary (unchanged from before) ── */
 
-/** Reuses the same circulation engine the Combine board's own rules checklist runs — never a second, disagreeing implementation. */
-function analyzeFireSafety() {
-  if (combineState.items.length === 0) return { status: "empty" };
-  if (combineState.entryPoints.length === 0) return { status: "no-entries" };
+/* Each takes the layout to look at (default: the one on the Combine board). Compare runs them on every saved iteration, so the step where one is chosen
+   rests on the same analyses as the Results tab (compareController.js). A layout is { roof, items, entryPoints, zones }, the board's own shape. */
 
-  const circulation = computeCirculation(combineState, DESIGN_RULES);
+/** Reuses the same circulation engine the Combine board's own rules checklist runs — never a second, disagreeing implementation. */
+function analyzeFireSafety(st = combineState) {
+  if (st.items.length === 0) return { status: "empty" };
+  if (st.entryPoints.length === 0) return { status: "no-entries" };
+
+  const circulation = computeCirculation(st, DESIGN_RULES);
   if (circulation.unreachable.size > 0) {
     return { status: "fail", unreachableCount: circulation.unreachable.size };
   }
@@ -77,13 +80,13 @@ function analyzeFireSafety() {
   return { status: "ok", maxDist, maxTravelDistance, withinLimit: maxDist <= maxTravelDistance };
 }
 
-function analyzeAccessibility() {
-  if (combineState.items.length === 0) return { status: "empty" };
+function analyzeAccessibility(st = combineState) {
+  if (st.items.length === 0) return { status: "empty" };
 
   const minWidth = getAnalysisParam("Accessibility", "min_circulation_width_m");
   const widthOk = DESIGN_RULES.circulationWidth_m >= minWidth;
-  const circulation = computeCirculation(combineState, DESIGN_RULES);
-  const reachOk = combineState.entryPoints.length > 0 && circulation.unreachable.size === 0;
+  const circulation = computeCirculation(st, DESIGN_RULES);
+  const reachOk = st.entryPoints.length > 0 && circulation.unreachable.size === 0;
   return { status: "ok", widthOk, reachOk, currentWidth: DESIGN_RULES.circulationWidth_m, minWidth };
 }
 
@@ -102,38 +105,56 @@ function computeRetentionPercent(depthCm) {
   return Math.min(max, Math.round(base + depthCm * coeff));
 }
 
-function analyzeWaterManagement() {
-  const gardenItems = combineState.items.filter(it => it.kind === "garden");
-  if (gardenItems.length === 0) return { status: "empty" };
-
-  let totalAreaM2 = 0;
-  let weightedDepthCm = 0;
-  gardenItems.forEach(it => {
+/**
+ * Every green surface of the layout, with the depth it holds water in: garden parcels (their theme's layers), green roof zones (their build-up's layers, the
+ * zone's true area) and planters (their substrate). Counting only the parcels said "no garden" for every layout built from green roof zones and planters, the
+ * Garden Core presets included (found 2026-09-29: three garden iterations all scored the same "5" in Compare).
+ */
+function greenSurfaces(st = combineState) {
+  const parts = [];
+  st.items.forEach(it => {
     const fp = typeof getFootprint === "function" ? getFootprint(it) : { w: it.length_m, h: it.width_m };
-    const area = fp.w * fp.h;
-    const theme = GARDEN_THEMES[it.sourceJson?.garden?.theme] || GARDEN_THEMES.custom;
-    const depthCm = Object.values(theme.layers).reduce((sum, l) => sum + l.thickness_m * 100, 0);
-    totalAreaM2 += area;
-    weightedDepthCm += area * depthCm;
+    if (it.kind === "garden") {
+      const theme = GARDEN_THEMES[it.sourceJson?.garden?.theme] || GARDEN_THEMES.custom;
+      parts.push({ source: "garden", areaM2: fp.w * fp.h, depthCm: Object.values(theme.layers).reduce((sum, l) => sum + l.thickness_m * 100, 0) });
+    } else if (it.kind === "gardenBlock") {
+      const mm = Number(it.sourceJson?.gardenBlock?.params?.substrateDepth);      // a planter; the bench has no substrate
+      if (mm > 0) parts.push({ source: "planter", areaM2: fp.w * fp.h, depthCm: mm / 10 });
+    }
   });
-  const avgDepthCm = weightedDepthCm / totalAreaM2;
+  (st.zones || []).forEach(z => {
+    if (z.kind && z.kind !== "green_roof") return;
+    const assembly = typeof getAssembly === "function" ? getAssembly(z.assemblyKey) : null;
+    const mm = assembly && typeof assemblyLayerTotalMm === "function" ? assemblyLayerTotalMm(assembly) : 0;
+    const area = typeof zoneAreaM2 === "function" ? zoneAreaM2(z) : 0;
+    if (area > 0 && mm > 0) parts.push({ source: "zone", areaM2: area, depthCm: mm / 10 });
+  });
+  return parts;
+}
+
+function analyzeWaterManagement(st = combineState) {
+  const parts = greenSurfaces(st);
+  if (parts.length === 0) return { status: "empty" };
+  const totalAreaM2 = parts.reduce((s, p) => s + p.areaM2, 0);
+  const avgDepthCm = parts.reduce((s, p) => s + p.areaM2 * p.depthCm, 0) / totalAreaM2;
   const retentionPercent = computeRetentionPercent(avgDepthCm);
-  return { status: "ok", totalAreaM2, avgDepthCm, retentionPercent };
+  const count = src => parts.filter(p => p.source === src).length;
+  return { status: "ok", totalAreaM2, avgDepthCm, retentionPercent, zones: count("zone"), planters: count("planter"), gardens: count("garden") };
 }
 
 /** Purely geometric proxy for rooftop wind exposure — real wind-field simulation is the Revit-side AnalyzeWindErosionRiskCommand's job, not this. */
-function analyzeWindExposure() {
-  if (combineState.items.length === 0) return { status: "empty" };
-  const roof = combineState.roof;
+function analyzeWindExposure(st = combineState) {
+  if (st.items.length === 0) return { status: "empty" };
+  const roof = st.roof;
   const zoneM = getAnalysisParam("Wind Exposure", "edge_exposure_zone_m");
-  const exposed = combineState.items.filter(it => edgeDistanceM(it, roof) < zoneM);
-  return { status: "ok", exposedCount: exposed.length, totalCount: combineState.items.length, zoneM };
+  const exposed = st.items.filter(it => edgeDistanceM(it, roof) < zoneM);
+  return { status: "ok", exposedCount: exposed.length, totalCount: st.items.length, zoneM };
 }
 
 /** Embodied carbon of the layout (carbon.js: the one implementation, shared with the Design panel and mirrored by the add-in's LCA): pieces missing a material or its carbon figure are reported separately, never silently assumed zero. */
-function analyzeLCA() {
-  if (combineState.items.length === 0) return { status: "empty" };
-  const { totalKg, coveredCount, missingCount, totalCount } = embodiedCarbon(combineState.items, analysisMaterialsCache);
+function analyzeLCA(st = combineState) {
+  if (st.items.length === 0) return { status: "empty" };
+  const { totalKg, coveredCount, missingCount, totalCount } = embodiedCarbon(st.items, analysisMaterialsCache);
   return { status: "ok", totalKg, coveredCount, missingCount, totalCount };
 }
 

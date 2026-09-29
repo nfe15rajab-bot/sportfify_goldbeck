@@ -102,6 +102,50 @@ let resultsPollGen = 0;
   } catch (e) { /* storage blocked or corrupt: start empty */ }
 })();
 
+// ---------------------------------------------------------------------------------------------------- every layout's results, kept
+
+/**
+ * The add-in publishes the results of ONE layout at a time (the next run replaces them), each section stamped with the layout it was computed for. To compare
+ * iterations by their analyses (Compare), every section that arrives is also kept here under that layout's id: analyse iteration 1, then 2, then 3, and each
+ * keeps its own. In this browser only (localStorage), the most recent RESULTS_ARCHIVE_LAYOUTS layouts.
+ */
+const RESULTS_ARCHIVE_KEY = "sportify-analysis-results-by-layout";
+const RESULTS_ARCHIVE_LAYOUTS = 30;
+let resultsArchive = {};
+try { resultsArchive = JSON.parse(localStorage.getItem(RESULTS_ARCHIVE_KEY) || "{}") || {}; } catch (e) { resultsArchive = {}; }
+
+function archiveResultsByLayout(payload) {
+  const sections = payload && payload.sections;
+  if (!sections || typeof sections !== "object") return;
+  Object.keys(sections).forEach(name => {
+    const info = sections[name], result = payload[name];
+    if (!info || !info.layout_id || !result) return;
+    const bucket = resultsArchive[info.layout_id] = resultsArchive[info.layout_id] || {};
+    bucket[name] = { result, computed_at: info.computed_at || null, kept: Date.now() };
+  });
+  const ids = Object.keys(resultsArchive);
+  if (ids.length > RESULTS_ARCHIVE_LAYOUTS) {
+    const newest = id => Math.max(...Object.values(resultsArchive[id]).map(s => s.kept || 0));
+    ids.sort((a, b) => newest(a) - newest(b)).slice(0, ids.length - RESULTS_ARCHIVE_LAYOUTS).forEach(id => delete resultsArchive[id]);
+  }
+  try { localStorage.setItem(RESULTS_ARCHIVE_KEY, JSON.stringify(resultsArchive)); } catch (e) { /* not kept */ }
+}
+
+/** The latest result of each analysis computed for any of these layout ids: { section: result }. */
+function resultsForLayouts(ids) {
+  const best = {};
+  (ids || []).forEach(id => {
+    const bucket = resultsArchive[id];
+    if (!bucket) return;
+    Object.keys(bucket).forEach(name => {
+      if (!best[name] || String(bucket[name].computed_at || "") > String(best[name].computed_at || "")) best[name] = bucket[name];
+    });
+  });
+  const out = {};
+  Object.keys(best).forEach(name => { out[name] = best[name].result; });
+  return out;
+}
+
 // ---------------------------------------------------------------------------------------------------- polling
 
 async function pollAnalysisResults() {
@@ -119,6 +163,7 @@ async function pollAnalysisResults() {
         resultsState.cached = false;
         changed = true;
         try { localStorage.setItem(RESULTS_CACHE_KEY, JSON.stringify({ payload: resultsState.payload, receivedAt: resultsState.receivedAt })); } catch (e) { /* not kept */ }
+        archiveResultsByLayout(resultsState.payload);
       } else if (resultsState.cached) {
         resultsState.cached = false;
         changed = true;
@@ -449,9 +494,98 @@ function structuralCard(r) {
   return resCard({
     section: "structural_loads", title: RESULT_SECTIONS.structural_loads.title, sub: r.case_study, tone, chip,
     prelim: r.preliminary ? r.preliminary_note : "",
-    body: tiles + plan + resFindings((r.findings || []).filter(f => f.kind !== "grid")) + bayTable + resVideo(r.video_path) + resInputs(r.inputs) + resAssumptions(r.assumptions)
+    body: tiles + plan + resFindings((r.findings || []).filter(f => f.kind !== "grid")) + structuralActionsHtml(r) + bayTable + resVideo(r.video_path) + resInputs(r.inputs) + resAssumptions(r.assumptions)
   });
 }
+
+/**
+ * ── Closing the loop: the structural analysis's own moves, applied to the layout (user + professor, 2026-09-29) ──
+ * The analysis does not only say that the load sits to one side: it works out which piece to move, along which axis and how far, checks that the move stops at
+ * other pieces and the roof edge and never makes the busiest bay worse, and says what the bays become (StructureRecommendation). The add-in publishes those
+ * numbers as `actions`; here a move is one click, done on the Combine board like a drag (Ctrl+Z undoes it), and the result is then out of date until the
+ * analysis runs again on the new layout. A lighter build-up is a choice of product, so it points at the piece instead of choosing for the designer.
+ * Moves computed for an earlier layout are not offered: they may no longer fit. The one exception is the analysis's own sequence ("Move A ..., then move B ..."):
+ * its steps were worked out one after the other, so while the only change since the analysis is the steps applied from it, the next step still fits.
+ */
+let structuralApplied = { resultLayoutId: null, layoutIdAfter: null, done: [] };
+
+function structuralActions(r) {
+  return r && Array.isArray(r.actions) ? r.actions.filter(a => a && a.item_id && (a.kind === "move" || a.kind === "lighten")) : [];
+}
+
+/** Whether the structural result's moves still fit the layout on screen: it is about this layout, or the only changes since are its own steps, applied here. */
+function structuralActionsFit() {
+  const f = resFreshness("structural_loads");
+  if (f.state !== "stale") return true;
+  return !!(structuralApplied.resultLayoutId && f.layoutId === structuralApplied.resultLayoutId && structuralApplied.layoutIdAfter
+            && typeof workspaceState !== "undefined" && workspaceState.layoutIdNow === structuralApplied.layoutIdAfter);
+}
+
+function structuralActionsHtml(r) {
+  const acts = structuralActions(r);
+  if (!acts.length) return "";
+  const fits = structuralActionsFit();
+  const f = resFreshness("structural_loads");
+  // applied: only while the layout on screen is the one the applied steps led to (an undo takes it back to "not applied")
+  const done = i => structuralApplied.resultLayoutId === f.layoutId && structuralApplied.layoutIdAfter && typeof workspaceState !== "undefined"
+                    && workspaceState.layoutIdNow === structuralApplied.layoutIdAfter && structuralApplied.done.includes(i);
+  const dirWord = a => a.axis === "x" ? (a.move_m >= 0 ? "to the right" : "to the left") : (a.move_m >= 0 ? "toward the bottom" : "toward the top");
+  const rows = acts.map((a, i) => {
+    const onBoard = typeof combineState !== "undefined" && combineState.items.some(it => it.id === a.item_id);
+    const button = a.kind === "move"
+      ? (done(i) ? `<span class="res-pill tone-ok"><i class="ti ti-check" aria-hidden="true"></i> applied</span>`
+        : `<button class="btn-export accent res-apply" data-struct-action="${i}" ${!fits || !onBoard ? "disabled" : ""}><i class="ti ti-arrows-move" aria-hidden="true"></i>Apply: move ${resEsc(a.target)} ${resNum(Math.abs(a.move_m), 1)} m ${dirWord(a)}</button>`)
+      : `<button class="btn-export res-apply" data-struct-show="${resEsc(a.item_id)}" ${onBoard ? "" : "disabled"}><i class="ti ti-focus-2" aria-hidden="true"></i>Show ${resEsc(a.target)} in Combine</button>`;
+    const expect = a.kind === "move"
+      ? `busiest bay ${resNum(a.peak_utilisation_after_percent, 0)}% afterwards, the load's centre ${resNum(Math.abs(a.offset_after_percent), 1)}% off`
+      : `a build-up of at most ${resNum(a.new_dead_kn_m2, 1)} kN/m² here (choose a lighter one in its Zone or Garden panel)`;
+    return `<li><div>${resText(a.text)}</div><div class="res-apply-row">${button}<span class="hint">The analysis expects ${expect}.</span></div></li>`;
+  }).join("");
+  return `<div class="res-actions"><div class="res-bars-title">Act on it</div>
+    ${fits ? "" : `<p class="hint">These were worked out for an earlier layout: run the analysis again for moves that fit the one on screen.</p>`}
+    <ul class="res-list">${rows}</ul>
+    <p class="hint">A move is made on the Combine board (Ctrl+Z undoes it). The numbers above are then about the earlier layout until the analysis runs again:
+      <button class="btn-link" data-ws-action="run">Run analysis</button></p></div>`;
+}
+
+async function applyStructuralAction(index) {
+  const r = resSection("structural_loads");
+  const a = structuralActions(r)[index];
+  if (!a || a.kind !== "move") return;
+  if (!structuralActionsFit()) { showToast("Out of date", "This move was worked out for an earlier layout. Run the analysis again first."); return; }
+  const item = combineState.items.find(it => it.id === a.item_id);
+  const d = Number(a.move_m) || 0;
+  if (!item || !d || (a.axis !== "x" && a.axis !== "y")) { showToast("Couldn't apply it", `${a.target || "The piece"} is not on the board any more.`); return; }
+  const resultLayoutId = resFreshness("structural_loads").layoutId || null;
+  if (structuralApplied.resultLayoutId !== resultLayoutId) structuralApplied = { resultLayoutId, layoutIdAfter: null, done: [] };
+  if (a.axis === "x") item.x_m = Math.round((item.x_m + d) * 100) / 100;
+  else item.y_m = Math.round((item.y_m + d) * 100) / 100;
+  combineState.selectedKind = "item";
+  combineState.selectedId = item.id;
+  if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  // the layout this step leads to: the next step of the same sequence still fits it (structuralActionsFit)
+  structuralApplied.done.push(index);
+  if (typeof refreshLayoutIdNow === "function") await refreshLayoutIdNow();
+  structuralApplied.layoutIdAfter = typeof workspaceState !== "undefined" ? workspaceState.layoutIdNow : null;
+  resultsState.lastRenderKey = null;
+  renderAnalysisIfShowingResults();
+  showToast("Applied: " + (a.target || "the move"), `Moved ${resNum(Math.abs(d), 1)} m. The analysis expects the busiest bay at ${resNum(a.peak_utilisation_after_percent, 0)}%: run the analysis again to confirm it on the new layout.`);
+}
+
+function showPieceInCombine(itemId) {
+  if (!combineState.items.some(it => it.id === itemId)) return;
+  combineState.selectedKind = "item";
+  combineState.selectedId = itemId;
+  if (typeof setMode === "function") setMode("combine");
+  if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+}
+
+if (typeof document !== "undefined") document.addEventListener("click", e => {
+  const apply = e.target.closest("[data-struct-action]");
+  if (apply) { applyStructuralAction(Number(apply.dataset.structAction)); return; }
+  const show = e.target.closest("[data-struct-show]");
+  if (show) showPieceInCombine(show.dataset.structShow);
+});
 
 function dynamicCard(r) {
   const rv = revitSummary("dynamic_analysis", r), tone = rv.tone;
@@ -563,13 +697,50 @@ function ballCard(r) {
     ${resTile("Boundary crossings", String(r.crossing_count), "into a neighbouring court, the roof edge or circulation", r.crossing_count > 0 ? "warn" : "ok")}
     ${r.swept_shots > 0 ? resTile("Leave the roof", resNum(r.percent_leaving_roof, 0) + "%", "of " + r.swept_shots + " extra shots", r.percent_leaving_roof > 0 ? "warn" : "ok") : ""}
     ${r.swept_shots > 0 ? resTile("With the fences", resNum(r.percent_leaving_after_fences, 0) + "%", "still leave the roof", r.percent_leaving_after_fences > 0 ? "warn" : "ok") : ""}
+    ${r.design_fences > 0 ? resTile("The design's fences", resNum(r.percent_stopped_by_design_fences, 0) + "%", "of the shots stopped by the " + r.design_fences + " fence" + (r.design_fences === 1 ? "" : "s") + " already in the design", "ok") : ""}
   </div>`;
   return resCard({
     section: "ball_trajectory", title: RESULT_SECTIONS.ball_trajectory.title, sub: r.case_study, tone,
     chip: rv.chip,
-    body: tiles + (fences ? `<div class="res-bars-title">Where fences would stop them</div>` + fences : "") + resVideo(r.video_path)
+    body: tiles + (fences ? `<div class="res-bars-title">Where fences would stop them</div>` + fences : "") + ballFenceActionsHtml(r) + resVideo(r.video_path)
   });
 }
+
+/**
+ * Closing the loop for the ball analysis (ballFences.js): its proposed fences taken into the design with one click, drawn on the Combine board and standing in
+ * the next run, which then reports what they stop and proposes fences only for what still leaves. A proposal worked out for an earlier layout is not offered.
+ */
+function ballFenceActionsHtml(r) {
+  const proposed = Array.isArray(r.fences) ? r.fences : [];
+  const have = typeof combineState !== "undefined" ? (combineState.ballFences || []).length : 0;
+  if (!proposed.length && !have) return "";
+  const stale = resFreshness("ball_trajectory").state === "stale";
+  const add = proposed.length
+    ? `<button class="btn-export accent res-apply" data-ball-fences="add" ${stale ? "disabled" : ""}><i class="ti ti-fence" aria-hidden="true"></i>Add ${proposed.length === 1 ? "this fence" : "these " + proposed.length + " fences"} to the design</button>` : "";
+  const remove = have ? `<button class="btn-export res-apply" data-ball-fences="remove"><i class="ti ti-trash" aria-hidden="true"></i>Remove the design's ${have === 1 ? "fence" : have + " fences"}</button>` : "";
+  return `<div class="res-actions"><div class="res-bars-title">Act on it</div>
+    ${stale ? `<p class="hint">This proposal is for an earlier layout: run the analysis again for fences that fit the one on screen.</p>` : ""}
+    <div class="res-apply-row">${add}${remove}</div>
+    <p class="hint">Added fences are drawn along the roof edge on the Combine board and saved with the session. The next run treats them as standing: it says what they stop and proposes fences only for what still leaves.
+      <button class="btn-link" data-ws-action="run">Run analysis</button></p></div>`;
+}
+
+if (typeof document !== "undefined") document.addEventListener("click", e => {
+  const b = e.target.closest("[data-ball-fences]");
+  if (!b || typeof addBallFences !== "function") return;
+  if (b.dataset.ballFences === "add") {
+    const r = resSection("ball_trajectory");
+    if (!r || resFreshness("ball_trajectory").state === "stale") return;
+    const n = addBallFences(r.fences);
+    showToast("Fences added to the design", `${n} ball-stop fence${n === 1 ? "" : "s"} along the roof edge, drawn on the Combine board. Run the analysis again to see what still leaves.`);
+  } else {
+    removeBallFences();
+    showToast("Fences removed", "The design has no ball-stop fences any more.");
+  }
+  if (typeof refreshSuggestions === "function") refreshSuggestions(); else if (typeof drawCombineCanvas === "function") drawCombineCanvas();
+  resultsState.lastRenderKey = null;
+  renderAnalysisIfShowingResults();
+});
 
 function renderSportResults() {
   return resultsCardHtml("ball_trajectory");

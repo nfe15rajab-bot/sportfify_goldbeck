@@ -802,6 +802,7 @@ function drawCombineCanvas() {
     ${typeof structureSvg === "function" ? structureSvg(scale, roofOx, roofOy) : ""}
     ${typeof roofFeaturesSvg === "function" ? roofFeaturesSvg(scale, roofOx, roofOy) : ""}
     ${setbackGuideSvg(roof, scale, roofOx, roofOy)}
+    ${typeof ballFencesSvg === "function" ? ballFencesSvg(scale, roofOx, roofOy) : ""}
   `;
 
   // The Algorithmic placement's rules, applied to the board (boardRuleCheck): run once per redraw (the pathway search is the expensive part) and handed to

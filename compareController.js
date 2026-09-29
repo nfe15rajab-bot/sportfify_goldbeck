@@ -71,9 +71,13 @@ function cmpGardenItem(itemId, theme, quality, length_m, width_m, refMaterial, r
  * stable for as long as Compare is open (updateCompareUI only re-generates
  * on mode entry, not on every slider tweak).
  */
-function snapshotToDef(id, name, tagline, payload, goldbeckPresetId) {
+function snapshotToDef(id, name, tagline, payload, goldbeckPresetId, layoutIds) {
   return {
     id, name, tagline, goldbeckPresetId: goldbeckPresetId || null,
+    // the layout ids this iteration has had on the board: Revit's results computed for any of them are this iteration's (analysisResults.js resultsForLayouts)
+    layoutIds: layoutIds || [],
+    // its green roof zones, for the analyses Compare runs on it (the water estimate reads their build-ups and true areas)
+    zones: (payload.zones || []).map((z, i) => typeof zoneFromPayload === "function" ? zoneFromPayload(z, i) : null).filter(Boolean),
     // The exact payload this config came from, preferred by layoutAndScoreConfig's rawSnapshot over its own
     // reconstruction (stateToSnapshot only ever rebuilds roof/placements/entries — zones, structure, site data and
     // everything else a real push carries would otherwise be silently dropped on "click to load into Combine").
@@ -116,6 +120,19 @@ let savedCompareConfigs = [];
 // Still real entries (same shape as savedCompareConfigs, still clickable to load back into Combine), just out of the way.
 let archivedCompareConfigs = [];
 
+/**
+ * Keeps the id of the layout on the board (the one Revit's results are stamped with) on this iteration: when it is saved and each time it is loaded back.
+ * Revit's results for that layout then belong to this iteration in Compare, even after the next run has replaced them in the Results tab.
+ */
+async function rememberIterationLayoutId(entry) {
+  if (!entry || typeof currentDraftBody !== "function" || typeof layoutIdOf !== "function") return;
+  const body = currentDraftBody();
+  const id = body ? await layoutIdOf(body) : null;
+  if (!id) return;
+  entry.layoutIds = entry.layoutIds || [];
+  if (!entry.layoutIds.includes(id)) entry.layoutIds.push(id);
+}
+
 function savedCompareTagline(payload) {
   const sportCount = payload.placements.filter(pl => pl.category === "field" || pl.category === "activity").length;
   // "garden" and "vegetation" (a plant) and "gardenBlock" (a Garden tab block — Planter S/T, Park Bench and Table,
@@ -154,6 +171,7 @@ function saveConfigToCompare(payload) {
   };
   savedCompareConfigs.push(entry);
   if (savedCompareConfigs.length > 3) savedCompareConfigs.shift();
+  rememberIterationLayoutId(entry);
   renderIterationsPanels();
 }
 
@@ -262,6 +280,7 @@ document.addEventListener("click", e => {
   if (!entry) return;
   try {
     applySessionSnapshot(entry.payload);
+    rememberIterationLayoutId(entry);
     if (activeMode === "combine") {
       if (typeof algoSetMode === "function") algoSetMode(entry.mode === "algo" ? "algo" : "manual");
       if (typeof setWizardStep === "function") setWizardStep(2);
@@ -331,21 +350,10 @@ function buildCompareConfigDefs() {
  * 4 axes so the priority sliders below have something real to weight.
  */
 
+/** The Results tab's own water estimate (analysisController.js analyzeWaterManagement), on this iteration: garden parcels, green roof zones and planters, by depth. */
 function compareWaterManagement(state) {
-  const gardenItems = state.items.filter(it => it.kind === "garden");
-  if (gardenItems.length === 0) return { totalAreaM2: 0, avgDepthCm: 0, retentionPercent: 0 };
-  let totalAreaM2 = 0, weightedDepthCm = 0;
-  gardenItems.forEach(it => {
-    const fp = getFootprint(it);
-    const area = fp.w * fp.h;
-    const theme = GARDEN_THEMES[it.sourceJson?.garden?.theme] || GARDEN_THEMES.custom;
-    const depthCm = Object.values(theme.layers).reduce((s, l) => s + l.thickness_m * 100, 0);
-    totalAreaM2 += area;
-    weightedDepthCm += area * depthCm;
-  });
-  const avgDepthCm = weightedDepthCm / totalAreaM2;
-  const retentionPercent = Math.min(90, Math.round(30 + avgDepthCm * 2));
-  return { totalAreaM2, avgDepthCm, retentionPercent };
+  const r = typeof analyzeWaterManagement === "function" ? analyzeWaterManagement(state) : { status: "empty" };
+  return r.status === "ok" ? r : { totalAreaM2: 0, avgDepthCm: 0, retentionPercent: 0, zones: 0, planters: 0, gardens: 0 };
 }
 
 /** Quality/Cost: area-weighted over each item's own quality tier (the app's existing Economy/Standard/Premium tiers double as the only cost signal in the reference database — no separate price table exists yet, matching how the Results tab's LCA card also declines to invent numbers it doesn't have). Sustainability: real water-retention formula (identical to analysisController.js's) blended with green-coverage ratio. Accessibility: real circulation reachability + longest route, blended with the same wheelchair-width reference the Results tab checks. */
@@ -434,6 +442,7 @@ function layoutAndScoreConfig(def) {
     roof: { ...roof, boundary: roof.boundary || null, originXm: 0, originYm: 0, rotationDeg: 0 },
     items: def.items.map((it, i) => ({ ...it, id: `${def.id}_item_${i}`, rotation: it.rotation || 0, x_m: it.x_m ?? 0, y_m: it.y_m ?? 0 })),
     entryPoints: [],
+    zones: def.zones || [],
   };
 
   let unplaced = [];
@@ -473,7 +482,8 @@ function layoutAndScoreConfig(def) {
     goldbeckPresetId: def.goldbeckPresetId || null,
     scores,
     checklistHtml: checklist.map(c => `<div class="compare-rule-row ${c.pass ? "pass" : "fail"}"><i class="ti ${c.pass ? "ti-check" : "ti-x"}" aria-hidden="true"></i>${escapeHtml(c.label)}</div>`).join(""),
-    statsLine: `${Math.round(totalItemAreaM2)} m² programmed · ${water.totalAreaM2 ? Math.round(water.totalAreaM2) + " m² garden (" + water.retentionPercent + "% retention)" : "no garden coverage"} · ${maxDist.toFixed(1)} m longest route to an entrance`,
+    statsLine: `${Math.round(totalItemAreaM2)} m² programmed · ${water.totalAreaM2 ? Math.round(water.totalAreaM2) + " m² green (" + compareGreenParts(water) + ", ~" + water.retentionPercent + "% of the rain kept)" : "no green surface"} · ${maxDist.toFixed(1)} m longest route to an entrance`,
+    analysesHtml: compareAnalysesHtml(state, def),
     roofSvg: miniRoofSvg(state),
     // The exact original payload when there is one (a saved-from-Combine or Goldbeck config) — everything about it
     // survives "click to load into Combine" this way, not just what this scoring pass happened to rebuild.
@@ -581,6 +591,7 @@ function cardShellHtml(r) {
       <div class="compare-roof-preview">${r.roofSvg}</div>
       <div class="compare-checklist">${r.checklistHtml}</div>
       <p class="hint compare-stats">${r.statsLine}</p>
+      ${r.analysesHtml || ""}
       <div class="compare-bars">
         ${COMPARE_AXES.map(([label, key]) => `
           <div class="compare-bar-row">
@@ -704,7 +715,42 @@ function renderCompareResults(results, weights) {
 let compareShowingGuide = false;
 
 function buildCompareSlotDefs() {
-  return savedCompareConfigs.map(saved => snapshotToDef(saved.id, saved.name, saved.tagline, saved.payload, null));
+  return savedCompareConfigs.map(saved => snapshotToDef(saved.id, saved.name, saved.tagline, saved.payload, null, saved.layoutIds));
+}
+
+function compareGreenParts(water) {
+  const parts = [];
+  if (water.zones) parts.push(water.zones + " green roof zone" + (water.zones === 1 ? "" : "s"));
+  if (water.planters) parts.push(water.planters + " planter" + (water.planters === 1 ? "" : "s"));
+  if (water.gardens) parts.push(water.gardens + " garden" + (water.gardens === 1 ? "" : "s"));
+  return parts.join(", ");
+}
+
+/**
+ * ── The iteration's analyses, on its card (closing the loop: the step where one iteration is chosen rests on the analyses) ──
+ * The app's quick estimates, run on this iteration (the same functions as the Results tab), and Revit's full analyses when they have run on it: load the
+ * iteration, Run analysis, and its card keeps them (analysisResults.js keeps every layout's results; rememberIterationLayoutId ties them to the iteration).
+ */
+function compareAnalysesHtml(state, def) {
+  if (typeof estimateSummary !== "function") return "";
+  const row = (tone, icon, title, text) => `<div class="compare-an-row tone-${escapeHtml(tone || "neutral")}"><i class="ti ${escapeHtml(icon)}" aria-hidden="true"></i><span><strong>${escapeHtml(title)}</strong> ${escapeHtml(text)}</span></div>`;
+  const quick = [
+    ["water", "ti-droplet", "Rain", typeof analyzeWaterManagement === "function" ? analyzeWaterManagement(state) : null],
+    ["fire", "ti-flame", "Escape route", typeof analyzeFireSafety === "function" ? analyzeFireSafety(state) : null],
+    ["wind", "ti-wind", "Wind", typeof analyzeWindExposure === "function" ? analyzeWindExposure(state) : null],
+    ["lca", "ti-recycle", "Carbon", typeof analyzeLCA === "function" ? analyzeLCA(state) : null],
+  ].filter(q => q[3] && q[3].status !== "empty").map(([kind, icon, title, r]) => { const s = estimateSummary(kind, r); return row(s.tone, icon, title, s.headline); });
+
+  const revit = typeof resultsForLayouts === "function" ? resultsForLayouts(def.layoutIds) : {};
+  const fromRevit = (typeof RESULTS_CATALOGUE !== "undefined" ? RESULTS_CATALOGUE : []).filter(c => revit[c.key]).map(c => {
+    const s = revitSummary(c.key, revit[c.key]);
+    return row(s.tone, c.icon, c.short || c.title, s.headline + (s.chip ? " (" + s.chip + ")" : ""));
+  });
+  return `<div class="compare-analyses">
+    <div class="compare-an-head">Quick estimates <span class="hint">this app, on this iteration</span></div>${quick.join("") || `<p class="hint">Nothing to estimate yet.</p>`}
+    <div class="compare-an-head">Revit's analyses <span class="hint">run on this iteration</span></div>${fromRevit.length ? fromRevit.join("")
+      : `<p class="hint">None yet: load this iteration, then Run analysis (Results tab); its card keeps them.</p>`}
+  </div>`;
 }
 
 /**

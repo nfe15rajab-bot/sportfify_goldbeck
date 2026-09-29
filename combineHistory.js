@@ -40,6 +40,7 @@ function captureCombineState() {
     items: combineState.items,
     zones: combineState.zones,
     entryPoints: combineState.entryPoints,
+    ballFences: combineState.ballFences || [],
     finish: typeof roofFinishKey !== "undefined" ? roofFinishKey : null,
   });
 }
@@ -108,6 +109,7 @@ function restoreCombineState(snapshot) {
     combineState.items = s.items || [];
     combineState.zones = s.zones || [];
     combineState.entryPoints = s.entryPoints || [];
+    combineState.ballFences = s.ballFences || [];
     if (typeof roofFinishKey !== "undefined" && s.finish) roofFinishKey = s.finish;
 
     // A selection pointing at something that no longer exists leaves handles
