@@ -33,16 +33,17 @@ function goldbeckCloneRealPayload(payload) {
 }
 
 /** Roof 2 — E9, the lower of the top two slabs: the team's sports layout (export "sportify_combined_revit (6)", 2026-09-30) mirrored so the Locker and
- *  Bathroom stand in the right-hand corner by the ramps (user, 2026-09-30), put on the ACTUAL roof of the Submission model (its E9 push: top 12.481 m,
- *  40 grid lines, 70 columns, 27 beams, 5 ramp entries; her file came from another copy with the roof at 0 m, so Revit built it on the ground), and
- *  where her file and our work differ ours wins (our planner rules). The TRX frame stays out (2026-09-29). A plain mirror put the Trampoline in the
- *  left notch's setback (the notches differ, 13.5 m vs 10.8 m): it stands in the gap between the HIIT turf (0.5 m left) and the Ping Pong tables
- *  (0.5 m right) instead. The doors stay on Revit's stair core and ramps. Re-exported by the app itself (build goldbeck-mirrored-2), so every piece
- *  carries today's links: the Trampoline its "Trampoline-SandPit" family. */
+ *  Bathroom stand in the right-hand corner by the ramps, put on the ACTUAL roof of the Submission model (its E9 push: top 12.481 m, 40 grid lines,
+ *  70 columns, 27 beams, 5 ramp entries; her file came from another copy with the roof at 0 m, so Revit built it on the ground), and where her file
+ *  and our work differ ours wins (user, 2026-09-30): our planner rules, and OUR PIECES WHERE HERS COULD ONLY BE GENERATED SLABS - the Pickleball,
+ *  Teqball and HIIT turf gave way to our Padel court (SportifyPadelCourtBuilder, its settings from our previous default), the Modular Tower Slide
+ *  and Balance Logs (library families). The Trampoline (library family), the Ping Pong pair, the planters and the Mini-Golf lane (library) are hers;
+ *  the padel court took the pickleball's place, so the trampoline and the tables moved left and the Mini-Golf lane under the tables. The doors stay
+ *  on Revit's stair core and ramps. All six rules pass; re-exported by the app itself, so every piece carries today's links. */
 const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
   "version": "1.3",
   "generator": "Sportify-Combine",
-  "build": "2026-09-30-goldbeck-mirrored-2",
+  "build": "2026-09-30-goldbeck-mirrored-3",
   "roof_context": {
     "length_m": 67.5,
     "width_m": 16.28,
@@ -529,19 +530,19 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       ]
     },
     {
-      "item_id": "algo_1790783658370_2",
+      "item_id": "algo_1790783658370_3",
       "points_m": [
         {
-          "x_m": 56.7,
+          "x_m": 11.600000000000001,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 46.5,
+          "x_m": 13.8,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 46.5,
-          "y_m": 2.5
+          "x_m": 13.8,
+          "y_m": 6.5
         }
       ]
     },
@@ -549,54 +550,28 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_4",
       "points_m": [
         {
-          "x_m": 11.600000000000001,
-          "y_m": 8.700000000000001
-        },
-        {
-          "x_m": 15.5,
-          "y_m": 8.700000000000001
-        },
-        {
-          "x_m": 15.5,
-          "y_m": 6.5
-        }
-      ]
-    },
-    {
-      "item_id": "algo_1790783658370_5",
-      "points_m": [
-        {
           "x_m": 56.7,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 46.5,
+          "x_m": 36.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 46.5,
-          "y_m": 11.600000000000001
+          "x_m": 36.5,
+          "y_m": 8.5
         },
         {
-          "x_m": 26.200000000000003,
-          "y_m": 11.600000000000001
+          "x_m": 25,
+          "y_m": 8.5
         },
         {
-          "x_m": 26.200000000000003,
+          "x_m": 25,
           "y_m": 10.100000000000001
-        }
-      ]
-    },
-    {
-      "item_id": "algo_1790783658370_7",
-      "points_m": [
-        {
-          "x_m": 2.5,
-          "y_m": 9.3
         },
         {
-          "x_m": 2.5,
-          "y_m": 7.5
+          "x_m": 18.5,
+          "y_m": 10.100000000000001
         }
       ]
     },
@@ -604,11 +579,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_8",
       "points_m": [
         {
-          "x_m": 10.5,
+          "x_m": 8.4,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 10.5,
+          "x_m": 8.4,
           "y_m": 6.5
         }
       ]
@@ -638,20 +613,28 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 46.5,
+          "x_m": 36.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 46.5,
-          "y_m": 11.600000000000001
+          "x_m": 36.5,
+          "y_m": 8.5
         },
         {
-          "x_m": 40.2,
-          "y_m": 11.600000000000001
+          "x_m": 25,
+          "y_m": 8.5
         },
         {
-          "x_m": 40.2,
-          "y_m": 11.700000000000001
+          "x_m": 25,
+          "y_m": 10.100000000000001
+        },
+        {
+          "x_m": 16,
+          "y_m": 10.100000000000001
+        },
+        {
+          "x_m": 16,
+          "y_m": 11.600000000000001
         }
       ]
     },
@@ -669,6 +652,53 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         {
           "x_m": 46.5,
           "y_m": 8.9
+        }
+      ]
+    },
+    {
+      "item_id": "ours_padel_court",
+      "points_m": [
+        {
+          "x_m": 56.7,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 46.5,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 46.5,
+          "y_m": 2.5
+        }
+      ]
+    },
+    {
+      "item_id": "ours_modular_tower_slide",
+      "points_m": [
+        {
+          "x_m": 56.7,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 36.5,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 36.5,
+          "y_m": 8.6
+        }
+      ]
+    },
+    {
+      "item_id": "ours_balance_logs",
+      "points_m": [
+        {
+          "x_m": 2.5,
+          "y_m": 9.3
+        },
+        {
+          "x_m": 2.5,
+          "y_m": 5.5
         }
       ]
     }
@@ -771,7 +801,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
   "roof_finish": {
     "assembly_key": "gravel_ballast",
     "revit_type_name": "Sportify - Generic Washed Gravel Ballast",
-    "net_area_m2": 385.01,
+    "net_area_m2": 443.18,
     "roof_area_m2": 985.31,
     "revit_openings_area_m2": 0,
     "openings": [
@@ -949,16 +979,8 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       },
       {
         "source": "piece",
-        "id": "algo_1790783658370_2",
-        "x_m": 27.21,
-        "y_m": 1.5,
-        "length_m": 18.29,
-        "width_m": 9.14
-      },
-      {
-        "source": "piece",
         "id": "algo_1790783658370_3",
-        "x_m": 21.1,
+        "x_m": 14.8,
         "y_m": 1.5,
         "length_m": 4.6,
         "width_m": 7.6
@@ -966,31 +988,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_4",
-        "x_m": 16.5,
+        "x_m": 19.4,
         "y_m": 1.5,
         "length_m": 4.6,
         "width_m": 7.6
       },
       {
         "source": "piece",
-        "id": "algo_1790783658370_5",
-        "x_m": 19.2,
-        "y_m": 10.6,
-        "length_m": 6,
-        "width_m": 4
-      },
-      {
-        "source": "piece",
-        "id": "algo_1790783658370_7",
-        "x_m": 1.5,
-        "y_m": 1.5,
-        "length_m": 8,
-        "width_m": 5
-      },
-      {
-        "source": "piece",
         "id": "algo_1790783658370_8",
-        "x_m": 11,
+        "x_m": 9.3,
         "y_m": 1.5,
         "length_m": 4,
         "width_m": 4
@@ -1006,7 +1012,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_10",
-        "x_m": 27.2,
+        "x_m": 15,
         "y_m": 12.6,
         "length_m": 12,
         "width_m": 1.5
@@ -1018,6 +1024,30 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "y_m": 9.8,
         "length_m": 2.4,
         "width_m": 1
+      },
+      {
+        "source": "piece",
+        "id": "ours_padel_court",
+        "x_m": 25.5,
+        "y_m": 1.5,
+        "length_m": 20,
+        "width_m": 6
+      },
+      {
+        "source": "piece",
+        "id": "ours_modular_tower_slide",
+        "x_m": 28.5,
+        "y_m": 9.5,
+        "length_m": 7,
+        "width_m": 5
+      },
+      {
+        "source": "piece",
+        "id": "ours_balance_logs",
+        "x_m": 1.5,
+        "y_m": 1.5,
+        "length_m": 6,
+        "width_m": 3
       }
     ]
   },
@@ -2811,56 +2841,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "diagram_zone": "indoor"
     },
     {
-      "id": "algo_1790783658370_2",
-      "category": "activity",
-      "label": "Pickleball Court",
-      "insertion_point": {
-        "center_x_m": 36.355000000000004,
-        "center_y_m": 6.07
-      },
-      "bounding_box": {
-        "top_left_x_m": 27.21,
-        "top_left_y_m": 1.5,
-        "width_m": 18.29,
-        "height_m": 9.14
-      },
-      "transform": {
-        "rotation_deg": 0
-      },
-      "parameters": {
-        "version": "1.0",
-        "generator": "Sportify-Algorithmic-Placement",
-        "quality_key": "ACTIVITY_PICKLEBALL_COURT",
-        "activity": {
-          "type_id": "pickleball_court",
-          "category": "court",
-          "norm": "Reference sheet",
-          "dimensions": {
-            "length_m": 18.29,
-            "width_m": 9.14
-          }
-        },
-        "materials": {
-          "surface": "Reinforced synthetic surface",
-          "structure": "Galvanized steel",
-          "quality_level": "medium",
-          "reference_material": null,
-          "reference_provider": null
-        }
-      },
-      "diagram_color": "#a0d26e",
-      "diagram_zone": "outdoor"
-    },
-    {
       "id": "algo_1790783658370_3",
       "category": "activity",
       "label": "Ping Pong Station",
       "insertion_point": {
-        "center_x_m": 23.400000000000002,
+        "center_x_m": 17.1,
         "center_y_m": 5.3
       },
       "bounding_box": {
-        "top_left_x_m": 21.1,
+        "top_left_x_m": 14.8,
         "top_left_y_m": 1.5,
         "width_m": 4.6,
         "height_m": 7.6
@@ -2921,11 +2910,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "category": "activity",
       "label": "Ping Pong Station",
       "insertion_point": {
-        "center_x_m": 18.8,
+        "center_x_m": 21.7,
         "center_y_m": 5.3
       },
       "bounding_box": {
-        "top_left_x_m": 16.5,
+        "top_left_x_m": 19.4,
         "top_left_y_m": 1.5,
         "width_m": 4.6,
         "height_m": 7.6
@@ -2982,97 +2971,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "diagram_zone": "indoor"
     },
     {
-      "id": "algo_1790783658370_5",
-      "category": "activity",
-      "label": "Teqball Table",
-      "insertion_point": {
-        "center_x_m": 22.2,
-        "center_y_m": 12.6
-      },
-      "bounding_box": {
-        "top_left_x_m": 19.2,
-        "top_left_y_m": 10.6,
-        "width_m": 6,
-        "height_m": 4
-      },
-      "transform": {
-        "rotation_deg": 0
-      },
-      "parameters": {
-        "version": "1.0",
-        "generator": "Sportify-Algorithmic-Placement",
-        "quality_key": "ACTIVITY_TEQBALL_TABLE",
-        "activity": {
-          "type_id": "teqball_table",
-          "category": "court",
-          "norm": "Reference sheet",
-          "dimensions": {
-            "length_m": 6,
-            "width_m": 4
-          }
-        },
-        "materials": {
-          "surface": "Reinforced synthetic surface",
-          "structure": "Galvanized steel",
-          "quality_level": "medium",
-          "reference_material": null,
-          "reference_provider": null
-        }
-      },
-      "diagram_color": "#009688",
-      "diagram_zone": "outdoor"
-    },
-    {
-      "id": "algo_1790783658370_7",
-      "category": "activity",
-      "label": "HIIT Turf Grid",
-      "insertion_point": {
-        "center_x_m": 5.5,
-        "center_y_m": 4
-      },
-      "bounding_box": {
-        "top_left_x_m": 1.5,
-        "top_left_y_m": 1.5,
-        "width_m": 8,
-        "height_m": 5
-      },
-      "transform": {
-        "rotation_deg": 0
-      },
-      "parameters": {
-        "version": "1.0",
-        "generator": "Sportify-Algorithmic-Placement",
-        "quality_key": "ACTIVITY_HIIT_TURF_GRID",
-        "activity": {
-          "type_id": "hiit_turf_grid",
-          "category": "fitness",
-          "norm": "Reference sheet",
-          "dimensions": {
-            "length_m": 8,
-            "width_m": 5
-          }
-        },
-        "materials": {
-          "surface": "Reinforced synthetic surface",
-          "structure": "Galvanized steel",
-          "quality_level": "medium",
-          "reference_material": null,
-          "reference_provider": null
-        }
-      },
-      "diagram_color": "#78be3c",
-      "diagram_zone": "outdoor"
-    },
-    {
       "id": "algo_1790783658370_8",
       "category": "activity",
       "label": "Trampoline",
       "insertion_point": {
-        "center_x_m": 13,
+        "center_x_m": 11.3,
         "center_y_m": 3.5
       },
       "bounding_box": {
-        "top_left_x_m": 11,
+        "top_left_x_m": 9.3,
         "top_left_y_m": 1.5,
         "width_m": 4,
         "height_m": 4
@@ -3178,11 +3085,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "category": "activity",
       "label": "Mini-Golf Lane",
       "insertion_point": {
-        "center_x_m": 33.2,
+        "center_x_m": 21,
         "center_y_m": 13.35
       },
       "bounding_box": {
-        "top_left_x_m": 27.2,
+        "top_left_x_m": 15,
         "top_left_y_m": 12.6,
         "width_m": 12,
         "height_m": 1.5
@@ -3268,6 +3175,182 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       },
       "diagram_color": "#8a5a2b",
       "diagram_zone": "garden"
+    },
+    {
+      "id": "ours_padel_court",
+      "category": "activity",
+      "label": "Padel Tennis Court",
+      "insertion_point": {
+        "center_x_m": 35.5,
+        "center_y_m": 4.5
+      },
+      "bounding_box": {
+        "top_left_x_m": 25.5,
+        "top_left_y_m": 1.5,
+        "width_m": 20,
+        "height_m": 6
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "quality_key": "ACTIVITY_PADEL_COURT",
+        "activity": {
+          "type_id": "padel_court",
+          "category": "court",
+          "norm": "FIP (singles court)",
+          "dimensions": {
+            "length_m": 20,
+            "width_m": 6
+          },
+          "variant": "mini"
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        },
+        "padel": {
+          "court_type": "single",
+          "wall_system": "panoramic",
+          "surface": "artificial_grass",
+          "surface_colour": "blue",
+          "appearance_hex": "#366daa",
+          "length_m": 20,
+          "width_m": 6,
+          "net_centre_height_m": 0.88,
+          "net_post_height_m": 0.92,
+          "service_line_from_net_m": 6.95,
+          "back_wall_glass_height_m": 3,
+          "back_wall_mesh_height_m": 1,
+          "side_corner_glass": {
+            "length_m": 2,
+            "height_m": 3
+          },
+          "side_step_glass": {
+            "length_m": 2,
+            "height_m": 2
+          },
+          "side_centre_mesh_height_m": 3,
+          "glass_thickness_mm": 12,
+          "clear_height_min_m": 6,
+          "clear_height_recommended_m": 8,
+          "weight_kg": 5646,
+          "weight_kg_m2": 47.1,
+          "weight_breakdown": [
+            {
+              "part": "Tempered glass",
+              "kg": 2280
+            },
+            {
+              "part": "Mesh panels",
+              "kg": 406
+            },
+            {
+              "part": "Steel frame",
+              "kg": 1080
+            },
+            {
+              "part": "Net and posts",
+              "kg": 80
+            },
+            {
+              "part": "Playing surface",
+              "kg": 1800
+            }
+          ],
+          "weight_basis": "estimated",
+          "source": "FIP Rules of Padel (2026 revision)"
+        }
+      },
+      "diagram_color": "#5a50a0",
+      "diagram_zone": "outdoor"
+    },
+    {
+      "id": "ours_modular_tower_slide",
+      "category": "activity",
+      "label": "Modular Tower Slide",
+      "insertion_point": {
+        "center_x_m": 32,
+        "center_y_m": 12
+      },
+      "bounding_box": {
+        "top_left_x_m": 28.5,
+        "top_left_y_m": 9.5,
+        "width_m": 7,
+        "height_m": 5
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "quality_key": "ACTIVITY_MODULAR_TOWER_SLIDE",
+        "activity": {
+          "type_id": "modular_tower_slide",
+          "category": "playground",
+          "norm": "Reference sheet",
+          "dimensions": {
+            "length_m": 7,
+            "width_m": 5
+          }
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        }
+      },
+      "diagram_color": "#f06478",
+      "diagram_zone": "outdoor"
+    },
+    {
+      "id": "ours_balance_logs",
+      "category": "activity",
+      "label": "Balance Logs",
+      "insertion_point": {
+        "center_x_m": 4.5,
+        "center_y_m": 3
+      },
+      "bounding_box": {
+        "top_left_x_m": 1.5,
+        "top_left_y_m": 1.5,
+        "width_m": 6,
+        "height_m": 3
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "quality_key": "ACTIVITY_BALANCE_LOGS",
+        "activity": {
+          "type_id": "balance_logs",
+          "category": "playground",
+          "norm": "Reference sheet",
+          "dimensions": {
+            "length_m": 6,
+            "width_m": 3
+          }
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        }
+      },
+      "diagram_color": "#aa8c64",
+      "diagram_zone": "outdoor"
     }
   ]
 };
@@ -18965,7 +19048,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
 const GOLDBECK_PREBUILT_SESSIONS = {
   lowRoofSports: {
     id: "lowRoofSports", title: "Goldbeck — Low Roof, Sports",
-    tagline: "11 pieces on the real E9 slab: Pickleball, 2 Ping Pong, Teqball, HIIT turf, Trampoline, Mini-Golf, 2 planters; the Locker & Bathroom modules by the ramps on the right; doors at the stair core and the two ramps.",
+    tagline: "11 pieces on the real E9 slab: Padel court, 2 Ping Pong, Trampoline, Modular Tower Slide, Balance Logs, Mini-Golf, 2 planters; the Locker & Bathroom modules by the ramps on the right; doors at the stair core and the two ramps.",
     generate: () => goldbeckCloneRealPayload(GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD),
   },
   highRoofGarden: {
