@@ -1241,12 +1241,8 @@ function algoCatalogueSource(name, sp) {
   };
 }
 
-/**
- * The colour a piece has in the Algorithmic placement's plan (the packing library's own colour for it, algoPlacementCore.js SPORTS), as "#rrggbb", or null.
- * Found by the piece's name, else by what it is (its activity, garden block or sport); a piece the library does not have gets null, and Revit's diagrams
- * give it the colour of its kind. Exported with the piece (diagram_color) so the diagrams in Revit look like this plan.
- */
-function diagramColorOf(item) {
+/** The packing library's entry for a piece (algoPlacementCore.js SPORTS): by the piece's name, else by what it is (its activity, garden block or sport); or null. */
+function algoSportOf(item) {
   const sports = typeof AlgoPlacement !== "undefined" ? AlgoPlacement.SPORTS : [];
   const byName = n => sports.find(s => s.name === n || s.label === n);
   let sp = item && byName(item.label);
@@ -1256,6 +1252,25 @@ function diagramColorOf(item) {
     const name = id ? Object.keys(ALGO_CATALOGUE).find(n => ALGO_CATALOGUE[n].id === id || ALGO_CATALOGUE[n].sport === id) : null;
     sp = name ? byName(name) : null;
   }
+  return sp || null;
+}
+
+/**
+ * The zone a piece belongs to in the Algorithmic placement (AlgoPlacement.zoneOf): "indoor", "outdoor" or "garden"; null for a piece the library does not
+ * have. Exported with the piece (diagram_zone) for Revit's zoning diagram, which otherwise goes by the piece's name and kind.
+ */
+function diagramZoneOf(item) {
+  const sp = algoSportOf(item);
+  return sp && typeof AlgoPlacement !== "undefined" && typeof AlgoPlacement.zoneOf === "function" ? AlgoPlacement.zoneOf(sp.name) : null;
+}
+
+/**
+ * The colour a piece has in the Algorithmic placement's plan (the packing library's own colour for it, algoPlacementCore.js SPORTS), as "#rrggbb", or null.
+ * Found by the piece's name, else by what it is (its activity, garden block or sport); a piece the library does not have gets null, and Revit's diagrams
+ * give it the colour of its kind. Exported with the piece (diagram_color) so the diagrams in Revit look like this plan.
+ */
+function diagramColorOf(item) {
+  const sp = algoSportOf(item);
   if (!sp || !Array.isArray(sp.color) || sp.color.length < 3) return null;
   return "#" + sp.color.slice(0, 3).map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
 }

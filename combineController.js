@@ -452,7 +452,9 @@ function buildCombinedPayload() {
 
       // The colour the Algorithmic placement's plan gives this piece (algoPlacementUI.js diagramColorOf): Revit's diagrams draw the plan in the same
       // style (SportifyDiagramViews), a little less saturated. Null when the piece has none there.
-      diagram_color: typeof diagramColorOf === "function" ? diagramColorOf(item) : null
+      diagram_color: typeof diagramColorOf === "function" ? diagramColorOf(item) : null,
+      // Its zone there (indoor / outdoor / garden, algoPlacementUI.js diagramZoneOf), for Revit's zoning diagram. Null when the library does not have it.
+      diagram_zone: typeof diagramZoneOf === "function" ? diagramZoneOf(item) : null
     };
   });
 
