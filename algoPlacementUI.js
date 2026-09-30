@@ -1229,16 +1229,43 @@ function algoCatalogueSource(name, sp) {
     activity: Object.assign({ type_id: cat.id, category: a ? a.category : "court", norm: a ? a.norm : "", dimensions: { length_m: sp.long, width_m: sp.short } },
       algoTierOf(name) && a && a.variants ? { variant: algoTierOf(name), norm: a.variants[algoTierOf(name)].norm } : {}),
     materials: { surface: mat.surface, structure: mat.structure, quality_level: quality, reference_material: null, reference_provider: null },
-    // what the Sport tab's own push carries for a module-sized activity, so Revit gets the same settings (sportController.js buildActivityPayload)
-    ping_pong: cat.id === "ping_pong" && typeof pingPongPlacementPayload === "function" ? pingPongPlacementPayload() : undefined,
-    // ... and for a specified court or rig: without these Revit's own builders (SportifyPadelCourtBuilder, the calisthenics / CrossFit rigs) never run and
-    // the piece arrives as a generated slab of its footprint (found 2026-09-29: the Goldbeck sports roof's padel court, placed here, was a flat box in Revit).
-    padel: cat.id === "padel_court" && typeof padelPlacementPayload === "function" ? padelPlacementPayload(algoPadelState(sp)) : undefined,
-    calisthenics: cat.id === "calisthenics" && typeof calisthenicsPayload === "function" ? calisthenicsPayload() : undefined,
-    crossfit: cat.id === "crossfit_rig" && typeof crossfitPayload === "function" ? crossfitPayload() : undefined,
-    familyInstance: cat.id === "climbing_tower" && typeof climbingTowerPayload === "function" ? climbingTowerPayload()
-      : (typeof isActivityFamily === "function" && isActivityFamily(cat.id) && typeof activityFamilyPayload === "function") ? activityFamilyPayload(cat.id) : undefined
+    ...activityLinksFor(cat.id, sp)
   };
+}
+
+/**
+ * What Revit needs to build an activity as its real family or rig instead of a generated slab of its footprint: what the Sport tab's own push carries
+ * for a module-sized activity (sportController.js buildActivityPayload), a specified court's or rig's settings (without them SportifyPadelCourtBuilder
+ * and the calisthenics / CrossFit rigs never run: found 2026-09-29, the Goldbeck sports roof's padel court was a flat box in Revit), and a design team
+ * family's parameters (the climbing tower, activityFamilies.js). `sp` = the packing library's entry, for the padel court's width. Keys that do not
+ * apply are undefined (JSON leaves them out).
+ */
+function activityLinksFor(typeId, sp) {
+  return {
+    ping_pong: typeId === "ping_pong" && typeof pingPongPlacementPayload === "function" ? pingPongPlacementPayload() : undefined,
+    padel: typeId === "padel_court" && typeof padelPlacementPayload === "function" ? padelPlacementPayload(algoPadelState(sp)) : undefined,
+    calisthenics: typeId === "calisthenics" && typeof calisthenicsPayload === "function" ? calisthenicsPayload() : undefined,
+    crossfit: typeId === "crossfit_rig" && typeof crossfitPayload === "function" ? crossfitPayload() : undefined,
+    familyInstance: typeId === "climbing_tower" && typeof climbingTowerPayload === "function" ? climbingTowerPayload()
+      : (typeof isActivityFamily === "function" && isActivityFamily(typeId) && typeof activityFamilyPayload === "function") ? activityFamilyPayload(typeId) : undefined
+  };
+}
+
+/**
+ * A placed activity's parameters with the links above added where they are missing, for everything sent to Revit (the export, Sync with Revit, the
+ * iterations): a session saved or exported by an older build reaches Revit linked like a piece placed today (found 2026-09-30: the team's export
+ * "sportify_combined_revit (6)" had its trampoline without the "Trampoline-SandPit" family, so Revit built a generated box). What a piece already
+ * carries is never replaced. `item` (optional) = its board piece, for the packing library's entry.
+ */
+function withActivityLinks(params, item) {
+  const typeId = params && params.activity && params.activity.type_id;
+  if (!typeId) return params;
+  const links = activityLinksFor(typeId, item ? algoSportOf(item) : null);
+  const missing = Object.keys(links).filter(k => links[k] !== undefined && params[k] == null);
+  if (!missing.length) return params;
+  const out = Object.assign({}, params);
+  for (const k of missing) out[k] = links[k];
+  return out;
 }
 
 /** The packing library's entry for a piece (algoPlacementCore.js SPORTS): by the piece's name, else by what it is (its activity, garden block or sport); or null. */

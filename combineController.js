@@ -447,8 +447,8 @@ function buildCombinedPayload() {
         rotation_deg: item.rotation
       },
 
-      // Deep parameters mapped from the sidebars
-      parameters: item.sourceJson,
+      // Deep parameters mapped from the sidebars, with any family / rig link an older session left out (algoPlacementUI.js withActivityLinks)
+      parameters: typeof withActivityLinks === "function" ? withActivityLinks(item.sourceJson, item) : item.sourceJson,
 
       // The colour the Algorithmic placement's plan gives this piece (algoPlacementUI.js diagramColorOf): Revit's diagrams draw the plan in the same
       // style (SportifyDiagramViews), a little less saturated. Null when the piece has none there.

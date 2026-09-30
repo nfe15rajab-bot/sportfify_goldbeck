@@ -253,6 +253,13 @@ function acceptPrimaryIteration(primary) {
  * Options (DesignOption only exposes a getter for the active one), so "Import Iterations as Design Options" there builds each into its own workset
  * instead, switchable like options would be. Best-effort like the rest of the Revit bridge: Revit not running just means a toast, not an error.
  */
+/** A saved iteration as Revit gets it: its pieces with any family / rig link the build that saved it did not add yet (algoPlacementUI.js withActivityLinks). */
+function iterationWithLinks(c) {
+  const placements = c && c.payload && Array.isArray(c.payload.placements) ? c.payload.placements : null;
+  if (!placements || typeof withActivityLinks !== "function") return c;
+  return Object.assign({}, c, { payload: Object.assign({}, c.payload, { placements: placements.map(p => Object.assign({}, p, { parameters: withActivityLinks(p.parameters) })) }) });
+}
+
 async function sendIterationsToRevit() {
   const btn = document.getElementById("btn-send-iterations-revit");
   if (savedCompareConfigs.length === 0) return;
@@ -261,7 +268,7 @@ async function sendIterationsToRevit() {
     const res = await localFetch("/iterations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(savedCompareConfigs),
+      body: JSON.stringify(savedCompareConfigs.map(iterationWithLinks)),
     });
     if (!res.ok) throw new Error("the add-in refused the request");
     showToast("Sent to Revit", `${savedCompareConfigs.length} iteration${savedCompareConfigs.length === 1 ? "" : "s"} sent — in Revit, edit a design option and run "Import Iterations as Design Options" to put one into it (once per option); from the Main Model it builds them all on worksets instead.`);

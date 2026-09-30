@@ -32,12 +32,17 @@ function goldbeckCloneRealPayload(payload) {
   return typeof structuredClone === "function" ? structuredClone(payload) : JSON.parse(JSON.stringify(payload));
 }
 
-/** Roof 2 — E9, the lower of the top two slabs: the team's sports layout (export "sportify_combined_revit (6)", 2026-09-30) without the TRX frame
- *  (removed from Sportify 2026-09-29), with the right-hand doors on the two ramp arrivals Revit reports. */
+/** Roof 2 — E9, the lower of the top two slabs: the team's sports layout (export "sportify_combined_revit (6)", 2026-09-30) mirrored so the Locker and
+ *  Bathroom stand in the right-hand corner by the ramps (user, 2026-09-30), put on the ACTUAL roof of the Submission model (its E9 push: top 12.481 m,
+ *  40 grid lines, 70 columns, 27 beams, 5 ramp entries; her file came from another copy with the roof at 0 m, so Revit built it on the ground), and
+ *  where her file and our work differ ours wins (our planner rules). The TRX frame stays out (2026-09-29). A plain mirror put the Trampoline in the
+ *  left notch's setback (the notches differ, 13.5 m vs 10.8 m): it stands in the gap between the HIIT turf (0.5 m left) and the Ping Pong tables
+ *  (0.5 m right) instead. The doors stay on Revit's stair core and ramps. Re-exported by the app itself (build goldbeck-mirrored-2), so every piece
+ *  carries today's links: the Trampoline its "Trampoline-SandPit" family. */
 const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
   "version": "1.3",
   "generator": "Sportify-Combine",
-  "build": "2026-09-29-sporttabdraw",
+  "build": "2026-09-30-goldbeck-mirrored-2",
   "roof_context": {
     "length_m": 67.5,
     "width_m": 16.28,
@@ -94,11 +99,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       }
     ],
     "world_origin_x_m": 0.109,
-    "world_origin_y_m": 16.279,
+    "world_origin_y_m": 16.28,
     "rotation_deg": 0,
-    "world_origin_z_m": 0,
-    "height_above_ground_m": 12.51,
-    "height_source": "level \"E0 TP\" (nearest the project zero; no ground floor by name)",
+    "world_origin_z_m": 12.481,
+    "height_above_ground_m": 12.48,
+    "height_source": "level \"Basisebene\" (nearest the project zero; no ground floor by name)",
     "features": {
       "source": "revit",
       "notes": [],
@@ -107,12 +112,52 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         {
           "id": "ramp_1",
           "kind": "ramp",
-          "name": "Geschosshöhe-2750_Rampenträger-HEA200:16791278 1 : Parkhäuser_Rampe_Splitlevel:Geschosshöhe-2750_Rampenträger-HEA200:16791278 1",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 7",
+          "x_m": 58.86,
+          "y_m": 12.55,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2520305
+        },
+        {
+          "id": "ramp_2",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 5",
+          "x_m": 58.86,
+          "y_m": 16.31,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2520299
+        },
+        {
+          "id": "ramp_3",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278",
           "x_m": 60.75,
-          "y_m": 16.69,
+          "y_m": 17.01,
           "width_m": 0,
           "on_roof": false,
-          "source_element_id": 334750
+          "source_element_id": 2520296
+        },
+        {
+          "id": "ramp_4",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 6",
+          "x_m": 62.64,
+          "y_m": 12.55,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2520308
+        },
+        {
+          "id": "ramp_5",
+          "kind": "ramp",
+          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 4",
+          "x_m": 62.64,
+          "y_m": 16.31,
+          "width_m": 0,
+          "on_roof": true,
+          "source_element_id": 2520302
         }
       ],
       "edges": [
@@ -175,9 +220,9 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           },
           "end_m": {
             "x_m": 0,
-            "y_m": 11.87
+            "y_m": 11.88
           },
-          "length_m": 11.87,
+          "length_m": 11.88,
           "kind": "open",
           "height_m": 0,
           "thickness_m": 0,
@@ -188,11 +233,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "index": 4,
           "start_m": {
             "x_m": 0,
-            "y_m": 11.87
+            "y_m": 11.88
           },
           "end_m": {
             "x_m": 5.4,
-            "y_m": 11.87
+            "y_m": 11.88
           },
           "length_m": 5.4,
           "kind": "open",
@@ -205,13 +250,13 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "index": 5,
           "start_m": {
             "x_m": 5.4,
-            "y_m": 11.87
+            "y_m": 11.88
           },
           "end_m": {
             "x_m": 5.4,
             "y_m": 11.28
           },
-          "length_m": 0.6,
+          "length_m": 0.59,
           "kind": "open",
           "height_m": 0,
           "thickness_m": 0,
@@ -339,13 +384,13 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "is_roof_level": false
         },
         {
-          "name": "E0 TP",
+          "name": "Basisebene",
           "elevation_m": 0,
           "above_ground_m": 0,
           "is_roof_level": false
         },
         {
-          "name": "Basisebene",
+          "name": "E0 TP",
           "elevation_m": 0,
           "above_ground_m": 0,
           "is_roof_level": false
@@ -422,29 +467,29 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
   "design_rules": {
     "clearance_m": 1,
     "boundary_setback_m": 1.5,
-    "circulation_width_m": 1.5,
+    "circulation_width_m": 1.2,
     "min_entry_points": 1,
     "quiet_buffer_m": 3
   },
   "entry_points": [
     {
       "x_m": 2.5,
-      "y_m": 11.87,
+      "y_m": 11.870000000000001,
       "edge": "bottom"
     },
     {
       "x_m": 9.4,
-      "y_m": 11.28,
+      "y_m": 11.280000000000001,
       "edge": "bottom"
     },
     {
       "x_m": 58.86,
-      "y_m": 11.28,
+      "y_m": 11.280000000000001,
       "edge": "bottom"
     },
     {
       "x_m": 62.64,
-      "y_m": 11.28,
+      "y_m": 11.280000000000001,
       "edge": "bottom"
     }
   ],
@@ -453,11 +498,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_0",
       "points_m": [
         {
-          "x_m": 2.5,
-          "y_m": 9.3
+          "x_m": 56.7,
+          "y_m": 8.700000000000001
         },
         {
-          "x_m": 2.5,
+          "x_m": 56.6,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 56.6,
           "y_m": 6
         }
       ]
@@ -466,15 +515,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_1",
       "points_m": [
         {
-          "x_m": 11.600000000000001,
+          "x_m": 56.7,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 2.5
         }
       ]
@@ -483,49 +532,33 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_2",
       "points_m": [
         {
-          "x_m": 11.600000000000001,
+          "x_m": 56.7,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
-          "y_m": 11.600000000000001
-        },
-        {
-          "x_m": 41.300000000000004,
-          "y_m": 11.600000000000001
-        },
-        {
-          "x_m": 41.300000000000004,
+          "x_m": 46.5,
           "y_m": 2.5
         }
       ]
     },
     {
-      "item_id": "algo_1790783658370_3",
+      "item_id": "algo_1790783658370_4",
       "points_m": [
         {
           "x_m": 11.600000000000001,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 15.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
-          "y_m": 11.600000000000001
-        },
-        {
-          "x_m": 41.300000000000004,
-          "y_m": 11.600000000000001
-        },
-        {
-          "x_m": 41.300000000000004,
-          "y_m": 2.5
+          "x_m": 15.5,
+          "y_m": 6.5
         }
       ]
     },
@@ -533,24 +566,24 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_5",
       "points_m": [
         {
-          "x_m": 11.600000000000001,
+          "x_m": 56.7,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 11.600000000000001
         },
         {
-          "x_m": 41.300000000000004,
+          "x_m": 26.200000000000003,
           "y_m": 11.600000000000001
         },
         {
-          "x_m": 41.300000000000004,
-          "y_m": 9.700000000000001
+          "x_m": 26.200000000000003,
+          "y_m": 10.100000000000001
         }
       ]
     },
@@ -558,15 +591,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_7",
       "points_m": [
         {
-          "x_m": 58.5,
-          "y_m": 8.700000000000001
+          "x_m": 2.5,
+          "y_m": 9.3
         },
         {
-          "x_m": 57,
-          "y_m": 8.700000000000001
-        },
-        {
-          "x_m": 57,
+          "x_m": 2.5,
           "y_m": 7.5
         }
       ]
@@ -575,16 +604,12 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_8",
       "points_m": [
         {
-          "x_m": 58.5,
+          "x_m": 10.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 52.5,
-          "y_m": 8.700000000000001
-        },
-        {
-          "x_m": 52.5,
-          "y_m": 9.600000000000001
+          "x_m": 10.5,
+          "y_m": 6.5
         }
       ]
     },
@@ -592,15 +617,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_9",
       "points_m": [
         {
-          "x_m": 11.600000000000001,
+          "x_m": 56.7,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 11.4
         }
       ]
@@ -609,23 +634,23 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_10",
       "points_m": [
         {
-          "x_m": 11.600000000000001,
+          "x_m": 56.7,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 11.600000000000001
         },
         {
-          "x_m": 41.300000000000004,
+          "x_m": 40.2,
           "y_m": 11.600000000000001
         },
         {
-          "x_m": 41.300000000000004,
+          "x_m": 40.2,
           "y_m": 11.700000000000001
         }
       ]
@@ -634,15 +659,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "item_id": "algo_1790783658370_11",
       "points_m": [
         {
-          "x_m": 11.600000000000001,
+          "x_m": 56.7,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 8.700000000000001
         },
         {
-          "x_m": 21,
+          "x_m": 46.5,
           "y_m": 8.9
         }
       ]
@@ -753,104 +778,104 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "zone",
         "id": "zone_algo_1790783658370_0",
-        "x_m": 20,
+        "x_m": 0,
         "y_m": 0,
         "length_m": 47.5,
         "width_m": 1.5,
         "points": [
           {
-            "x_m": 20,
-            "y_m": 0
-          },
-          {
-            "x_m": 67.5,
-            "y_m": 0
-          },
-          {
-            "x_m": 67.5,
+            "x_m": 47.5,
             "y_m": 1.5
           },
           {
-            "x_m": 20,
+            "x_m": 0,
             "y_m": 1.5
+          },
+          {
+            "x_m": 0,
+            "y_m": 0
+          },
+          {
+            "x_m": 47.5,
+            "y_m": 0
           }
         ]
       },
       {
         "source": "zone",
         "id": "zone_algo_1790783658370_1",
-        "x_m": 66,
+        "x_m": 0,
         "y_m": 1.5,
         "length_m": 1.5,
         "width_m": 8.2,
         "points": [
           {
-            "x_m": 66,
-            "y_m": 1.5
-          },
-          {
-            "x_m": 67.5,
-            "y_m": 1.5
-          },
-          {
-            "x_m": 67.5,
+            "x_m": 1.5,
             "y_m": 9.7
           },
           {
-            "x_m": 66,
+            "x_m": 0,
             "y_m": 9.7
+          },
+          {
+            "x_m": 0,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 1.5
           }
         ]
       },
       {
         "source": "zone",
         "id": "zone_algo_1790783658370_2",
-        "x_m": 0,
+        "x_m": 66,
         "y_m": 7,
         "length_m": 1.5,
         "width_m": 3.3000000000000007,
         "points": [
           {
-            "x_m": 0,
-            "y_m": 7
-          },
-          {
-            "x_m": 1.5,
-            "y_m": 7
-          },
-          {
-            "x_m": 1.5,
+            "x_m": 67.5,
             "y_m": 10.3
           },
           {
-            "x_m": 0,
+            "x_m": 66,
             "y_m": 10.3
+          },
+          {
+            "x_m": 66,
+            "y_m": 7
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 7
           }
         ]
       },
       {
         "source": "zone",
         "id": "zone_algo_1790783658370_3",
-        "x_m": 66.3,
+        "x_m": 0,
         "y_m": 9.78,
-        "length_m": 1.2000000000000028,
+        "length_m": 1.2,
         "width_m": 1.42,
         "points": [
           {
-            "x_m": 66.3,
-            "y_m": 9.78
-          },
-          {
-            "x_m": 67.5,
-            "y_m": 9.78
-          },
-          {
-            "x_m": 67.5,
+            "x_m": 1.2,
             "y_m": 11.2
           },
           {
-            "x_m": 66.3,
+            "x_m": 0,
             "y_m": 11.2
+          },
+          {
+            "x_m": 0,
+            "y_m": 9.78
+          },
+          {
+            "x_m": 1.2,
+            "y_m": 9.78
           }
         ]
       },
@@ -883,33 +908,33 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "zone",
         "id": "zone_algo_1790783658370_5",
-        "x_m": 15,
+        "x_m": 51.4,
         "y_m": 9.7,
         "length_m": 1.1000000000000014,
         "width_m": 5,
         "points": [
           {
-            "x_m": 15,
-            "y_m": 9.7
-          },
-          {
-            "x_m": 16.1,
-            "y_m": 9.7
-          },
-          {
-            "x_m": 16.1,
+            "x_m": 52.5,
             "y_m": 14.7
           },
           {
-            "x_m": 15,
+            "x_m": 51.4,
             "y_m": 14.7
+          },
+          {
+            "x_m": 51.4,
+            "y_m": 9.7
+          },
+          {
+            "x_m": 52.5,
+            "y_m": 9.7
           }
         ]
       },
       {
         "source": "piece",
         "id": "algo_1790783658370_0",
-        "x_m": 0,
+        "x_m": 57.5,
         "y_m": 0,
         "length_m": 10,
         "width_m": 5
@@ -917,7 +942,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_1",
-        "x_m": 10,
+        "x_m": 47.5,
         "y_m": 0,
         "length_m": 10,
         "width_m": 5
@@ -925,7 +950,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_2",
-        "x_m": 22,
+        "x_m": 27.21,
         "y_m": 1.5,
         "length_m": 18.29,
         "width_m": 9.14
@@ -933,7 +958,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_3",
-        "x_m": 42.3,
+        "x_m": 21.1,
         "y_m": 1.5,
         "length_m": 4.6,
         "width_m": 7.6
@@ -941,7 +966,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_4",
-        "x_m": 46.9,
+        "x_m": 16.5,
         "y_m": 1.5,
         "length_m": 4.6,
         "width_m": 7.6
@@ -949,7 +974,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_5",
-        "x_m": 42.3,
+        "x_m": 19.2,
         "y_m": 10.6,
         "length_m": 6,
         "width_m": 4
@@ -957,7 +982,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_7",
-        "x_m": 57.5,
+        "x_m": 1.5,
         "y_m": 1.5,
         "length_m": 8,
         "width_m": 5
@@ -965,15 +990,15 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_8",
-        "x_m": 49.8,
-        "y_m": 10.6,
+        "x_m": 11,
+        "y_m": 1.5,
         "length_m": 4,
         "width_m": 4
       },
       {
         "source": "piece",
         "id": "algo_1790783658370_9",
-        "x_m": 17.6,
+        "x_m": 47.5,
         "y_m": 12.3,
         "length_m": 2.4,
         "width_m": 2.4
@@ -981,7 +1006,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_10",
-        "x_m": 28.3,
+        "x_m": 27.2,
         "y_m": 12.6,
         "length_m": 12,
         "width_m": 1.5
@@ -989,7 +1014,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       {
         "source": "piece",
         "id": "algo_1790783658370_11",
-        "x_m": 17.6,
+        "x_m": 47.5,
         "y_m": 9.8,
         "length_m": 2.4,
         "width_m": 1
@@ -1002,27 +1027,27 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "kind": "green_roof",
       "label": "Green roof",
       "bounding_box": {
-        "top_left_x_m": 20,
+        "top_left_x_m": 0,
         "top_left_y_m": 0,
         "width_m": 47.5,
         "height_m": 1.5
       },
       "points": [
         {
-          "x_m": 20,
-          "y_m": 0
-        },
-        {
-          "x_m": 67.5,
-          "y_m": 0
-        },
-        {
-          "x_m": 67.5,
+          "x_m": 47.5,
           "y_m": 1.5
         },
         {
-          "x_m": 20,
+          "x_m": 0,
           "y_m": 1.5
+        },
+        {
+          "x_m": 0,
+          "y_m": 0
+        },
+        {
+          "x_m": 47.5,
+          "y_m": 0
         }
       ],
       "area_m2": 71.25,
@@ -1080,30 +1105,30 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "kind": "green_roof",
       "label": "Green roof",
       "bounding_box": {
-        "top_left_x_m": 66,
+        "top_left_x_m": 0,
         "top_left_y_m": 1.5,
         "width_m": 1.5,
         "height_m": 8.2
       },
       "points": [
         {
-          "x_m": 66,
-          "y_m": 1.5
-        },
-        {
-          "x_m": 67.5,
-          "y_m": 1.5
-        },
-        {
-          "x_m": 67.5,
+          "x_m": 1.5,
           "y_m": 9.7
         },
         {
-          "x_m": 66,
+          "x_m": 0,
           "y_m": 9.7
+        },
+        {
+          "x_m": 0,
+          "y_m": 1.5
+        },
+        {
+          "x_m": 1.5,
+          "y_m": 1.5
         }
       ],
-      "area_m2": 12.300000000000068,
+      "area_m2": 12.299999999999999,
       "assembly_key": "bauder_extensive_sedum",
       "family": {
         "key": "green_roof_module",
@@ -1158,30 +1183,30 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "kind": "green_roof",
       "label": "Green roof",
       "bounding_box": {
-        "top_left_x_m": 0,
+        "top_left_x_m": 66,
         "top_left_y_m": 7,
         "width_m": 1.5,
         "height_m": 3.3000000000000007
       },
       "points": [
         {
-          "x_m": 0,
-          "y_m": 7
-        },
-        {
-          "x_m": 1.5,
-          "y_m": 7
-        },
-        {
-          "x_m": 1.5,
+          "x_m": 67.5,
           "y_m": 10.3
         },
         {
-          "x_m": 0,
+          "x_m": 66,
           "y_m": 10.3
+        },
+        {
+          "x_m": 66,
+          "y_m": 7
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 7
         }
       ],
-      "area_m2": 4.950000000000001,
+      "area_m2": 4.949999999999932,
       "assembly_key": "bauder_extensive_sedum",
       "family": {
         "key": "green_roof_module",
@@ -1236,30 +1261,30 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "kind": "green_roof",
       "label": "Green roof",
       "bounding_box": {
-        "top_left_x_m": 66.3,
+        "top_left_x_m": 0,
         "top_left_y_m": 9.78,
-        "width_m": 1.2000000000000028,
+        "width_m": 1.2,
         "height_m": 1.42
       },
       "points": [
         {
-          "x_m": 66.3,
-          "y_m": 9.78
-        },
-        {
-          "x_m": 67.5,
-          "y_m": 9.78
-        },
-        {
-          "x_m": 67.5,
+          "x_m": 1.2,
           "y_m": 11.2
         },
         {
-          "x_m": 66.3,
+          "x_m": 0,
           "y_m": 11.2
+        },
+        {
+          "x_m": 0,
+          "y_m": 9.78
+        },
+        {
+          "x_m": 1.2,
+          "y_m": 9.78
         }
       ],
-      "area_m2": 1.7039999999999509,
+      "area_m2": 1.7040000000000006,
       "assembly_key": "bauder_extensive_sedum",
       "family": {
         "key": "green_roof_module",
@@ -1392,30 +1417,30 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "kind": "green_roof",
       "label": "Green roof",
       "bounding_box": {
-        "top_left_x_m": 15,
+        "top_left_x_m": 51.4,
         "top_left_y_m": 9.7,
         "width_m": 1.1000000000000014,
         "height_m": 5
       },
       "points": [
         {
-          "x_m": 15,
-          "y_m": 9.7
-        },
-        {
-          "x_m": 16.1,
-          "y_m": 9.7
-        },
-        {
-          "x_m": 16.1,
+          "x_m": 52.5,
           "y_m": 14.7
         },
         {
-          "x_m": 15,
+          "x_m": 51.4,
           "y_m": 14.7
+        },
+        {
+          "x_m": 51.4,
+          "y_m": 9.7
+        },
+        {
+          "x_m": 52.5,
+          "y_m": 9.7
         }
       ],
-      "area_m2": 5.5,
+      "area_m2": 5.500000000000057,
       "assembly_key": "bauder_extensive_sedum",
       "family": {
         "key": "green_roof_module",
@@ -1480,40 +1505,40 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "thickness_m": 0.3,
       "rects_m": [
         [
+          47.35,
           0,
-          0,
-          20.15,
+          67.5,
           0.15
         ],
         [
-          0,
+          58,
           6.85,
-          9.5,
+          67.5,
           7.15
         ],
         [
-          10.5,
+          47.35,
           6.85,
-          20.15,
+          57,
           7.15
         ],
         [
-          0,
+          67.35,
           0.15,
-          0.15,
+          67.5,
           6.85
         ],
         [
-          19.85,
+          47.35,
           0.15,
-          20.15,
+          47.65,
           6.85
         ]
       ],
       "door": {
-        "x0": 9.5,
+        "x0": 57,
         "y0": 6.85,
-        "x1": 10.5,
+        "x1": 58,
         "y1": 7.15,
         "side": "S"
       }
@@ -1528,51 +1553,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "1",
         "start_m": {
           "x_m": -0.109,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": -0.109,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "1",
-        "start_m": {
-          "x_m": -0.109,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": -0.109,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "1",
-        "start_m": {
-          "x_m": -0.109,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": -0.109,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "1",
-        "start_m": {
-          "x_m": -0.109,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": -0.109,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "1",
-        "start_m": {
-          "x_m": -0.109,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": -0.109,
@@ -1583,51 +1564,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "10",
         "start_m": {
           "x_m": 24.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 24.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "10",
-        "start_m": {
-          "x_m": 24.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 24.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "10",
-        "start_m": {
-          "x_m": 24.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 24.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "10",
-        "start_m": {
-          "x_m": 24.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 24.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "10",
-        "start_m": {
-          "x_m": 24.3,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 24.3,
@@ -1638,51 +1575,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "11",
         "start_m": {
           "x_m": 27,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 27,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "11",
-        "start_m": {
-          "x_m": 27,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 27,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "11",
-        "start_m": {
-          "x_m": 27,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 27,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "11",
-        "start_m": {
-          "x_m": 27,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 27,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "11",
-        "start_m": {
-          "x_m": 27,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 27,
@@ -1693,51 +1586,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "12",
         "start_m": {
           "x_m": 29.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 29.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "12",
-        "start_m": {
-          "x_m": 29.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 29.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "12",
-        "start_m": {
-          "x_m": 29.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 29.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "12",
-        "start_m": {
-          "x_m": 29.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 29.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "12",
-        "start_m": {
-          "x_m": 29.7,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 29.7,
@@ -1748,51 +1597,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "13",
         "start_m": {
           "x_m": 32.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 32.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "13",
-        "start_m": {
-          "x_m": 32.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 32.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "13",
-        "start_m": {
-          "x_m": 32.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 32.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "13",
-        "start_m": {
-          "x_m": 32.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 32.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "13",
-        "start_m": {
-          "x_m": 32.4,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 32.4,
@@ -1803,51 +1608,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "14",
         "start_m": {
           "x_m": 35.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 35.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "14",
-        "start_m": {
-          "x_m": 35.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 35.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "14",
-        "start_m": {
-          "x_m": 35.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 35.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "14",
-        "start_m": {
-          "x_m": 35.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 35.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "14",
-        "start_m": {
-          "x_m": 35.1,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 35.1,
@@ -1858,51 +1619,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "15",
         "start_m": {
           "x_m": 37.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 37.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "15",
-        "start_m": {
-          "x_m": 37.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 37.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "15",
-        "start_m": {
-          "x_m": 37.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 37.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "15",
-        "start_m": {
-          "x_m": 37.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 37.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "15",
-        "start_m": {
-          "x_m": 37.8,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 37.8,
@@ -1913,51 +1630,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "16",
         "start_m": {
           "x_m": 40.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 40.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "16",
-        "start_m": {
-          "x_m": 40.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 40.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "16",
-        "start_m": {
-          "x_m": 40.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 40.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "16",
-        "start_m": {
-          "x_m": 40.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 40.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "16",
-        "start_m": {
-          "x_m": 40.5,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 40.5,
@@ -1968,51 +1641,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "17",
         "start_m": {
           "x_m": 43.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 43.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "17",
-        "start_m": {
-          "x_m": 43.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 43.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "17",
-        "start_m": {
-          "x_m": 43.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 43.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "17",
-        "start_m": {
-          "x_m": 43.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 43.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "17",
-        "start_m": {
-          "x_m": 43.2,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 43.2,
@@ -2023,51 +1652,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "18",
         "start_m": {
           "x_m": 45.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 45.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "18",
-        "start_m": {
-          "x_m": 45.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 45.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "18",
-        "start_m": {
-          "x_m": 45.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 45.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "18",
-        "start_m": {
-          "x_m": 45.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 45.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "18",
-        "start_m": {
-          "x_m": 45.9,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 45.9,
@@ -2078,51 +1663,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "19",
         "start_m": {
           "x_m": 48.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 48.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "19",
-        "start_m": {
-          "x_m": 48.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 48.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "19",
-        "start_m": {
-          "x_m": 48.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 48.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "19",
-        "start_m": {
-          "x_m": 48.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 48.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "19",
-        "start_m": {
-          "x_m": 48.6,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 48.6,
@@ -2133,51 +1674,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "2",
         "start_m": {
           "x_m": 2.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 2.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "2",
-        "start_m": {
-          "x_m": 2.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 2.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "2",
-        "start_m": {
-          "x_m": 2.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 2.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "2",
-        "start_m": {
-          "x_m": 2.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 2.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "2",
-        "start_m": {
-          "x_m": 2.7,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 2.7,
@@ -2188,51 +1685,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "20",
         "start_m": {
           "x_m": 51.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 51.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "20",
-        "start_m": {
-          "x_m": 51.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 51.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "20",
-        "start_m": {
-          "x_m": 51.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 51.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "20",
-        "start_m": {
-          "x_m": 51.3,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 51.3,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "20",
-        "start_m": {
-          "x_m": 51.3,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 51.3,
@@ -2243,51 +1696,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "21",
         "start_m": {
           "x_m": 54,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 54,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "21",
-        "start_m": {
-          "x_m": 54,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 54,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "21",
-        "start_m": {
-          "x_m": 54,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 54,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "21",
-        "start_m": {
-          "x_m": 54,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 54,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "21",
-        "start_m": {
-          "x_m": 54,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 54,
@@ -2298,51 +1707,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "22",
         "start_m": {
           "x_m": 56.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "22",
-        "start_m": {
-          "x_m": 56.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "22",
-        "start_m": {
-          "x_m": 56.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "22",
-        "start_m": {
-          "x_m": 56.7,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.7,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "22",
-        "start_m": {
-          "x_m": 56.7,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 56.7,
@@ -2353,51 +1718,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "22'",
         "start_m": {
           "x_m": 56.833,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.833,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "22'",
-        "start_m": {
-          "x_m": 56.833,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.833,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "22'",
-        "start_m": {
-          "x_m": 56.833,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.833,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "22'",
-        "start_m": {
-          "x_m": 56.833,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 56.833,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "22'",
-        "start_m": {
-          "x_m": 56.833,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 56.833,
@@ -2408,51 +1729,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "23",
         "start_m": {
           "x_m": 59.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 59.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "23",
-        "start_m": {
-          "x_m": 59.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 59.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "23",
-        "start_m": {
-          "x_m": 59.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 59.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "23",
-        "start_m": {
-          "x_m": 59.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 59.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "23",
-        "start_m": {
-          "x_m": 59.4,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 59.4,
@@ -2463,51 +1740,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "24",
         "start_m": {
           "x_m": 62.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 62.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "24",
-        "start_m": {
-          "x_m": 62.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 62.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "24",
-        "start_m": {
-          "x_m": 62.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 62.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "24",
-        "start_m": {
-          "x_m": 62.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 62.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "24",
-        "start_m": {
-          "x_m": 62.1,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 62.1,
@@ -2518,51 +1751,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "24'",
         "start_m": {
           "x_m": 64.667,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.667,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "24'",
-        "start_m": {
-          "x_m": 64.667,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.667,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "24'",
-        "start_m": {
-          "x_m": 64.667,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.667,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "24'",
-        "start_m": {
-          "x_m": 64.667,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.667,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "24'",
-        "start_m": {
-          "x_m": 64.667,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 64.667,
@@ -2573,51 +1762,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "25",
         "start_m": {
           "x_m": 64.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "25",
-        "start_m": {
-          "x_m": 64.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "25",
-        "start_m": {
-          "x_m": 64.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "25",
-        "start_m": {
-          "x_m": 64.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 64.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "25",
-        "start_m": {
-          "x_m": 64.8,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 64.8,
@@ -2628,51 +1773,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "26",
         "start_m": {
           "x_m": 67.609,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 67.609,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "26",
-        "start_m": {
-          "x_m": 67.609,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 67.609,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "26",
-        "start_m": {
-          "x_m": 67.609,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 67.609,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "26",
-        "start_m": {
-          "x_m": 67.609,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 67.609,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "26",
-        "start_m": {
-          "x_m": 67.609,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 67.609,
@@ -2683,51 +1784,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "3",
         "start_m": {
           "x_m": 5.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "3",
-        "start_m": {
-          "x_m": 5.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "3",
-        "start_m": {
-          "x_m": 5.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "3",
-        "start_m": {
-          "x_m": 5.4,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.4,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "3",
-        "start_m": {
-          "x_m": 5.4,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 5.4,
@@ -2738,51 +1795,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "3'",
         "start_m": {
           "x_m": 5.533,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.533,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "3'",
-        "start_m": {
-          "x_m": 5.533,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.533,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "3'",
-        "start_m": {
-          "x_m": 5.533,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.533,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "3'",
-        "start_m": {
-          "x_m": 5.533,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 5.533,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "3'",
-        "start_m": {
-          "x_m": 5.533,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 5.533,
@@ -2793,51 +1806,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "4",
         "start_m": {
           "x_m": 8.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 8.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "4",
-        "start_m": {
-          "x_m": 8.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 8.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "4",
-        "start_m": {
-          "x_m": 8.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 8.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "4",
-        "start_m": {
-          "x_m": 8.1,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 8.1,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "4",
-        "start_m": {
-          "x_m": 8.1,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 8.1,
@@ -2848,51 +1817,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "5",
         "start_m": {
           "x_m": 10.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 10.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "5",
-        "start_m": {
-          "x_m": 10.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 10.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "5",
-        "start_m": {
-          "x_m": 10.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 10.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "5",
-        "start_m": {
-          "x_m": 10.8,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 10.8,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "5",
-        "start_m": {
-          "x_m": 10.8,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 10.8,
@@ -2903,51 +1828,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "5'",
         "start_m": {
           "x_m": 13.367,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.367,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "5'",
-        "start_m": {
-          "x_m": 13.367,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.367,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "5'",
-        "start_m": {
-          "x_m": 13.367,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.367,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "5'",
-        "start_m": {
-          "x_m": 13.367,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.367,
-          "y_m": 10.78
-        }
-      },
-      {
-        "name": "5'",
-        "start_m": {
-          "x_m": 13.367,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 13.367,
@@ -2958,51 +1839,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "6",
         "start_m": {
           "x_m": 13.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "6",
-        "start_m": {
-          "x_m": 13.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "6",
-        "start_m": {
-          "x_m": 13.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "6",
-        "start_m": {
-          "x_m": 13.5,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 13.5,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "6",
-        "start_m": {
-          "x_m": 13.5,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 13.5,
@@ -3013,51 +1850,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "7",
         "start_m": {
           "x_m": 16.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 16.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "7",
-        "start_m": {
-          "x_m": 16.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 16.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "7",
-        "start_m": {
-          "x_m": 16.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 16.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "7",
-        "start_m": {
-          "x_m": 16.2,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 16.2,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "7",
-        "start_m": {
-          "x_m": 16.2,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 16.2,
@@ -3068,51 +1861,7 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "8",
         "start_m": {
           "x_m": 18.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 18.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "8",
-        "start_m": {
-          "x_m": 18.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 18.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "8",
-        "start_m": {
-          "x_m": 18.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 18.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "8",
-        "start_m": {
-          "x_m": 18.9,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 18.9,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "8",
-        "start_m": {
-          "x_m": 18.9,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 18.9,
@@ -3123,99 +1872,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "name": "9",
         "start_m": {
           "x_m": 21.6,
-          "y_m": 16.531
+          "y_m": 16.53
         },
         "end_m": {
           "x_m": 21.6,
           "y_m": -0.25
-        }
-      },
-      {
-        "name": "9",
-        "start_m": {
-          "x_m": 21.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 21.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "9",
-        "start_m": {
-          "x_m": 21.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 21.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "9",
-        "start_m": {
-          "x_m": 21.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 21.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "9",
-        "start_m": {
-          "x_m": 21.6,
-          "y_m": 16.531
-        },
-        "end_m": {
-          "x_m": 21.6,
-          "y_m": -0.25
-        }
-      },
-      {
-        "name": "H",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 16.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 16.28
-        }
-      },
-      {
-        "name": "H",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 16.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 16.28
-        }
-      },
-      {
-        "name": "H",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 16.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 16.28
-        }
-      },
-      {
-        "name": "H",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 16.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 16.28
         }
       },
       {
@@ -3241,50 +1902,6 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         }
       },
       {
-        "name": "I",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 13.78
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.78
-        }
-      },
-      {
-        "name": "I",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 13.78
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.78
-        }
-      },
-      {
-        "name": "I",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 13.78
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.78
-        }
-      },
-      {
-        "name": "I",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 13.78
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.78
-        }
-      },
-      {
         "name": "I'",
         "start_m": {
           "x_m": -0.25,
@@ -3293,94 +1910,6 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "end_m": {
           "x_m": 5.6,
           "y_m": 11.875
-        }
-      },
-      {
-        "name": "I'",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.875
-        },
-        "end_m": {
-          "x_m": 5.6,
-          "y_m": 11.875
-        }
-      },
-      {
-        "name": "I'",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.875
-        },
-        "end_m": {
-          "x_m": 5.6,
-          "y_m": 11.875
-        }
-      },
-      {
-        "name": "I'",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.875
-        },
-        "end_m": {
-          "x_m": 5.6,
-          "y_m": 11.875
-        }
-      },
-      {
-        "name": "I'",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.875
-        },
-        "end_m": {
-          "x_m": 5.6,
-          "y_m": 11.875
-        }
-      },
-      {
-        "name": "I''",
-        "start_m": {
-          "x_m": 64.6,
-          "y_m": 13.03
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.03
-        }
-      },
-      {
-        "name": "I''",
-        "start_m": {
-          "x_m": 64.6,
-          "y_m": 13.03
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.03
-        }
-      },
-      {
-        "name": "I''",
-        "start_m": {
-          "x_m": 64.6,
-          "y_m": 13.03
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.03
-        }
-      },
-      {
-        "name": "I''",
-        "start_m": {
-          "x_m": 64.6,
-          "y_m": 13.03
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 13.03
         }
       },
       {
@@ -3406,50 +1935,6 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         }
       },
       {
-        "name": "J",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 11.28
-        }
-      },
-      {
-        "name": "J",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 11.28
-        }
-      },
-      {
-        "name": "J",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 11.28
-        }
-      },
-      {
-        "name": "J",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 11.28
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 11.28
-        }
-      },
-      {
         "name": "K",
         "start_m": {
           "x_m": -0.25,
@@ -3458,94 +1943,6 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "end_m": {
           "x_m": 67.75,
           "y_m": 9.19
-        }
-      },
-      {
-        "name": "K",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 9.19
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 9.19
-        }
-      },
-      {
-        "name": "K",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 9.19
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 9.19
-        }
-      },
-      {
-        "name": "K",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 9.19
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 9.19
-        }
-      },
-      {
-        "name": "K",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 9.19
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 9.19
-        }
-      },
-      {
-        "name": "L",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 7.09
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 7.09
-        }
-      },
-      {
-        "name": "L",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 7.09
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 7.09
-        }
-      },
-      {
-        "name": "L",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 7.09
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 7.09
-        }
-      },
-      {
-        "name": "L",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 7.09
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 7.09
         }
       },
       {
@@ -3571,50 +1968,6 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         }
       },
       {
-        "name": "M",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 5
-        }
-      },
-      {
-        "name": "M",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 5
-        }
-      },
-      {
-        "name": "M",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 5
-        }
-      },
-      {
-        "name": "M",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 5
-        }
-      },
-      {
         "name": "N",
         "start_m": {
           "x_m": -0.25,
@@ -3623,94 +1976,6 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         "end_m": {
           "x_m": 67.75,
           "y_m": 2.5
-        }
-      },
-      {
-        "name": "N",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 2.5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 2.5
-        }
-      },
-      {
-        "name": "N",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 2.5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 2.5
-        }
-      },
-      {
-        "name": "N",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 2.5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 2.5
-        }
-      },
-      {
-        "name": "N",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 2.5
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 2.5
-        }
-      },
-      {
-        "name": "O",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 0
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 0
-        }
-      },
-      {
-        "name": "O",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 0
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 0
-        }
-      },
-      {
-        "name": "O",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 0
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 0
-        }
-      },
-      {
-        "name": "O",
-        "start_m": {
-          "x_m": -0.25,
-          "y_m": 0
-        },
-        "end_m": {
-          "x_m": 67.75,
-          "y_m": 0
         }
       },
       {
@@ -3727,366 +1992,740 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
     ],
     "columns": [
       {
-        "label": "",
+        "label": "16791945",
         "x_m": -0.109,
-        "y_m": 0
+        "y_m": -0.015
       },
       {
-        "label": "",
+        "label": "16791917",
         "x_m": -0.109,
         "y_m": 2.5
       },
       {
-        "label": "",
+        "label": "16791914",
         "x_m": -0.109,
         "y_m": 5
       },
       {
-        "label": "",
+        "label": "16791911",
         "x_m": -0.109,
         "y_m": 7.09
       },
       {
-        "label": "",
+        "label": "16791908",
         "x_m": -0.109,
         "y_m": 9.19
       },
       {
-        "label": "",
+        "label": "16791905",
         "x_m": -0.109,
         "y_m": 11.28
       },
       {
-        "label": "",
+        "label": "16792096",
         "x_m": -0.109,
         "y_m": 11.875
       },
       {
-        "label": "",
+        "label": "16791986",
         "x_m": 2.7,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16792120",
         "x_m": 2.7,
-        "y_m": 11.875
+        "y_m": 11.86
       },
       {
-        "label": "",
+        "label": "16791992",
         "x_m": 5.4,
         "y_m": 0
       },
       {
-        "label": "",
-        "x_m": 5.4,
+        "label": "16792108",
+        "x_m": 5.509,
         "y_m": 11.875
       },
       {
-        "label": "",
+        "label": "16791867",
         "x_m": 5.533,
         "y_m": 11.28
       },
       {
-        "label": "",
+        "label": "16791836",
         "x_m": 5.533,
         "y_m": 13.78
       },
       {
-        "label": "",
+        "label": "16791833",
         "x_m": 5.533,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16791996",
         "x_m": 8.1,
         "y_m": 0
       },
       {
-        "label": "",
-        "x_m": 8.1,
-        "y_m": 11.28
-      },
-      {
-        "label": "",
+        "label": "16792000",
         "x_m": 10.8,
         "y_m": 0
       },
       {
-        "label": "",
-        "x_m": 10.8,
-        "y_m": 11.28
-      },
-      {
-        "label": "",
+        "label": "16791873",
         "x_m": 13.367,
         "y_m": 11.28
       },
       {
-        "label": "",
+        "label": "16791845",
         "x_m": 13.367,
         "y_m": 13.78
       },
       {
-        "label": "",
+        "label": "16791842",
         "x_m": 13.367,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792004",
         "x_m": 13.5,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16792008",
         "x_m": 16.2,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791953",
         "x_m": 16.2,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792012",
         "x_m": 18.9,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791956",
         "x_m": 18.9,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792016",
         "x_m": 21.6,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791959",
         "x_m": 21.6,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792020",
         "x_m": 24.3,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791961",
         "x_m": 24.3,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792024",
         "x_m": 27,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791963",
         "x_m": 27,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792028",
         "x_m": 29.7,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791965",
         "x_m": 29.7,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792032",
         "x_m": 32.4,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791967",
         "x_m": 32.4,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792036",
         "x_m": 35.1,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16792089",
         "x_m": 35.1,
         "y_m": 11.28
       },
       {
-        "label": "",
+        "label": "16792087",
         "x_m": 35.1,
         "y_m": 13.78
       },
       {
-        "label": "",
+        "label": "16792092",
         "x_m": 35.1,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792040",
         "x_m": 37.8,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791969",
         "x_m": 37.8,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792044",
         "x_m": 40.5,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791971",
         "x_m": 40.5,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792048",
         "x_m": 43.2,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791973",
         "x_m": 43.2,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792052",
         "x_m": 45.9,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791975",
         "x_m": 45.9,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792056",
         "x_m": 48.6,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791977",
         "x_m": 48.6,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792060",
         "x_m": 51.3,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791979",
         "x_m": 51.3,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792064",
         "x_m": 54,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791981",
         "x_m": 54,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792068",
         "x_m": 56.7,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791877",
         "x_m": 56.833,
         "y_m": 11.28
       },
       {
-        "label": "",
+        "label": "16791852",
         "x_m": 56.833,
         "y_m": 13.78
       },
       {
-        "label": "",
+        "label": "16791850",
         "x_m": 56.833,
         "y_m": 16.28
       },
       {
-        "label": "",
+        "label": "16792072",
         "x_m": 59.4,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16792076",
         "x_m": 62.1,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791881",
         "x_m": 64.667,
         "y_m": 11.28
       },
       {
-        "label": "",
+        "label": "16791860",
         "x_m": 64.667,
         "y_m": 13.78
       },
       {
-        "label": "",
+        "label": "16791857",
         "x_m": 64.667,
         "y_m": 16.28
       },
       {
-        "label": "",
-        "x_m": 64.8,
-        "y_m": 0
-      },
-      {
-        "label": "",
-        "x_m": 64.8,
+        "label": "16792114",
+        "x_m": 64.691,
         "y_m": 13.03
       },
       {
-        "label": "",
-        "x_m": 67.609,
+        "label": "16792080",
+        "x_m": 64.8,
         "y_m": 0
       },
       {
-        "label": "",
+        "label": "16791951",
+        "x_m": 67.609,
+        "y_m": -0.015
+      },
+      {
+        "label": "16791941",
         "x_m": 67.609,
         "y_m": 2.5
       },
       {
-        "label": "",
+        "label": "16791939",
         "x_m": 67.609,
         "y_m": 5
       },
       {
-        "label": "",
+        "label": "16791937",
         "x_m": 67.609,
         "y_m": 7.09
       },
       {
-        "label": "",
+        "label": "16791935",
         "x_m": 67.609,
         "y_m": 9.19
       },
       {
-        "label": "",
+        "label": "16791933",
         "x_m": 67.609,
         "y_m": 11.28
       },
       {
-        "label": "",
+        "label": "16792102",
         "x_m": 67.609,
         "y_m": 13.03
       }
+    ],
+    "beams": [
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793607",
+        "start_m": {
+          "x_m": 0.004,
+          "y_m": 5.001
+        },
+        "end_m": {
+          "x_m": 0.004,
+          "y_m": -0.014
+        },
+        "width_m": 0.226,
+        "depth_m": 0.2,
+        "top_elevation_m": 12.462
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793604",
+        "start_m": {
+          "x_m": 0.004,
+          "y_m": 11.281
+        },
+        "end_m": {
+          "x_m": 0.004,
+          "y_m": 5
+        },
+        "width_m": 0.226,
+        "depth_m": 0.213,
+        "top_elevation_m": 12.525
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793601",
+        "start_m": {
+          "x_m": 0.004,
+          "y_m": 11.876
+        },
+        "end_m": {
+          "x_m": 0.004,
+          "y_m": 11.28
+        },
+        "width_m": 0.226,
+        "depth_m": 0.156,
+        "top_elevation_m": 12.531
+      },
+      {
+        "name": "IPE-Träger:IPE 400-Träger:16793090",
+        "start_m": {
+          "x_m": 2.7,
+          "y_m": 11.88
+        },
+        "end_m": {
+          "x_m": 2.7,
+          "y_m": 0
+        },
+        "width_m": 0.18,
+        "depth_m": 0.622,
+        "top_elevation_m": 12.494
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793770",
+        "start_m": {
+          "x_m": 5.408,
+          "y_m": 11.876
+        },
+        "end_m": {
+          "x_m": 5.408,
+          "y_m": 11.28
+        },
+        "width_m": 0.25,
+        "depth_m": 0.156,
+        "top_elevation_m": 12.531
+      },
+      {
+        "name": "ABF-RPT:SPR 360 - RPT:16791388",
+        "start_m": {
+          "x_m": 5.633,
+          "y_m": 11.28
+        },
+        "end_m": {
+          "x_m": 13.267,
+          "y_m": 11.28
+        },
+        "width_m": 0.19,
+        "depth_m": 0.36,
+        "top_elevation_m": 12.381
+      },
+      {
+        "name": "HEX-RPT:HEA 200 - RPT:16791387",
+        "start_m": {
+          "x_m": 5.633,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 13.267,
+          "y_m": 13.78
+        },
+        "width_m": 0.226,
+        "depth_m": 0.218,
+        "top_elevation_m": 12.771
+      },
+      {
+        "name": "HEX-RPT:HEA 200 - RPT:16791369",
+        "start_m": {
+          "x_m": 5.633,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 13.267,
+          "y_m": 13.78
+        },
+        "width_m": 0.226,
+        "depth_m": 0.218,
+        "top_elevation_m": 10.021
+      },
+      {
+        "name": "HEX-RPT:HEA 200 - RPT:16791371",
+        "start_m": {
+          "x_m": 5.633,
+          "y_m": 16.28
+        },
+        "end_m": {
+          "x_m": 13.267,
+          "y_m": 16.28
+        },
+        "width_m": 0.226,
+        "depth_m": 0.218,
+        "top_elevation_m": 10.396
+      },
+      {
+        "name": "IPE-Träger:IPE 360-Träger:16793049",
+        "start_m": {
+          "x_m": 8.1,
+          "y_m": 11.285
+        },
+        "end_m": {
+          "x_m": 8.1,
+          "y_m": 0
+        },
+        "width_m": 0.17,
+        "depth_m": 0.576,
+        "top_elevation_m": 12.488
+      },
+      {
+        "name": "IPE-Träger:IPE 360-Träger:16793052",
+        "start_m": {
+          "x_m": 10.8,
+          "y_m": 11.285
+        },
+        "end_m": {
+          "x_m": 10.8,
+          "y_m": 0
+        },
+        "width_m": 0.17,
+        "depth_m": 0.576,
+        "top_elevation_m": 12.488
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793794",
+        "start_m": {
+          "x_m": 13.49,
+          "y_m": 16.281
+        },
+        "end_m": {
+          "x_m": 13.49,
+          "y_m": 11.28
+        },
+        "width_m": 0.245,
+        "depth_m": 0.2,
+        "top_elevation_m": 12.575
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793740",
+        "start_m": {
+          "x_m": 13.49,
+          "y_m": 16.53
+        },
+        "end_m": {
+          "x_m": 13.49,
+          "y_m": 16.279
+        },
+        "width_m": 0.245,
+        "depth_m": 0.2,
+        "top_elevation_m": 11.2
+      },
+      {
+        "name": "IPE-Träger:IPE 360-Träger:16793055",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 11.364
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": 0
+        },
+        "width_m": 0.17,
+        "depth_m": 0.577,
+        "top_elevation_m": 12.489
+      },
+      {
+        "name": "HEA-Träger:HEA 180-Träger:16793134",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 13.862
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": 11.28
+        },
+        "width_m": 0.18,
+        "depth_m": 0.3,
+        "top_elevation_m": 12.514
+      },
+      {
+        "name": "HEA-Träger:HEA 180-Träger:16793146",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 16.283
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": 13.78
+        },
+        "width_m": 0.18,
+        "depth_m": 0.299,
+        "top_elevation_m": 12.538
+      },
+      {
+        "name": "HEA-Träger:HEA 180-Träger:16793119",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 16.53
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": 16.277
+        },
+        "width_m": 0.18,
+        "depth_m": 0.299,
+        "top_elevation_m": 11.163
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793773",
+        "start_m": {
+          "x_m": 56.711,
+          "y_m": 16.281
+        },
+        "end_m": {
+          "x_m": 56.711,
+          "y_m": 11.28
+        },
+        "width_m": 0.245,
+        "depth_m": 0.2,
+        "top_elevation_m": 12.575
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793713",
+        "start_m": {
+          "x_m": 56.711,
+          "y_m": 16.53
+        },
+        "end_m": {
+          "x_m": 56.711,
+          "y_m": 16.279
+        },
+        "width_m": 0.245,
+        "depth_m": 0.2,
+        "top_elevation_m": 11.2
+      },
+      {
+        "name": "ABF-RPT:SPR 360 - RPT:16791283",
+        "start_m": {
+          "x_m": 56.933,
+          "y_m": 11.28
+        },
+        "end_m": {
+          "x_m": 64.567,
+          "y_m": 11.28
+        },
+        "width_m": 0.19,
+        "depth_m": 0.36,
+        "top_elevation_m": 12.381
+      },
+      {
+        "name": "HEX-RPT:HEA 200 - RPT:16791282",
+        "start_m": {
+          "x_m": 56.933,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 64.567,
+          "y_m": 13.78
+        },
+        "width_m": 0.226,
+        "depth_m": 0.218,
+        "top_elevation_m": 12.146
+      },
+      {
+        "name": "HEX-RPT:HEA 200 - RPT:16791281",
+        "start_m": {
+          "x_m": 56.933,
+          "y_m": 16.28
+        },
+        "end_m": {
+          "x_m": 64.567,
+          "y_m": 16.28
+        },
+        "width_m": 0.226,
+        "depth_m": 0.218,
+        "top_elevation_m": 11.771
+      },
+      {
+        "name": "IPE-Träger:IPE 360-Träger:16793058",
+        "start_m": {
+          "x_m": 59.4,
+          "y_m": 11.285
+        },
+        "end_m": {
+          "x_m": 59.4,
+          "y_m": 0
+        },
+        "width_m": 0.17,
+        "depth_m": 0.576,
+        "top_elevation_m": 12.488
+      },
+      {
+        "name": "IPE-Träger:IPE 360-Träger:16793061",
+        "start_m": {
+          "x_m": 62.1,
+          "y_m": 11.285
+        },
+        "end_m": {
+          "x_m": 62.1,
+          "y_m": 0
+        },
+        "width_m": 0.17,
+        "depth_m": 0.576,
+        "top_elevation_m": 12.488
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793683",
+        "start_m": {
+          "x_m": 67.496,
+          "y_m": 5.001
+        },
+        "end_m": {
+          "x_m": 67.496,
+          "y_m": 0
+        },
+        "width_m": 0.226,
+        "depth_m": 0.2,
+        "top_elevation_m": 12.462
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793686",
+        "start_m": {
+          "x_m": 67.496,
+          "y_m": 11.281
+        },
+        "end_m": {
+          "x_m": 67.496,
+          "y_m": 5
+        },
+        "width_m": 0.226,
+        "depth_m": 0.213,
+        "top_elevation_m": 12.525
+      },
+      {
+        "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793689",
+        "start_m": {
+          "x_m": 67.496,
+          "y_m": 13.031
+        },
+        "end_m": {
+          "x_m": 67.496,
+          "y_m": 11.28
+        },
+        "width_m": 0.226,
+        "depth_m": 0.167,
+        "top_elevation_m": 12.542
+      }
     ]
+  },
+  "session": {
+    "name": "Goldbeck — Low Roof, Sports",
+    "iteration": ""
   },
   "placements": [
     {
@@ -4094,11 +2733,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "category": "activity",
       "label": "Locker & Dressing Room Module",
       "insertion_point": {
-        "center_x_m": 5,
+        "center_x_m": 62.5,
         "center_y_m": 2.5
       },
       "bounding_box": {
-        "top_left_x_m": 0,
+        "top_left_x_m": 57.5,
         "top_left_y_m": 0,
         "width_m": 10,
         "height_m": 5
@@ -4126,18 +2765,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "reference_material": null,
           "reference_provider": null
         }
-      }
+      },
+      "diagram_color": "#3c5a78",
+      "diagram_zone": "indoor"
     },
     {
       "id": "algo_1790783658370_1",
       "category": "activity",
       "label": "Bathroom & Shower Module",
       "insertion_point": {
-        "center_x_m": 15,
+        "center_x_m": 52.5,
         "center_y_m": 2.5
       },
       "bounding_box": {
-        "top_left_x_m": 10,
+        "top_left_x_m": 47.5,
         "top_left_y_m": 0,
         "width_m": 10,
         "height_m": 5
@@ -4165,18 +2806,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "reference_material": null,
           "reference_provider": null
         }
-      }
+      },
+      "diagram_color": "#5aa0be",
+      "diagram_zone": "indoor"
     },
     {
       "id": "algo_1790783658370_2",
       "category": "activity",
       "label": "Pickleball Court",
       "insertion_point": {
-        "center_x_m": 31.145,
+        "center_x_m": 36.355000000000004,
         "center_y_m": 6.07
       },
       "bounding_box": {
-        "top_left_x_m": 22,
+        "top_left_x_m": 27.21,
         "top_left_y_m": 1.5,
         "width_m": 18.29,
         "height_m": 9.14
@@ -4204,18 +2847,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "reference_material": null,
           "reference_provider": null
         }
-      }
+      },
+      "diagram_color": "#a0d26e",
+      "diagram_zone": "outdoor"
     },
     {
       "id": "algo_1790783658370_3",
       "category": "activity",
       "label": "Ping Pong Station",
       "insertion_point": {
-        "center_x_m": 44.599999999999994,
+        "center_x_m": 23.400000000000002,
         "center_y_m": 5.3
       },
       "bounding_box": {
-        "top_left_x_m": 42.3,
+        "top_left_x_m": 21.1,
         "top_left_y_m": 1.5,
         "width_m": 4.6,
         "height_m": 7.6
@@ -4267,18 +2912,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "weight_kg_m2": 0,
           "source": "Casual play — below any ITTF minimum"
         }
-      }
+      },
+      "diagram_color": "#ffd600",
+      "diagram_zone": "indoor"
     },
     {
       "id": "algo_1790783658370_4",
       "category": "activity",
       "label": "Ping Pong Station",
       "insertion_point": {
-        "center_x_m": 49.199999999999996,
+        "center_x_m": 18.8,
         "center_y_m": 5.3
       },
       "bounding_box": {
-        "top_left_x_m": 46.9,
+        "top_left_x_m": 16.5,
         "top_left_y_m": 1.5,
         "width_m": 4.6,
         "height_m": 7.6
@@ -4330,18 +2977,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "weight_kg_m2": 0,
           "source": "Casual play — below any ITTF minimum"
         }
-      }
+      },
+      "diagram_color": "#ffd600",
+      "diagram_zone": "indoor"
     },
     {
       "id": "algo_1790783658370_5",
       "category": "activity",
       "label": "Teqball Table",
       "insertion_point": {
-        "center_x_m": 45.3,
+        "center_x_m": 22.2,
         "center_y_m": 12.6
       },
       "bounding_box": {
-        "top_left_x_m": 42.3,
+        "top_left_x_m": 19.2,
         "top_left_y_m": 10.6,
         "width_m": 6,
         "height_m": 4
@@ -4369,18 +3018,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "reference_material": null,
           "reference_provider": null
         }
-      }
+      },
+      "diagram_color": "#009688",
+      "diagram_zone": "outdoor"
     },
     {
       "id": "algo_1790783658370_7",
       "category": "activity",
       "label": "HIIT Turf Grid",
       "insertion_point": {
-        "center_x_m": 61.5,
+        "center_x_m": 5.5,
         "center_y_m": 4
       },
       "bounding_box": {
-        "top_left_x_m": 57.5,
+        "top_left_x_m": 1.5,
         "top_left_y_m": 1.5,
         "width_m": 8,
         "height_m": 5
@@ -4408,19 +3059,21 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "reference_material": null,
           "reference_provider": null
         }
-      }
+      },
+      "diagram_color": "#78be3c",
+      "diagram_zone": "outdoor"
     },
     {
       "id": "algo_1790783658370_8",
       "category": "activity",
       "label": "Trampoline",
       "insertion_point": {
-        "center_x_m": 51.8,
-        "center_y_m": 12.6
+        "center_x_m": 13,
+        "center_y_m": 3.5
       },
       "bounding_box": {
-        "top_left_x_m": 49.8,
-        "top_left_y_m": 10.6,
+        "top_left_x_m": 11,
+        "top_left_y_m": 1.5,
         "width_m": 4,
         "height_m": 4
       },
@@ -4446,19 +3099,35 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "quality_level": "medium",
           "reference_material": null,
           "reference_provider": null
+        },
+        "familyInstance": {
+          "type": "trampoline",
+          "label": "Trampoline in a Sand Pit",
+          "family": "Trampoline-SandPit",
+          "units": "mm",
+          "params": {
+            "Jump_Radius": 1450,
+            "Pad_Width": 300,
+            "Base_Height": 400,
+            "Bedding": 50,
+            "Net_Height": 2100,
+            "Show_Net": false
+          }
         }
-      }
+      },
+      "diagram_color": "#ffc83c",
+      "diagram_zone": "outdoor"
     },
     {
       "id": "algo_1790783658370_9",
       "category": "gardenBlock",
       "label": "Planter T (with pedestal)",
       "insertion_point": {
-        "center_x_m": 18.8,
+        "center_x_m": 48.7,
         "center_y_m": 13.5
       },
       "bounding_box": {
-        "top_left_x_m": 17.6,
+        "top_left_x_m": 47.5,
         "top_left_y_m": 12.3,
         "width_m": 2.4,
         "height_m": 2.4
@@ -4500,18 +3169,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
             "outletTop": 155
           }
         }
-      }
+      },
+      "diagram_color": "#8a5a2b",
+      "diagram_zone": "garden"
     },
     {
       "id": "algo_1790783658370_10",
       "category": "activity",
       "label": "Mini-Golf Lane",
       "insertion_point": {
-        "center_x_m": 34.3,
+        "center_x_m": 33.2,
         "center_y_m": 13.35
       },
       "bounding_box": {
-        "top_left_x_m": 28.3,
+        "top_left_x_m": 27.2,
         "top_left_y_m": 12.6,
         "width_m": 12,
         "height_m": 1.5
@@ -4539,18 +3210,20 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "reference_material": null,
           "reference_provider": null
         }
-      }
+      },
+      "diagram_color": "#66c2a5",
+      "diagram_zone": "outdoor"
     },
     {
       "id": "algo_1790783658370_11",
       "category": "gardenBlock",
       "label": "Planter S (with pedestal)",
       "insertion_point": {
-        "center_x_m": 18.8,
+        "center_x_m": 48.7,
         "center_y_m": 10.3
       },
       "bounding_box": {
-        "top_left_x_m": 17.6,
+        "top_left_x_m": 47.5,
         "top_left_y_m": 9.8,
         "width_m": 2.4,
         "height_m": 1
@@ -4592,7 +3265,9 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
             "outletTop": 155
           }
         }
-      }
+      },
+      "diagram_color": "#8a5a2b",
+      "diagram_zone": "garden"
     }
   ]
 };
@@ -20290,7 +18965,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
 const GOLDBECK_PREBUILT_SESSIONS = {
   lowRoofSports: {
     id: "lowRoofSports", title: "Goldbeck — Low Roof, Sports",
-    tagline: "11 pieces on the real E9 slab: Pickleball, 2 Ping Pong, Teqball, HIIT turf, Trampoline, Mini-Golf, 2 planters, Locker & Bathroom modules; doors at the stair core and the two ramps.",
+    tagline: "11 pieces on the real E9 slab: Pickleball, 2 Ping Pong, Teqball, HIIT turf, Trampoline, Mini-Golf, 2 planters; the Locker & Bathroom modules by the ramps on the right; doors at the stair core and the two ramps.",
     generate: () => goldbeckCloneRealPayload(GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD),
   },
   highRoofGarden: {
