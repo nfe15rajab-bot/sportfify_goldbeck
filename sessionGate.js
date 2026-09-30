@@ -417,7 +417,9 @@ presetCardsEl?.addEventListener("click", e => {
     // These two are real Revit exports with a known roof type and how their pieces were placed (user, 2026-09-28) — go straight to where the
     // work is instead of the roof-type prompt (the payload's own roof_context.program already skips that; the goldbeckPresetId list below is the
     // ONE place this needs updating if a third real preset is ever added) and Combine's own manual/algorithmic sub-tab.
-    const GOLDBECK_LANDING = { lowRoofSports: "algo", highRoofGarden: "manual" };
+    // The low roof opens on the Manual board since 2026-09-30: its saved layout is the team's own (export "(6)"), exactly as they left it; the
+    // Algorithmic tab would show a live re-pack of it instead, which with the doors on the ramps puts the service modules in the other corner.
+    const GOLDBECK_LANDING = { lowRoofSports: "manual", highRoofGarden: "manual" };
     if (GOLDBECK_LANDING[preset.id] && typeof setMode === "function") {
       setMode("combine");
       if (typeof algoSetMode === "function") algoSetMode(GOLDBECK_LANDING[preset.id]);

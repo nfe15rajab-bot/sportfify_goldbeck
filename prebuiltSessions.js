@@ -32,14 +32,16 @@ function goldbeckCloneRealPayload(payload) {
   return typeof structuredClone === "function" ? structuredClone(payload) : JSON.parse(JSON.stringify(payload));
 }
 
-/** Roof 2 — E9, the lower of the top two slabs (world_origin_z_m 12.481): the sports layout (8 courts, 0 unplaced). */
+/** Roof 2 — E9, the lower of the top two slabs: the team's sports layout (export "sportify_combined_revit (6)", 2026-09-30) without the TRX frame
+ *  (removed from Sportify 2026-09-29), with the right-hand doors on the two ramp arrivals Revit reports. */
 const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
   "version": "1.3",
   "generator": "Sportify-Combine",
+  "build": "2026-09-29-sporttabdraw",
   "roof_context": {
     "length_m": 67.5,
     "width_m": 16.28,
-    "program": "sports",
+    "program": "mixed",
     "source": "revit",
     "source_boundary_polygon": [
       {
@@ -92,11 +94,11 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       }
     ],
     "world_origin_x_m": 0.109,
-    "world_origin_y_m": 16.28,
+    "world_origin_y_m": 16.279,
     "rotation_deg": 0,
-    "world_origin_z_m": 12.481,
-    "height_above_ground_m": 12.48,
-    "height_source": "level \"Basisebene\" (nearest the project zero; no ground floor by name)",
+    "world_origin_z_m": 0,
+    "height_above_ground_m": 12.51,
+    "height_source": "level \"E0 TP\" (nearest the project zero; no ground floor by name)",
     "features": {
       "source": "revit",
       "notes": [],
@@ -105,1657 +107,3999 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
         {
           "id": "ramp_1",
           "kind": "ramp",
-          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 7",
-          "x_m": 58.86,
-          "y_m": 12.55,
-          "width_m": 0,
-          "on_roof": true,
-          "source_element_id": 2520305
-        },
-        {
-          "id": "ramp_2",
-          "kind": "ramp",
-          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 5",
-          "x_m": 58.86,
-          "y_m": 16.31,
-          "width_m": 0,
-          "on_roof": true,
-          "source_element_id": 2520299
-        },
-        {
-          "id": "ramp_3",
-          "kind": "ramp",
-          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278",
+          "name": "Geschosshöhe-2750_Rampenträger-HEA200:16791278 1 : Parkhäuser_Rampe_Splitlevel:Geschosshöhe-2750_Rampenträger-HEA200:16791278 1",
           "x_m": 60.75,
-          "y_m": 17.01,
+          "y_m": 16.69,
           "width_m": 0,
           "on_roof": false,
-          "source_element_id": 2520296
-        },
-        {
-          "id": "ramp_4",
-          "kind": "ramp",
-          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 6",
-          "x_m": 62.64,
-          "y_m": 12.55,
-          "width_m": 0,
-          "on_roof": true,
-          "source_element_id": 2520308
-        },
-        {
-          "id": "ramp_5",
-          "kind": "ramp",
-          "name": "Parkhäuser_Rampe_Splitlevel-Geschosshöhe-2750_Rampenträger-HEA200-16791278 4",
-          "x_m": 62.64,
-          "y_m": 16.31,
-          "width_m": 0,
-          "on_roof": true,
-          "source_element_id": 2520302
+          "source_element_id": 334750
         }
       ],
-      "edges": [],
+      "edges": [
+        {
+          "index": 0,
+          "start_m": {
+            "x_m": 64.8,
+            "y_m": 13.03
+          },
+          "end_m": {
+            "x_m": 67.5,
+            "y_m": 13.03
+          },
+          "length_m": 2.7,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 1,
+          "start_m": {
+            "x_m": 67.5,
+            "y_m": 13.03
+          },
+          "end_m": {
+            "x_m": 67.5,
+            "y_m": 0
+          },
+          "length_m": 13.03,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 2,
+          "start_m": {
+            "x_m": 67.5,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 0,
+            "y_m": 0
+          },
+          "length_m": 67.5,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 3,
+          "start_m": {
+            "x_m": 0,
+            "y_m": 0
+          },
+          "end_m": {
+            "x_m": 0,
+            "y_m": 11.87
+          },
+          "length_m": 11.87,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 4,
+          "start_m": {
+            "x_m": 0,
+            "y_m": 11.87
+          },
+          "end_m": {
+            "x_m": 5.4,
+            "y_m": 11.87
+          },
+          "length_m": 5.4,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 5,
+          "start_m": {
+            "x_m": 5.4,
+            "y_m": 11.87
+          },
+          "end_m": {
+            "x_m": 5.4,
+            "y_m": 11.28
+          },
+          "length_m": 0.6,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 6,
+          "start_m": {
+            "x_m": 5.4,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 13.5,
+            "y_m": 11.28
+          },
+          "length_m": 8.1,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 7,
+          "start_m": {
+            "x_m": 13.5,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 13.5,
+            "y_m": 16.28
+          },
+          "length_m": 5,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 8,
+          "start_m": {
+            "x_m": 13.5,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 56.7,
+            "y_m": 16.28
+          },
+          "length_m": 43.2,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 9,
+          "start_m": {
+            "x_m": 56.7,
+            "y_m": 16.28
+          },
+          "end_m": {
+            "x_m": 56.7,
+            "y_m": 11.28
+          },
+          "length_m": 5,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 10,
+          "start_m": {
+            "x_m": 56.7,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 64.8,
+            "y_m": 11.28
+          },
+          "length_m": 8.1,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        },
+        {
+          "index": 11,
+          "start_m": {
+            "x_m": 64.8,
+            "y_m": 11.28
+          },
+          "end_m": {
+            "x_m": 64.8,
+            "y_m": 13.03
+          },
+          "length_m": 1.75,
+          "kind": "open",
+          "height_m": 0,
+          "thickness_m": 0,
+          "parapet_coverage": 0,
+          "railing_coverage": 0
+        }
+      ],
       "obstacles": [],
       "equipment": [],
       "drains": [],
       "slab": null,
-      "levels": []
-    },
-    "structure": {
-      "source": "revit",
-      "deck_capacity_kn_m2": null,
-      "natural_frequency_hz": null,
-      "grid_lines": [
+      "levels": [
         {
-          "name": "1",
-          "start_m": {
-            "x_m": -0.109,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": -0.109,
-            "y_m": -0.25
-          }
+          "name": "OK FU Achse A",
+          "elevation_m": -0.3,
+          "above_ground_m": -0.3,
+          "is_roof_level": false
         },
         {
-          "name": "10",
-          "start_m": {
-            "x_m": 24.3,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 24.3,
-            "y_m": -0.25
-          }
+          "name": "OK FU Achse H",
+          "elevation_m": -0.14,
+          "above_ground_m": -0.14,
+          "is_roof_level": false
         },
         {
-          "name": "11",
-          "start_m": {
-            "x_m": 27,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 27,
-            "y_m": -0.25
-          }
+          "name": "E0 TP",
+          "elevation_m": 0,
+          "above_ground_m": 0,
+          "is_roof_level": false
         },
         {
-          "name": "12",
-          "start_m": {
-            "x_m": 29.7,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 29.7,
-            "y_m": -0.25
-          }
+          "name": "Basisebene",
+          "elevation_m": 0,
+          "above_ground_m": 0,
+          "is_roof_level": false
         },
         {
-          "name": "13",
-          "start_m": {
-            "x_m": 32.4,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 32.4,
-            "y_m": -0.25
-          }
+          "name": "E1 TP",
+          "elevation_m": 1.375,
+          "above_ground_m": 1.375,
+          "is_roof_level": false
         },
         {
-          "name": "14",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": -0.25
-          }
+          "name": "E2 TP",
+          "elevation_m": 2.75,
+          "above_ground_m": 2.75,
+          "is_roof_level": false
         },
         {
-          "name": "15",
-          "start_m": {
-            "x_m": 37.8,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 37.8,
-            "y_m": -0.25
-          }
+          "name": "E3 TP",
+          "elevation_m": 4.125,
+          "above_ground_m": 4.125,
+          "is_roof_level": false
         },
         {
-          "name": "16",
-          "start_m": {
-            "x_m": 40.5,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 40.5,
-            "y_m": -0.25
-          }
+          "name": "E4 TP",
+          "elevation_m": 5.5,
+          "above_ground_m": 5.5,
+          "is_roof_level": false
         },
         {
-          "name": "17",
-          "start_m": {
-            "x_m": 43.2,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 43.2,
-            "y_m": -0.25
-          }
+          "name": "E5 TP",
+          "elevation_m": 6.875,
+          "above_ground_m": 6.875,
+          "is_roof_level": false
         },
         {
-          "name": "18",
-          "start_m": {
-            "x_m": 45.9,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 45.9,
-            "y_m": -0.25
-          }
+          "name": "E6 TP",
+          "elevation_m": 8.25,
+          "above_ground_m": 8.25,
+          "is_roof_level": false
         },
         {
-          "name": "19",
-          "start_m": {
-            "x_m": 48.6,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 48.6,
-            "y_m": -0.25
-          }
+          "name": "E7 TP",
+          "elevation_m": 9.625,
+          "above_ground_m": 9.625,
+          "is_roof_level": false
         },
         {
-          "name": "2",
-          "start_m": {
-            "x_m": 2.7,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 2.7,
-            "y_m": -0.25
-          }
+          "name": "E8 TP",
+          "elevation_m": 11,
+          "above_ground_m": 11,
+          "is_roof_level": false
         },
         {
-          "name": "20",
-          "start_m": {
-            "x_m": 51.3,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 51.3,
-            "y_m": -0.25
-          }
+          "name": "E9 TP",
+          "elevation_m": 12.375,
+          "above_ground_m": 12.375,
+          "is_roof_level": true
         },
         {
-          "name": "21",
-          "start_m": {
-            "x_m": 54,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 54,
-            "y_m": -0.25
-          }
+          "name": "E10 TP",
+          "elevation_m": 13.75,
+          "above_ground_m": 13.75,
+          "is_roof_level": false
         },
         {
-          "name": "22",
-          "start_m": {
-            "x_m": 56.7,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 56.7,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "22'",
-          "start_m": {
-            "x_m": 56.833,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 56.833,
-            "y_m": 10.78
-          }
-        },
-        {
-          "name": "23",
-          "start_m": {
-            "x_m": 59.4,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 59.4,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "24",
-          "start_m": {
-            "x_m": 62.1,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 62.1,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "24'",
-          "start_m": {
-            "x_m": 64.667,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 64.667,
-            "y_m": 10.78
-          }
-        },
-        {
-          "name": "25",
-          "start_m": {
-            "x_m": 64.8,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 64.8,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "26",
-          "start_m": {
-            "x_m": 67.609,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 67.609,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "3",
-          "start_m": {
-            "x_m": 5.4,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 5.4,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "3'",
-          "start_m": {
-            "x_m": 5.533,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 5.533,
-            "y_m": 10.78
-          }
-        },
-        {
-          "name": "4",
-          "start_m": {
-            "x_m": 8.1,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 8.1,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "5",
-          "start_m": {
-            "x_m": 10.8,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 10.8,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "5'",
-          "start_m": {
-            "x_m": 13.367,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 13.367,
-            "y_m": 10.78
-          }
-        },
-        {
-          "name": "6",
-          "start_m": {
-            "x_m": 13.5,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 13.5,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "7",
-          "start_m": {
-            "x_m": 16.2,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 16.2,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "8",
-          "start_m": {
-            "x_m": 18.9,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 18.9,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "9",
-          "start_m": {
-            "x_m": 21.6,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 21.6,
-            "y_m": -0.25
-          }
-        },
-        {
-          "name": "H",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 16.28
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 16.28
-          }
-        },
-        {
-          "name": "I",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 13.78
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 13.78
-          }
-        },
-        {
-          "name": "I'",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 11.875
-          },
-          "end_m": {
-            "x_m": 5.6,
-            "y_m": 11.875
-          }
-        },
-        {
-          "name": "I''",
-          "start_m": {
-            "x_m": 64.6,
-            "y_m": 13.03
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 13.03
-          }
-        },
-        {
-          "name": "J",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 11.28
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 11.28
-          }
-        },
-        {
-          "name": "K",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 9.19
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 9.19
-          }
-        },
-        {
-          "name": "L",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 7.09
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 7.09
-          }
-        },
-        {
-          "name": "M",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 5
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 5
-          }
-        },
-        {
-          "name": "N",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 2.5
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 2.5
-          }
-        },
-        {
-          "name": "O",
-          "start_m": {
-            "x_m": -0.25,
-            "y_m": 0
-          },
-          "end_m": {
-            "x_m": 67.75,
-            "y_m": 0
-          }
+          "name": "Bauteilgruppenebene (BTGE)",
+          "elevation_m": 50,
+          "above_ground_m": 50,
+          "is_roof_level": false
         }
-      ],
-      "columns": [
-        {
-          "label": "16791945",
-          "x_m": -0.109,
-          "y_m": -0.015
-        },
-        {
-          "label": "16791917",
-          "x_m": -0.109,
-          "y_m": 2.5
-        },
-        {
-          "label": "16791914",
-          "x_m": -0.109,
-          "y_m": 5
-        },
-        {
-          "label": "16791911",
-          "x_m": -0.109,
-          "y_m": 7.09
-        },
-        {
-          "label": "16791908",
-          "x_m": -0.109,
-          "y_m": 9.19
-        },
-        {
-          "label": "16791905",
-          "x_m": -0.109,
-          "y_m": 11.28
-        },
-        {
-          "label": "16792096",
-          "x_m": -0.109,
-          "y_m": 11.875
-        },
-        {
-          "label": "16791986",
-          "x_m": 2.7,
-          "y_m": 0
-        },
-        {
-          "label": "16792120",
-          "x_m": 2.7,
-          "y_m": 11.86
-        },
-        {
-          "label": "16791992",
-          "x_m": 5.4,
-          "y_m": 0
-        },
-        {
-          "label": "16792108",
-          "x_m": 5.509,
-          "y_m": 11.875
-        },
-        {
-          "label": "16791867",
-          "x_m": 5.533,
-          "y_m": 11.28
-        },
-        {
-          "label": "16791836",
-          "x_m": 5.533,
-          "y_m": 13.78
-        },
-        {
-          "label": "16791833",
-          "x_m": 5.533,
-          "y_m": 16.28
-        },
-        {
-          "label": "16791996",
-          "x_m": 8.1,
-          "y_m": 0
-        },
-        {
-          "label": "16791883",
-          "x_m": 8.1,
-          "y_m": 11.256
-        },
-        {
-          "label": "16792000",
-          "x_m": 10.8,
-          "y_m": 0
-        },
-        {
-          "label": "16791886",
-          "x_m": 10.8,
-          "y_m": 11.256
-        },
-        {
-          "label": "16791873",
-          "x_m": 13.367,
-          "y_m": 11.28
-        },
-        {
-          "label": "16791845",
-          "x_m": 13.367,
-          "y_m": 13.78
-        },
-        {
-          "label": "16791842",
-          "x_m": 13.367,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792004",
-          "x_m": 13.5,
-          "y_m": 0
-        },
-        {
-          "label": "16792008",
-          "x_m": 16.2,
-          "y_m": 0
-        },
-        {
-          "label": "16791953",
-          "x_m": 16.2,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792012",
-          "x_m": 18.9,
-          "y_m": 0
-        },
-        {
-          "label": "16791956",
-          "x_m": 18.9,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792016",
-          "x_m": 21.6,
-          "y_m": 0
-        },
-        {
-          "label": "16791959",
-          "x_m": 21.6,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792020",
-          "x_m": 24.3,
-          "y_m": 0
-        },
-        {
-          "label": "16791961",
-          "x_m": 24.3,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792024",
-          "x_m": 27,
-          "y_m": 0
-        },
-        {
-          "label": "16791963",
-          "x_m": 27,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792028",
-          "x_m": 29.7,
-          "y_m": 0
-        },
-        {
-          "label": "16791965",
-          "x_m": 29.7,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792032",
-          "x_m": 32.4,
-          "y_m": 0
-        },
-        {
-          "label": "16791967",
-          "x_m": 32.4,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792036",
-          "x_m": 35.1,
-          "y_m": 0
-        },
-        {
-          "label": "16792089",
-          "x_m": 35.1,
-          "y_m": 11.28
-        },
-        {
-          "label": "16792087",
-          "x_m": 35.1,
-          "y_m": 13.78
-        },
-        {
-          "label": "16792092",
-          "x_m": 35.1,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792040",
-          "x_m": 37.8,
-          "y_m": 0
-        },
-        {
-          "label": "16791969",
-          "x_m": 37.8,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792044",
-          "x_m": 40.5,
-          "y_m": 0
-        },
-        {
-          "label": "16791971",
-          "x_m": 40.5,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792048",
-          "x_m": 43.2,
-          "y_m": 0
-        },
-        {
-          "label": "16791973",
-          "x_m": 43.2,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792052",
-          "x_m": 45.9,
-          "y_m": 0
-        },
-        {
-          "label": "16791975",
-          "x_m": 45.9,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792056",
-          "x_m": 48.6,
-          "y_m": 0
-        },
-        {
-          "label": "16791977",
-          "x_m": 48.6,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792060",
-          "x_m": 51.3,
-          "y_m": 0
-        },
-        {
-          "label": "16791979",
-          "x_m": 51.3,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792064",
-          "x_m": 54,
-          "y_m": 0
-        },
-        {
-          "label": "16791981",
-          "x_m": 54,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792068",
-          "x_m": 56.7,
-          "y_m": 0
-        },
-        {
-          "label": "16791877",
-          "x_m": 56.833,
-          "y_m": 11.28
-        },
-        {
-          "label": "16791852",
-          "x_m": 56.833,
-          "y_m": 13.78
-        },
-        {
-          "label": "16791850",
-          "x_m": 56.833,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792072",
-          "x_m": 59.4,
-          "y_m": 0
-        },
-        {
-          "label": "16792076",
-          "x_m": 62.1,
-          "y_m": 0
-        },
-        {
-          "label": "16791881",
-          "x_m": 64.667,
-          "y_m": 11.28
-        },
-        {
-          "label": "16791860",
-          "x_m": 64.667,
-          "y_m": 13.78
-        },
-        {
-          "label": "16791857",
-          "x_m": 64.667,
-          "y_m": 16.28
-        },
-        {
-          "label": "16792114",
-          "x_m": 64.691,
-          "y_m": 13.03
-        },
-        {
-          "label": "16792080",
-          "x_m": 64.8,
-          "y_m": 0
-        },
-        {
-          "label": "16791951",
-          "x_m": 67.609,
-          "y_m": -0.015
-        },
-        {
-          "label": "16791941",
-          "x_m": 67.609,
-          "y_m": 2.5
-        },
-        {
-          "label": "16791939",
-          "x_m": 67.609,
-          "y_m": 5
-        },
-        {
-          "label": "16791937",
-          "x_m": 67.609,
-          "y_m": 7.09
-        },
-        {
-          "label": "16791935",
-          "x_m": 67.609,
-          "y_m": 9.19
-        },
-        {
-          "label": "16791933",
-          "x_m": 67.609,
-          "y_m": 11.28
-        },
-        {
-          "label": "16792102",
-          "x_m": 67.609,
-          "y_m": 13.03
-        }
-      ],
-      "beams": [
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793607",
-          "start_m": {
-            "x_m": 0.004,
-            "y_m": 5.001
-          },
-          "end_m": {
-            "x_m": 0.004,
-            "y_m": -0.014
-          },
-          "width_m": 0.226,
-          "depth_m": 0.2,
-          "top_elevation_m": 12.462
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793598",
-          "start_m": {
-            "x_m": 0.004,
-            "y_m": 5.001
-          },
-          "end_m": {
-            "x_m": 0.004,
-            "y_m": -0.014
-          },
-          "width_m": 0.226,
-          "depth_m": 0.2,
-          "top_elevation_m": 9.712
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793604",
-          "start_m": {
-            "x_m": 0.004,
-            "y_m": 11.281
-          },
-          "end_m": {
-            "x_m": 0.004,
-            "y_m": 5
-          },
-          "width_m": 0.226,
-          "depth_m": 0.213,
-          "top_elevation_m": 12.525
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793595",
-          "start_m": {
-            "x_m": 0.004,
-            "y_m": 11.281
-          },
-          "end_m": {
-            "x_m": 0.004,
-            "y_m": 5
-          },
-          "width_m": 0.226,
-          "depth_m": 0.213,
-          "top_elevation_m": 9.775
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793601",
-          "start_m": {
-            "x_m": 0.004,
-            "y_m": 11.876
-          },
-          "end_m": {
-            "x_m": 0.004,
-            "y_m": 11.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.156,
-          "top_elevation_m": 12.531
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793592",
-          "start_m": {
-            "x_m": 0.004,
-            "y_m": 11.876
-          },
-          "end_m": {
-            "x_m": 0.004,
-            "y_m": 11.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.156,
-          "top_elevation_m": 9.781
-        },
-        {
-          "name": "IPE-Träger:IPE 400-Träger:16793090",
-          "start_m": {
-            "x_m": 2.7,
-            "y_m": 11.88
-          },
-          "end_m": {
-            "x_m": 2.7,
-            "y_m": 0
-          },
-          "width_m": 0.18,
-          "depth_m": 0.622,
-          "top_elevation_m": 12.494
-        },
-        {
-          "name": "IPE-Träger:IPE 400-Träger:16793087",
-          "start_m": {
-            "x_m": 2.7,
-            "y_m": 11.88
-          },
-          "end_m": {
-            "x_m": 2.7,
-            "y_m": 0
-          },
-          "width_m": 0.18,
-          "depth_m": 0.622,
-          "top_elevation_m": 9.744
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793770",
-          "start_m": {
-            "x_m": 5.408,
-            "y_m": 11.876
-          },
-          "end_m": {
-            "x_m": 5.408,
-            "y_m": 11.28
-          },
-          "width_m": 0.25,
-          "depth_m": 0.156,
-          "top_elevation_m": 12.531
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793764",
-          "start_m": {
-            "x_m": 5.408,
-            "y_m": 11.876
-          },
-          "end_m": {
-            "x_m": 5.408,
-            "y_m": 11.28
-          },
-          "width_m": 0.25,
-          "depth_m": 0.156,
-          "top_elevation_m": 9.781
-        },
-        {
-          "name": "ABF-RPT:SPR 360 - RPT:16791388",
-          "start_m": {
-            "x_m": 5.633,
-            "y_m": 11.28
-          },
-          "end_m": {
-            "x_m": 13.267,
-            "y_m": 11.28
-          },
-          "width_m": 0.19,
-          "depth_m": 0.36,
-          "top_elevation_m": 12.381
-        },
-        {
-          "name": "ABF-RPT:SPR 360 - RPT:16791370",
-          "start_m": {
-            "x_m": 5.633,
-            "y_m": 11.28
-          },
-          "end_m": {
-            "x_m": 13.267,
-            "y_m": 11.28
-          },
-          "width_m": 0.19,
-          "depth_m": 0.36,
-          "top_elevation_m": 9.631
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791387",
-          "start_m": {
-            "x_m": 5.633,
-            "y_m": 13.78
-          },
-          "end_m": {
-            "x_m": 13.267,
-            "y_m": 13.78
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 12.771
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791369",
-          "start_m": {
-            "x_m": 5.633,
-            "y_m": 13.78
-          },
-          "end_m": {
-            "x_m": 13.267,
-            "y_m": 13.78
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 10.021
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791389",
-          "start_m": {
-            "x_m": 5.633,
-            "y_m": 16.28
-          },
-          "end_m": {
-            "x_m": 13.267,
-            "y_m": 16.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 13.146
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791371",
-          "start_m": {
-            "x_m": 5.633,
-            "y_m": 16.28
-          },
-          "end_m": {
-            "x_m": 13.267,
-            "y_m": 16.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 10.396
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793049",
-          "start_m": {
-            "x_m": 8.1,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 8.1,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 12.488
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793034",
-          "start_m": {
-            "x_m": 8.1,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 8.1,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 9.738
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793052",
-          "start_m": {
-            "x_m": 10.8,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 10.8,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 12.488
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793037",
-          "start_m": {
-            "x_m": 10.8,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 10.8,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 9.738
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793794",
-          "start_m": {
-            "x_m": 13.49,
-            "y_m": 16.281
-          },
-          "end_m": {
-            "x_m": 13.49,
-            "y_m": 11.28
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 12.575
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793788",
-          "start_m": {
-            "x_m": 13.49,
-            "y_m": 16.281
-          },
-          "end_m": {
-            "x_m": 13.49,
-            "y_m": 11.28
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 9.825
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793734",
-          "start_m": {
-            "x_m": 13.49,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 13.49,
-            "y_m": 16.279
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 8.45
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793740",
-          "start_m": {
-            "x_m": 13.49,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 13.49,
-            "y_m": 16.279
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 11.2
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793040",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 9.738
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793055",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 11.364
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.577,
-          "top_elevation_m": 12.489
-        },
-        {
-          "name": "HEA-Träger:HEA 180-Träger:16793131",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 13.783
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 11.28
-          },
-          "width_m": 0.18,
-          "depth_m": 0.299,
-          "top_elevation_m": 9.763
-        },
-        {
-          "name": "HEA-Träger:HEA 180-Träger:16793134",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 13.862
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 11.28
-          },
-          "width_m": 0.18,
-          "depth_m": 0.3,
-          "top_elevation_m": 12.514
-        },
-        {
-          "name": "HEA-Träger:HEA 180-Träger:16793146",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 16.283
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 13.78
-          },
-          "width_m": 0.18,
-          "depth_m": 0.299,
-          "top_elevation_m": 12.538
-        },
-        {
-          "name": "HEA-Träger:HEA 180-Träger:16793143",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 16.283
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 13.78
-          },
-          "width_m": 0.18,
-          "depth_m": 0.299,
-          "top_elevation_m": 9.788
-        },
-        {
-          "name": "HEA-Träger:HEA 180-Träger:16793116",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 16.277
-          },
-          "width_m": 0.18,
-          "depth_m": 0.299,
-          "top_elevation_m": 8.413
-        },
-        {
-          "name": "HEA-Träger:HEA 180-Träger:16793119",
-          "start_m": {
-            "x_m": 35.1,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 35.1,
-            "y_m": 16.277
-          },
-          "width_m": 0.18,
-          "depth_m": 0.299,
-          "top_elevation_m": 11.163
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793773",
-          "start_m": {
-            "x_m": 56.711,
-            "y_m": 16.281
-          },
-          "end_m": {
-            "x_m": 56.711,
-            "y_m": 11.28
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 12.575
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793767",
-          "start_m": {
-            "x_m": 56.711,
-            "y_m": 16.281
-          },
-          "end_m": {
-            "x_m": 56.711,
-            "y_m": 11.28
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 9.825
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793707",
-          "start_m": {
-            "x_m": 56.711,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 56.711,
-            "y_m": 16.279
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 8.45
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793713",
-          "start_m": {
-            "x_m": 56.711,
-            "y_m": 16.53
-          },
-          "end_m": {
-            "x_m": 56.711,
-            "y_m": 16.279
-          },
-          "width_m": 0.245,
-          "depth_m": 0.2,
-          "top_elevation_m": 11.2
-        },
-        {
-          "name": "ABF-RPT:SPR 360 - RPT:16791265",
-          "start_m": {
-            "x_m": 56.933,
-            "y_m": 11.28
-          },
-          "end_m": {
-            "x_m": 64.567,
-            "y_m": 11.28
-          },
-          "width_m": 0.19,
-          "depth_m": 0.36,
-          "top_elevation_m": 9.631
-        },
-        {
-          "name": "ABF-RPT:SPR 360 - RPT:16791283",
-          "start_m": {
-            "x_m": 56.933,
-            "y_m": 11.28
-          },
-          "end_m": {
-            "x_m": 64.567,
-            "y_m": 11.28
-          },
-          "width_m": 0.19,
-          "depth_m": 0.36,
-          "top_elevation_m": 12.381
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791264",
-          "start_m": {
-            "x_m": 56.933,
-            "y_m": 13.78
-          },
-          "end_m": {
-            "x_m": 64.567,
-            "y_m": 13.78
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 9.396
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791282",
-          "start_m": {
-            "x_m": 56.933,
-            "y_m": 13.78
-          },
-          "end_m": {
-            "x_m": 64.567,
-            "y_m": 13.78
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 12.146
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791263",
-          "start_m": {
-            "x_m": 56.933,
-            "y_m": 16.28
-          },
-          "end_m": {
-            "x_m": 64.567,
-            "y_m": 16.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 9.021
-        },
-        {
-          "name": "HEX-RPT:HEA 200 - RPT:16791281",
-          "start_m": {
-            "x_m": 56.933,
-            "y_m": 16.28
-          },
-          "end_m": {
-            "x_m": 64.567,
-            "y_m": 16.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.218,
-          "top_elevation_m": 11.771
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793058",
-          "start_m": {
-            "x_m": 59.4,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 59.4,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 12.488
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793043",
-          "start_m": {
-            "x_m": 59.4,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 59.4,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 9.738
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793061",
-          "start_m": {
-            "x_m": 62.1,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 62.1,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 12.488
-        },
-        {
-          "name": "IPE-Träger:IPE 360-Träger:16793046",
-          "start_m": {
-            "x_m": 62.1,
-            "y_m": 11.285
-          },
-          "end_m": {
-            "x_m": 62.1,
-            "y_m": 0
-          },
-          "width_m": 0.17,
-          "depth_m": 0.576,
-          "top_elevation_m": 9.738
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793791",
-          "start_m": {
-            "x_m": 64.792,
-            "y_m": 13.031
-          },
-          "end_m": {
-            "x_m": 64.792,
-            "y_m": 11.28
-          },
-          "width_m": 0.25,
-          "depth_m": 0.167,
-          "top_elevation_m": 9.792
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793683",
-          "start_m": {
-            "x_m": 67.496,
-            "y_m": 5.001
-          },
-          "end_m": {
-            "x_m": 67.496,
-            "y_m": 0
-          },
-          "width_m": 0.226,
-          "depth_m": 0.2,
-          "top_elevation_m": 12.462
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793674",
-          "start_m": {
-            "x_m": 67.496,
-            "y_m": 5.001
-          },
-          "end_m": {
-            "x_m": 67.496,
-            "y_m": 0
-          },
-          "width_m": 0.226,
-          "depth_m": 0.2,
-          "top_elevation_m": 9.712
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793686",
-          "start_m": {
-            "x_m": 67.496,
-            "y_m": 11.281
-          },
-          "end_m": {
-            "x_m": 67.496,
-            "y_m": 5
-          },
-          "width_m": 0.226,
-          "depth_m": 0.213,
-          "top_elevation_m": 12.525
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793677",
-          "start_m": {
-            "x_m": 67.496,
-            "y_m": 11.281
-          },
-          "end_m": {
-            "x_m": 67.496,
-            "y_m": 5
-          },
-          "width_m": 0.226,
-          "depth_m": 0.213,
-          "top_elevation_m": 9.775
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793689",
-          "start_m": {
-            "x_m": 67.496,
-            "y_m": 13.031
-          },
-          "end_m": {
-            "x_m": 67.496,
-            "y_m": 11.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.167,
-          "top_elevation_m": 12.542
-        },
-        {
-          "name": "L-Träger_gleichschenklig:L 150*10-Träger:16793680",
-          "start_m": {
-            "x_m": 67.496,
-            "y_m": 13.031
-          },
-          "end_m": {
-            "x_m": 67.496,
-            "y_m": 11.28
-          },
-          "width_m": 0.226,
-          "depth_m": 0.167,
-          "top_elevation_m": 9.792
-        }
-      ],
-      "walls": []
+      ]
     }
   },
   "design_rules": {
     "clearance_m": 1,
     "boundary_setback_m": 1.5,
-    "circulation_width_m": 1.2,
+    "circulation_width_m": 1.5,
     "min_entry_points": 1,
     "quiet_buffer_m": 3
   },
   "entry_points": [
+    {
+      "x_m": 2.5,
+      "y_m": 11.87,
+      "edge": "bottom"
+    },
+    {
+      "x_m": 9.4,
+      "y_m": 11.28,
+      "edge": "bottom"
+    },
     {
       "x_m": 58.86,
       "y_m": 11.28,
       "edge": "bottom"
     },
     {
-      "x_m": 56.7,
-      "y_m": 16.28,
-      "edge": "bottom"
-    },
-    {
       "x_m": 62.64,
       "y_m": 11.28,
       "edge": "bottom"
-    },
-    {
-      "x_m": 64.8,
-      "y_m": 13.03,
-      "edge": "bottom"
     }
   ],
+  "circulation_paths": [
+    {
+      "item_id": "algo_1790783658370_0",
+      "points_m": [
+        {
+          "x_m": 2.5,
+          "y_m": 9.3
+        },
+        {
+          "x_m": 2.5,
+          "y_m": 6
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_1",
+      "points_m": [
+        {
+          "x_m": 11.600000000000001,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 2.5
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_2",
+      "points_m": [
+        {
+          "x_m": 11.600000000000001,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 2.5
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_3",
+      "points_m": [
+        {
+          "x_m": 11.600000000000001,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 2.5
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_5",
+      "points_m": [
+        {
+          "x_m": 11.600000000000001,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 9.700000000000001
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_7",
+      "points_m": [
+        {
+          "x_m": 58.5,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 57,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 57,
+          "y_m": 7.5
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_8",
+      "points_m": [
+        {
+          "x_m": 58.5,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 52.5,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 52.5,
+          "y_m": 9.600000000000001
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_9",
+      "points_m": [
+        {
+          "x_m": 11.600000000000001,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 11.4
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_10",
+      "points_m": [
+        {
+          "x_m": 11.600000000000001,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 11.600000000000001
+        },
+        {
+          "x_m": 41.300000000000004,
+          "y_m": 11.700000000000001
+        }
+      ]
+    },
+    {
+      "item_id": "algo_1790783658370_11",
+      "points_m": [
+        {
+          "x_m": 11.600000000000001,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.700000000000001
+        },
+        {
+          "x_m": 21,
+          "y_m": 8.9
+        }
+      ]
+    }
+  ],
+  "site_location": null,
+  "site_conditions": {
+    "wind_zone": null,
+    "wind_zone_manual": false,
+    "wind_zone_confidence": "none",
+    "wind_zone_source": null,
+    "north_deg": null,
+    "north_set": false,
+    "snow_zone": null,
+    "altitude_m": null,
+    "altitude_set": false,
+    "day_schedule": null
+  },
+  "assemblies": [
+    {
+      "key": "bauder_extensive_sedum",
+      "provider": "Bauder",
+      "provider_country": "Germany",
+      "system_name": "BauderEXTENSIVE Lightweight Sedum",
+      "category": "extensive",
+      "revit_type_name": "Sportify - Bauder BauderEXTENSIVE Lightweight Sedum",
+      "build_up_mm": null,
+      "saturated_kg_m2": null,
+      "water_storage_l_m2": null,
+      "source_url": "https://www.bauder.co.uk/green-and-blue-roofs/green-roofs/extensive-lightweight-sedum",
+      "total_thickness_m": 0.069,
+      "layers": [
+        {
+          "order": 0,
+          "name": "Mature sedum blanket",
+          "function": "vegetation",
+          "thickness_m": 0.025,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 1,
+          "name": "Extensive substrate",
+          "function": "substrate",
+          "thickness_m": 0.02,
+          "thickness_source": "published"
+        },
+        {
+          "order": 2,
+          "name": "Water retention and filter layer",
+          "function": "drainage",
+          "thickness_m": 0.02,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 3,
+          "name": "Root-resistant waterproofing",
+          "function": "waterproofing",
+          "thickness_m": 0.004,
+          "thickness_source": "typical"
+        }
+      ]
+    },
+    {
+      "key": "gravel_ballast",
+      "provider": "Generic",
+      "provider_country": "Germany",
+      "system_name": "Washed Gravel Ballast",
+      "category": "finish",
+      "revit_type_name": "Sportify - Generic Washed Gravel Ballast",
+      "build_up_mm": null,
+      "saturated_kg_m2": null,
+      "water_storage_l_m2": null,
+      "source_url": null,
+      "total_thickness_m": 0.057,
+      "layers": [
+        {
+          "order": 0,
+          "name": "Washed round gravel 16/32",
+          "function": "wearing",
+          "thickness_m": 0.05,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 1,
+          "name": "Filter fleece",
+          "function": "filter",
+          "thickness_m": 0.002,
+          "thickness_source": "typical"
+        },
+        {
+          "order": 2,
+          "name": "Protection mat",
+          "function": "protection",
+          "thickness_m": 0.005,
+          "thickness_source": "typical"
+        }
+      ]
+    }
+  ],
+  "unresolved_assemblies": [],
+  "roof_finish": {
+    "assembly_key": "gravel_ballast",
+    "revit_type_name": "Sportify - Generic Washed Gravel Ballast",
+    "net_area_m2": 385.01,
+    "roof_area_m2": 985.31,
+    "revit_openings_area_m2": 0,
+    "openings": [
+      {
+        "source": "zone",
+        "id": "zone_algo_1790783658370_0",
+        "x_m": 20,
+        "y_m": 0,
+        "length_m": 47.5,
+        "width_m": 1.5,
+        "points": [
+          {
+            "x_m": 20,
+            "y_m": 0
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 0
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 20,
+            "y_m": 1.5
+          }
+        ]
+      },
+      {
+        "source": "zone",
+        "id": "zone_algo_1790783658370_1",
+        "x_m": 66,
+        "y_m": 1.5,
+        "length_m": 1.5,
+        "width_m": 8.2,
+        "points": [
+          {
+            "x_m": 66,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 1.5
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 9.7
+          },
+          {
+            "x_m": 66,
+            "y_m": 9.7
+          }
+        ]
+      },
+      {
+        "source": "zone",
+        "id": "zone_algo_1790783658370_2",
+        "x_m": 0,
+        "y_m": 7,
+        "length_m": 1.5,
+        "width_m": 3.3000000000000007,
+        "points": [
+          {
+            "x_m": 0,
+            "y_m": 7
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 7
+          },
+          {
+            "x_m": 1.5,
+            "y_m": 10.3
+          },
+          {
+            "x_m": 0,
+            "y_m": 10.3
+          }
+        ]
+      },
+      {
+        "source": "zone",
+        "id": "zone_algo_1790783658370_3",
+        "x_m": 66.3,
+        "y_m": 9.78,
+        "length_m": 1.2000000000000028,
+        "width_m": 1.42,
+        "points": [
+          {
+            "x_m": 66.3,
+            "y_m": 9.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 9.78
+          },
+          {
+            "x_m": 67.5,
+            "y_m": 11.2
+          },
+          {
+            "x_m": 66.3,
+            "y_m": 11.2
+          }
+        ]
+      },
+      {
+        "source": "zone",
+        "id": "zone_algo_1790783658370_4",
+        "x_m": 13.5,
+        "y_m": 14.78,
+        "length_m": 43.2,
+        "width_m": 1.42,
+        "points": [
+          {
+            "x_m": 13.5,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 14.78
+          },
+          {
+            "x_m": 56.7,
+            "y_m": 16.2
+          },
+          {
+            "x_m": 13.5,
+            "y_m": 16.2
+          }
+        ]
+      },
+      {
+        "source": "zone",
+        "id": "zone_algo_1790783658370_5",
+        "x_m": 15,
+        "y_m": 9.7,
+        "length_m": 1.1000000000000014,
+        "width_m": 5,
+        "points": [
+          {
+            "x_m": 15,
+            "y_m": 9.7
+          },
+          {
+            "x_m": 16.1,
+            "y_m": 9.7
+          },
+          {
+            "x_m": 16.1,
+            "y_m": 14.7
+          },
+          {
+            "x_m": 15,
+            "y_m": 14.7
+          }
+        ]
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_0",
+        "x_m": 0,
+        "y_m": 0,
+        "length_m": 10,
+        "width_m": 5
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_1",
+        "x_m": 10,
+        "y_m": 0,
+        "length_m": 10,
+        "width_m": 5
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_2",
+        "x_m": 22,
+        "y_m": 1.5,
+        "length_m": 18.29,
+        "width_m": 9.14
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_3",
+        "x_m": 42.3,
+        "y_m": 1.5,
+        "length_m": 4.6,
+        "width_m": 7.6
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_4",
+        "x_m": 46.9,
+        "y_m": 1.5,
+        "length_m": 4.6,
+        "width_m": 7.6
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_5",
+        "x_m": 42.3,
+        "y_m": 10.6,
+        "length_m": 6,
+        "width_m": 4
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_7",
+        "x_m": 57.5,
+        "y_m": 1.5,
+        "length_m": 8,
+        "width_m": 5
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_8",
+        "x_m": 49.8,
+        "y_m": 10.6,
+        "length_m": 4,
+        "width_m": 4
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_9",
+        "x_m": 17.6,
+        "y_m": 12.3,
+        "length_m": 2.4,
+        "width_m": 2.4
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_10",
+        "x_m": 28.3,
+        "y_m": 12.6,
+        "length_m": 12,
+        "width_m": 1.5
+      },
+      {
+        "source": "piece",
+        "id": "algo_1790783658370_11",
+        "x_m": 17.6,
+        "y_m": 9.8,
+        "length_m": 2.4,
+        "width_m": 1
+      }
+    ]
+  },
+  "zones": [
+    {
+      "id": "zone_algo_1790783658370_0",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 20,
+        "top_left_y_m": 0,
+        "width_m": 47.5,
+        "height_m": 1.5
+      },
+      "points": [
+        {
+          "x_m": 20,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 0
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 1.5
+        },
+        {
+          "x_m": 20,
+          "y_m": 1.5
+        }
+      ],
+      "area_m2": 71.25,
+      "assembly_key": "bauder_extensive_sedum",
+      "family": {
+        "key": "green_roof_module",
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 95,
+          "length": 47500,
+          "width": 1500,
+          "rimLevel": 195,
+          "trayFloorTop": 120,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
+          "freeboard": 35,
+          "capTop": 265,
+          "outletTop": 150
+        },
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "zone_algo_1790783658370_1",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 66,
+        "top_left_y_m": 1.5,
+        "width_m": 1.5,
+        "height_m": 8.2
+      },
+      "points": [
+        {
+          "x_m": 66,
+          "y_m": 1.5
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 1.5
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 9.7
+        },
+        {
+          "x_m": 66,
+          "y_m": 9.7
+        }
+      ],
+      "area_m2": 12.300000000000068,
+      "assembly_key": "bauder_extensive_sedum",
+      "family": {
+        "key": "green_roof_module",
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 95,
+          "length": 1500,
+          "width": 8200,
+          "rimLevel": 195,
+          "trayFloorTop": 120,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
+          "freeboard": 35,
+          "capTop": 265,
+          "outletTop": 150
+        },
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "zone_algo_1790783658370_2",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 0,
+        "top_left_y_m": 7,
+        "width_m": 1.5,
+        "height_m": 3.3000000000000007
+      },
+      "points": [
+        {
+          "x_m": 0,
+          "y_m": 7
+        },
+        {
+          "x_m": 1.5,
+          "y_m": 7
+        },
+        {
+          "x_m": 1.5,
+          "y_m": 10.3
+        },
+        {
+          "x_m": 0,
+          "y_m": 10.3
+        }
+      ],
+      "area_m2": 4.950000000000001,
+      "assembly_key": "bauder_extensive_sedum",
+      "family": {
+        "key": "green_roof_module",
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 95,
+          "length": 1500,
+          "width": 3300,
+          "rimLevel": 195,
+          "trayFloorTop": 120,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
+          "freeboard": 35,
+          "capTop": 265,
+          "outletTop": 150
+        },
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "zone_algo_1790783658370_3",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 66.3,
+        "top_left_y_m": 9.78,
+        "width_m": 1.2000000000000028,
+        "height_m": 1.42
+      },
+      "points": [
+        {
+          "x_m": 66.3,
+          "y_m": 9.78
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 9.78
+        },
+        {
+          "x_m": 67.5,
+          "y_m": 11.2
+        },
+        {
+          "x_m": 66.3,
+          "y_m": 11.2
+        }
+      ],
+      "area_m2": 1.7039999999999509,
+      "assembly_key": "bauder_extensive_sedum",
+      "family": {
+        "key": "green_roof_module",
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 95,
+          "length": 1200,
+          "width": 1420,
+          "rimLevel": 195,
+          "trayFloorTop": 120,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
+          "freeboard": 35,
+          "capTop": 265,
+          "outletTop": 150
+        },
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "zone_algo_1790783658370_4",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 13.5,
+        "top_left_y_m": 14.78,
+        "width_m": 43.2,
+        "height_m": 1.42
+      },
+      "points": [
+        {
+          "x_m": 13.5,
+          "y_m": 14.78
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 14.78
+        },
+        {
+          "x_m": 56.7,
+          "y_m": 16.2
+        },
+        {
+          "x_m": 13.5,
+          "y_m": 16.2
+        }
+      ],
+      "area_m2": 61.34399999999998,
+      "assembly_key": "bauder_extensive_sedum",
+      "family": {
+        "key": "green_roof_module",
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 95,
+          "length": 43200,
+          "width": 1420,
+          "rimLevel": 195,
+          "trayFloorTop": 120,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
+          "freeboard": 35,
+          "capTop": 265,
+          "outletTop": 150
+        },
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "zone_algo_1790783658370_5",
+      "kind": "green_roof",
+      "label": "Green roof",
+      "bounding_box": {
+        "top_left_x_m": 15,
+        "top_left_y_m": 9.7,
+        "width_m": 1.1000000000000014,
+        "height_m": 5
+      },
+      "points": [
+        {
+          "x_m": 15,
+          "y_m": 9.7
+        },
+        {
+          "x_m": 16.1,
+          "y_m": 9.7
+        },
+        {
+          "x_m": 16.1,
+          "y_m": 14.7
+        },
+        {
+          "x_m": 15,
+          "y_m": 14.7
+        }
+      ],
+      "area_m2": 5.5,
+      "assembly_key": "bauder_extensive_sedum",
+      "family": {
+        "key": "green_roof_module",
+        "family": "Sportify_GreenRoofModule",
+        "type": "Green Roof Module",
+        "units": "mm",
+        "parameters": {
+          "defaultElevation": 0,
+          "pedestalHeight": 100,
+          "protectionMat": 0,
+          "drainageDepth": 20,
+          "filterFleece": 0,
+          "substrateDepth": 20,
+          "outletHeight": 30,
+          "outletBottomOffset": 25,
+          "outletTopOffset": 55,
+          "centreRow": true,
+          "seatCap": false,
+          "tree": false,
+          "rimHeight": 95,
+          "length": 1100,
+          "width": 5000,
+          "rimLevel": 195,
+          "trayFloorTop": 120,
+          "matTop": 120,
+          "drainageTop": 140,
+          "fleeceTop": 140,
+          "substrateTop": 160,
+          "freeboard": 35,
+          "capTop": 265,
+          "outletTop": 150
+        },
+        "strip_generic_model": true,
+        "floor_top_mm": 160,
+        "trayed_mm": 40,
+        "untrayed_layers": [
+          {
+            "name": "Mature sedum blanket",
+            "fn": "vegetation",
+            "mm": 25
+          },
+          {
+            "name": "Root-resistant waterproofing",
+            "fn": "waterproofing",
+            "mm": 4
+          }
+        ]
+      }
+    }
+  ],
+  "algo_blocks": [
+    {
+      "kind": "lift",
+      "x_m": 0.5,
+      "y_m": 8.5,
+      "width_m": 2.5,
+      "height_m": 2.5
+    }
+  ],
+  "walls": [
+    {
+      "thickness_m": 0.3,
+      "rects_m": [
+        [
+          0,
+          0,
+          20.15,
+          0.15
+        ],
+        [
+          0,
+          6.85,
+          9.5,
+          7.15
+        ],
+        [
+          10.5,
+          6.85,
+          20.15,
+          7.15
+        ],
+        [
+          0,
+          0.15,
+          0.15,
+          6.85
+        ],
+        [
+          19.85,
+          0.15,
+          20.15,
+          6.85
+        ]
+      ],
+      "door": {
+        "x0": 9.5,
+        "y0": 6.85,
+        "x1": 10.5,
+        "y1": 7.15,
+        "side": "S"
+      }
+    }
+  ],
+  "structure": {
+    "source": "revit",
+    "deck_capacity_kn_m2": null,
+    "natural_frequency_hz": null,
+    "grid_lines": [
+      {
+        "name": "1",
+        "start_m": {
+          "x_m": -0.109,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": -0.109,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "1",
+        "start_m": {
+          "x_m": -0.109,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": -0.109,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "1",
+        "start_m": {
+          "x_m": -0.109,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": -0.109,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "1",
+        "start_m": {
+          "x_m": -0.109,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": -0.109,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "1",
+        "start_m": {
+          "x_m": -0.109,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": -0.109,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "10",
+        "start_m": {
+          "x_m": 24.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 24.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "10",
+        "start_m": {
+          "x_m": 24.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 24.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "10",
+        "start_m": {
+          "x_m": 24.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 24.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "10",
+        "start_m": {
+          "x_m": 24.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 24.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "10",
+        "start_m": {
+          "x_m": 24.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 24.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "11",
+        "start_m": {
+          "x_m": 27,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 27,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "11",
+        "start_m": {
+          "x_m": 27,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 27,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "11",
+        "start_m": {
+          "x_m": 27,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 27,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "11",
+        "start_m": {
+          "x_m": 27,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 27,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "11",
+        "start_m": {
+          "x_m": 27,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 27,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "12",
+        "start_m": {
+          "x_m": 29.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 29.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "12",
+        "start_m": {
+          "x_m": 29.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 29.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "12",
+        "start_m": {
+          "x_m": 29.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 29.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "12",
+        "start_m": {
+          "x_m": 29.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 29.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "12",
+        "start_m": {
+          "x_m": 29.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 29.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "13",
+        "start_m": {
+          "x_m": 32.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 32.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "13",
+        "start_m": {
+          "x_m": 32.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 32.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "13",
+        "start_m": {
+          "x_m": 32.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 32.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "13",
+        "start_m": {
+          "x_m": 32.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 32.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "13",
+        "start_m": {
+          "x_m": 32.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 32.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "14",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "14",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "14",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "14",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "14",
+        "start_m": {
+          "x_m": 35.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 35.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "15",
+        "start_m": {
+          "x_m": 37.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 37.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "15",
+        "start_m": {
+          "x_m": 37.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 37.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "15",
+        "start_m": {
+          "x_m": 37.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 37.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "15",
+        "start_m": {
+          "x_m": 37.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 37.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "15",
+        "start_m": {
+          "x_m": 37.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 37.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "16",
+        "start_m": {
+          "x_m": 40.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 40.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "16",
+        "start_m": {
+          "x_m": 40.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 40.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "16",
+        "start_m": {
+          "x_m": 40.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 40.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "16",
+        "start_m": {
+          "x_m": 40.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 40.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "16",
+        "start_m": {
+          "x_m": 40.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 40.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "17",
+        "start_m": {
+          "x_m": 43.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 43.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "17",
+        "start_m": {
+          "x_m": 43.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 43.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "17",
+        "start_m": {
+          "x_m": 43.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 43.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "17",
+        "start_m": {
+          "x_m": 43.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 43.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "17",
+        "start_m": {
+          "x_m": 43.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 43.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "18",
+        "start_m": {
+          "x_m": 45.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 45.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "18",
+        "start_m": {
+          "x_m": 45.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 45.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "18",
+        "start_m": {
+          "x_m": 45.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 45.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "18",
+        "start_m": {
+          "x_m": 45.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 45.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "18",
+        "start_m": {
+          "x_m": 45.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 45.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "19",
+        "start_m": {
+          "x_m": 48.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 48.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "19",
+        "start_m": {
+          "x_m": 48.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 48.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "19",
+        "start_m": {
+          "x_m": 48.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 48.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "19",
+        "start_m": {
+          "x_m": 48.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 48.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "19",
+        "start_m": {
+          "x_m": 48.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 48.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "2",
+        "start_m": {
+          "x_m": 2.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 2.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "2",
+        "start_m": {
+          "x_m": 2.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 2.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "2",
+        "start_m": {
+          "x_m": 2.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 2.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "2",
+        "start_m": {
+          "x_m": 2.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 2.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "2",
+        "start_m": {
+          "x_m": 2.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 2.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "20",
+        "start_m": {
+          "x_m": 51.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 51.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "20",
+        "start_m": {
+          "x_m": 51.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 51.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "20",
+        "start_m": {
+          "x_m": 51.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 51.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "20",
+        "start_m": {
+          "x_m": 51.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 51.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "20",
+        "start_m": {
+          "x_m": 51.3,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 51.3,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "21",
+        "start_m": {
+          "x_m": 54,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 54,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "21",
+        "start_m": {
+          "x_m": 54,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 54,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "21",
+        "start_m": {
+          "x_m": 54,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 54,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "21",
+        "start_m": {
+          "x_m": 54,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 54,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "21",
+        "start_m": {
+          "x_m": 54,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 54,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "22",
+        "start_m": {
+          "x_m": 56.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "22",
+        "start_m": {
+          "x_m": 56.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "22",
+        "start_m": {
+          "x_m": 56.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "22",
+        "start_m": {
+          "x_m": 56.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "22",
+        "start_m": {
+          "x_m": 56.7,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.7,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "22'",
+        "start_m": {
+          "x_m": 56.833,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.833,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "22'",
+        "start_m": {
+          "x_m": 56.833,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.833,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "22'",
+        "start_m": {
+          "x_m": 56.833,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.833,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "22'",
+        "start_m": {
+          "x_m": 56.833,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.833,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "22'",
+        "start_m": {
+          "x_m": 56.833,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 56.833,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "23",
+        "start_m": {
+          "x_m": 59.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 59.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "23",
+        "start_m": {
+          "x_m": 59.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 59.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "23",
+        "start_m": {
+          "x_m": 59.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 59.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "23",
+        "start_m": {
+          "x_m": 59.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 59.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "23",
+        "start_m": {
+          "x_m": 59.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 59.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "24",
+        "start_m": {
+          "x_m": 62.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 62.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "24",
+        "start_m": {
+          "x_m": 62.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 62.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "24",
+        "start_m": {
+          "x_m": 62.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 62.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "24",
+        "start_m": {
+          "x_m": 62.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 62.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "24",
+        "start_m": {
+          "x_m": 62.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 62.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "24'",
+        "start_m": {
+          "x_m": 64.667,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.667,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "24'",
+        "start_m": {
+          "x_m": 64.667,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.667,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "24'",
+        "start_m": {
+          "x_m": 64.667,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.667,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "24'",
+        "start_m": {
+          "x_m": 64.667,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.667,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "24'",
+        "start_m": {
+          "x_m": 64.667,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.667,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "25",
+        "start_m": {
+          "x_m": 64.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "25",
+        "start_m": {
+          "x_m": 64.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "25",
+        "start_m": {
+          "x_m": 64.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "25",
+        "start_m": {
+          "x_m": 64.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "25",
+        "start_m": {
+          "x_m": 64.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 64.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "26",
+        "start_m": {
+          "x_m": 67.609,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 67.609,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "26",
+        "start_m": {
+          "x_m": 67.609,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 67.609,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "26",
+        "start_m": {
+          "x_m": 67.609,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 67.609,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "26",
+        "start_m": {
+          "x_m": 67.609,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 67.609,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "26",
+        "start_m": {
+          "x_m": 67.609,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 67.609,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "3",
+        "start_m": {
+          "x_m": 5.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "3",
+        "start_m": {
+          "x_m": 5.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "3",
+        "start_m": {
+          "x_m": 5.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "3",
+        "start_m": {
+          "x_m": 5.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "3",
+        "start_m": {
+          "x_m": 5.4,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.4,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "3'",
+        "start_m": {
+          "x_m": 5.533,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.533,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "3'",
+        "start_m": {
+          "x_m": 5.533,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.533,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "3'",
+        "start_m": {
+          "x_m": 5.533,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.533,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "3'",
+        "start_m": {
+          "x_m": 5.533,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.533,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "3'",
+        "start_m": {
+          "x_m": 5.533,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 5.533,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "4",
+        "start_m": {
+          "x_m": 8.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 8.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "4",
+        "start_m": {
+          "x_m": 8.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 8.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "4",
+        "start_m": {
+          "x_m": 8.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 8.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "4",
+        "start_m": {
+          "x_m": 8.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 8.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "4",
+        "start_m": {
+          "x_m": 8.1,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 8.1,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "5",
+        "start_m": {
+          "x_m": 10.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 10.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "5",
+        "start_m": {
+          "x_m": 10.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 10.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "5",
+        "start_m": {
+          "x_m": 10.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 10.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "5",
+        "start_m": {
+          "x_m": 10.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 10.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "5",
+        "start_m": {
+          "x_m": 10.8,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 10.8,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "5'",
+        "start_m": {
+          "x_m": 13.367,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.367,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "5'",
+        "start_m": {
+          "x_m": 13.367,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.367,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "5'",
+        "start_m": {
+          "x_m": 13.367,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.367,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "5'",
+        "start_m": {
+          "x_m": 13.367,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.367,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "5'",
+        "start_m": {
+          "x_m": 13.367,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.367,
+          "y_m": 10.78
+        }
+      },
+      {
+        "name": "6",
+        "start_m": {
+          "x_m": 13.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "6",
+        "start_m": {
+          "x_m": 13.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "6",
+        "start_m": {
+          "x_m": 13.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "6",
+        "start_m": {
+          "x_m": 13.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "6",
+        "start_m": {
+          "x_m": 13.5,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 13.5,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "7",
+        "start_m": {
+          "x_m": 16.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 16.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "7",
+        "start_m": {
+          "x_m": 16.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 16.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "7",
+        "start_m": {
+          "x_m": 16.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 16.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "7",
+        "start_m": {
+          "x_m": 16.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 16.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "7",
+        "start_m": {
+          "x_m": 16.2,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 16.2,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "8",
+        "start_m": {
+          "x_m": 18.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 18.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "8",
+        "start_m": {
+          "x_m": 18.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 18.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "8",
+        "start_m": {
+          "x_m": 18.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 18.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "8",
+        "start_m": {
+          "x_m": 18.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 18.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "8",
+        "start_m": {
+          "x_m": 18.9,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 18.9,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "9",
+        "start_m": {
+          "x_m": 21.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 21.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "9",
+        "start_m": {
+          "x_m": 21.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 21.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "9",
+        "start_m": {
+          "x_m": 21.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 21.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "9",
+        "start_m": {
+          "x_m": 21.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 21.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "9",
+        "start_m": {
+          "x_m": 21.6,
+          "y_m": 16.531
+        },
+        "end_m": {
+          "x_m": 21.6,
+          "y_m": -0.25
+        }
+      },
+      {
+        "name": "H",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 16.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 16.28
+        }
+      },
+      {
+        "name": "H",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 16.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 16.28
+        }
+      },
+      {
+        "name": "H",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 16.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 16.28
+        }
+      },
+      {
+        "name": "H",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 16.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 16.28
+        }
+      },
+      {
+        "name": "H",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 16.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 16.28
+        }
+      },
+      {
+        "name": "I",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.78
+        }
+      },
+      {
+        "name": "I",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.78
+        }
+      },
+      {
+        "name": "I",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.78
+        }
+      },
+      {
+        "name": "I",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.78
+        }
+      },
+      {
+        "name": "I",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 13.78
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.78
+        }
+      },
+      {
+        "name": "I'",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.875
+        },
+        "end_m": {
+          "x_m": 5.6,
+          "y_m": 11.875
+        }
+      },
+      {
+        "name": "I'",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.875
+        },
+        "end_m": {
+          "x_m": 5.6,
+          "y_m": 11.875
+        }
+      },
+      {
+        "name": "I'",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.875
+        },
+        "end_m": {
+          "x_m": 5.6,
+          "y_m": 11.875
+        }
+      },
+      {
+        "name": "I'",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.875
+        },
+        "end_m": {
+          "x_m": 5.6,
+          "y_m": 11.875
+        }
+      },
+      {
+        "name": "I'",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.875
+        },
+        "end_m": {
+          "x_m": 5.6,
+          "y_m": 11.875
+        }
+      },
+      {
+        "name": "I''",
+        "start_m": {
+          "x_m": 64.6,
+          "y_m": 13.03
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.03
+        }
+      },
+      {
+        "name": "I''",
+        "start_m": {
+          "x_m": 64.6,
+          "y_m": 13.03
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.03
+        }
+      },
+      {
+        "name": "I''",
+        "start_m": {
+          "x_m": 64.6,
+          "y_m": 13.03
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.03
+        }
+      },
+      {
+        "name": "I''",
+        "start_m": {
+          "x_m": 64.6,
+          "y_m": 13.03
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.03
+        }
+      },
+      {
+        "name": "I''",
+        "start_m": {
+          "x_m": 64.6,
+          "y_m": 13.03
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 13.03
+        }
+      },
+      {
+        "name": "J",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 11.28
+        }
+      },
+      {
+        "name": "J",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 11.28
+        }
+      },
+      {
+        "name": "J",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 11.28
+        }
+      },
+      {
+        "name": "J",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 11.28
+        }
+      },
+      {
+        "name": "J",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 11.28
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 11.28
+        }
+      },
+      {
+        "name": "K",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 9.19
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 9.19
+        }
+      },
+      {
+        "name": "K",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 9.19
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 9.19
+        }
+      },
+      {
+        "name": "K",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 9.19
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 9.19
+        }
+      },
+      {
+        "name": "K",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 9.19
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 9.19
+        }
+      },
+      {
+        "name": "K",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 9.19
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 9.19
+        }
+      },
+      {
+        "name": "L",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 7.09
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 7.09
+        }
+      },
+      {
+        "name": "L",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 7.09
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 7.09
+        }
+      },
+      {
+        "name": "L",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 7.09
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 7.09
+        }
+      },
+      {
+        "name": "L",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 7.09
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 7.09
+        }
+      },
+      {
+        "name": "L",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 7.09
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 7.09
+        }
+      },
+      {
+        "name": "M",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 5
+        }
+      },
+      {
+        "name": "M",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 5
+        }
+      },
+      {
+        "name": "M",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 5
+        }
+      },
+      {
+        "name": "M",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 5
+        }
+      },
+      {
+        "name": "M",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 5
+        }
+      },
+      {
+        "name": "N",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 2.5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 2.5
+        }
+      },
+      {
+        "name": "N",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 2.5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 2.5
+        }
+      },
+      {
+        "name": "N",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 2.5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 2.5
+        }
+      },
+      {
+        "name": "N",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 2.5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 2.5
+        }
+      },
+      {
+        "name": "N",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 2.5
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 2.5
+        }
+      },
+      {
+        "name": "O",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 0
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 0
+        }
+      },
+      {
+        "name": "O",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 0
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 0
+        }
+      },
+      {
+        "name": "O",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 0
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 0
+        }
+      },
+      {
+        "name": "O",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 0
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 0
+        }
+      },
+      {
+        "name": "O",
+        "start_m": {
+          "x_m": -0.25,
+          "y_m": 0
+        },
+        "end_m": {
+          "x_m": 67.75,
+          "y_m": 0
+        }
+      }
+    ],
+    "columns": [
+      {
+        "label": "",
+        "x_m": -0.109,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": -0.109,
+        "y_m": 2.5
+      },
+      {
+        "label": "",
+        "x_m": -0.109,
+        "y_m": 5
+      },
+      {
+        "label": "",
+        "x_m": -0.109,
+        "y_m": 7.09
+      },
+      {
+        "label": "",
+        "x_m": -0.109,
+        "y_m": 9.19
+      },
+      {
+        "label": "",
+        "x_m": -0.109,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": -0.109,
+        "y_m": 11.875
+      },
+      {
+        "label": "",
+        "x_m": 2.7,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 2.7,
+        "y_m": 11.875
+      },
+      {
+        "label": "",
+        "x_m": 5.4,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 5.4,
+        "y_m": 11.875
+      },
+      {
+        "label": "",
+        "x_m": 5.533,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 5.533,
+        "y_m": 13.78
+      },
+      {
+        "label": "",
+        "x_m": 5.533,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 8.1,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 8.1,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 10.8,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 10.8,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 13.367,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 13.367,
+        "y_m": 13.78
+      },
+      {
+        "label": "",
+        "x_m": 13.367,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 13.5,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 16.2,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 16.2,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 18.9,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 18.9,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 21.6,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 21.6,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 24.3,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 24.3,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 27,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 27,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 29.7,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 29.7,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 32.4,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 32.4,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 35.1,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 35.1,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 35.1,
+        "y_m": 13.78
+      },
+      {
+        "label": "",
+        "x_m": 35.1,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 37.8,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 37.8,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 40.5,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 40.5,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 43.2,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 43.2,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 45.9,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 45.9,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 48.6,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 48.6,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 51.3,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 51.3,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 54,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 54,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 56.7,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 56.833,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 56.833,
+        "y_m": 13.78
+      },
+      {
+        "label": "",
+        "x_m": 56.833,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 59.4,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 62.1,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 64.667,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 64.667,
+        "y_m": 13.78
+      },
+      {
+        "label": "",
+        "x_m": 64.667,
+        "y_m": 16.28
+      },
+      {
+        "label": "",
+        "x_m": 64.8,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 64.8,
+        "y_m": 13.03
+      },
+      {
+        "label": "",
+        "x_m": 67.609,
+        "y_m": 0
+      },
+      {
+        "label": "",
+        "x_m": 67.609,
+        "y_m": 2.5
+      },
+      {
+        "label": "",
+        "x_m": 67.609,
+        "y_m": 5
+      },
+      {
+        "label": "",
+        "x_m": 67.609,
+        "y_m": 7.09
+      },
+      {
+        "label": "",
+        "x_m": 67.609,
+        "y_m": 9.19
+      },
+      {
+        "label": "",
+        "x_m": 67.609,
+        "y_m": 11.28
+      },
+      {
+        "label": "",
+        "x_m": 67.609,
+        "y_m": 13.03
+      }
+    ]
+  },
   "placements": [
     {
-      "id": "gb_low_0",
+      "id": "algo_1790783658370_0",
       "category": "activity",
       "label": "Locker & Dressing Room Module",
       "insertion_point": {
-        "center_x_m": 50.2,
-        "center_y_m": 10.2
+        "center_x_m": 5,
+        "center_y_m": 2.5
       },
       "bounding_box": {
-        "top_left_x_m": 45.2,
-        "top_left_y_m": 7.7,
+        "top_left_x_m": 0,
+        "top_left_y_m": 0,
         "width_m": 10,
         "height_m": 5
       },
@@ -1785,16 +4129,16 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       }
     },
     {
-      "id": "gb_low_1",
+      "id": "algo_1790783658370_1",
       "category": "activity",
       "label": "Bathroom & Shower Module",
       "insertion_point": {
-        "center_x_m": 38.2,
-        "center_y_m": 10.2
+        "center_x_m": 15,
+        "center_y_m": 2.5
       },
       "bounding_box": {
-        "top_left_x_m": 33.2,
-        "top_left_y_m": 7.7,
+        "top_left_x_m": 10,
+        "top_left_y_m": 0,
         "width_m": 10,
         "height_m": 5
       },
@@ -1824,21 +4168,60 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       }
     },
     {
-      "id": "gb_low_2",
+      "id": "algo_1790783658370_2",
       "category": "activity",
-      "label": "Ping Pong Station",
+      "label": "Pickleball Court",
       "insertion_point": {
-        "center_x_m": 27.4,
-        "center_y_m": 7.8
+        "center_x_m": 31.145,
+        "center_y_m": 6.07
       },
       "bounding_box": {
-        "top_left_x_m": 23.6,
-        "top_left_y_m": 5.5,
-        "width_m": 7.6,
-        "height_m": 4.6
+        "top_left_x_m": 22,
+        "top_left_y_m": 1.5,
+        "width_m": 18.29,
+        "height_m": 9.14
       },
       "transform": {
         "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "quality_key": "ACTIVITY_PICKLEBALL_COURT",
+        "activity": {
+          "type_id": "pickleball_court",
+          "category": "court",
+          "norm": "Reference sheet",
+          "dimensions": {
+            "length_m": 18.29,
+            "width_m": 9.14
+          }
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        }
+      }
+    },
+    {
+      "id": "algo_1790783658370_3",
+      "category": "activity",
+      "label": "Ping Pong Station",
+      "insertion_point": {
+        "center_x_m": 44.599999999999994,
+        "center_y_m": 5.3
+      },
+      "bounding_box": {
+        "top_left_x_m": 42.3,
+        "top_left_y_m": 1.5,
+        "width_m": 4.6,
+        "height_m": 7.6
+      },
+      "transform": {
+        "rotation_deg": 90
       },
       "parameters": {
         "version": "1.0",
@@ -1887,21 +4270,21 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       }
     },
     {
-      "id": "gb_low_3",
+      "id": "algo_1790783658370_4",
       "category": "activity",
       "label": "Ping Pong Station",
       "insertion_point": {
-        "center_x_m": 27.4,
-        "center_y_m": 12.4
+        "center_x_m": 49.199999999999996,
+        "center_y_m": 5.3
       },
       "bounding_box": {
-        "top_left_x_m": 23.6,
-        "top_left_y_m": 10.1,
-        "width_m": 7.6,
-        "height_m": 4.6
+        "top_left_x_m": 46.9,
+        "top_left_y_m": 1.5,
+        "width_m": 4.6,
+        "height_m": 7.6
       },
       "transform": {
-        "rotation_deg": 0
+        "rotation_deg": 90
       },
       "parameters": {
         "version": "1.0",
@@ -1950,148 +4333,17 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       }
     },
     {
-      "id": "gb_low_4",
+      "id": "algo_1790783658370_5",
       "category": "activity",
-      "label": "Padel Tennis Court",
+      "label": "Teqball Table",
       "insertion_point": {
-        "center_x_m": 11.5,
-        "center_y_m": 4.5
+        "center_x_m": 45.3,
+        "center_y_m": 12.6
       },
       "bounding_box": {
-        "top_left_x_m": 1.5,
-        "top_left_y_m": 1.5,
-        "width_m": 20,
-        "height_m": 6
-      },
-      "transform": {
-        "rotation_deg": 0
-      },
-      "parameters": {
-        "version": "1.0",
-        "generator": "Sportify-Algorithmic-Placement",
-        "quality_key": "ACTIVITY_PADEL_COURT",
-        "activity": {
-          "type_id": "padel_court",
-          "category": "court",
-          "norm": "FIP (singles court)",
-          "dimensions": {
-            "length_m": 20,
-            "width_m": 6
-          },
-          "variant": "mini"
-        },
-        "materials": {
-          "surface": "Reinforced synthetic surface",
-          "structure": "Galvanized steel",
-          "quality_level": "medium",
-          "reference_material": null,
-          "reference_provider": null
-        },
-        "padel": {
-          "court_type": "single",
-          "wall_system": "panoramic",
-          "surface": "artificial_grass",
-          "surface_colour": "blue",
-          "appearance_hex": "#366daa",
-          "length_m": 20,
-          "width_m": 6,
-          "net_centre_height_m": 0.88,
-          "net_post_height_m": 0.92,
-          "service_line_from_net_m": 6.95,
-          "back_wall_glass_height_m": 3,
-          "back_wall_mesh_height_m": 1,
-          "side_corner_glass": {
-            "length_m": 2,
-            "height_m": 3
-          },
-          "side_step_glass": {
-            "length_m": 2,
-            "height_m": 2
-          },
-          "side_centre_mesh_height_m": 3,
-          "glass_thickness_mm": 12,
-          "clear_height_min_m": 6,
-          "clear_height_recommended_m": 8,
-          "weight_kg": 5646,
-          "weight_kg_m2": 47.1,
-          "weight_breakdown": [
-            {
-              "part": "Tempered glass",
-              "kg": 2280
-            },
-            {
-              "part": "Mesh panels",
-              "kg": 406
-            },
-            {
-              "part": "Steel frame",
-              "kg": 1080
-            },
-            {
-              "part": "Net and posts",
-              "kg": 80
-            },
-            {
-              "part": "Playing surface",
-              "kg": 1800
-            }
-          ],
-          "weight_basis": "estimated",
-          "source": "FIP Rules of Padel (2026 revision)"
-        }
-      }
-    },
-    {
-      "id": "gb_low_5",
-      "category": "activity",
-      "label": "Modular Tower Slide",
-      "insertion_point": {
-        "center_x_m": 62.5,
-        "center_y_m": 5.2
-      },
-      "bounding_box": {
-        "top_left_x_m": 59,
-        "top_left_y_m": 2.7,
-        "width_m": 7,
-        "height_m": 5
-      },
-      "transform": {
-        "rotation_deg": 0
-      },
-      "parameters": {
-        "version": "1.0",
-        "generator": "Sportify-Algorithmic-Placement",
-        "quality_key": "ACTIVITY_MODULAR_TOWER_SLIDE",
-        "activity": {
-          "type_id": "modular_tower_slide",
-          "category": "playground",
-          "norm": "Reference sheet",
-          "dimensions": {
-            "length_m": 7,
-            "width_m": 5
-          }
-        },
-        "materials": {
-          "surface": "Reinforced synthetic surface",
-          "structure": "Galvanized steel",
-          "quality_level": "medium",
-          "reference_material": null,
-          "reference_provider": null
-        }
-      }
-    },
-    {
-      "id": "gb_low_6",
-      "category": "activity",
-      "label": "Sand Pit",
-      "insertion_point": {
-        "center_x_m": 35.2,
-        "center_y_m": 3.5
-      },
-      "bounding_box": {
-        "top_left_x_m": 33.2,
-        "top_left_y_m": 1.5,
-        "width_m": 4,
+        "top_left_x_m": 42.3,
+        "top_left_y_m": 10.6,
+        "width_m": 6,
         "height_m": 4
       },
       "transform": {
@@ -2100,13 +4352,13 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       "parameters": {
         "version": "1.0",
         "generator": "Sportify-Algorithmic-Placement",
-        "quality_key": "ACTIVITY_SAND_PIT",
+        "quality_key": "ACTIVITY_TEQBALL_TABLE",
         "activity": {
-          "type_id": "sand_pit",
-          "category": "playground",
+          "type_id": "teqball_table",
+          "category": "court",
           "norm": "Reference sheet",
           "dimensions": {
-            "length_m": 4,
+            "length_m": 6,
             "width_m": 4
           }
         },
@@ -2120,16 +4372,55 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
       }
     },
     {
-      "id": "gb_low_7",
+      "id": "algo_1790783658370_7",
+      "category": "activity",
+      "label": "HIIT Turf Grid",
+      "insertion_point": {
+        "center_x_m": 61.5,
+        "center_y_m": 4
+      },
+      "bounding_box": {
+        "top_left_x_m": 57.5,
+        "top_left_y_m": 1.5,
+        "width_m": 8,
+        "height_m": 5
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "quality_key": "ACTIVITY_HIIT_TURF_GRID",
+        "activity": {
+          "type_id": "hiit_turf_grid",
+          "category": "fitness",
+          "norm": "Reference sheet",
+          "dimensions": {
+            "length_m": 8,
+            "width_m": 5
+          }
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        }
+      }
+    },
+    {
+      "id": "algo_1790783658370_8",
       "category": "activity",
       "label": "Trampoline",
       "insertion_point": {
-        "center_x_m": 41.2,
-        "center_y_m": 3.5
+        "center_x_m": 51.8,
+        "center_y_m": 12.6
       },
       "bounding_box": {
-        "top_left_x_m": 39.2,
-        "top_left_y_m": 1.5,
+        "top_left_x_m": 49.8,
+        "top_left_y_m": 10.6,
         "width_m": 4,
         "height_m": 4
       },
@@ -2155,65 +4446,152 @@ const GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD = {
           "quality_level": "medium",
           "reference_material": null,
           "reference_provider": null
-        },
-        "familyInstance": {
-          "type": "trampoline",
-          "label": "Trampoline in a Sand Pit",
-          "family": "Trampoline-SandPit",
-          "units": "mm",
+        }
+      }
+    },
+    {
+      "id": "algo_1790783658370_9",
+      "category": "gardenBlock",
+      "label": "Planter T (with pedestal)",
+      "insertion_point": {
+        "center_x_m": 18.8,
+        "center_y_m": 13.5
+      },
+      "bounding_box": {
+        "top_left_x_m": 17.6,
+        "top_left_y_m": 12.3,
+        "width_m": 2.4,
+        "height_m": 2.4
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "gardenBlock": {
+          "type": "planter_t_pedestal",
+          "label": "Planter T (with pedestal)",
+          "family": "Planter",
           "params": {
-            "Jump_Radius": 1450,
-            "Pad_Width": 300,
-            "Base_Height": 400,
-            "Bedding": 50,
-            "Net_Height": 2100,
-            "Show_Net": false
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 2400,
+            "rimHeight": 900,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 1000,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 530,
+            "capTop": 1070,
+            "outletTop": 155
           }
         }
       }
-    }
-  ],
-  "walls": [
+    },
     {
-      "thickness_m": 0.3,
-      "rects_m": [
-        [
-          33.05,
-          7.55,
-          55.35,
-          7.85
-        ],
-        [
-          33.05,
-          12.55,
-          43.7,
-          12.85
-        ],
-        [
-          44.7,
-          12.55,
-          55.35,
-          12.85
-        ],
-        [
-          33.05,
-          7.85,
-          33.35,
-          12.55
-        ],
-        [
-          55.05,
-          7.85,
-          55.35,
-          12.55
-        ]
-      ],
-      "door": {
-        "x0": 43.7,
-        "y0": 12.55,
-        "x1": 44.7,
-        "y1": 12.85,
-        "side": "S"
+      "id": "algo_1790783658370_10",
+      "category": "activity",
+      "label": "Mini-Golf Lane",
+      "insertion_point": {
+        "center_x_m": 34.3,
+        "center_y_m": 13.35
+      },
+      "bounding_box": {
+        "top_left_x_m": 28.3,
+        "top_left_y_m": 12.6,
+        "width_m": 12,
+        "height_m": 1.5
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "quality_key": "ACTIVITY_MINIGOLF_LANE",
+        "activity": {
+          "type_id": "minigolf_lane",
+          "category": "leisure",
+          "norm": "Reference sheet",
+          "dimensions": {
+            "length_m": 12,
+            "width_m": 1.5
+          }
+        },
+        "materials": {
+          "surface": "Reinforced synthetic surface",
+          "structure": "Galvanized steel",
+          "quality_level": "medium",
+          "reference_material": null,
+          "reference_provider": null
+        }
+      }
+    },
+    {
+      "id": "algo_1790783658370_11",
+      "category": "gardenBlock",
+      "label": "Planter S (with pedestal)",
+      "insertion_point": {
+        "center_x_m": 18.8,
+        "center_y_m": 10.3
+      },
+      "bounding_box": {
+        "top_left_x_m": 17.6,
+        "top_left_y_m": 9.8,
+        "width_m": 2.4,
+        "height_m": 1
+      },
+      "transform": {
+        "rotation_deg": 0
+      },
+      "parameters": {
+        "version": "1.0",
+        "generator": "Sportify-Algorithmic-Placement",
+        "gardenBlock": {
+          "type": "planter_s_pedestal",
+          "label": "Planter S (with pedestal)",
+          "family": "Planter",
+          "params": {
+            "defaultElevation": 0,
+            "length": 2400,
+            "width": 1000,
+            "rimHeight": 450,
+            "pedestalHeight": 100,
+            "protectionMat": 5,
+            "drainageDepth": 40,
+            "filterFleece": 5,
+            "substrateDepth": 300,
+            "outletHeight": 30,
+            "outletBottomOffset": 25,
+            "outletTopOffset": 55,
+            "centreRow": true,
+            "seatCap": true,
+            "tree": true,
+            "rimLevel": 550,
+            "trayFloorTop": 120,
+            "matTop": 125,
+            "drainageTop": 165,
+            "fleeceTop": 170,
+            "substrateTop": 470,
+            "freeboard": 80,
+            "capTop": 620,
+            "outletTop": 155
+          }
+        }
       }
     }
   ]
@@ -17912,7 +20290,7 @@ const GOLDBECK_HIGH_ROOF_GARDEN_ITERATIONS = [
 const GOLDBECK_PREBUILT_SESSIONS = {
   lowRoofSports: {
     id: "lowRoofSports", title: "Goldbeck — Low Roof, Sports",
-    tagline: "8 courts on the real E9 slab: Padel, 2 Ping Pong, Sand Pit, Trampoline, Modular Tower Slide, Locker & Bathroom modules.",
+    tagline: "11 pieces on the real E9 slab: Pickleball, 2 Ping Pong, Teqball, HIIT turf, Trampoline, Mini-Golf, 2 planters, Locker & Bathroom modules; doors at the stair core and the two ramps.",
     generate: () => goldbeckCloneRealPayload(GOLDBECK_LOW_ROOF_SPORTS_PAYLOAD),
   },
   highRoofGarden: {
