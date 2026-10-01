@@ -1290,7 +1290,21 @@ function algoSportOf(item) {
  */
 function diagramZoneOf(item) {
   const sp = algoSportOf(item);
-  return sp && typeof AlgoPlacement !== "undefined" && typeof AlgoPlacement.zoneOf === "function" ? AlgoPlacement.zoneOf(sp.name) : null;
+  const zone = sp && typeof AlgoPlacement !== "undefined" && typeof AlgoPlacement.zoneOf === "function" ? AlgoPlacement.zoneOf(sp.name) : null;
+  if (zone !== "indoor" || sp.service) return zone;                     // a service module is a building of its own: always indoor
+  // the engine's other "indoor" pieces (Ping Pong, Badminton, Bouldering Wall, Rest / Hydration) are indoor only where they stand inside the indoor
+  // zone's walls; anywhere else they are out in the open (2026-10-01: the Goldbeck default's Ping Pong tables stand 23-33 m from the walls and the
+  // zoning diagram painted them indoor). The engine still packs them as its own rules say; only what Revit is told follows the layout.
+  const walls = (typeof combineState !== "undefined" && combineState.walls) || [];
+  const fp = typeof getFootprint === "function" ? getFootprint(item) : { w: item.length_m, h: item.width_m };
+  const cx = item.x_m + fp.w / 2, cy = item.y_m + fp.h / 2;
+  const inside = walls.some(w => {
+    const rs = (w.rects || []).filter(r => Array.isArray(r) && r.length >= 4);
+    if (!rs.length) return false;
+    const x0 = Math.min(...rs.map(r => r[0])), y0 = Math.min(...rs.map(r => r[1])), x1 = Math.max(...rs.map(r => r[2])), y1 = Math.max(...rs.map(r => r[3]));
+    return cx > x0 && cx < x1 && cy > y0 && cy < y1;
+  });
+  return inside ? "indoor" : "outdoor";
 }
 
 /**
