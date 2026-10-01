@@ -78,6 +78,7 @@ const AlgoPlacement = (function () {
     { name: "Bouldering Wall", label: "Bouldering Wall", group: "Fitness & wellness", long: 6.0, short: 1.5, color: [200, 140, 80], headcount: 3, deadLoad: 0.70 },
     { name: "Pickleball Court", label: "Pickleball Court", group: "Courts", long: 13.4, short: 6.1, color: [160, 210, 110], headcount: 4, deadLoad: 0.15 },
     { name: "CrossFit Training Rig", label: "CrossFit Training Rig", group: "Fitness & wellness", long: 6.0, short: 5.0, color: [110, 110, 110], headcount: 8, deadLoad: 0.60 },
+    { name: "TRX Suspension Frame", label: "TRX Suspension Frame", group: "Fitness & wellness", long: 6.0, short: 3.0, color: [255, 170, 190], headcount: 6, deadLoad: 0.40 },
     { name: "HIIT Turf Grid", label: "HIIT Turf Grid", group: "Fitness & wellness", long: 8.0, short: 5.0, color: [120, 190, 60], headcount: 10, deadLoad: 0.30 },
     { name: "Multipurpose Sport Area", label: "Multipurpose Sport Area", group: "Courts", long: 22.0, short: 12.0, color: [70, 130, 200], headcount: 12, deadLoad: 0.35 },
     { name: "Trampoline", label: "Trampoline", group: "Playground & leisure", long: 4.0, short: 4.0, color: [255, 200, 60], headcount: 2, deadLoad: 0.30, assumed: true },

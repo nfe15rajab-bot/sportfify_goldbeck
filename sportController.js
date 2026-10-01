@@ -380,6 +380,8 @@ function buildActivityPayload() {
       ? calisthenicsPayload() : undefined,
     crossfit: (state.activityId === "crossfit_rig" && typeof crossfitPayload === "function")
       ? crossfitPayload() : undefined,
+    trx: (state.activityId === "trx_frame" && typeof trxPayload === "function")
+      ? trxPayload() : undefined,
     // A family the design team authored carries the values set on it, so Revit
     // can place THEIR family configured rather than build one of ours.
     familyInstance:

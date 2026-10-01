@@ -38,6 +38,7 @@ const ALGO_CATALOGUE = {
   "Bouldering Wall": { kind: "activity", id: "bouldering_wall" },
   "Pickleball Court": { kind: "activity", id: "pickleball_court" },
   "CrossFit Training Rig": { kind: "activity", id: "crossfit_rig" },
+  "TRX Suspension Frame": { kind: "activity", id: "trx_frame" },
   "HIIT Turf Grid": { kind: "activity", id: "hiit_turf_grid" },
   "Multipurpose Sport Area": { kind: "activity", id: "multipurpose_court" },
   "Trampoline": { kind: "activity", id: "trampoline" },
@@ -103,7 +104,7 @@ const ALGO_PRIMARY_MAX_M = 2.5;
  * engine, whose Rhino-parity and zoning tests use their names).
  */
 const ALGO_LISTS = [
-  { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
+  { heading: "Sports on Sportify", names: ["Multi Sport Court", "3x3 Streetbasketball", "Basketball Court", "Handball", "Football", "Volleyball", "Bocce Court", "Sprint Lane", "Padel Tennis Court", "Teqball Table", "Pickleball Court", "Ping Pong Outdoor", "TRX Suspension Frame", "CrossFit Training Rig", "HIIT Turf Grid", "Mini Golf", "Sandpit", "Trampoline", "Balance Logs", "Climbing Tower", "Modular Tower Slide"] },
   { heading: "Indoor services", names: ["Locker & Dressing Room Module", "Bathroom & Shower Module"] },
   { heading: "Garden activities", names: ["Yoga", "Calisthenics"] },
   // (the tab's smaller pieces - benches, bins, bollards, lights - are placed by hand: under the existing rules an item needs a long side of 2 m to be reached)
@@ -1246,6 +1247,7 @@ function activityLinksFor(typeId, sp) {
     padel: typeId === "padel_court" && typeof padelPlacementPayload === "function" ? padelPlacementPayload(algoPadelState(sp)) : undefined,
     calisthenics: typeId === "calisthenics" && typeof calisthenicsPayload === "function" ? calisthenicsPayload() : undefined,
     crossfit: typeId === "crossfit_rig" && typeof crossfitPayload === "function" ? crossfitPayload() : undefined,
+    trx: typeId === "trx_frame" && typeof trxPayload === "function" ? trxPayload() : undefined,
     familyInstance: typeId === "climbing_tower" && typeof climbingTowerPayload === "function" ? climbingTowerPayload()
       : (typeof isActivityFamily === "function" && isActivityFamily(typeId) && typeof activityFamilyPayload === "function") ? activityFamilyPayload(typeId) : undefined
   };

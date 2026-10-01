@@ -399,6 +399,7 @@ function previewRigHeight(it) {
   if (!s) return 0;
   if (s.calisthenics) return previewPos(s.calisthenics.frame_height_m, 2.5);
   if (s.crossfit) return previewPos(s.crossfit.upright_height_m, 2.75);
+  if (s.trx) return previewPos(s.trx.frame_height_m, 2.45);
   if (s.ping_pong) return previewPos(s.ping_pong.table_height_m, 0.76);
   if (s.gardenBlock && s.gardenBlock.params) return previewPos(s.gardenBlock.params.capTop, 620) / 1000;
   if (s.familyInstance) return previewFamilyHeight(s.familyInstance);
@@ -445,6 +446,10 @@ function previewRigExtent(it, x0, z0, x1, z1) {
     const W = previewPos(r.rig_width_m, 1.18);
     return box(previewPos(r.rig_length_m, x1 - x0), W, z0 + previewPos(r.working_depth_m, 2.0) + W / 2);
   }
+  if (s && s.trx) {
+    const f = s.trx;
+    return box(previewPos(f.frame_length_m, x1 - x0), previewPos(f.frame_width_m, z1 - z0), cz);
+  }
   if (s && s.ping_pong) {
     const t = s.ping_pong;
     return box(previewPos(t.table_length_m, 2.74), previewPos(t.table_width_m, 1.525), cz);
@@ -468,6 +473,7 @@ function previewRigParts(m, it, x0, z0, x1, z1) {
   if (!src) return 0;
   if (src.calisthenics) return previewCalisthenicsParts(m, src.calisthenics, x0, z0, x1, z1);
   if (src.crossfit) return previewCrossfitParts(m, src.crossfit, x0, z0, x1, z1);
+  if (src.trx) return previewTrxParts(m, src.trx, x0, z0, x1, z1);
   if (src.ping_pong) return previewPingPongParts(m, src.ping_pong, x0, z0, x1, z1);
   if (src.gardenBlock && src.gardenBlock.params) return previewPlanterParts(m, src.gardenBlock, x0, z0, x1, z1);
   if (src.familyInstance) return previewFamilyParts(m, src.familyInstance, x0, z0, x1, z1);
@@ -602,6 +608,49 @@ function previewCrossfitParts(m, r, x0, z0, x1, z1) {
         previewAddTube(m, [x, y, z + sign * half], [x, y, z + sign * (half + out)], 0.025, S);
       }
     }
+  }
+  return height;
+}
+
+/** Mirrors SportifyTrxFrameBuilder.BuildFrame. The splay is the point: it is what resists the pull. */
+function previewTrxParts(m, f, x0, z0, x1, z1) {
+  const beam = previewPos(f.beam_length_m, 3.0);
+  const height = previewPos(f.frame_height_m, 2.45);
+  const spread = previewPos(f.leg_spread_m, 1.2);
+  const beamR = previewPos(f.beam_diameter_m, 0.089) / 2;
+  const legR = previewPos(f.leg_diameter_m, 0.076) / 2;
+
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const xa = cx - beam / 2, xb = cx + beam / 2;
+  const S = PREVIEW_RIG.steel, G = PREVIEW_RIG.grip;
+
+  previewAddTube(m, [xa, height, cz], [xb, height, cz], beamR, S);
+
+  const half = f.a_frame ? spread / 2 : 0;
+  for (const x of [xa, xb]) {
+    for (const sign of [-1, 1]) {
+      const zf = cz + sign * half;
+      previewAddTube(m, [x, 0, zf], [x, height, cz], legR, S);
+      const p = legR * 3;
+      previewAddBox(m, x - p, 0, zf - p, x + p, 0.014, zf + p, S);
+      if (!f.a_frame) break;
+    }
+  }
+  if (f.mid_rail) {
+    const y = Math.min(0.45, height / 4);
+    previewAddTube(m, [xa, y, cz], [xb, y, cz], legR * 0.8, S);
+  }
+
+  // The anchors, and a hint of the straps hanging from them — without those it
+  // reads as a goalpost rather than as something you train on.
+  const n = Math.max(1, previewPos(f.anchor_count, 5));
+  const usable = Math.max(0, beam - 0.3);
+  for (let i = 0; i < n; i++) {
+    const t = n > 1 ? i / (n - 1) : 0.5;
+    const x = xa + 0.15 + t * usable;
+    previewAddTube(m, [x, height - beamR, cz - 0.022], [x, height - beamR, cz + 0.022], 0.022, G);
+    previewAddTube(m, [x, height - beamR, cz], [x, height - 1.15, cz - 0.16], 0.012, G);
+    previewAddTube(m, [x, height - beamR, cz], [x, height - 1.15, cz + 0.16], 0.012, G);
   }
   return height;
 }

@@ -104,7 +104,7 @@ function familyByKey(key) {
 /**
  * The 3D preview block: one shared canvas (not one per family — a real project can have dozens of family types,
  * far more than a browser allows live WebGL contexts for), showing whichever family/type was last clicked. A known
- * kind of equipment (a CrossFit rig, a calisthenics rig, one of the design team's own kit items) previews as a likeness of
+ * kind of equipment (a CrossFit rig, a TRX frame, one of the design team's own kit items) previews as a likeness of
  * its real shape; anything else previews as a box of its own measured size. Either way it is built from this app's
  * own defaults and the measured footprint, not the family's real Revit geometry, which this app has never seen.
  */

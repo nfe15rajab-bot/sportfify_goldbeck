@@ -7,7 +7,7 @@
  *
  * The shape itself is a best-effort likeness, the same trade-off previewFamilyParts already documents for the design
  * team's own families: this app has never seen the fetched family's real Revit geometry, only its name and its
- * measured footprint. A family whose name matches a kind this app already knows how to draw (a CrossFit rig, a calisthenics
+ * measured footprint. A family whose name matches a kind this app already knows how to draw (a CrossFit rig, a TRX
  * frame, a football court, one of the design team's own kit items) gets that kind's shape, built from that shape's
  * own sensible defaults and scaled to the real measured footprint. Anything else is a plain box of its own size,
  * coloured by its Revit category — a likeness beats nothing, and neither claims to be the family itself.
@@ -112,6 +112,7 @@ function familyPreviewRedraw() {
 function familyPreviewShapeKind(name) {
   const n = (name || "").toLowerCase();
   if (n.includes("crossfit")) return "crossfit";
+  if (n.includes("trx")) return "trx";
   if (n.includes("calisthenics")) return "calisthenics";
   if (n.includes("ping pong") || n.includes("table tennis") || n.includes("pingpong")) return "ping_pong";
   if (n.includes("planter")) return "planter";
@@ -204,6 +205,7 @@ function familyPreviewBuildScene(fam, type) {
   const kind = familyPreviewShapeKind(fam.family_name) || familyPreviewShapeKind(type.type_name);
   let topY;
   if (kind === "crossfit") topY = previewCrossfitParts(m, {}, x0, z0, x1, z1);
+  else if (kind === "trx") topY = previewTrxParts(m, {}, x0, z0, x1, z1);
   else if (kind === "calisthenics") topY = previewCalisthenicsParts(m, {}, x0, z0, x1, z1);
   else if (kind === "ping_pong") topY = previewPingPongParts(m, {}, x0, z0, x1, z1);
   else if (kind === "planter") topY = previewPlanterParts(m, { params: { tree: /\btrees?\b/i.test(fam.family_name || "") || / t\b/i.test(fam.family_name || "") } }, x0, z0, x1, z1);

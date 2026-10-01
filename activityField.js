@@ -153,11 +153,15 @@ function drawActivity(activityId, dims, isDark) {
     if (typeof drawCalisthenicsPreview === "function") { drawCalisthenicsPreview(svg, isDark); return; }
   }
 
-  // The CrossFit rig — ours to model, like the calisthenics rig, and
-  // deliberately not the same shape as it.
+  // The CrossFit rig and the suspension frame — ours to model, like the
+  // calisthenics rig, and deliberately not the same shape as it.
   if (typeof syncCrossfitPanel === "function" && syncCrossfitPanel(activityId)) {
     if (typeof crossfitApplyFootprint === "function") crossfitApplyFootprint();
     if (typeof drawCrossfitPreview === "function") { drawCrossfitPreview(svg, isDark); return; }
+  }
+  if (typeof syncTrxPanel === "function" && syncTrxPanel(activityId)) {
+    if (typeof trxApplyFootprint === "function") trxApplyFootprint();
+    if (typeof drawTrxPreview === "function") { drawTrxPreview(svg, isDark); return; }
   }
 
   // Table tennis: the table is fixed, so what it configures is the room round it.
